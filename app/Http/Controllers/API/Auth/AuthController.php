@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Carbon\Carbon;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -36,11 +37,22 @@ class AuthController extends Controller
          // Kiểm tra email hợp lệ
     $request->validated();
 
+<<<<<<< HEAD
+            if ($status === Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __($status)
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            $this->logError($e);
+=======
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
         return response()->json(['message' => 'Email không tồn tại'], 404);
     }
+>>>>>>> 673f16aae0d2926e4f0771ddbf4faf931b97fb67
 
     // Tạo token reset ngẫu nhiên
     $token = Str::random(60);
@@ -57,11 +69,11 @@ class AuthController extends Controller
     ]);
     }
 
-    public function resetPassword(ResetPasswordRequest $resetPasswordRequest)
+    public function resetPassword(ResetPasswordRequest $request)
     {
         try {
             //code...
-            $data = $resetPasswordRequest->only('email', 'password', 'password_confirmation', 'token');
+            $data = $request->only('email', 'password', 'password_confirmation', 'token');
 
             $status = Password::reset(
                 $data,
@@ -85,7 +97,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => __($status),
+                'message' => 'Mật khẩu không được thay đổi thành công',
             ], 400);
         }
     }
@@ -102,7 +114,6 @@ class AuthController extends Controller
                     'message' => 'Mật khẩu chính xác.',
                 ], 200);
             }
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -227,7 +238,7 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            Auth::user()->currentAccessToken()->delete();
+            // Auth::user()->currentAccessToken()->delete();
 
             return $this->respondOk('Đăng xuất thành công');
         } catch (\Exception $e) {
@@ -239,5 +250,4 @@ class AuthController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 }

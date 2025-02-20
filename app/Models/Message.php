@@ -17,4 +17,18 @@ class Message extends Model
         'type',
         'meta_data',
     ];
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Message::class, 'parent_id');
+    }
+
+    public function conversation()
+    {
+        return $this->belongsTo(Conversation::class);
+    }
 }

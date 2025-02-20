@@ -28,7 +28,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">{{ $subTitle ?? ''}}</h4>
                         <div class="d-flex gap-2">
-                            <a class="btn btn-sm btn-success" href="">Export dữ liệu</a>
+                            <a class="btn btn-sm btn-success" href="{{ route('admin.posts.export') }}">Export dữ liệu</a>
                             <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>

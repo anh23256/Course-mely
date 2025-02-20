@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CoursesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Traits\FilterTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Role;
 
 class CourseController extends Controller
 {
@@ -49,6 +53,20 @@ class CourseController extends Controller
         $subTitle = 'Thông tin khoá học: ' . $course->name;
 
         return view('courses.show', compact('title', 'subTitle', 'course'));
+    }
+
+    public function export()
+    {
+        try {
+            
+            return Excel::download(new CoursesExport, 'Courses.xlsx');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 
     private function filter($request, $query)

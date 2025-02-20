@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Traits\HasRoles;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasRoles ;
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
@@ -97,6 +99,11 @@ class Course extends Model
     public function wishLists()
     {
         return $this->hasMany(WishList::class, 'course_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 
 }

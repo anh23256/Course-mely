@@ -327,7 +327,8 @@ class LessonController extends Controller
     private function deleteLessonable($lessonable)
     {
         if ($lessonable instanceof Video) {
-            $this->deleteVideo($lessonable->public_id);
+            $this->deleteVideo($lessonable->url, self::VIDEO_LESSON);
+            $this->videoUploadService->deleteVideoFromMux($lessonable->asset_id);
         } elseif ($lessonable instanceof Document) {
             if ($lessonable->file_path && Storage::exists($lessonable->file_path)) {
                 $this->deleteFromLocal($lessonable->file_path, self::DOCUMENT_LESSON);
@@ -356,10 +357,18 @@ class LessonController extends Controller
             $dataFile = $this->uploadVideo($request->file('video_file'), self::VIDEO_LESSON, true);
             $muxVideoUrl = $this->videoUploadService->uploadVideoToMux($dataFile['secure_url']);
 
+            if (!$muxVideoUrl) {
+                return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại');
+            }
+
+            sleep(5);
+            $duration = $this->videoUploadService->getVideoDurationToMux($muxVideoUrl['asset_id']);
+
             $video->update([
                 'url' => $dataFile['secure_url'],
-                'mux_playback_id' => $muxVideoUrl,
-                'duration' => $dataFile['duration'],
+                'asset_id' => $muxVideoUrl['asset_id'],
+                'mux_playback_id' => $muxVideoUrl['playback_id'],
+                'duration' => $duration,
             ]);
         }
     }

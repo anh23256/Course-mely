@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\InvoicesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InvoiceController extends Controller
 {
@@ -93,6 +95,20 @@ class InvoiceController extends Controller
         }
 
         return $query;
+    }
+
+    public function export()
+    {
+        try {
+            
+            return Excel::download(new InvoicesExport, 'Invoices.xlsx');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 
     private function search($searchTerm, $query)

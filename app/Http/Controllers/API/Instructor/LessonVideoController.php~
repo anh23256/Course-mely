@@ -178,7 +178,7 @@ class LessonVideoController extends Controller
                 'is_free_preview' => $data['is_free_preview'] ?? false,
             ]);
 
-            return $this->respondOk('Cập nhật bài giảng thành công', $lesson->load('lessonable'));
+            return $this->respondOk('Cập nhật bài giảng thành cong', $lesson->load('lessonable'));
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 

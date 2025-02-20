@@ -56,8 +56,8 @@ class CourseValidatorService
         $errors = [];
         $chapters = Chapter::where('course_id', $course->id)->get();
 
-        if ($chapters->count() < 5) {
-            $errors[] = "Khóa học phải có ít nhất 5 chương học. Hiện tại có {$chapters->count()} chương.";
+        if ($chapters->count() < 3) {
+            $errors[] = "Khóa học phải có ít nhất 3 chương học. Hiện tại có {$chapters->count()} chương.";
         }
 
         foreach ($chapters as $chapter) {
@@ -76,8 +76,8 @@ class CourseValidatorService
         $errors = [];
         $lessons = Lesson::where('chapter_id', $chapterId)->get();
 
-        if ($lessons->count() < 5) {
-            $errors[] = "Chương '{$chapterTitle}' cần ít nhất 5 bài giảng. Hiện tại có {$lessons->count()} bài.";
+        if ($lessons->count() < 3) {
+            $errors[] = "Chương '{$chapterTitle}' cần ít nhất 3 bài giảng. Hiện tại có {$lessons->count()} bài.";
         }
 
         foreach ($lessons as $lesson) {

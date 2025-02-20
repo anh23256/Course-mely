@@ -476,8 +476,9 @@ class CourseController extends Controller
         $errors = [];
 
         $chapters = $course->chapters()->get();
-        if ($chapters->count() < 5) {
-            $errors[] = 'Khóa học phải có ít nhất 5 chương học.';
+
+        if ($chapters->count() < 3) {
+            $errors[] = 'Khóa học phải có ít nhất 3 chương học.';
         }
 
         foreach ($chapters as $chapter) {
@@ -485,10 +486,14 @@ class CourseController extends Controller
                 $errors[] = "Chương học ID {$chapter->id} không có tiêu đề.";
             }
 
+            if ($chapter->lessons()->count() < 3) {
+                $errors[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
+            }
+
             $lessons = $chapter->lessons()->get();
 
             foreach ($lessons as $lesson) {
-                if(empty($lesson->title) ) {
+                if (empty($lesson->title)) {
                     $errors[] = "Bài học giảng {$lesson->title} trong chương
                      '{$chapter->title}' thiếu tiêu đề hoặc nội dung";
 

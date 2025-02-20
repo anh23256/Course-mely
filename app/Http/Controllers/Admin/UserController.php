@@ -296,10 +296,12 @@ class UserController extends Controller
     public function export(string $role = null)
     {
         try {
+            
             $validRoles = Role::pluck('name')->toArray();
             $role = in_array($role, $validRoles) ? $role : 'member';
 
             return Excel::download(new UsersExport($role), 'Users_' . $role . '.xlsx');
+
         } catch (\Exception $e) {
             $this->logError($e);
 

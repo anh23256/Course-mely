@@ -178,7 +178,9 @@ class UserController extends Controller
     public function changePassword(ChangePasswordRequest $request)
     {
         try {
+
             $user = Auth::user();
+
 
             if (!Hash::check($request->old_password, $user->password)) {
                 return $this->respondError('Mật khẩu hiện tại không đúng');

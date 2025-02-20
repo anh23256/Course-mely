@@ -101,7 +101,6 @@ class DocumentController extends Controller
                 'lessonable_type' => Document::class,
                 'lessonable_id' => $document->id,
                 'order' => $data['order'],
-                'content' => $data['content'] ?? null,
                 'is_free_preview' => $data['is_free_preview'] ?? false,
             ]);
 

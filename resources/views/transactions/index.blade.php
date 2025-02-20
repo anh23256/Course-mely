@@ -71,7 +71,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-sm btn-success h-75">Export dữ liệu</button>
+                            
+                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.transactions.export') }}">Export dữ liệu</a>
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
@@ -235,7 +236,7 @@
                                                 </td>
                                                 <td>
                                                     <a
-                                                        href="{{ route('admin.transactions.show', $transaction->transaction_code) }}">
+                                                        href="{{ route('admin.transactions.show', $transaction->id) }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">
                                                             <span class="ri-eye-line"></span>
                                                         </button>

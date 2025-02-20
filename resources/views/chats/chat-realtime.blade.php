@@ -22,12 +22,62 @@
                         <div class="flex-grow-1">
                             <h5 class="mb-4">Chats</h5>
                         </div>
+                        <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade" id="addGroupModal"
+                            role="dialog" tabindex="-1">
+                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
+                                <div class="modal-content rounded-3 shadow-lg">
+                                    <div class="modal-header bg-primary text-white rounded-top p-3">
+                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
+                                            Thêm nhóm
+                                        </h5>
+                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
+                                            type="button">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body p-4 bg-light rounded-bottom">
+                                        <form id="createGroupChatForm">
+                                            @csrf
+                                            <div class="form-group mb-3">
+                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
+                                                <input class="form-control py-2" name="name" id="groupName"
+                                                    placeholder="Nhập tên nhóm" type="text" />
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupType" class="font-weight-bold">Chọn kiểu nhóm</label>
+                                                <select class="form-select py-2" name="type" id="groupType">
+                                                    <option value="#">Chọn kiểu nhóm</option>
+                                                    <option value="1">Personal</option>
+                                                    <option value="2">Group</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupMembers" class="font-weight-bold">Add Members</label>
+                                                <select tabindex="-1" id="groupMembers" name="members[]"
+                                                    class="form-select py-2" multiple="multiple">
+                                                    @foreach ($admins as $admin)
+                                                        <option value="{{ $admin->id }}">{{ $admin->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary w-100 py-2" type="submit">
+                                                Add Group
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
                         <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
                                 title="Add Contact">
 
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-soft-success btn-sm">
+                                <button type="button" class="btn btn-soft-success btn-sm" data-toggle="modal"
+                                    data-target="#addGroupModal">
                                     <i class="ri-add-line align-bottom"></i>
                                 </button>
                             </div>
@@ -95,7 +145,28 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list mb-0" id="channelList">
+                                <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
+                                    @foreach ($channels as $channel)
+                                        <li class="">
+                                            <a href="#" class="unread-msg-user"
+                                                data-channel-id="{{ $channel->id }}">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                        <div class="avatar-xxs">
+                                                            <div class="avatar-title bg-light rounded-circle text-body">#
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-truncate mb-0">
+                                                            {{ $channel->name }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    @endforeach
+
                                 </ul>
                             </div>
                             <!-- End chat-message-list -->
@@ -134,20 +205,19 @@
                                                     <div class="d-flex align-items-center">
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            <img src="{{ asset('assets/images/users/avatar-2.jpg') }}"
+                                                            <img src="{{ asset('assets/images/users/multi-user.jpg') }}"
                                                                 class="rounded-circle avatar-xs" alt="">
                                                             <span class="user-status"></span>
                                                         </div>
-                                                        <div class="flex-grow-1 overflow-hidden">
-                                                            <h5 class="text-truncate mb-0 fs-16"><a
-                                                                    class="text-reset username" data-bs-toggle="offcanvas"
-                                                                    href="#userProfileCanvasExample"
-                                                                    aria-controls="userProfileCanvasExample">Lisa Parker</a>
+                                                        <div class="flex-grow-1 overflow-hidden" id="groupInfo" data-conversation-id="{{ $channels->first()->id }}">
+                                                            <h5 class="text-truncate mb-0 fs-16">
+                                                                <a class="text-reset username" id="name"></a>
                                                             </h5>
                                                             <p class="text-truncate text-muted fs-14 mb-0 userStatus">
-                                                                <small>Online</small>
+                                                                <small id="memberCount"></small>
                                                             </p>
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -214,13 +284,13 @@
 
                                 </div>
                                 <!-- end chat user head -->
-                                <div class="chat-conversation p-3 p-lg-4 " id="chat-conversation" data-simplebar>
-                                    <div id="elmLoader">
+                                <div class="chat-conversation p-3 p-lg-4 " id="chatBox" data-simplebar>
+                                    {{-- <div id="elmLoader">
                                         <div class="spinner-border text-primary avatar-sm" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
-                                    </div>
-                                    <ul class="list-unstyled chat-conversation-list" id="users-conversation">
+                                    </div> --}}
+                                    <ul class="list-unstyled chat-conversation-list" id="messagesList">
 
                                     </ul>
                                     <!-- end chat-conversation-list -->
@@ -345,7 +415,8 @@
                                             <div class="chat-input-links me-2">
                                                 <div class="links-list-item">
                                                     <button type="button"
-                                                        class="btn btn-link text-decoration-none emoji-btn" id="emoji-btn">
+                                                        class="btn btn-link text-decoration-none emoji-btn"
+                                                        id="emoji-btn">
                                                         <i class="bx bx-smile align-middle"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-link text-decoration-none"
@@ -363,12 +434,12 @@
                                                 Please Enter a Message
                                             </div>
                                             <input type="text" class="form-control chat-input bg-light border-light"
-                                                id="chat-input" placeholder="Type your message..." autocomplete="off">
+                                                id="messageInput" placeholder="Type your message..." autocomplete="off">
                                         </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links ms-2">
                                                 <div class="links-list-item">
-                                                    <button type="submit"
+                                                    <button type="submit" id="sendMessageButton"
                                                         class="btn btn-success chat-send waves-effect waves-light">
                                                         <i class="ri-send-plane-2-fill align-bottom"></i>
                                                     </button>
@@ -412,6 +483,7 @@
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
     </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
     <script src="{{ asset('assets/libs/fg-emoji-picker/fgEmojiPicker.js') }}"></script>
     <script>
@@ -449,11 +521,126 @@
             });
         }
         initIcons();
-        
+
         $(document).ready(function() {
             $("#upload-btn").click(function() {
                 $("#file-input").click();
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#createGroupChatForm').submit(function(event) {
+                event.preventDefault();
+
+                var formData = $(this).serialize(); // Lấy dữ liệu từ form
+                $.ajax({
+                    url: "{{ route('admin.chats.create') }}",
+                    method: "POST",
+                    data: formData,
+                    success: function(response) {
+                        if (response.status == 'success') {
+                            // Cập nhật lại dữ liệu nhóm và admin trên giao diện
+                            $('#conversationList').html(response.data.channels);
+                            alert(response.message); // Hiển thị thông báo thành công
+                            window.location.href = "{{ route('admin.chats.index') }}";
+                        } else {
+                            alert(response.message); // Hiển thị thông báo lỗi
+                        }
+                    },
+                    error: function() {
+                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                    }
+                });
+            });
+        });
+        $(document).ready(function() {
+            $('#conversationList a').click(function(event) {
+                event.preventDefault(); // Ngừng hành động mặc định của liên kết
+
+                var channelId = $(this).data('channel-id'); // Lấy ID của nhóm chat
+
+                // Gửi yêu cầu AJAX để lấy thông tin nhóm
+                $.ajax({
+                    url: "{{ route('admin.chats.getGroupInfo') }}", // Endpoint API để lấy thông tin nhóm
+                    method: 'GET',
+                    data: {
+                        id: channelId
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        if (response.status === 'success') {
+                            // Cập nhật tên nhóm và số thành viên
+                            $('#name').text(response.data.name);
+                            $('#memberCount').text(response.data.memberCount);
+                        } else {
+                            alert('Không thể lấy thông tin nhóm');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $('#sendMessageButton').click(function() {
+            var content = $('#messageInput').val();
+            var conversationId = $('#groupInfo').data('conversation-id'); // ID của nhóm chat hiện tại
+            var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
+            var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
+            var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+            console.log(conversationId);
+            if (message) {
+                $.ajax({
+                    url: "{{ route('admin.chats.sendGroupMessage') }}",
+                    method: 'POST',
+                    data: {
+                        conversation_id: conversationId,
+                        content: content,
+                        parent_id: parentId, // Nếu có
+                        type: type,
+                        meta_data: metaData,
+                        _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#messageInput').val(''); // Xóa nội dung nhập
+                            loadMessages(conversationId); // Tải lại tin nhắn
+                        }
+                    }
+                });
+            }
+
+
+            // Lấy và hiển thị tin nhắn
+            function loadMessages(conversationId) {
+                $.get('admin/chats/get-messages/' + conversationId, function(response) {
+                    if (response.status === 'success') {
+                        $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+                        response.messages.forEach(function(message) {
+                            var messageHtml = `
+                    <div class="message">
+                        <strong>${message.sender.name}</strong>: ${message.message}
+                        <div class="message-meta">
+                            Type: ${message.type}
+                        </div>
+                    </div>
+                `;
+                            if (message.meta_data) {
+                                messageHtml += `
+                        <div class="message-meta">
+                            Meta Data: ${message.meta_data}
+                        </div>
+                    `;
+                            }
+                            $('#messagesList').append(messageHtml);
+                        });
+                    }
+                });
+            }
+
         });
     </script>
 @endpush

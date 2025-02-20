@@ -170,6 +170,7 @@ Route::prefix('admin')->as('admin.')
                 ->can('post.create');
             Route::post('/', [PostController::class, 'store'])->name('store')
                 ->can('post.create');
+            Route::get('export', [PostController::class, 'export'])->name('export');
             Route::get('/{id}', [PostController::class, 'show'])->name('show');
             Route::get('/edit/{post}', [PostController::class, 'edit'])->name('edit')
                 ->can('post.update');
@@ -252,8 +253,9 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COURSES =============================
         Route::prefix('courses')->as('courses.')->group(function () {
             Route::get('/', [CourseController::class, 'index'])->name('index');
-
+            Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
+            
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -280,8 +282,11 @@ Route::prefix('admin')->as('admin.')
             });
 
         #============================== ROUTE INVOICE =============================
-        Route::get('/invoices', [InvoiceController::class, 'index'])
-            ->name('invoices.index');
+        Route::prefix('invoices')->as('invoices.')->group(function () {
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::get('export', [InvoiceController::class, 'export'])->name('export');
+        });
+        
 
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
@@ -296,6 +301,7 @@ Route::prefix('admin')->as('admin.')
             ->as('transactions.')
             ->group(function () {
                 Route::get('/', [TransactionController::class, 'index'])->name('index');
+                Route::get('export', [TransactionController::class, 'export'])->name('export');
                 Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
 
                 Route::get('/check-transaction', [TransactionController::class, 'checkTransaction'])
@@ -349,5 +355,9 @@ Route::prefix('admin')->as('admin.')
             ->as('chats.')
             ->group(function () {
                 Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
+                Route::post('/chat-realtime',[ChatController::class, 'createGroupChat'])->name('create');
+                Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
+                Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
+                Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
             });    
     });

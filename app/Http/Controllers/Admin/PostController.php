@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\PostsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Posts\StorePostRequest;
 use App\Http\Requests\Admin\Posts\UpdatePostRequest;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+
 use function PHPUnit\Framework\isEmpty;
 
 class PostController extends Controller
@@ -284,6 +287,20 @@ class PostController extends Controller
             return response()->json($data = ['status' => 'error', 'message' => 'Lỗi thao tác.']);
         }
     }
+    public function export()
+    {
+        try {
+            
+            return Excel::download(new PostsExport, 'Posts.xlsx');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
     private function filter(Request $request, $query)
     {
         $filters = [

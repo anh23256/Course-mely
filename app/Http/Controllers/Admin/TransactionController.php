@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TransactionExport;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
 {
@@ -127,6 +129,19 @@ class TransactionController extends Controller
         return $query;
     }
 
+    public function export()
+    {
+        try {
+            
+            return Excel::download(new TransactionExport, 'transaction.xlsx');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
     private function search($searchTerm, $query)
     {
         if (!empty($searchTerm)) {

@@ -52,6 +52,7 @@ class LessonCodingController extends Controller
                 'lessonable_type' => Coding::class,
                 'lessonable_id' => $coding->id,
                 'order' => $data['order'],
+                'content' => $data['content'] ?? '',
                 'is_free_preview' => $data['is_free_preview'] ?? false,
             ]);
 

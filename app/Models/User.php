@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -97,6 +98,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(WishList::class, 'user_id');
     }
 
-
-    
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class);
+    }
 }
