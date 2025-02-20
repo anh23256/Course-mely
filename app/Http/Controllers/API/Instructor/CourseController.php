@@ -39,6 +39,7 @@ class CourseController extends Controller
                 ->select([
                     'id', 'category_id', 'name', 'slug', 'thumbnail',
                     'intro', 'price', 'price_sale', 'total_student',
+                    'status'
                 ])
                 ->with([
                     'category:id,name,slug,parent_id',

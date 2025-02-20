@@ -129,6 +129,8 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::get('/{slug}/chapters', [CourseController::class, 'getChapters']);
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
+
+                            Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
                         });
 
                     #============================== ROUTE CHAPTER =============================
@@ -175,8 +177,6 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::put('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'updateCodingExercise']);
                         });
                 });
-
-            Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
 
             #============================== ROUTE POST =============================
             Route::prefix('posts')->as('posts.')->group(function () {

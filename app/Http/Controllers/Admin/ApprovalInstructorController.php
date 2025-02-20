@@ -80,7 +80,7 @@ class ApprovalInstructorController extends Controller
                     'approver',
                     'user.profile.careers',
                 ])
-                ->findOrFail($id);
+                ->where('id',$id)->first();
 
             $score = $this->calculateCompletenessScore($approval->user);
 
@@ -125,25 +125,25 @@ class ApprovalInstructorController extends Controller
         }
         $criteriaCount++;
 
-        $qa_systems = json_decode($user->profile->qa_systems, true);
+        $qa_systems = $user->profile->qa_systems ? json_decode($user->profile->qa_systems, true) : [];
         if (count($qa_systems) > 0) {
             $score += 10;
             $criteriaCount++;
         }
 
-        $qualifications = $user->profile->careers;
+        $qualifications = $user->profile->careers ?? [];
         if (count($qualifications) > 0) {
             $score += 10;
             $criteriaCount++;
         }
 
-        $certificates = json_decode($user->profile->certificates, true);
+        $certificates = $user->profile->certificates ? json_decode($user->profile->certificates, true) : [];
         if (count($certificates) > 0) {
             $score += 10;
             $criteriaCount++;
         }
 
-        if ($user->profile->experience >= 1) {
+        if (($user->profile->experience ?? 0) >= 1) {
             $score += 5;
             $criteriaCount++;
         }
