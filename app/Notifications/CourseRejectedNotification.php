@@ -4,11 +4,12 @@ namespace App\Notifications;
 
 use App\Models\Course;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class CourseRejectedNotification extends Notification
+class CourseRejectedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -29,18 +30,7 @@ class CourseRejectedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
-    }
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -51,10 +41,23 @@ class CourseRejectedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => 'register_course',
             'course_id' => $this->course->id,
-            'message' => "Khóa học \"{$this->course->name}\" bị từ chối do không đủ điều kiện.",
-            'url' => 'asdadsa',
+            'course_name' => $this->course->name,
+            'course_slug' => $this->course->slug,
+            'course_thumbnail' => $this->course->thumbnail,
+            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
+        ];
+    }
+
+    public function toBroadcast($notifiable)
+    {
+        return [
+            'course_id' => $this->course->id,
+            'course_name' => $this->course->name,
+            'course_slug' => $this->course->slug,
+            'course_thumbnail' => $this->course->thumbnail,
+            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
         ];
     }
 }
+

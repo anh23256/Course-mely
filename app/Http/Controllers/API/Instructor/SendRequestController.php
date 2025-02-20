@@ -8,6 +8,7 @@ use App\Mail\CourseSubmitMail;
 use App\Models\Approvable;
 use App\Models\Course;
 use App\Models\User;
+use App\Notifications\CourseApprovedNotification;
 use App\Notifications\CourseSubmittedNotification;
 use App\Services\CourseValidatorService;
 use App\Traits\ApiResponseTrait;
@@ -141,4 +142,27 @@ class SendRequestController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    public function requestApproval($courseId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        if ($course->status !== 'draft') {
+            return response()->json(['message' => 'Khóa học đã gửi yêu cầu hoặc đã được duyệt!'], 400);
+        }
+
+        $instructor = User::findOrFail($course->user_id);
+        if (!$instructor) {
+            return response()->json(['message' => 'Người giảng viên không tồn tại.'], 404);
+        }
+
+        $course->status = 'approved';
+        $course->save();
+
+        $instructor->notify(new CourseApprovedNotification($course));
+
+        return response()->json(['message' => 'Khóa học đã được duyệt thành công!'], 200);
+    }
+
+
 }

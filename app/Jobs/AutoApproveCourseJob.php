@@ -71,6 +71,7 @@ class AutoApproveCourseJob implements ShouldQueue
 
                 $this->course->update([
                     'status' => 'approved',
+                    'visibility' => 'public',
                     'accepted' => now(),
                 ]);
 
