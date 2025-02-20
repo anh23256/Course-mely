@@ -37,22 +37,11 @@ class AuthController extends Controller
          // Kiểm tra email hợp lệ
     $request->validated();
 
-<<<<<<< HEAD
-            if ($status === Password::RESET_LINK_SENT) {
-                return response()->json([
-                    'success' => true,
-                    'message' => __($status)
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $this->logError($e);
-=======
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
         return response()->json(['message' => 'Email không tồn tại'], 404);
     }
->>>>>>> 673f16aae0d2926e4f0771ddbf4faf931b97fb67
 
     // Tạo token reset ngẫu nhiên
     $token = Str::random(60);
