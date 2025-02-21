@@ -3,7 +3,6 @@
 namespace App\Http\Requests\API\User;
 
 use App\Http\Requests\API\Bases\BaseFormRequest;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -36,21 +35,21 @@ class ChangePasswordRequest extends BaseFormRequest
     {
         return [
             // Mật khẩu
-            'old_password.required'  => 'Mật khẩu là bắt buộc.',
-            'old_password.string'    => 'Định dạng mật khẩu không hợp lệ.',
-            'old_password.max'       => 'Mật khẩu không được vượt quá 255 ký tự.',
+            'old_password.required'  => 'Mật khẩu hiện tại là bắt buộc.',
+            'old_password.string'    => 'Định dạng mật khẩu hiện tại không hợp lệ.',
+            'old_password.max'       => 'Mật khẩu hiện tại không được vượt quá 255 ký tự.',
 
             // Mật khẩu
-            'new_password.required'  => 'Mật khẩu là bắt buộc.',
-            'new_password.string'    => 'Định dạng mật khẩu không hợp lệ.',
-            'new_password.min'       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'new_password.max'       => 'Mật khẩu không được vượt quá 255 ký tự.',
-            'new_password.regex'     => 'Mật khẩu phải chứa ít nhất một chữ cái viết hoa.',
+            'new_password.required'  => 'Mật khẩu mới là bắt buộc.',
+            'new_password.string'    => 'Định dạng mật khẩu mới không hợp lệ.',
+            'new_password.min'       => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
+            'new_password.max'       => 'Mật khẩu mới không được vượt quá 255 ký tự.',
+            'new_password.regex'     => 'Mật khẩu mới phải chứa ít nhất một chữ cái viết hoa.',
             'new_password.not_in'    => 'Mật khẩu mới không được trùng với mật khẩu hiện tại',
 
             // Repassword
-            'confirm_new_password.required' => 'Vui lòng xác nhận mật khẩu.',
-            'confirm_new_password.same' => 'Mật khẩu và xác nhận mật khẩu không khớp.',
+            'confirm_new_password.required' => 'Vui lòng xác nhận mật khẩu mới.',
+            'confirm_new_password.same' => 'Mật khẩu mới và xác nhận mật khẩu mới không khớp.',
         ];
     }
     public function withValidator($validator)

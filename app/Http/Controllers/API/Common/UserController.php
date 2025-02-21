@@ -83,6 +83,7 @@ class UserController extends Controller
 
             if ($request->has('careers')) {
                 foreach ($request->careers as $careerData) {
+                    dd($careerData);
                     Career::updateOrCreate(
                         [
                             'profile_id' => $profile->id,
@@ -93,6 +94,7 @@ class UserController extends Controller
                             'major' => $careerData['major'],
                             'start_date' => $careerData['start_date'],
                             'end_date' => $careerData['end_date'],
+                            'description' => $careerData['description']
                         ]
                     );
                 }
