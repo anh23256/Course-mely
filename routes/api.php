@@ -71,6 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/test/{id}', [SendRequestController::class, 'requestApproval']);
 
+    Route::get('a', function (Request $request) {
+            $course = \App\Models\Course::query()->where('slug', 'khoa-hoc-eleaning-3c75d71a-821d-45fc-9348-71104f2dec47')->first();
+            $error = \App\Services\CourseValidatorService::validateCourse($course);
+
+        dd($error);
+    });
+
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
     Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);

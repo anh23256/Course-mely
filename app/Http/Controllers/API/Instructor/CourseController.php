@@ -496,23 +496,22 @@ class CourseController extends Controller
                 if (empty($lesson->title)) {
                     $errors[] = "Bài học giảng {$lesson->title} trong chương
                      '{$chapter->title}' thiếu tiêu đề hoặc nội dung";
+                }
+                if ($lesson->lessonable_type === Video::class) {
+                    $video = Video::query()->find($lesson->lessonable_id);
 
-                    if ($lesson->lessonable_type === Video::class) {
-                        $video = Video::query()->find($lesson->lessonable_id);
+                    if ($video && $video->duration < 900) {
+                        $errors[] = "Bài giảng '{$lesson->title}' trong chương
+                             '{$chapter->title}' có video dưới 15 phút.";
+                    }
 
-                        if ($video && $video->duration < 1200) {
-                            $errors[] = "Bài giảng '{$lesson->title}' (ID {$lesson->id}) trong chương
-                             '{$chapter->title}' có video dưới 20 phút.";
-                        }
-
-                        if ($lesson->lessonable_type === Quiz::class) {
-                            $quiz = Quiz::query()->find($lesson->lessonable_id);
-                            if ($quiz) {
-                                $questions = Question::query()->where('quiz_id', $quiz->id)->get();
-                                if ($questions->count() < 3 || $questions->count() > 5) {
-                                    $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương
-                                     '{$chapter->title}' phải có từ 3 đến 5 câu hỏi. Hiện tại có {$questions->count()} câu.";
-                                }
+                    if ($lesson->lessonable_type === Quiz::class) {
+                        $quiz = Quiz::query()->find($lesson->lessonable_id);
+                        if ($quiz) {
+                            $questions = Question::query()->where('quiz_id', $quiz->id)->get();
+                            if ($questions->count() < 1 || $questions->count() > 5) {
+                                $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương
+                                     '{$chapter->title}' phải có từ 1 đến 5 câu hỏi. Hiện tại có {$questions->count()} câu.";
                             }
                         }
                     }

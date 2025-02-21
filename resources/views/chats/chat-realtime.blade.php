@@ -1,3 +1,4 @@
+@vite(['resources/js/app.js'])
 @extends('layouts.app')
 @push('page-css')
     <!-- glightbox css -->
@@ -8,7 +9,6 @@
         }
     </style>
 @endpush
-
 @php
     $title = 'Chat';
 @endphp
@@ -148,7 +148,7 @@
                                 <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
                                     @foreach ($channels as $channel)
                                         <li class="">
-                                            <a href="#" class="unread-msg-user"
+                                            <a href="#" class="unread-msg-user group-button"
                                                 data-channel-id="{{ $channel->id }}">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
@@ -209,7 +209,7 @@
                                                                 class="rounded-circle avatar-xs" alt="">
                                                             <span class="user-status"></span>
                                                         </div>
-                                                        <div class="flex-grow-1 overflow-hidden" id="groupInfo" data-conversation-id="{{ $channels->first()->id }}">
+                                                        <div class="flex-grow-1 overflow-hidden" id="groupInfo">
                                                             <h5 class="text-truncate mb-0 fs-16">
                                                                 <a class="text-reset username" id="name"></a>
                                                             </h5>
@@ -285,11 +285,11 @@
                                 </div>
                                 <!-- end chat user head -->
                                 <div class="chat-conversation p-3 p-lg-4 " id="chatBox" data-simplebar>
-                                    {{-- <div id="elmLoader">
+                                    <div id="elmLoader">
                                         <div class="spinner-border text-primary avatar-sm" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
-                                    </div> --}}
+                                    </div>
                                     <ul class="list-unstyled chat-conversation-list" id="messagesList">
 
                                     </ul>
@@ -410,6 +410,7 @@
                             <div class="chat-input-section p-3 p-lg-4">
 
                                 <form id="chatinput-form" enctype="multipart/form-data">
+                                    @csrf
                                     <div class="row g-0 align-items-center">
                                         <div class="col-auto">
                                             <div class="chat-input-links me-2">
@@ -445,6 +446,7 @@
                                                     </button>
                                                 </div>
                                             </div>
+
                                         </div>
 
                                     </div>
@@ -529,6 +531,7 @@
         });
     </script>
     <script>
+        var currentConversationId = null;
         $(document).ready(function() {
             $('#createGroupChatForm').submit(function(event) {
                 event.preventDefault();
@@ -553,8 +556,7 @@
                     }
                 });
             });
-        });
-        $(document).ready(function() {
+
             $('#conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
@@ -573,6 +575,7 @@
                             // Cập nhật tên nhóm và số thành viên
                             $('#name').text(response.data.name);
                             $('#memberCount').text(response.data.memberCount);
+                            loadMessages(response.data.group.id);
                         } else {
                             alert('Không thể lấy thông tin nhóm');
                         }
@@ -582,61 +585,132 @@
                     }
                 });
             });
-        });
-    </script>
-    <script>
-        $('#sendMessageButton').click(function() {
-            var content = $('#messageInput').val();
-            var conversationId = $('#groupInfo').data('conversation-id'); // ID của nhóm chat hiện tại
-            var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
-            var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
-            var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-            console.log(conversationId);
-            if (message) {
-                $.ajax({
-                    url: "{{ route('admin.chats.sendGroupMessage') }}",
-                    method: 'POST',
-                    data: {
-                        conversation_id: conversationId,
-                        content: content,
-                        parent_id: parentId, // Nếu có
-                        type: type,
-                        meta_data: metaData,
-                        _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            $('#messageInput').val(''); // Xóa nội dung nhập
-                            loadMessages(conversationId); // Tải lại tin nhắn
-                        }
-                    }
-                });
-            }
+            // Khi người dùng chọn một nhóm
+            $('.group-button').click(function() {
+                currentConversationId = $(this).data('channel-id'); // Lấy ID nhóm đã chọn
+                console.log('Đã chọn nhóm với ID:', currentConversationId);
+                window.Echo.private('conversation.' + currentConversationId)
+                    .listen('GroupMessageSent', function(event) {
+                        loadMessages(currentConversationId);
+                    });
+            });
 
-
-            // Lấy và hiển thị tin nhắn
-            function loadMessages(conversationId) {
-                $.get('admin/chats/get-messages/' + conversationId, function(response) {
-                    if (response.status === 'success') {
-                        $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-                        response.messages.forEach(function(message) {
-                            var messageHtml = `
-                    <div class="message">
-                        <strong>${message.sender.name}</strong>: ${message.message}
-                        <div class="message-meta">
-                            Type: ${message.type}
-                        </div>
-                    </div>
-                `;
-                            if (message.meta_data) {
-                                messageHtml += `
-                        <div class="message-meta">
-                            Meta Data: ${message.meta_data}
-                        </div>
-                    `;
+            // Khi người dùng nhấn gửi tin nhắn
+            $('#sendMessageButton').click(function(e) {
+                e.preventDefault();
+                var content = $('#messageInput').val();
+                var parentId = $('#parentMessageId')
+                    .val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
+                var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
+                var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+                if (currentConversationId && content) {
+                    // Gửi tin nhắn vào nhóm hiện tại
+                    $.ajax({
+                        url: "{{ route('admin.chats.sendGroupMessage') }}",
+                        method: 'POST',
+                        data: {
+                            conversation_id: currentConversationId,
+                            content: content,
+                            parent_id: parentId, // Nếu có
+                            type: type,
+                            meta_data: metaData,
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                $('#messageInput').val(''); // Xóa nội dung nhập
+                                loadMessages(
+                                    currentConversationId); // Tải lại tin nhắn của nhóm
                             }
-                            $('#messagesList').append(messageHtml);
-                        });
+                        }
+                    });
+                } else {
+                    alert("Vui lòng chọn nhóm và nhập tin nhắn!");
+                }
+                // $('#sendMessageButton').click(function() {
+                //     var content = $('#messageInput').val();
+                //     var conversationId = $(this).data('conversation-id'); // ID của nhóm chat hiện tại
+                //     var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
+                //     var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
+                //     var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+                //     console.log('Conversation ID:', conversationId); // Kiểm tra giá trị của conversationId
+                //     if (content) {
+                //         $.ajax({
+                //             url: "{{ route('admin.chats.sendGroupMessage') }}",
+                //             method: 'POST',
+                //             data: {
+                //                 conversation_id: conversationId,
+                //                 content: content,
+                //                 parent_id: parentId, // Nếu có
+                //                 type: type,
+                //                 meta_data: metaData,
+                //                 _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
+                //             },
+                //             success: function(response) {
+                //                 if (response.status === 'success') {
+                //                     $('#messageInput').val(''); // Xóa nội dung nhập
+                //                     loadMessages(conversationId); // Tải lại tin nhắn
+                //                 }
+                //             }
+                //         });
+                //     }
+
+
+                // Lấy và hiển thị tin nhắn
+                // function loadMessages(currentConversationId) {
+
+                //     $.get('admin.chats.getGroupMessages. ' + currentConversationId, function(response) {
+                //         if (response.status === 'success') {
+                //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+                //             response.messages.forEach(function(message) {
+                //                 var messageHtml = `
+            //         <div class="message">
+            //             <strong>${message.sender.name}</strong>: ${message.message}
+            //             <div class="message-meta">
+            //                 Type: ${message.type}
+            //             </div>
+            //         </div>
+            //     `;
+                //                 if (message.meta_data) {
+                //                     messageHtml += `
+            //             <div class="message-meta">
+            //                 Meta Data: ${message.meta_data}
+            //             </div>
+            //         `;
+                //                 }
+                //                 $('#messagesList').append(messageHtml);
+                //             });
+                //         }
+                //     });
+                // }
+            });
+
+            function loadMessages(conversationId) {
+                $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+                    if (response.status === 'success') {
+
+                        $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+
+                        const messagesHtml = response.messages.map(message => {
+
+                            return `
+            <div class="message">
+                <strong>${message.sender?.name || 'Người dùng ẩn danh'}</strong>: ${message.content}
+                <div class="message-meta">
+                    Type: ${message.type || 'text'}
+                </div>
+                ${message.meta_data ? `
+                                                                    <div class="message-meta">
+                                                                        Meta Data: ${message.meta_data}
+                                                                    </div>
+                                                                ` : ''}
+            </div>
+        `;
+                        }).join(''); // Chuyển mảng thành chuỗi HTML
+
+                        $('#elmLoader').hide();
+                        $('#messagesList').append(messagesHtml);
+                    } else {
+                        $('#elmLoader').show();
                     }
                 });
             }

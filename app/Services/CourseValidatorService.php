@@ -102,8 +102,13 @@ class CourseValidatorService
         $errors = [];
         $video = Video::find($videoId);
 
-        if ($video && $video->duration < 1200) {
-            $errors[] = "Bài giảng '{$lessonTitle}' trong chương '{$chapterTitle}' có video dưới 20 phút.";
+        if (!$video) {
+            $errors[] = "Bài giảng '{$lessonTitle}' trong chương '{$chapterTitle}' không có video.";
+            return $errors;
+        }
+
+        if ($video->duration < 900) {
+            $errors[] = "Bài giảng '{$lessonTitle}' trong chương '{$chapterTitle}' có video dưới 15 phút.";
         }
 
         return $errors;
@@ -116,8 +121,8 @@ class CourseValidatorService
 
         if ($quiz) {
             $questions = Question::where('quiz_id', $quiz->id)->get();
-            if ($questions->count() < 3 || $questions->count() > 5) {
-                $errors[] = "Bài kiểm tra '{$lessonTitle}' trong chương '{$chapterTitle}' phải có từ 3 đến 5 câu hỏi. Hiện tại có {$questions->count()} câu.";
+            if ($questions->count() < 1 || $questions->count() > 5) {
+                $errors[] = "Bài kiểm tra '{$lessonTitle}' trong chương '{$chapterTitle}' phải có từ 1 đến 5 câu hỏi. Hiện tại có {$questions->count()} câu.";
             }
         }
 
