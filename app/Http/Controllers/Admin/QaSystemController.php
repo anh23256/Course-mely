@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\QaSystems\StoreQaSystemRequest;
 use App\Http\Requests\Admin\QaSystems\UpdateQaSystemRequest;
 use App\Models\QaSystem;
+use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
 
 class QaSystemController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait, FilterTrait;
 
     public function index()
     {
@@ -131,5 +133,52 @@ class QaSystemController extends Controller
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại');
         }
+    }
+
+    public function filterSearch(Request $request)
+    {
+        try {
+            $queryQaSystems = QaSystem::query()->latest('id');
+
+            $queryQaSystems = $this->filter($request, $queryQaSystems);
+
+            $queryQaSystems = $this->search($request, $queryQaSystems);
+
+            $qaSystems = $queryQaSystems->paginate(10);
+
+            if ($request->ajax()) {
+                $html = view('qa-systems.includes.table', compact('qaSystems'))->render();
+                return response()->json(['html' => $html]);
+            }
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
+    }
+
+    private function filter($request, $query)
+    {
+        $filters = [
+            'status' => ['queryWhere' => '='],
+            'title' => ['queryWhere' => 'LIKE'],
+            'answer_type' => ['queryWhere' => '='],
+            'created_at' => ['attribute' => ['startDate' => ">=", 'endDate' => "<="]],
+        ];
+
+        $query = $this->filterTrait($filters, $request, $query);
+
+        return $query;
+    }
+
+    private function search($request, $query)
+    {
+        if (!empty($request->search_full)) {
+            $searchTerm = $request->search_full;
+
+            $query->where(function ($query) use ($searchTerm) {
+                $query->where('title', 'LIKE', "%$searchTerm%");
+            });
+        }
+
+        return $query;
     }
 }
