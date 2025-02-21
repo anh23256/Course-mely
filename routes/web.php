@@ -337,6 +337,7 @@ Route::prefix('admin')->as('admin.')
             ->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'index'])->name('index');
                 Route::get('/create', [\App\Http\Controllers\Admin\QaSystemController::class, 'create'])->name('create');
+                Route::get('/filter-search',[\App\Http\Controllers\Admin\QaSystemController::class, 'filterSearch'])->name('filter-search');
                 Route::post('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'store'])->name('store');
                 Route::get('/edit/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'edit'])->name('edit');
                 Route::put('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'update'])->name('update');

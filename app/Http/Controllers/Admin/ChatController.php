@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Chats\StoreGroupChatRequest;
 use App\Http\Requests\Admin\Chats\StoreSendMessageRequest;
 use App\Models\Conversation;
+use App\Models\ConversationUser;
 use App\Models\Group;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\MessageNotification;
 use App\Traits\LoggableTrait;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Http\Request;
@@ -79,6 +81,11 @@ class ChatController extends Controller
         ]);
 
         broadcast(new GroupMessageSent($message));
+
+        $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
+            ->where('user_id', '<>', auth()->id())->pluck('user_id');
+
+        User::whereIn('id', $users)->get()->each->notify(new MessageNotification($message));
 
         return response()->json(['status' => 'success', 'message' => $message]);
     }

@@ -93,6 +93,7 @@ class UserController extends Controller
                             'major' => $careerData['major'],
                             'start_date' => $careerData['start_date'],
                             'end_date' => $careerData['end_date'],
+                            'description' => $careerData['description']
                         ]
                     );
                 }
@@ -180,11 +181,6 @@ class UserController extends Controller
         try {
 
             $user = Auth::user();
-
-
-            if (!Hash::check($request->old_password, $user->password)) {
-                return $this->respondError('Mật khẩu hiện tại không đúng');
-            }
 
             $user->password = Hash::make($request->new_password);
             $user->save();

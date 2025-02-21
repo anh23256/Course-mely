@@ -47,6 +47,7 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'careers.*.major' => 'required|string|max:255',
             'careers.*.start_date' => 'required|date',
             'careers.*.end_date' => 'nullable|date|after_or_equal:careers.*.start_date',
+            'careers.*.description' => 'nullable|string',
         ];
     }
 }

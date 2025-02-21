@@ -398,6 +398,11 @@
                     thumbnail = notification.data.user_avatar ||
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
+                if (type === 'receive_message') {
+                    title = 'Tin nhắn';
+                    thumbnail = notification.data.message_user_avatar ||
+                        'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+                }
                 if (type === 'register_course') {
                     title = notification.data.course_name || 'Khóa học';
                     thumbnail = notification.data.course_thumbnail;
@@ -437,6 +442,12 @@
                         $('#messages-notifications-container').append(notificationItem);
                     }
                 } else if (type === 'user_buy_course') {
+                    if (isRealTime) {
+                        $('#notification-data').prepend(notificationItem);
+                    } else {
+                        $('#notification-data').append(notificationItem);
+                    }
+                }else if(type === "receive_message"){
                     if (isRealTime) {
                         $('#notification-data').prepend(notificationItem);
                     } else {

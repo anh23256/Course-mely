@@ -20,7 +20,7 @@ class CourseController extends Controller
         $title = 'Quản lý khoá học';
         $subTitle = 'Danh sách khoá học trên hệ thống';
 
-        $queryCourses = Course::query();
+        $queryCourses = Course::query()->with(['user', 'category']);
 
         if ($request->has('query') && $request->input('query')) {
             $search = $request->input(key: 'query');
@@ -28,9 +28,7 @@ class CourseController extends Controller
                 ->orWhere('code', 'like', "%$search%");
         }
 
-        if ($request->hasAny(['code', 'name', 'user_name', 'level', 'price', 'created_at', 'updated_at'])) {
-            $queryCourses = $this->filter($request, $queryCourses);
-        }
+        $queryCourses = $this->filter($request, $queryCourses);
 
         $courses = $queryCourses->orderBy('created_at', 'desc')->paginate(10);
 
@@ -74,7 +72,7 @@ class CourseController extends Controller
         $filters = [
             'code' => ['queryWhere' => 'LIKE'],
             'name' => ['queryWhere' => 'LIKE'],
-            // 'user_name' => null,
+            'user_name_course' => null,
             'level' => ['queryWhere' => '='],
             'price' => ['queryWhere' => '='],
             'start_date' => ['queryWhere' => '>='],
