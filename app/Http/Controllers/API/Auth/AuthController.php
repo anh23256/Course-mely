@@ -34,39 +34,28 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPassWordRequest $request)
     {
-         // Kiểm tra email hợp lệ
-    $request->validated();
+        // Kiểm tra email hợp lệ
+        $request->validated();
 
-<<<<<<< HEAD
-            if ($status === Password::RESET_LINK_SENT) {
-                return response()->json([
-                    'success' => true,
-                    'message' => __($status)
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $this->logError($e);
-=======
-    $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-    if (!$user) {
-        return response()->json(['message' => 'Email không tồn tại'], 404);
-    }
->>>>>>> 673f16aae0d2926e4f0771ddbf4faf931b97fb67
+        if (!$user) {
+            return response()->json(['message' => 'Email không tồn tại'], 404);
+        }
 
-    // Tạo token reset ngẫu nhiên
-    $token = Str::random(60);
-    
-    // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
-    $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
+        // Tạo token reset ngẫu nhiên
+        $token = Str::random(60);
 
-    // Gửi email
-    Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl));
+        // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
+        $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Email đặt lại mật khẩu đã được gửi!',
-    ]);
+        // Gửi email
+        Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email đặt lại mật khẩu đã được gửi!',
+        ]);
     }
 
     public function resetPassword(ResetPasswordRequest $request)
@@ -213,7 +202,7 @@ class AuthController extends Controller
                 return response()->json([
                     'message' => 'Đăng nhập thành công',
                     'user' => $user,
-                    'role' =>  $role,
+                    'role' => $role,
                     'token' => $token->plainTextToken,
                     'expires_at' => $expiresAt
                 ], Response::HTTP_OK);

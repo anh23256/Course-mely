@@ -15,16 +15,16 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Technology',
-            'Business',
-            'Design',
+            'Công nghệ thông tin & Truyền thông',
+            'Kinh doanh',
             'Marketing',
-            'Science',
-            'Health',
-            'Education',
-            'Arts',
-            'Literature',
-            'Music'
+            'Nghệ thuật & Thiết kế',
+            'Kỹ năng mềm',
+            'Sức khoẻ & Làm đẹp',
+            'Nấu ăn & Ẩm thực',
+            'Thể thao & Fitness',
+            'Giáo dục & Phát triển bản thân',
+            'AI & Machine Learning',
         ];
 
         foreach ($categories as $category) {

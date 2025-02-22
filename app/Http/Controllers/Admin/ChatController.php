@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Chats\StoreGroupChatRequest;
 use App\Http\Requests\Admin\Chats\StoreSendMessageRequest;
 use App\Models\Conversation;
+use App\Models\ConversationUser;
 use App\Models\Group;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\MessageNotification;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use Illuminate\Broadcasting\Channel;
@@ -93,6 +95,11 @@ class ChatController extends Controller
         //     'message_id' => $validated['message_id'],
         // );
         broadcast(new GroupMessageSent($message));
+
+        $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
+            ->where('user_id', '<>', auth()->id())->pluck('user_id');
+
+        User::whereIn('id', $users)->get()->each->notify(new MessageNotification($message));
 
         return response()->json(['status' => 'success', 'message' => $message]);
     }

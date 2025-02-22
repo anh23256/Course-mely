@@ -30,8 +30,8 @@ class UpdateContentCourse extends BaseFormRequest
                 'nullable',
                 'string',
                 function ($attribute, $value, $fail) {
-                    if ($value && str_word_count($value) < 150) {
-                        $fail('Mô tả phải có ít nhất 150 từ.');
+                    if ($value && str_word_count($value) > 150) {
+                        $fail('Mô tả không được quá 150 từ.');
                     }
                 },
             ],

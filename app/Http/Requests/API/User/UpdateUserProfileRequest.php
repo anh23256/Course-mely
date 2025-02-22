@@ -3,7 +3,12 @@
 namespace App\Http\Requests\API\User;
 
 use App\Http\Requests\API\Bases\BaseFormRequest;
+use App\Models\Profile;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateUserProfileRequest extends BaseFormRequest
 {
@@ -42,11 +47,54 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'email' => 'prohibited',
             'qa_systems' => 'prohibited',
             'careers' => 'nullable|array',
-            'careers.*.institution_name' => 'required|string|max:255',
+            'careers.*.institution_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
             'careers.*.degree' => 'required|string|max:255',
             'careers.*.major' => 'required|string|max:255',
             'careers.*.start_date' => 'required|date',
             'careers.*.end_date' => 'nullable|date|after_or_equal:careers.*.start_date',
+            'careers.*.description' => 'nullable|string',
+            'careers.*.id' => 'nullable',
         ];
+    }
+    public function withValidator(Validator $validator)
+    {
+        $validator->after(function ($validator) {
+            $careers = request()->input('careers', []);
+            $userID = Auth::id();
+            $profile = Profile::query()->where('user_id', $userID)->first();
+
+            $institution_names = [];
+
+            foreach ($careers as $index => $career) {
+                $institutionName = $career['institution_name'];
+                $careerId = $career['id'] ?? null;
+
+                if (!in_array($institutionName, $institution_names)) {
+                    $institution_names[] = $institutionName;
+                } else {
+                    $validator->errors()->add("careers.$index.institution_name", 'Đã tồn tại tên cơ sở này.');
+                }
+
+                if ($profile) {
+                    $profileId = $profile->id;
+                    
+                    $query = DB::table('careers')
+                        ->where('profile_id', $profileId)
+                        ->where('institution_name', $institutionName);
+
+                    if (!empty($careerId)) {
+                        $query->where('id', '<>', $careerId);
+                    }
+
+                    if ($query->exists()) {
+                        $validator->errors()->add("careers.$index.institution_name", 'Đã tồn tại tên cơ sở này.');
+                    }
+                }
+            }
+        });
     }
 }

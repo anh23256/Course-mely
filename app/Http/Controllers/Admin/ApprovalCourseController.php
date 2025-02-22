@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Approvable;
 use App\Models\Course;
+use App\Models\Video;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -72,9 +73,11 @@ class ApprovalCourseController extends Controller
     {
         try {
             $approval = Approvable::query()
+                ->where('approvable_type', Course::class)
                 ->with([
                     'approver',
-                    'course.user',
+                    'approvable.user',
+                    'approvable.chapters.lessons.lessonable'
                 ])
                 ->latest('created_at')
                 ->findOrFail($id);
@@ -82,10 +85,19 @@ class ApprovalCourseController extends Controller
             $title = 'Kiểm duyệt khoá học';
             $subTitle = 'Thông tin khoá học: ' . $approval->course->name;
 
+            $totalDuration = $approval->approvable->chapters->flatMap(function ($chapter) {
+                return $chapter->lessons;
+            })->filter(function ($lesson) {
+                return $lesson->lessonable_type === Video::class;
+            })->sum(function ($lesson) {
+                return $lesson->lessonable->duration ?? 0;
+            });
+
             return view('approval.course.show', compact([
                 'title',
                 'subTitle',
                 'approval',
+                'totalDuration'
             ]));
         } catch (\Exception $e) {
             $this->logError($e);

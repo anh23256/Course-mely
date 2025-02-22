@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Documents\DocumentRequest;
+use App\Http\Requests\API\Lessons\UpdateLessonDocumetRequest;
 use App\Models\Chapter;
 use App\Models\Document;
 use App\Models\Lesson;
@@ -42,20 +43,34 @@ class DocumentController extends Controller
         }
     }
 
-    public function show(string $id)
+    public function getLessonDocument(string $chapterId, string $lessonId)
     {
         try {
-            $document = Document::findOrFail($id);
+            $chapter = Chapter::query()->find($chapterId);
 
-            return response()->json([
-                'message' => 'Chi tiết tài liệu',
-                'status' => true,
-                'document' => $document
-            ], Response::HTTP_OK);
+            if (!$chapter) {
+                return $this->respondNotFound('Không tìm thấy chương học');
+            }
+
+            if ($chapter->course->user_id !== auth()->id()) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
+
+            $lesson = Lesson::query()->with('lessonable')->find($lessonId);
+
+            if (!$lesson || $lesson->chapter_id !== $chapter->id) {
+                return $this->respondNotFound('Không tìm thấy bài giảng');
+            }
+
+            if ($lesson->lessonable_type !== Document::class) {
+                return $this->respondNotFound('Bài giảng không phải là tài liệu');
+            }
+
+            return $this->respondOk('Lấy thông tin tài liệu thành công', $lesson->load('lessonable'));
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondNotFound('Tài liệu không tồn tại');
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 
@@ -117,37 +132,72 @@ class DocumentController extends Controller
         }
     }
 
-    public function update(DocumentRequest $request, string $id)
+    public function updateLessonDocument(UpdateLessonDocumetRequest $request, string $chapterId, string $lessonId)
     {
         try {
-            $document = Document::find($id);
-
-            if (!$document) {
-                return $this->respondNotFound('Tài liệu không tồn tại');
-            }
+            DB::beginTransaction();
 
             $data = $request->validated();
 
+            $chapter = Chapter::query()->find($chapterId);
+
+            if (!$chapter) {
+                return $this->respondNotFound('Không tìm thấy chương học');
+            }
+
+            if ($chapter->course->user_id !== auth()->id()) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
+
+            $lesson = Lesson::query()
+                ->with('lessonable')
+                ->where('id', $lessonId)->first();
+
+            if (!$lesson || $lesson->chapter_id !== $chapter->id || $lesson->lessonable_type !== Document::class) {
+                return $this->respondNotFound('Không tìm thấy bài giảng');
+            }
+
+            $document = $lesson->lessonable;
             if ($request->hasFile('document_file')) {
+                if ($document->file_path && Storage::exists($document->file_path)) {
+                    $this->deleteFromLocal($document->file_path, self::DOCUMENT_LESSON);
+                }
                 $documentFile = $request->file('document_file');
                 $data['file_path'] = $this->uploadToLocal($documentFile, self::DOCUMENT_LESSON);
                 $data['file_type'] = 'upload';
             } elseif (!empty($request->document_url)) {
+                if ($document->file_path && Storage::exists($document->file_path)) {
+                    $this->deleteFromLocal($document->file_path, self::DOCUMENT_LESSON);
+                }
                 $data['file_path'] = $request->document_url;
                 $data['file_type'] = 'url';
+            } else {
+                $data['file_path'] = $document->file_path;
+                $data['file_type'] = $document->file_type;
             }
 
             $data['title'] = !empty($data['title']) ? $data['title'] : Str::uuid();
 
-            $document = $document->update($data);
+            $lesson->lessonable->update([
+                'title' => $data['title'],
+                'file_path' => $data['file_path'],
+                'file_type' => $data['file_type'],
+                'content' => $data['content'] ?? $lesson->content,
+            ]);
 
-            return response()->json([
-                'message' => 'Tài liệu đã được cập nhật thành công',
-                'status' => true,
-                'document' => $document
-            ], Response::HTTP_OK);
+            $lesson->update([
+                'title' => $data['title'],
+                'is_free_preview' => $data['is_free_preview'] ?? $lesson->is_free_preview,
+            ]);
+
+            DB::commit();
+
+            return $this->respondSuccess('Cập nhật tài liệu thành công', $lesson->load('lessonable'));
         } catch (\Exception $e) {
-            $this->logError($e);
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }

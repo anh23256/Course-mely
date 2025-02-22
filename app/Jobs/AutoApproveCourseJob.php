@@ -37,6 +37,8 @@ class AutoApproveCourseJob implements ShouldQueue
     public function handle(): void
     {
         try {
+            DB::beginTransaction();
+
             $course = $this->course;
 
             $approval = Approvable::query()->where('approvable_id', $this->course->id)
@@ -57,7 +59,10 @@ class AutoApproveCourseJob implements ShouldQueue
                     'approver_id' => null,
                 ]);
 
-                $this->course->update(['status' => 'rejected']);
+                $this->course->update([
+                    'status' => 'rejected',
+                    'visibility' => 'private',
+                ]);
 
                 $this->course->user->notify(new CourseRejectedNotification($this->course));
 
@@ -71,18 +76,11 @@ class AutoApproveCourseJob implements ShouldQueue
 
                 $this->course->update([
                     'status' => 'approved',
+                    'visibility' => 'public',
                     'accepted' => now(),
                 ]);
 
                 $this->course->user->notify(new CourseApprovedNotification($this->course));
-            }
-
-            $managers = User::query()->role([
-                'admin',
-            ])->get();
-
-            foreach ($managers as $manager) {
-                $manager->notify(new CourseApprovedNotification($this->course));
             }
 
             DB::commit();

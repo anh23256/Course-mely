@@ -15,7 +15,8 @@ class Coding extends Model
         'hints',
         'sample_code',
         'result_code',
-        'solution_code'
+        'solution_code',
+        'instruct'
     ];
 
     public function lessons()

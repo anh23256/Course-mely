@@ -10,7 +10,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes, HasRoles ;
+    use HasFactory, SoftDeletes, HasRoles;
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
@@ -44,6 +44,7 @@ class Course extends Model
         'visibility',
         'modification_request',
         'accepted',
+        'views'
     ];
 
     public $attributes = [

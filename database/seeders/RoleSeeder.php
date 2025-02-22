@@ -29,7 +29,7 @@ class RoleSeeder extends Seeder
                 'description' => 'Giảng viên hệ thống',
             ],
             [
-                'name' => 'super_admin',
+                'name' => 'admin',
                 'guard_name' => 'web',
                 'description' => 'Người có quyền kiểm soát toàn bộ hệ thống',
             ],

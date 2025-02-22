@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\SearchController;
 use App\Http\Controllers\API\Common\TransactionController;
@@ -15,13 +15,12 @@ use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
 use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
+use App\Http\Controllers\API\Instructor\PostController;
 use App\Http\Controllers\API\Instructor\RegisterController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
-use App\Http\Controllers\API\Verify\VerificationController;
-use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
-use App\Http\Controllers\API\Instructor\PostController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
 use App\Http\Controllers\API\Student\NoteController;
+use App\Http\Controllers\API\Verify\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,7 +57,29 @@ Route::prefix('search')
         Route::get('/', [SearchController::class, 'search']);
     });
 
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/broadcasting/auth', function (Request $request) {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    });
+
+    Route::post('/test/{id}', [SendRequestController::class, 'requestApproval']);
+
+    Route::get('a', function (Request $request) {
+            $course = \App\Models\Course::query()->where('slug', 'khoa-hoc-eleaning-3c75d71a-821d-45fc-9348-71104f2dec47')->first();
+            $error = \App\Services\CourseValidatorService::validateCourse($course);
+
+        dd($error);
+    });
+
+    Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
+
     Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
@@ -83,6 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
             ->group(function () {
+                Route::get('/', [\App\Http\Controllers\API\Common\NotificationController::class, 'getNotifications']);
+                Route::put('/{id}/read', [\App\Http\Controllers\API\Common\NotificationController::class, 'markAsRead']);
             });
     });
 
@@ -172,8 +195,9 @@ Route::middleware('auth:sanctum')->group(function () {
                                     Route::delete('{question}/delete-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'deleteQuestion']);
                                 });
 
+                            Route::get('/{chapterId}/{lesson}/lesson-document', [DocumentController::class, 'getLessonDocument']);
                             Route::post('/{chapterId}/store-lesson-document', [DocumentController::class, 'storeLessonDocument']);
-                            Route::put('/{documentID}', [DocumentController::class, 'update']);
+                            Route::put('/{chapterId}/{lesson}/update-lesson-document', [DocumentController::class, 'updateLessonDocument']);
 
                             Route::post('/{chapterId}/store-lesson-coding', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'storeLessonCoding']);
                             Route::get('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'getCodingExercise']);
