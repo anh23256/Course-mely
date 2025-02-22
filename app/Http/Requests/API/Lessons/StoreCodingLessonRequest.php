@@ -23,7 +23,6 @@ class StoreCodingLessonRequest extends BaseFormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'content' => 'nullable|string',
             'language' => 'required|string',
         ];
     }
@@ -34,7 +33,6 @@ class StoreCodingLessonRequest extends BaseFormRequest
             'title.required' => 'Tiêu đề không được để trống',
             'title.string' => 'Tiêu đề phải là chuỗi',
             'title.max' => 'Tiêu đề không được vượt quá 255 ký tự',
-            'content.string' => 'Nội dung phải là chuỗi',
             'language.required' => 'Ngôn ngữ không được để trống',
             'language.string' => 'Ngôn ngữ phải là chuỗi',
         ];

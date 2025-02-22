@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('language')->nullable();
-            $table->json('hints');
+            $table->json('hints')->nullable();
             $table->text('sample_code')->nullable();
             $table->text('result_code')->nullable();
             $table->text('solution_code')->nullable();

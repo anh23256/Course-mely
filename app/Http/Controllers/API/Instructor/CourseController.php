@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Courses\StoreCourseRequest;
 use App\Http\Requests\API\Courses\UpdateContentCourse;
 use App\Http\Requests\API\Courses\UpdateCourseObjectives;
+use App\Models\Coding;
 use App\Models\Course;
+use App\Models\Document;
 use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\Video;
@@ -461,9 +463,6 @@ class CourseController extends Controller
         if (count($requirements) < 4 || count($requirements) > 10) {
             $errors[] = 'Yêu cầu khóa học phải có từ 4 đến 10 mục.';
         }
-        if (count($qa) < 1 || count($qa) > 5) {
-            $errors[] = 'Câu hỏi và trả lời phải có từ 1 đến 5 mục.';
-        }
 
         return [
             'status' => empty($errors),
@@ -489,6 +488,17 @@ class CourseController extends Controller
             if ($chapter->lessons()->count() < 3) {
                 $errors[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
             }
+//
+//            $totalVideoDuration = Video::whereIn('id', function ($query) use ($chapter) {
+//                $query->select('lessonable_id')
+//                    ->from('lessons')
+//                    ->where('chapter_id', $chapter->id)
+//                    ->where('lessonable_type', Video::class);
+//            })->sum('duration');
+//
+//            if ($totalVideoDuration < 1800) {
+//                $errors[] = "Tổng thời lượng video trong chương '{$chapter->title}' phải lớn hơn 30 phút. Hiện tại chỉ có " . round($totalVideoDuration / 60, 2) . " phút.";
+//            }
 
             $lessons = $chapter->lessons()->get();
 
@@ -497,22 +507,52 @@ class CourseController extends Controller
                     $errors[] = "Bài học giảng {$lesson->title} trong chương
                      '{$chapter->title}' thiếu tiêu đề hoặc nội dung";
                 }
+
                 if ($lesson->lessonable_type === Video::class) {
                     $video = Video::query()->find($lesson->lessonable_id);
 
-                    if ($video && $video->duration < 900) {
+                    if ($video && $video->duration < 300) {
                         $errors[] = "Bài giảng '{$lesson->title}' trong chương
-                             '{$chapter->title}' có video dưới 15 phút.";
+                             '{$chapter->title}' có video dưới 5 phút.";
                     }
+                }
 
-                    if ($lesson->lessonable_type === Quiz::class) {
-                        $quiz = Quiz::query()->find($lesson->lessonable_id);
-                        if ($quiz) {
-                            $questions = Question::query()->where('quiz_id', $quiz->id)->get();
-                            if ($questions->count() < 1 || $questions->count() > 5) {
-                                $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương
+                if ($lesson->lessonable_type === Quiz::class) {
+                    $quiz = Quiz::query()->find($lesson->lessonable_id);
+                    if ($quiz) {
+                        $questions = Question::query()->where('quiz_id', $quiz->id)->get();
+                        if ($questions->count() < 1 || $questions->count() > 5) {
+                            $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương
                                      '{$chapter->title}' phải có từ 1 đến 5 câu hỏi. Hiện tại có {$questions->count()} câu.";
-                            }
+                        }
+                    }
+                }
+
+                if ($lesson->lessonable_type === Coding::class) {
+                    $coding = Coding::query()->find($lesson->lessonable_id);
+
+                    if ($coding) {
+                        if (empty($coding->title)) {
+                            $errors[] = "Bài tập coding trong chương '{$chapter->title}' thiếu tiêu đề.";
+                        }
+                        if (empty($coding->language)) {
+                            $errors[] = "Bài tập coding '{$coding->title}' trong chương '{$chapter->title} chưa chọn ngôn ngữ lập trình.";
+                        }
+                        if (empty($coding->sample_code)) {
+                            $errors[] = "Bài tập coding '{$coding->title}' trong chương '{$chapter->title}' thiếu đoạn mã mẫu (sample code).";
+                        }
+                    }
+                }
+
+                if ($lesson->lessonable_type === Document::class) {
+                    $document = Document::query()->find($lesson->lessonable_id);
+
+                    if ($document) {
+                        if (empty($document->title)) {
+                            $errors[] = "Tài liệu '{$document->title}' trong chương '{$chapter->title}' thiếu tiêu đề.";
+                        }
+                        if (empty($document->content)) {
+                            $errors[] = "Tài liệu '{$document->title}' trong chương '{$chapter->title}' thiếu nội dung.";
                         }
                     }
                 }
