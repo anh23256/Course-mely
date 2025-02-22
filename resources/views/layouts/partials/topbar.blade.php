@@ -181,13 +181,13 @@
                                     </a>
                                 </li>
                                 <li class="nav-item waves-effect waves-light">
-                                    <a class="nav-link" data-bs-toggle="tab" href="#messages-tab" role="tab"
+                                    <a class="nav-link" data-bs-toggle="tab" href="#alerts-tab" role="tab"
                                         aria-selected="false">
                                         Kiểm duyệt
                                     </a>
                                 </li>
                                 <li class="nav-item waves-effect waves-light">
-                                    <a class="nav-link" data-bs-toggle="tab" href="#alerts-tab" role="tab"
+                                    <a class="nav-link" data-bs-toggle="tab" href="#messages-tab" role="tab"
                                         aria-selected="false">
                                         Tin nhắn
                                     </a>
@@ -201,30 +201,20 @@
                         <div class="tab-pane fade show active py-2 ps-2" id="all-noti-tab" role="tabpanel">
                             <div data-simplebar style="max-height: 300px;" class="pe-2" id="notification-data">
                             </div>
-
-                            <div class="my-3 text-center view-all">
-                                <button type="button" class="btn btn-soft-success waves-effect waves-light">
-                                    Xem tất cả <i class="ri-arrow-right-line align-middle"></i>
-                                </button>
-                            </div>
                         </div>
 
+                        <div class="tab-pane fade py-2 ps-2" id="alerts-tab" role="tabpanel"
+                            aria-labelledby="alerts-tab">
+                            <div data-simplebar style="max-height: 300px; overflow-y: auto;" class="pe-2"
+                                id="approvals-notifications-container">
+                            </div>
+                        </div>
 
                         <div class="tab-pane fade py-2 ps-2" id="messages-tab" role="tabpanel"
                             aria-labelledby="messages-tab">
                             <div data-simplebar style="max-height: 300px;" class="pe-2"
                                 id="messages-notifications-container">
-
-                                <div class="my-3 text-center view-all">
-                                    <button type="button" class="btn btn-soft-success waves-effect waves-light">
-                                        Xem tất cả <i class="ri-arrow-right-line align-middle"></i>
-                                    </button>
-                                </div>
                             </div>
-
-                        </div>
-
-                        <div class="tab-pane fade p-4" id="alerts-tab" role="tabpanel" aria-labelledby="alerts-tab">
                         </div>
 
                         <div class="notification-actions" id="notification-actions">
@@ -296,7 +286,6 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/locale/vi.js"></script>
     <script>
-        let countNotification = 10;
         moment.locale('vi');
 
         $(document).ready(function() {
@@ -338,6 +327,8 @@
                             console.log(response);
 
                             $('#messages-notifications-container').empty();
+                            $('#notification-data').empty();
+                            $('#approvals-notifications-container').empty();
 
                             $.each(notifications, function(_, notification) {
                                 renderNotification(notification, false);
@@ -346,26 +337,31 @@
                             updateUnreadCount(unread_notifications_count);
 
                             if (response.data && response.data.notifications.length > 0) {
-
-                                if (response.data.notifications.length >= countNotification) {
-                                    $('#messages-notifications-container').append(`
+                                $('#notification-data').append(`
                                         <div class="col-12 col-md-12">
                                             <div class="d-flex mt-4 justify-content-center">
-                                                <span class="text-primary text-decoration-underline" id="load-more">Xem thêm</span>
+                                                <a class="text-primary text-decoration-underline" data-notification-type="user_buy_course" id="load-more">Xem thêm</a>
                                             </div>
                                         </div>
                                     `);
-                                }
-                            } else {
-                                $('#messages-notifications-container').append(`
-                                    <div class="col-12 col-md-12">
-                                        <div class="d-flex mt-4 justify-content-center">
-                                            <span class="text-info">Không có thông báo</span>
+                                $('#approvals-notifications-container').append(`
+                                        <div class="col-12 col-md-12">
+                                            <div class="d-flex mt-4 justify-content-center">
+                                                <a class="text-primary text-decoration-underline" 
+                                                    data-notification-type="register_course-register_instructor" id="load-more">
+                                                    Xem thêm
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                `);
+                                    `);
+                                $('#messages-notifications-container').append(`
+                                        <div class="col-12 col-md-12">
+                                            <div class="d-flex mt-4 justify-content-center">
+                                                <a class="text-primary text-decoration-underline" data-notification-type="receive_message" id="load-more">Xem thêm</a>
+                                            </div>
+                                        </div>
+                                    `);
                             }
-
                         }
                     },
                     error: function(error) {
@@ -437,9 +433,9 @@
 
                 if (type === 'register_course' || type === 'register_instructor') {
                     if (isRealTime) {
-                        $('#messages-notifications-container').prepend(notificationItem);
+                        $('#approvals-notifications-container').prepend(notificationItem);
                     } else {
-                        $('#messages-notifications-container').append(notificationItem);
+                        $('#approvals-notifications-container').append(notificationItem);
                     }
                 } else if (type === 'user_buy_course') {
                     if (isRealTime) {
@@ -447,11 +443,11 @@
                     } else {
                         $('#notification-data').append(notificationItem);
                     }
-                }else if(type === "receive_message"){
+                } else if (type === "receive_message") {
                     if (isRealTime) {
-                        $('#notification-data').prepend(notificationItem);
+                        $('#messages-notifications-container').prepend(notificationItem);
                     } else {
-                        $('#notification-data').append(notificationItem);
+                        $('#messages-notifications-container').append(notificationItem);
                     }
                 }
 
@@ -467,7 +463,7 @@
                 e.preventDefault();
                 const notificationId = $(this).data('notification-id');
                 const isChecked = $(this).data('ischecked');
-                
+
                 const readed = "{{ now() }}";
                 const urlRedirect = $(`.stretched-link-${notificationId}`).attr('href');
 
@@ -478,7 +474,7 @@
                 const url = `/admin/notifications/${notificationId}`;
 
                 console.log(urlRedirect, url, notificationId);
-                
+
                 const data = {
                     read_at: readed
                 };
@@ -496,13 +492,37 @@
                 });
             });
 
+            let countNotificationsData = {
+                approval: {
+                    type: ["register_course", "register_instructor"],
+                    count: 10
+                },
+                message: {
+                    type: ["receive_message"],
+                    count: 10
+                },
+                buycourse: {
+                    type: ["user_buy_course"],
+                    count: 10
+                }
+            };
+
             $(document).on('click', '#load-more', function() {
-                countNotification += 5;
+                const notificationType = $(this).data('notification-type');
+
+                if (notificationType === "user_buy_course") {
+                    countNotificationsData.buycourse.count += 5;
+                } else if (notificationType === "receive_message") {
+                    countNotificationsData.message.count += 5;
+                } else {
+                    countNotificationsData.approval.count += 5;
+                }
 
                 fetchNotifications({
-                    count: countNotification
+                    count_notifications: countNotificationsData
                 });
             });
+
 
             window.Echo.private(`App.Models.User.${userID}`)
                 .notification((notification) => {
