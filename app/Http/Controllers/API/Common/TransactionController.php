@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Transaction\BuyCourseRequest;
 use App\Http\Requests\API\Transaction\DepositTransactionRequest;
 use App\Models\Coupon;
 use App\Models\Course;
@@ -29,7 +30,7 @@ class TransactionController extends Controller
 
     const adminRate = 0.4;
     const instructorRate = 1 - self::adminRate;
-    const walletMail = 'superadmin@gmail.com';
+    const walletMail = 'quaixe121811@gmail.com';
 
     public function index()
     {
@@ -94,6 +95,8 @@ class TransactionController extends Controller
 
             $validated = $request->validate([
                 'amount' => 'required|numeric',
+                'course_id' => 'required|exists:courses,id',
+                'coupon_code' => 'nullable|string',
             ]);
 
             $amount = number_format($validated['amount'], 0, '', '');
@@ -103,17 +106,20 @@ class TransactionController extends Controller
             $vnp_Url = env('VNPAY_URL');
             $vnp_ReturnUrl = env('VNPAY_RETURN_URL');
 
-            $vnp_TxnRef = Str::random(10);
-            $vnp_OrderInfo = 'Thanh toán khoá học';
+            $vnp_TxnRef = 'ORDER' . time();
+            $vnp_OrderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $validated['course_id'];
             $vnp_Amount = $amount * 100;
+            if (!empty($validated['coupon_code'])) {
+                $vnp_OrderInfo .= '-' . $validated['coupon_code'];
+            }
             $vnp_Locale = 'vn';
             $vnp_IpAddr = request()->ip();
 
             $inputData = [
                 "vnp_Version" => "2.1.0",
+                "vnp_Command" => "pay",
                 "vnp_TmnCode" => $vnp_TmnCode,
                 "vnp_Amount" => $vnp_Amount,
-                "vnp_Command" => "pay",
                 "vnp_CreateDate" => now()->format('YmdHis'),
                 "vnp_CurrCode" => "VND",
                 "vnp_IpAddr" => $vnp_IpAddr,
@@ -179,9 +185,10 @@ class TransactionController extends Controller
             DB::beginTransaction();
 
             // Giả sử vnp_OrderInfo chứa user_id và course_id
-            $parts = explode('-', json_encode($inputData['vnp_OrderInfo']));
-            $userId = trim($parts[0], '"'); // Lấy user_id
-            $courseId = trim($parts[1], '"'); // Lấy course_id
+            $orderInfo = explode('-', str_replace('-Thanh-toan-khoa-hoc-','-',$inputData['vnp_OrderInfo']));
+
+            $userId = trim($orderInfo[0], '"');
+            $courseId = trim($orderInfo[1], '"');
 
             $user = User::find($userId);
             $course = Course::find($courseId);
@@ -192,8 +199,8 @@ class TransactionController extends Controller
 
             // Kiểm tra mã giảm giá (nếu có)
             $discount = null;
-            if (!empty($inputData['vnp_OrderInfo']['coupon_code'])) {
-                $discount = Coupon::where(['code' => $inputData['vnp_OrderInfo']['coupon_code'], 'status' => '1'])->first();
+            if (!empty(trim($orderInfo[2], '"'))) {
+                $discount = Coupon::where(['code' => trim($orderInfo[2], '"'), 'status' => '1'])->first();
             }
 
             // Tạo hóa đơn (invoice)
@@ -223,24 +230,22 @@ class TransactionController extends Controller
                 'type' => 'invoice',
             ]);
 
+            $this->finalBuyCourse($userId, $course, $transaction, $discount, $inputData['vnp_Amount']/100);
+
             DB::commit();
 
             return redirect()->away(env('FE_URL') . "my-courses?vnp_TxnRef=" . $inputData['vnp_TxnRef']);
         } catch (\Exception $e) {
-            \Log::error("VNPAY Callback Error: " . $e);
+            Log::error("VNPAY Callback Error: " . $e);
             DB::rollBack();
             return redirect()->away($frontendUrl . "?error=server_error");
         }
     }
 
-    public function buyCourse(Request $request)
+    public function buyCourse(BuyCourseRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'slug' => 'required|exists:courses,slug',
-                'amount' => 'required|numeric',
-                'discount_code' => 'nullable|string',
-            ]);
+            $validated = $request->validated();
 
             DB::beginTransaction();
 
@@ -269,37 +274,37 @@ class TransactionController extends Controller
             $discountAmount = 0;
             $discount = null;
 
-            if (!empty($validated['discount_code'])) {
+            if (!empty($validated['coupon_code'])) {
                 $discount = Coupon::query()->where([
-                    'code' => $validated['discount_code'],
+                    'code' => $validated['coupon_code'],
                     'status' => '1'
                 ])->first();
 
                 if (!empty($discount)) {
                     $discountAmount = ($discount->discount_type === 'percentage')
-                        ? (($course->price_sale ?? $course->price) * $discount->discount_value) / 100
+                        ? (!empty(round($course->price_sale,2)) ? $course->price_sale :  $course->price) * $discount->discount_value / 100
                         : $discount->discount_value;
 
-                    $discountAmount = min($discountAmount, $course->price_sale ?? $course->price);
+                    $discountAmount = min($discountAmount, !empty(round($course->price_sale,2)) ? $course->price_sale :  $course->price);
                 } else {
                     return $this->respondError('Mã giảm giá không hợp lệ hoặc đã hết hạn');
                 }
             }
 
-            $finalAmount = round(max($validated['amount'] - $discountAmount, 0), 2);
-
-            $invoice = Invoice::create([
-                'user_id' => $userID,
-                'course_id' => $course->id,
-                'code' => 'HD' . strtoupper(Str::random(8)),
-                'coupon_code' => $validated['discount_code'] ?? null,
-                'coupon_discount' => $discountAmount > 0 ? $discountAmount : null,
-                'total' => $validated['amount'],
-                'final_total' => $finalAmount,
-                'status' => $finalAmount === 0 ? 'Đã thanh toán' : 'Chờ thanh toán',
-            ]);
+            $finalAmount = max($validated['amount'] - $discountAmount, 0);
 
             if ($finalAmount === 0) {
+                $invoice = Invoice::create([
+                    'user_id' => $userID,
+                    'course_id' => $course->id,
+                    'code' => 'HD' . strtoupper(Str::random(8)),
+                    'coupon_code' => $validated['coupon_code'] ?? null,
+                    'coupon_discount' => $discountAmount > 0 ? $discountAmount : null,
+                    'total' => $validated['amount'],
+                    'final_total' => $finalAmount,
+                    'status' => 'Đã thanh toán',
+                ]);
+
                 $transaction = Transaction::create([
                     'transaction_code' => 'GD' . strtoupper(Str::random(8)),
                     'user_id' => $userID,
@@ -329,7 +334,8 @@ class TransactionController extends Controller
                     return $this->respondOk('Chưa có bank');
                 } else {
                     $modifiedRequest = $request->merge([
-                        'order_info' => 'thanh-toan-kho-hoc-' . $course->slug . '-' . $invoice->id
+                        'amount' => $finalAmount,
+                        'course_id' => $course->id
                     ]);
 
                     return $this->createVNPayPayment($modifiedRequest);
@@ -348,7 +354,7 @@ class TransactionController extends Controller
     {
         if ($discount) {
             $course->coupons()->attach($discount->id);
-            if($discount->used_count > 0) $discount->decrement('used_count');
+            if ($discount->used_count > 0) $discount->decrement('used_count');
         }
 
         $course->increment('total_student');
@@ -374,11 +380,14 @@ class TransactionController extends Controller
             'total_amount' => $finalAmount,
             'retained_amount' => $finalAmount * self::adminRate,
             'type' => 'commission_received',
-            'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: '. $course->name,
+            'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: ' . $course->name,
         ]);
 
-        User::role('admin')->each(function ($manager) use ($course, $userID) {
-            $manager->notify(new UserBuyCourseNotification(User::find($userID), $course->load('invoices.transaction')));
-        });
+        User::whereHas('roles', function($query){
+            $query->where('name', 'admin');
+        })
+        ->each(fn($manager) => $manager->notify(
+            new UserBuyCourseNotification(User::find($userID), $course->load('invoices.transaction'))
+        ));
     }
 }

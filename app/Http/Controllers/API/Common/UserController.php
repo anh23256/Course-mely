@@ -93,7 +93,7 @@ class UserController extends Controller
                             'major' => $careerData['major'],
                             'start_date' => $careerData['start_date'],
                             'end_date' => $careerData['end_date'],
-                            'description' => $careerData['description']
+                            'description' => $careerData['description'],
                         ]
                     );
                 }
