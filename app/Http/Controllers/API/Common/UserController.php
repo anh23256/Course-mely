@@ -88,7 +88,7 @@ class UserController extends Controller
                             'profile_id' => $profile->id,
                             'institution_name' => $careerData['institution_name'],
                         ],
-                        [
+                        [                         
                             'degree' => $careerData['degree'],
                             'major' => $careerData['major'],
                             'start_date' => $careerData['start_date'],

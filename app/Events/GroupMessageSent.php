@@ -26,6 +26,6 @@ class GroupMessageSent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('conversation.'. $this->message->conversation_id);
+        return new PrivateChannel('conversation.'. $this->message->conversation_id);
     }
 }

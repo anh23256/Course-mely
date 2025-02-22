@@ -8,9 +8,11 @@ use App\Http\Requests\Admin\Chats\StoreGroupChatRequest;
 use App\Http\Requests\Admin\Chats\StoreSendMessageRequest;
 use App\Models\Conversation;
 use App\Models\Group;
+use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
 use App\Traits\LoggableTrait;
+use App\Traits\UploadToCloudinaryTrait;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
@@ -20,11 +22,17 @@ use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait,UploadToCloudinaryTrait;
+    const FOLDER = "messages";
     public function index()
     {
         $data = $this->getAdminsAndChannels();
-        return view('chats.chat-realtime', $data);
+        return view(
+            'chats.chat-realtime',
+            [
+                'data' => $data
+            ]
+        );
     }
     public function createGroupChat(StoreGroupChatRequest $request)
     {
@@ -69,6 +77,9 @@ class ChatController extends Controller
     public function sendGroupMessage(StoreSendMessageRequest $request)
     {
         $validated = $request->validated();
+        if ($request->hasFile('fileinput')) {
+            $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
+        }
         $message = Message::create([
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => auth()->id(),
@@ -77,12 +88,15 @@ class ChatController extends Controller
             'type' => $validated['type'],
             'meta_data' => $validated['meta_data'],
         ]);
-
+        // $media = Media::create(
+        //     'file_path' => $validated
+        //     'message_id' => $validated['message_id'],
+        // );
         broadcast(new GroupMessageSent($message));
 
         return response()->json(['status' => 'success', 'message' => $message]);
     }
-
+    
     protected function getAdminsAndChannels()
     {
         $roleUser = 'admin';
@@ -90,7 +104,9 @@ class ChatController extends Controller
             $query->where('name', $roleUser);
         })->get();
 
-        $channels = Conversation::all();
+        $channels = Conversation::whereHas('users', function ($query) {
+            $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
+        })->get();
 
         return [
             'admins' => $admins,

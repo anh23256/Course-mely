@@ -15,4 +15,8 @@ class Media extends Model
         'file_type',
         'file_size',
     ];
+    public function message()
+    {
+        return $this->belongsTo(Message::class);
+    }
 }

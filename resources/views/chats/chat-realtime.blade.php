@@ -3,9 +3,168 @@
 @push('page-css')
     <!-- glightbox css -->
     <link rel="stylesheet" href="{{ asset('assets/libs/glightbox/css/glightbox.min.css') }}">
+    <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" type="text/css" />
     <style>
         .file-input {
             display: none;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px;
+            background-color: #f0f2f5;
+            /* Màu nền nhạt */
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Nội dung tin nhắn */
+        .message-content {
+            flex: 1;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .message-header strong {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .message p {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        /* Các nút hành động */
+        .message-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .like-btn,
+        .thumbs-up-btn {
+            border: none;
+            background: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .like-btn {
+            color: #e74c3c;
+            /* Màu đỏ cho nút ❤️ */
+        }
+
+        .thumbs-up-btn {
+            color: #3498db;
+            /* Màu xanh cho nút 👍 */
+        }
+
+        /* Đảm bảo độ cao tối thiểu cho tin nhắn */
+        .sender {
+            min-height: 40px;
+            max-height: 200px;
+            /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
+            overflow: auto;
+        }
+
+        .sender {
+            /* Gradient cho người gửi */
+            color: black;
+            text-align: left;
+            /* Đưa tin nhắn vào bên phải */
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-width: 50%;
+            /* Giới hạn chiều rộng */
+            margin-left: auto;
+            /* Đẩy sang bên phải */
+            word-wrap: break-word;
+            /* Đảm bảo văn bản dài sẽ tự động xuống dòng */
+        }
+
+        .received {
+            /* Gradient cho người nhận */
+            color: black;
+            text-align: left;
+            /* Đưa tin nhắn vào bên trái */
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-width: 50%;
+            /* Giới hạn chiều rộng */
+            margin-right: auto;
+            /* Đẩy sang bên trái */
+        }
+
+        /* Các nút hành động */
+        .message-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .reaction-btn {
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            /* Hiệu ứng khi bấm vào */
+        }
+
+        /* Các reaction thả ra */
+        .reaction-container {
+            position: relative;
+        }
+
+        .reaction {
+            position: absolute;
+            font-size: 18px;
+            opacity: 1;
+            animation: floatUp 1s ease-in-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
         }
     </style>
 @endpush
@@ -54,9 +213,10 @@
                                             <div class="form-group mb-3">
                                                 <label for="groupMembers" class="font-weight-bold">Add Members</label>
                                                 <select tabindex="-1" id="groupMembers" name="members[]"
-                                                    class="form-select py-2" multiple="multiple">
-                                                    @foreach ($admins as $admin)
-                                                        <option value="{{ $admin->id }}">{{ $admin->name }}</option>
+                                                    multiple="multiple">
+                                                    @foreach ($data['admins'] as $admin)
+                                                        <option value="{{ $admin->id }}">
+                                                            {{ $admin->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -146,7 +306,7 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
-                                    @foreach ($channels as $channel)
+                                    @foreach ($data['channels'] as $channel)
                                         <li class="">
                                             <a href="#" class="unread-msg-user group-button"
                                                 data-channel-id="{{ $channel->id }}">
@@ -425,7 +585,7 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" id="file-input" style="display: none;">
+                                                    <input type="file" id="fileInput" style="display: none;">
                                                 </div>
                                             </div>
                                         </div>
@@ -436,6 +596,8 @@
                                             </div>
                                             <input type="text" class="form-control chat-input bg-light border-light"
                                                 id="messageInput" placeholder="Type your message..." autocomplete="off">
+                                            <input type="hidden" id="parentMessageId">
+                                            <!-- Nếu có tính năng trả lời tin nhắn -->
                                         </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links ms-2">
@@ -484,6 +646,7 @@
 @push('page-scripts')
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
+        const userId = @json(auth()->id()); // Truyền id người dùng từ Laravel sang JavaScript
     </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
@@ -526,7 +689,16 @@
 
         $(document).ready(function() {
             $("#upload-btn").click(function() {
-                $("#file-input").click();
+                $("#fileInput").click();
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#groupMembers').select2({
+                placeholder: "Chọn thành viên thêm vào nhóm",
+                allowClear: true,
+                dropdownParent: $('#addGroupModal'),
             });
         });
     </script>
@@ -592,18 +764,19 @@
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
                         loadMessages(currentConversationId);
+                        // alert('Đã nhận tin nhắn mới');
                     });
             });
 
             // Khi người dùng nhấn gửi tin nhắn
             $('#sendMessageButton').click(function(e) {
                 e.preventDefault();
-                var content = $('#messageInput').val();
-                var parentId = $('#parentMessageId')
-                    .val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
-                var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
-                var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-                if (currentConversationId && content) {
+                let content = $('#messageInput').val();
+                let parentId = $('#parentMessageId').val();
+                let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
+                let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+
+                 if (currentConversationId && content) { 
                     // Gửi tin nhắn vào nhóm hiện tại
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
@@ -625,96 +798,191 @@
                     });
                 } else {
                     alert("Vui lòng chọn nhóm và nhập tin nhắn!");
-                }
-                // $('#sendMessageButton').click(function() {
-                //     var content = $('#messageInput').val();
-                //     var conversationId = $(this).data('conversation-id'); // ID của nhóm chat hiện tại
-                //     var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
-                //     var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
-                //     var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-                //     console.log('Conversation ID:', conversationId); // Kiểm tra giá trị của conversationId
-                //     if (content) {
-                //         $.ajax({
-                //             url: "{{ route('admin.chats.sendGroupMessage') }}",
-                //             method: 'POST',
-                //             data: {
-                //                 conversation_id: conversationId,
-                //                 content: content,
-                //                 parent_id: parentId, // Nếu có
-                //                 type: type,
-                //                 meta_data: metaData,
-                //                 _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
-                //             },
-                //             success: function(response) {
-                //                 if (response.status === 'success') {
-                //                     $('#messageInput').val(''); // Xóa nội dung nhập
-                //                     loadMessages(conversationId); // Tải lại tin nhắn
-                //                 }
-                //             }
-                //         });
-                //     }
-
-
-                // Lấy và hiển thị tin nhắn
-                // function loadMessages(currentConversationId) {
-
-                //     $.get('admin.chats.getGroupMessages. ' + currentConversationId, function(response) {
-                //         if (response.status === 'success') {
-                //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-                //             response.messages.forEach(function(message) {
-                //                 var messageHtml = `
-            //         <div class="message">
-            //             <strong>${message.sender.name}</strong>: ${message.message}
-            //             <div class="message-meta">
-            //                 Type: ${message.type}
-            //             </div>
-            //         </div>
-            //     `;
-                //                 if (message.meta_data) {
-                //                     messageHtml += `
-            //             <div class="message-meta">
-            //                 Meta Data: ${message.meta_data}
-            //             </div>
-            //         `;
-                //                 }
-                //                 $('#messagesList').append(messageHtml);
-                //             });
-                //         }
-                //     });
-                // }
+                } 
             });
+            // function appendMessage(msg) {
+            //     let messagesDiv = $('#messages');
+            //     let messageElement = $('<div></div>');
 
-            function loadMessages(conversationId) {
-                $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
-                    if (response.status === 'success') {
+            //     if (msg.type === 'text') {
+            //         messageElement.html(`<p>${msg.content}</p>`);
+            //     } else if (msg.type === 'file' && msg.media.length > 0) {
+            //         let file = msg.media[0]; // Chỉ lấy file đầu tiên (có thể sửa để lấy nhiều file)
 
-                        $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+            //         if (file.type.includes('image')) {
+            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
+        //                     <img src="${file.file_path}" alt="image" style="max-width: 200px;">`);
+            //         } else {
+            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
+        //                     <a href="${file.file_path}" target="_blank">📂 ${file.original_name}</a>`);
+            //         }
+            //     }
 
-                        const messagesHtml = response.messages.map(message => {
+            //     messagesDiv.append(messageElement);
+            // }
 
-                            return `
-            <div class="message">
-                <strong>${message.sender?.name || 'Người dùng ẩn danh'}</strong>: ${message.content}
-                <div class="message-meta">
-                    Type: ${message.type || 'text'}
-                </div>
-                ${message.meta_data ? `
-                                                                    <div class="message-meta">
-                                                                        Meta Data: ${message.meta_data}
+            // $('#sendMessageButton').click(function() {
+            //     var content = $('#messageInput').val();
+            //     var conversationId = $(this).data('conversation-id'); // ID của nhóm chat hiện tại
+            //     var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
+            //     var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
+            //     var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+            //     console.log('Conversation ID:', conversationId); // Kiểm tra giá trị của conversationId
+            //     if (content) {
+            //         $.ajax({
+            //             url: "{{ route('admin.chats.sendGroupMessage') }}",
+            //             method: 'POST',
+            //             data: {
+            //                 conversation_id: conversationId,
+            //                 content: content,
+            //                 parent_id: parentId, // Nếu có
+            //                 type: type,
+            //                 meta_data: metaData,
+            //                 _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
+            //             },
+            //             success: function(response) {
+            //                 if (response.status === 'success') {
+            //                     $('#messageInput').val(''); // Xóa nội dung nhập
+            //                     loadMessages(conversationId); // Tải lại tin nhắn
+            //                 }
+            //             }
+            //         });
+            //     }
+
+
+            // Lấy và hiển thị tin nhắn
+            // function loadMessages(currentConversationId) {
+
+            //     $.get('admin.chats.getGroupMessages. ' + currentConversationId, function(response) {
+            //         if (response.status === 'success') {
+            //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+            //             response.messages.forEach(function(message) {
+            //                 var messageHtml = `
+
+    });
+
+    // function loadMessages(conversationId) {
+    //     $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+    //         if (response.status === 'success') {
+    //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+
+    //             const messagesHtml = response.messages.map(message => {
+    //                 const messageClass = message.sender.id == userId ? 'sender' : 'received';
+    //                 const time = formatTime(message.created_at);
+    //                 let messageContent = `<p>${message.content}</p>`; // Mặc định là text
+
+    //                 // Kiểm tra nếu tin nhắn có file
+    //                 if (message.meta_data) {
+    //                     try {
+    //                         let fileData = JSON.parse(message.meta_data); // Chuyển JSON thành object
+    //                         if (fileData.type.includes('image')) {
+    //                             messageContent =
+    //                                 `<img src="${fileData.file_path}" alt="Hình ảnh" style="max-width: 200px;">`;
+    //                         } else {
+    //                             messageContent =
+    //                                 `<a href="${fileData.file_path}" target="_blank">📂 ${fileData.original_name}</a>`;
+    //                         }
+    //                     } catch (error) {
+    //                         console.error("Lỗi phân tích meta_data:", error);
+    //                     }
+    //                 }
+
+    //                 return `
+    //                     <div class="message ${messageClass}">
+    //                         <div class="message-avatar">
+    //                             <img src="${message.sender.avatar}" alt="avatar">
+    //                         </div>
+    //                         <div class="message-content">
+    //                             <div class="message-header">
+    //                                 <strong>${message.sender.name}</strong>
+    //                                 <span class="message-time">${time}</span>
+    //                             </div>
+    //                             ${messageContent}
+    //                         </div>
+    //                     </div>`;
+    //             }).join('');
+
+    //             $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
+    //             $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
+    //         } else {
+    //             $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
+    //         }
+    //     });
+    // }
+
+
+    function loadMessages(conversationId) {
+        $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+            if (response.status === 'success') {
+                // Lấy tất cả các tin nhắn
+                $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
+
+                const messagesHtml = response.messages.map(message => {
+                    // Kiểm tra ID người gửi và người nhận
+                    const messageClass = message.sender.id == userId ? 'sender' :
+                        'received'; // Xác định lớp tin nhắn   
+                    const time = formatTime(message.created_at);
+                    return `
+                                                        <div class=" message ${messageClass}">
+                                                            <div class="message-avatar">
+                                                                <img src="${message.sender.avatar}" alt="avatar">
+                                                            </div>
+                                                            <div class="message-content">
+                                                                <div class="message-header">
+                                                                    <strong>${message.sender.name}</strong>
+                                                                    <span class="message-time">${time}</span>
                                                                     </div>
-                                                                ` : ''}
-            </div>
-        `;
-                        }).join(''); // Chuyển mảng thành chuỗi HTML
+                                                                    <p>   
+                                                                        ${message.metaData ? message.metaData : message.content}
+                                                                        </p>
+                                                                 </div>
+                                                            </div>`;
+                }).join(''); // Chuyển mảng thành chuỗi HTML
 
-                        $('#elmLoader').hide();
-                        $('#messagesList').append(messagesHtml);
-                    } else {
-                        $('#elmLoader').show();
-                    }
-                });
+                $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
+                $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
+            } else {
+                $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
             }
-
         });
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+
+        // Sử dụng toLocaleTimeString() để xử lý múi giờ và định dạng theo yêu cầu (giờ và phút)
+        const options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Ho_Chi_Minh', // Chỉnh múi giờ về Việt Nam (hoặc múi giờ khác nếu cần)
+        };
+
+        return date.toLocaleTimeString('vi-VN', options); // Sử dụng 'vi-VN' để định dạng tiếng Việt
+    }
+
+    // function addReaction(event) {
+    //     const reactionContainer = event.target.closest('.message').querySelector('.reaction-container');
+    //     const reaction = document.createElement('div');
+    //     reaction.classList.add('reaction');
+    //     reaction.innerHTML = event.target.innerHTML; // Thêm ký hiệu reaction (❤️ hoặc 👍)
+
+    //     // Vị trí ngẫu nhiên trên tin nhắn
+    //     const xOffset = Math.random() * 20 - 10; // Xê dịch ngẫu nhiên
+    //     const yOffset = Math.random() * 20 - 10;
+
+    //     // Đặt vị trí reaction
+    //     reaction.style.left = `${xOffset}px`;
+    //     reaction.style.top = `${yOffset}px`;
+
+    //         // Thêm reaction vào container
+    //         reactionContainer.appendChild(reaction);
+
+    //         // Sau khi animation kết thúc, xóa reaction
+    //         setTimeout(() => {
+    //             reaction.remove();
+    //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
+    //     }
+
+    //     });
     </script>
 @endpush

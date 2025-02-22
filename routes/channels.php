@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Conversation;
+use App\Models\ConversationUser;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
 
@@ -19,5 +21,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    return true;
+    $conversationUser = ConversationUser::where('conversation_id', $conversationId)
+    ->where('user_id', $user->id)
+    ->first();
+    return $conversationUser ? true : false;
 });
