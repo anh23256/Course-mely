@@ -24,11 +24,13 @@ class UpdateLessonCodingRequest extends BaseFormRequest
     {
         return [
             'title' => 'required|string|max:255',
+            'instruct' => 'nullable|string',
             'content' => 'nullable|string',
             'language' => 'nullable|string',
             'hints' => 'nullable|array',
             'result_code' => 'nullable|string',
             'solution_code' => 'nullable|string',
+            'sample_code' => 'nullable|string'
         ];
     }
 
@@ -38,11 +40,14 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'title.required' => 'Tiêu đề không được để trống',
             'title.string' => 'Tiêu đề phải là chuỗi',
             'title.max' => 'Tiêu đề không được vượt quá 255 ký tự',
+            'instruct.string' => 'Nội dung phải là chuỗi',
+            'instruct.max' => 'Tiêu đề không được vượt quá 255 ký tự',
             'content.string' => 'Nội dung phải là chuỗi',
             'language.string' => 'Ngôn ngữ lập trình phải là chuỗi',
             'hints.array' => 'Gợi ý phải là mảng',
             'result_code.string' => 'Mã kết quả phải là chuỗi',
             'solution_code.string' => 'Mã lý thuyết phải là chuỗi',
+            'sample_code.string' => 'Code mẫu phải là chuỗi'
         ];
     }
 }

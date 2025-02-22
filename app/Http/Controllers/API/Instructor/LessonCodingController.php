@@ -11,6 +11,7 @@ use App\Models\Lesson;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class LessonCodingController extends Controller
@@ -38,8 +39,7 @@ class LessonCodingController extends Controller
 
             $coding = Coding::query()->create([
                 'title' => $data['title'],
-                'language' => $data['language'],
-                'sample_code' => $this->getSampleCode($data['language']),
+                'language' => $data['language']
             ]);
 
             $data['order'] = $chapter->lessons->max('order') + 1;
@@ -52,7 +52,6 @@ class LessonCodingController extends Controller
                 'lessonable_type' => Coding::class,
                 'lessonable_id' => $coding->id,
                 'order' => $data['order'],
-                'content' => $data['content'] ?? '',
                 'is_free_preview' => $data['is_free_preview'] ?? false,
             ]);
 
@@ -60,7 +59,7 @@ class LessonCodingController extends Controller
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
-            return $this->respondInternalError('Có lỗi xảy ra, vui lòng thử lại sau');
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 
@@ -86,17 +85,21 @@ class LessonCodingController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài tập');
             }
 
+            $coding['content'] = $lesson->content;
+
             return $this->respondOk('Thông tin bài tập: ' . $lesson->title, $coding);
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondInternalError('Có lỗi xảy ra, vui lòng thử lại sau');
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 
     public function updateCodingExercise(UpdateLessonCodingRequest $request, string $slug, string $coding)
     {
         try {
+            DB::beginTransaction();
+
             $data = $request->validated();
 
             $lesson = Lesson::query()
@@ -118,19 +121,26 @@ class LessonCodingController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài tập');
             }
 
-            if (isset($data['language']) && $data['language'] !== $coding->language) {
-                $data['sample_code'] = $this->getSampleCode($data['language']);
-            }
-
-            $coding->hints = is_string($coding->hints) ? json_decode($coding->hints, true) : $coding->benefits;
+            $coding->hints = is_string($coding->hints)
+                ? json_decode($coding->hints, true)
+                : $coding->hints;
 
             $coding->update($data);
 
+            if (isset($data['content'])) {
+                $lesson->content = $data['content'];
+                $lesson->save();
+            }
+
+            DB::commit();
+
             return $this->respondOk('Cập nhật bài tập thành công', $coding);
         } catch (\Exception $e) {
+            DB::rollBack();
+
             $this->logError($e, $request->all());
 
-            return $this->respondInternalError('Có lỗi xảy ra, vui lòng thử lại sau');
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 
