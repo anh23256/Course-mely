@@ -13,21 +13,33 @@ use Maatwebsite\Excel\Facades\Excel;
 class TransactionController extends Controller
 {
     use LoggableTrait, FilterTrait;
-    public function index()
+    public function index(Request $request)
     {
         try {
             $title = 'Giao dịch thanh toán';
             $subTitle = 'Giao dịch thanh toán';
 
-            $transactions = Transaction::query()
+            $queryTransactions = Transaction::query()
                 ->with('user')
-                ->latest('id')->paginate(10);
+                ->latest('id');
 
             $countTransactions = Transaction::query()->selectRaw(
                 'count(id) as total_transactions,
-                sum(type = "invoice") as invoice_transactions,
-                sum(type = "withdrawal") as withdrawal_transactions'
+                    sum(type = "invoice") as invoice_transactions,
+                    sum(type = "withdrawal") as withdrawal_transactions'
             )->first();
+
+            if ($request->ajax()) {
+                $queryTransactions = $this->filter($request, $queryTransactions);
+                $queryTransactions = $this->search($request->search_full, $queryTransactions);
+            }
+
+            $transactions = $queryTransactions->paginate(10);
+
+            if ($request->ajax()) {
+                $html = view('transactions.table', compact('transactions'))->render();
+                return response()->json(['html' => $html]);
+            }
 
             return view('transactions.index', compact(['title', 'subTitle', 'transactions', 'countTransactions']));
         } catch (\Exception $e) {
@@ -78,29 +90,6 @@ class TransactionController extends Controller
         }
     }
 
-    public function filterSearch(Request $request)
-    {
-        try {
-            $queryTransactions = Transaction::query()
-                ->with('user')
-                ->latest('id');
-
-            $queryTransactions = $this->filter($request, $queryTransactions);
-
-            $queryTransactions = $this->search($request->search_full, $queryTransactions);
-
-            $transactions = $queryTransactions->paginate(10);
-
-            if ($request->ajax()) {
-                $html = view('transactions.table', compact('transactions'))->render();
-                return response()->json(['html' => $html]);
-            }
-        } catch (\Exception $e) {
-            $this->logError($e, $request->all());
-        }
-    }
-
-
     private function filter($request, $query)
     {
         $filters = [
@@ -132,8 +121,11 @@ class TransactionController extends Controller
     private function search($searchTerm, $query)
     {
         if (!empty($searchTerm)) {
-            $query->whereHas('user', function ($query) use ($searchTerm) {
-                $query->where('name', 'LIKE', "%$searchTerm%");
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('user', function ($query) use ($searchTerm) {
+                    $query->where('name', 'LIKE', "%$searchTerm%")
+                        ->orWhere('email', 'LIKE', "%$searchTerm%");
+                })->orWhere('transaction_code',  'LIKE', "%$searchTerm%");
             });
         }
 

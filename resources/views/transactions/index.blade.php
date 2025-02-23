@@ -270,7 +270,7 @@
 
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.transactions.filterSearch') }}";
+        var routeUrlFilter = "{{ route('admin.transactions.index') }}";
 
         function updateRange() {
             var minValue = $('#amountMinRange').val();

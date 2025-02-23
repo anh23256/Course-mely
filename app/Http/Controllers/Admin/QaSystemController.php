@@ -14,13 +14,26 @@ class QaSystemController extends Controller
 {
     use LoggableTrait, FilterTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         try {
             $title = 'Hệ thống quản lý câu hỏi';
             $subTitle = 'Danh sách hệ thống quản lý câu hỏi';
 
-            $qaSystems = QaSystem::query()->latest('id')->paginate(10);
+            $queryQaSystems = QaSystem::query()->latest('id');
+
+            if ($request->ajax()) {
+                $queryQaSystems = $this->filter($request, $queryQaSystems);
+
+                $queryQaSystems = $this->search($request, $queryQaSystems);
+            }
+
+            $qaSystems = $queryQaSystems->paginate(10);
+
+            if ($request->ajax()) {
+                $html = view('qa-systems.includes.table', compact('qaSystems'))->render();
+                return response()->json(['html' => $html]);
+            }
 
             return view('qa-systems.index', compact([
                 'title',
@@ -132,26 +145,6 @@ class QaSystemController extends Controller
             $this->logError($e);
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại');
-        }
-    }
-
-    public function filterSearch(Request $request)
-    {
-        try {
-            $queryQaSystems = QaSystem::query()->latest('id');
-
-            $queryQaSystems = $this->filter($request, $queryQaSystems);
-
-            $queryQaSystems = $this->search($request, $queryQaSystems);
-
-            $qaSystems = $queryQaSystems->paginate(10);
-
-            if ($request->ajax()) {
-                $html = view('qa-systems.includes.table', compact('qaSystems'))->render();
-                return response()->json(['html' => $html]);
-            }
-        } catch (\Exception $e) {
-            $this->logError($e);
         }
     }
 
