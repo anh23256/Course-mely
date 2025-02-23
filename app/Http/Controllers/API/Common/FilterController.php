@@ -123,22 +123,20 @@ class FilterController extends Controller
         try {
             $query = Course::query();
 
-            if ($request->has('sort_by')) {
-                $sortBy = $request->sort_by;
+            $sortBy = $request->sort_by ?? '';
 
-                switch ($sortBy) {
-                    case 'price_asc':
-                        $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) ASC');
-                        break;
+            switch ($sortBy) {
+                case 'price_asc':
+                    $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) ASC');
+                    break;
 
-                    case 'price_desc':
-                        $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) DESC');
-                        break;
+                case 'price_desc':
+                    $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) DESC');
+                    break;
 
-                    default:
-                        $query->orderByDesc('views');
-                        break;
-                }
+                default:
+                    $query->orderByDesc('views');
+                    break;
             }
 
             $courses = $query->select([
