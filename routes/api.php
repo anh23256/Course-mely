@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/change-password', [UserController::class, 'changePassword']);
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
         Route::get('/my-courses', [UserController::class, 'getUserCourses']);
+        Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
@@ -103,9 +104,12 @@ Route::middleware('auth:sanctum')->group(function () {
             });
     });
 
+
     #============================== ROUTE LERNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
+        Route::get('/{slug}/lesson',[ \App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
 
     #============================== ROUTE WISH LIST =============================
