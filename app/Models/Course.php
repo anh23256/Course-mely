@@ -90,6 +90,11 @@ class Course extends Model
         return $this->belongsToMany(Coupon::class);
     }
 
+    public function courseUsers()
+    {
+        return $this->hasMany(CourseUser::class);
+    }
+
     public function scopeSearch($query, $searchQuery)
     {
         return $query->when($searchQuery, function ($query) use ($searchQuery) {

@@ -77,6 +77,10 @@ class AutoApproveCourseJob implements ShouldQueue
                 $this->course->user->notify(new CourseRejectedNotification($this->course));
 
             } else {
+                if ($this->course->user->notifications()->where('data->course_id', $this->course->id)->exists()) {
+                    return;
+                }
+
                 DB::transaction(function () use ($approval, $course) {
                     $approval->update([
                         'status' => 'approved',

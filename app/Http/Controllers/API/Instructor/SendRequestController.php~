@@ -82,9 +82,7 @@ class SendRequestController extends Controller
                     $manager->notify(new CourseSubmittedNotification($course));
                 }
 
-                AutoApproveCourseJob::dispatch($course)
-                    ->delay(now()->addSeconds(10))
-                    ->afterCommit();
+                AutoApproveCourseJob::dispatch($course)->afterCommit();
 
                 DB::commit();
                 return $this->respondOk('Gửi yêu cầu thành công');

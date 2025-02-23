@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 trait UploadToCloudinaryTrait
@@ -69,15 +70,26 @@ trait UploadToCloudinaryTrait
                 return null;
             }
 
-            $uploadResult = Cloudinary::uploadVideo($file->getRealPath(), [
+            $fileSize = $file->getSize();
+
+            $uploadOptions = [
                 'folder' => $folder ?? 'videos',
                 'public_id' => Str::random(10),
                 'resource_type' => 'video',
                 'eager_async' => true,
-                'timeout' => 600,
-            ]);
+//                'timeout' => 600,
+            ];
+
+            if ($fileSize > 10 * 1048576) {
+                $uploadOptions['chunk_size'] = 10 * 1048576;
+            }
+
+            $uploadResult = Cloudinary::uploadVideo($file->getRealPath(), $uploadOptions);
 
             $secure_url = $uploadResult->getSecurePath() ?? null;
+            if (!$secure_url) {
+                throw new \Exception('Upload video thất bại');
+            }
 
             if ($fullInfo) {
                 $duration = $uploadResult->getDuration() ?? null;

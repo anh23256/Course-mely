@@ -56,6 +56,8 @@ return [
 
     'url' => env('APP_URL', 'http://127.0.0.1:8000'),
 
+    'fe_url' => env('FE_URL', 'http://localhost:3000'),
+
     'asset_url' => env('ASSET_URL', '/'),
 
     /*

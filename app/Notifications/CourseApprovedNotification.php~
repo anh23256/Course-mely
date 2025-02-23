@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Course;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
-class CourseRejectedNotification extends Notification implements ShouldBroadcast, ShouldQueue
+class CourseApprovedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -36,19 +37,18 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
         return ['database', 'broadcast'];
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+
+    public function toDatabase($notifiable)
     {
+        Log::info("Saving notification to the database for user ID: " . $notifiable->id . " | Course ID: " . $this->course->id);
+
         return [
+            'type' => 'register_course',
             'course_id' => $this->course->id,
             'course_name' => $this->course->name,
             'course_slug' => $this->course->slug,
             'course_thumbnail' => $this->course->thumbnail,
-            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
+            'message' => 'Khóa học "' . $this->course->name . '" đã được gửi yêu cầu kiểm duyệt.',
         ];
     }
 
@@ -59,15 +59,12 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
             'course_name' => $this->course->name,
             'course_slug' => $this->course->slug,
             'course_thumbnail' => $this->course->thumbnail,
-            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
+            'message' => 'Khóa học của bạn đã được phê duyệt!',
         ]);
     }
 
-    public function broadcastOn()
-    {
-        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
-        Log::info('Broadcasting on channel: ' . $channel->name);
-        return $channel;
-    }
+//    public function broadcastOn()
+//    {
+//        return ['instructor.' . $this->course->user_id];
+//    }
 }
-

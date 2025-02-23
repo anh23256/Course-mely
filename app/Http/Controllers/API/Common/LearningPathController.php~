@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Http\Controllers\API\Common;
+
+use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\CourseUser;
+use App\Models\Lesson;
+use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LearningPathController extends Controller
+{
+    use LoggableTrait, ApiResponseTrait;
+
+    public function show(Request $request, $slug, $lesson)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập để xem nội dung');
+            }
+
+            $course = Course::query()->where('slug', $slug)->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $userPurchaseCourse = CourseUser::query()
+                ->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if (!$userPurchaseCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            }
+
+            $lesson = $course->lessons()->where('lessons.id', $lesson)
+                ->first();
+
+            if (!$lesson) {
+                return $this->respondNotFound('Bài học không tồn tại');
+            }
+
+            $ahihi = Lesson::query()->where('id', $lesson->id)->first();
+
+            dd($ahihi->chapters());
+
+            $nextLesson = $course->lessons()->where('lessons.id', '>', $lesson->id)
+                ->orderBy('lessons.id', 'asc')
+                ->first();
+
+            $previousLesson = $course->lessons()->where('lessons.id', '<', $lesson->id)
+                ->orderBy('lessons.id', 'desc')
+                ->first();
+
+            return $this->respondOk('Thông tin bài học: ' . $lesson->title, [
+                'lesson' => $lesson,
+                'next_lesson' => $nextLesson,
+                'previous_lesson' => $previousLesson
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+}
