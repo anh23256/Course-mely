@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Common;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Transaction\BuyCourseRequest;
 use App\Http\Requests\API\Transaction\DepositTransactionRequest;
+use App\Mail\UserBuyCourseMail;
 use App\Models\Coupon;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -21,6 +22,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use PhpParser\Node\Stmt\Return_;
 
@@ -230,7 +232,7 @@ class TransactionController extends Controller
                 'type' => 'invoice',
             ]);
 
-            $this->finalBuyCourse($userId, $course, $transaction, $discount, $inputData['vnp_Amount']/100);
+            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $inputData['vnp_Amount']/100);
 
             DB::commit();
 
@@ -321,7 +323,7 @@ class TransactionController extends Controller
                     'enrolled_at' => now(),
                 ]);
 
-                $this->finalBuyCourse($userID, $course, $transaction, $discount);
+                $this->finalBuyCourse($userID, $course, $transaction, $invoice, $discount);
 
                 DB::commit();
 
@@ -350,7 +352,7 @@ class TransactionController extends Controller
         }
     }
 
-    private function finalBuyCourse($userID, $course, $transaction, $discount = null, $finalAmount = null)
+    private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
         if ($discount) {
             $course->coupons()->attach($discount->id);
@@ -383,11 +385,15 @@ class TransactionController extends Controller
             'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: ' . $course->name,
         ]);
 
+        $mailUserBuy = User::query()->where('id', $userID)->pluck('email');
+
         User::whereHas('roles', function($query){
             $query->where('name', 'admin');
         })
         ->each(fn($manager) => $manager->notify(
             new UserBuyCourseNotification(User::find($userID), $course->load('invoices.transaction'))
         ));
+
+        Mail::to($mailUserBuy)->send(new UserBuyCourseMail($invoice));
     }
 }

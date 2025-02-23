@@ -47,10 +47,10 @@ Route::prefix('admin')->as('admin.')->group(function () {
 });
 
 Route::get('email', function () {
-    //    \Illuminate\Support\Facades\Mail::to('thanhlongdevbe@gmail.com')
-    //        ->send(new \App\Mail\Auth\VerifyEmail());
-
     return view('emails.auth.verify');
+});
+Route::get('buyCourse', function () {
+    return view('emails.userBuyCourse');
 });
 Route::get('forgot-password', function () {
     return view('emails.auth.forgot-password');
