@@ -478,11 +478,7 @@ class CourseController extends Controller
 
         $chapters = $course->chapters()->get();
 
-        if ($chapters->count() === 0) {
-            $errors[] = "Khóa học phải có nội dung học tập";
-        } else {
-            $errors = array_merge($errors, $this->validateChapters($chapters));
-        }
+        $errors = array_merge($errors, $this->validateChapters($chapters));
 
         return [
             'status' => empty($errors),

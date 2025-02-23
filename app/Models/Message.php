@@ -31,4 +31,8 @@ class Message extends Model
     {
         return $this->belongsTo(Conversation::class, 'conversation_id');
     }
+    public function media()
+    {
+        return $this->hasMany(Media::class, 'message_id');
+    }
 }
