@@ -302,8 +302,8 @@ Route::prefix('admin')->as('admin.')
             ->group(function () {
                 Route::get('/', [TransactionController::class, 'index'])->name('index');
                 Route::get('export', [TransactionController::class, 'export'])->name('export');
+                Route::get('/filter-search', [TransactionController::class, 'filterSearch'])->name('filterSearch');
                 Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
-
                 Route::get('/check-transaction', [TransactionController::class, 'checkTransaction'])
                     ->name('check-transaction');
             });
