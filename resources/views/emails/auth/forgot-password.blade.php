@@ -15,7 +15,7 @@
                     <!-- Logo -->
                     <tr>
                         <td align="center" style="padding-bottom: 20px;">
-                            <img src="https://res.cloudinary.com/dtu4rvfye/image/upload/v1739627467/logo-container_ld46la.png" alt="CourseMeLy Logo" width="50" height="50">
+                            <img src="https://res.cloudinary.com/dere3na7i/image/upload/c_thumb,w_200,g_face/v1740311680/logo-container_zi19ug.png" alt="CourseMeLy Logo" width="50" height="50">
                             <h1 style="color:#333; margin-top:10px;">CourseMeLy</h1>
                         </td>
                     </tr>
