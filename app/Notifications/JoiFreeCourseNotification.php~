@@ -3,26 +3,28 @@
 namespace App\Notifications;
 
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
-class CourseRejectedNotification extends Notification implements ShouldBroadcast, ShouldQueue
+class JoiFreeCourseNotification extends Notification
 {
     use Queueable;
 
     protected $course;
+    protected $student;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Course $course)
+    public function __construct(User $student, Course $course)
     {
+        $this->student = $student;
         $this->course = $course;
     }
 
@@ -36,31 +38,28 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
         return ['database', 'broadcast'];
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    public function toDatabase($notifiable)
     {
         return [
+            'message' => 'Học viên ' . $this->student->name . ' đã tham gia khóa học miễn phí: ' . $this->course->name,
+            'student_id' => $this->student->id,
+            'student_name' => $this->student->name,
             'course_id' => $this->course->id,
             'course_name' => $this->course->name,
-            'course_slug' => $this->course->slug,
-            'course_thumbnail' => $this->course->thumbnail,
-            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
         ];
     }
 
     public function toBroadcast($notifiable)
     {
         return new BroadcastMessage([
+            'message' => 'Học viên ' . $this->student->name . ' đã tham gia khóa học miễn phí: ' . $this->course->name,
+            'student_id' => $this->student->id,
+            'student_name' => $this->student->name,
             'course_id' => $this->course->id,
             'course_name' => $this->course->name,
-            'course_slug' => $this->course->slug,
-            'course_thumbnail' => $this->course->thumbnail,
-            'message' => 'Khóa học "' . $this->course->name . '" bị từ chối do không đủ điều kiện!',
         ]);
+
+        Log::info('Broadcasting data: ' . json_encode($data));
     }
 
     public function broadcastOn()
@@ -70,4 +69,3 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
         return $channel;
     }
 }
-

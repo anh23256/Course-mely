@@ -105,7 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LERNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
-        Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
     });
 
     #============================== ROUTE WISH LIST =============================

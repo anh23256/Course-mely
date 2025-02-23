@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\User\ChangePasswordRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
+use App\Models\Course;
 use App\Models\Profile;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -42,6 +43,7 @@ class UserController extends Controller
     {
         try {
             DB::beginTransaction();
+
             $user = Auth::user();
 
             if ($request->hasFile('avatar')) {
@@ -85,7 +87,7 @@ class UserController extends Controller
                 foreach ($request->careers as $careerData) {
                     if (!empty($careerData['id'])) {
                         $career = Career::query()->where('id', $careerData['id'])->first();
-    
+
                         if (!$career) {
                             $career->update(
                                 [
@@ -216,6 +218,44 @@ class UserController extends Controller
     public function getMyCourseBought(Request $request)
     {
         try {
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+
+    public function getUserCourses(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn chưa đăng nhập');
+            }
+
+            $courses = Course::query()
+                ->whereHas('courseUsers', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->with([
+                    'courseUsers',
+                    'category',
+                    'user',
+                    'chapters' => function ($query) {
+                        $query->withCount('lessons');
+                    },
+                ])
+                ->withCount([
+                    'chapters',
+                    'lessons'
+                ])->get();
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, $courses);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 

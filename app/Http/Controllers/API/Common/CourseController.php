@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -177,6 +178,20 @@ class CourseController
             if (!$course) {
                 return $this->respondNotFound('Không có dữ liệu');
             }
+
+            $course->benefits = is_string($course->benefits) ? json_decode($course->benefits, true) : $course->benefits;
+            $course->requirements = is_string($course->requirements) ? json_decode($course->requirements, true) : $course->requirements;
+            $course->qa = is_string($course->qa) ? json_decode($course->qa, true) : $course->qa;
+
+            $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                return $chapter->lessons->where('lessonable_type', Video::class);
+            });
+
+            $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                return $lesson->lessonable->duration ?? 0;
+            });
+
+            $course->total_video_duration = $totalVideoDuration;
 
 //            $user = auth('sanctum')->user();
 //            $isCourseOwner = $user && $user->id === $course->user_id;

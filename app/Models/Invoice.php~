@@ -15,8 +15,8 @@ class Invoice extends Model
         'code',
         'coupon_code',
         'coupon_discount',
-        'amount',
-        'final_amount',
+        'total',
+        'final_total',
         'status'
     ];
 

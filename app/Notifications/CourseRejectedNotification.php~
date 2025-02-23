@@ -3,14 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\Course;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 
 class CourseRejectedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -54,7 +52,7 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
 
     public function toBroadcast($notifiable)
     {
-        return new BroadcastMessage([
+        return newBroadcastMessage([
             'course_id' => $this->course->id,
             'course_name' => $this->course->name,
             'course_slug' => $this->course->slug,
@@ -63,11 +61,9 @@ class CourseRejectedNotification extends Notification implements ShouldBroadcast
         ]);
     }
 
-    public function broadcastOn()
-    {
-        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
-        Log::info('Broadcasting on channel: ' . $channel->name);
-        return $channel;
-    }
+//    public function broadcastOn()
+//    {
+//        return ['instructor.' . $this->course->user_id];
+//    }
 }
 
