@@ -19,8 +19,7 @@ class TransactionSeeder extends Seeder
     {
         $users = User::query()->pluck('id')->all();
         $withdrawals = WithdrawalRequest::query()->pluck('id')->all();
-        $course = Course::query()->where('status', 'approved')
-            ->where('accepted', '!=', Null)->pluck('id')->all();
+        $course = Course::query()->where('status', 'approved')->pluck('id')->all();
 
         for ($i = 1; $i <= 100; $i++) {
             $type = fake()->randomElement(['invoice', 'withdrawal']);
