@@ -7,6 +7,7 @@ use App\Http\Requests\API\User\ChangePasswordRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
 use App\Models\Course;
+use App\Models\CourseUser;
 use App\Models\Profile;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -258,6 +259,36 @@ class UserController extends Controller
             return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, $courses);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+
+    public function getCourseProgress($slug)
+    {
+        try {
+            $user = Auth::user();
+
+            $course = Course::query()->where('slug', $slug)->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $courseProgress = CourseUser::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->select('progress_percent')
+                ->first();
+
+            if (!$courseProgress) {
+                return $this->respondNotFound('Học viên chưa đăng ký khóa học này');
+            }
+
+            return $this->respondOk('Tiến độ khóa học ' .
+                $course->name . ' của người dùng: ' .
+                $user->name, $courseProgress);
+        } catch (\Exception $e) {
+            $this->logError($e);
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
