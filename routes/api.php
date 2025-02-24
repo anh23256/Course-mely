@@ -18,6 +18,7 @@ use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
 use App\Http\Controllers\API\Instructor\PostController;
 use App\Http\Controllers\API\Instructor\RegisterController;
+use App\Http\Controllers\API\Instructor\RevenueController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
 use App\Http\Controllers\API\Student\NoteController;
@@ -142,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('roleHasInstructor')
         ->as('instructor.')
         ->group(function () {
+            Route::get('/revenue/students', [RevenueController::class, 'getTotalRevenueWithStudents']);
             Route::prefix('statistics')
                 ->group(function () {});
 
