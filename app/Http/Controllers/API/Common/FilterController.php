@@ -29,13 +29,15 @@ class FilterController extends Controller
             }
 
             if ($request->has('rating') && !empty($request->rating) && !is_array($request->rating)) {
-                $query->whereExists(function ($query) use ($request) {
-                    $query->select(DB::raw(1))
-                        ->from('ratings')
-                        ->whereRaw('ratings.course_id = courses.id')
-                        ->groupBy('ratings.course_id')
-                        ->havingRaw('AVG(ratings.rate) >= ?', [$request->rating]);
-                });
+                if ($request->rating > 0 && $request->rating <= 5) {
+                    $query->whereExists(function ($query) use ($request) {
+                        $query->select(DB::raw(1))
+                            ->from('ratings')
+                            ->whereRaw('ratings.course_id = courses.id')
+                            ->groupBy('ratings.course_id')
+                            ->havingRaw('AVG(ratings.rate) >= ?', [$request->rating]);
+                    });
+                }
             }
 
             if ($request->has('instructors') && !empty($request->instructors) && is_array($request->instructors)) {
@@ -53,24 +55,6 @@ class FilterController extends Controller
 
             if ($request->has('is_free') && $request->is_free !== null) {
                 $query->where('is_free', $request->is_free);
-            }
-
-            if ($request->has('video_duration') && !empty($request->video_duration) && is_array($request->video_duration)) {
-                $query->whereExists(function ($q) use ($request) {
-                    $q->select(DB::raw(1))
-                        ->from('lessons')
-                        ->join('videos', function ($join) {
-                            $join->on('lessons.lessonable_id', '=', 'videos.id')
-                                ->where('lessons.lessonable_type', Video::class);
-                        })
-                        ->whereRaw('lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)')
-                        ->havingRaw(
-                            collect($request->video_duration)->map(function ($range) {
-                                return '(SUM(videos.duration) BETWEEN ? AND ?)';
-                            })->implode(' OR '),
-                            collect($request->video_duration)->flatten()->toArray()
-                        );
-                });
             }
 
             if ($request->has('features') && !empty($request->features) && is_array($request->features)) {
@@ -95,15 +79,12 @@ class FilterController extends Controller
                     'courses.price',
                     'courses.price_sale',
                     'courses.is_free',
+                    'courses.level',
                     'courses.total_student',
-                    DB::raw('(SELECT CAST(AVG(ratings.rate) AS UNSIGNED) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
-                    DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons'),
-                    DB::raw('(SELECT CAST(SUM(videos.duration) AS UNSIGNED) FROM videos 
-                          JOIN lessons ON lessons.lessonable_id = videos.id
-                          WHERE lessons.lessonable_type = "App\\\Models\\\Video" 
-                          AND lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_duration')
+                    DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
+                    DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
                 ])
-                ->whereIn('courses.id', $courseIds)->with('user:id,name')
+                ->whereIn('courses.id', $courseIds)->with('user:id,name')->latest('id')
                 ->get();
 
             if ($courses->isEmpty()) {
@@ -150,12 +131,8 @@ class FilterController extends Controller
                 'courses.price_sale',
                 'courses.is_free',
                 'courses.total_student',
-                DB::raw('(SELECT CAST(AVG(ratings.rate) AS UNSIGNED) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
-                DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons'),
-                DB::raw('(SELECT CAST(SUM(videos.duration) AS UNSIGNED) FROM videos 
-                          JOIN lessons ON lessons.lessonable_id = videos.id
-                          WHERE lessons.lessonable_type = "App\\\Models\\\Video" 
-                          AND lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_duration')
+                DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
+                DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
             ])->get();
 
             if ($courses->isEmpty()) {

@@ -27,8 +27,8 @@ class InvoiceSeeder extends Seeder
             Invoice::insert([
                 'user_id' => fake()->randomElement($users),
                 'course_id' => fake()->randomElement($courses),
-                'total' => fake()->randomFloat(2, 10000, 10000000),
-                'final_total' => fake()->randomFloat(2, 10000, 10000000),
+                'amount' => fake()->randomFloat(2, 10000, 10000000),
+                'final_amount' => fake()->randomFloat(2, 10000, 10000000),
                 'status' => fake()->randomElement(['completed', 'pending', 'failed']),
                 'created_at' => $created_at,
                 'updated_at' => fake()->dateTimeBetween($created_at, now(), env('APP_TIMEZONE'))
