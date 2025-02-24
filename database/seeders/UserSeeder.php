@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 1; $i <= 1000; $i++) {
+        for ($i = 1; $i <= 100; $i++) {
             $user = User::create([
                 'code' => str_replace('-', '', Str::uuid()),
                 'name' => fake()->name(),
@@ -38,9 +38,9 @@ class UserSeeder extends Seeder
             }
         }
 
-        $permissions = ['member', 'instructor', 'employee', 'super_admin'];
+        $permissions = ['member', 'instructor', 'employee', 'admin'];
         foreach ($permissions as $permission) {
-            $email = $permission == 'super_admin' ? 'superadmin' : $permission;
+            $email = $permission == 'admin' ? 'admin' : $permission;
             $user = User::create([
                 'code' => str_replace('-', '', Str::uuid()),
                 'name' => Str::ucfirst($permission),

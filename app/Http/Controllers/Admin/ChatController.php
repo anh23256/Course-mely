@@ -24,7 +24,7 @@ use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
 {
-    use LoggableTrait,UploadToCloudinaryTrait;
+    use LoggableTrait, UploadToCloudinaryTrait;
     const FOLDER = "messages";
     public function index()
     {
@@ -40,22 +40,33 @@ class ChatController extends Controller
     {
         try {
             $validated = $request->validated();
-
+            if (!isset($request->members) || !is_array($request->members) || count($request->members) < 2) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Nhóm phải có ít nhất 3 thành viên (bao gồm người tạo nhóm).'
+                ], 400);
+            }
             // Tạo nhóm chat
             $conversation = Conversation::create([
                 'name' => $validated['name'],
+                'owner_id' => auth()->id(),
                 'type' => $validated['type'],
                 'status' => '1',
                 'conversationable_id' => null,
                 'conversationable_type' => null,
             ]);
+            $conversation->users()->attach(auth()->id());
 
-            // Thêm các thành viên vào nhóm chat
-            foreach ($request->members as $member_id) {
-                // Kiểm tra xem member có tồn tại không, nếu có thì attach vào nhóm
-                $user = User::find($member_id);
-                if ($user) {
-                    $conversation->users()->attach($member_id);
+            if ($request->has('members') && is_array($request->members)) {
+                foreach ($request->members as $member_id) {
+                    if ($member_id == auth()->id()) {
+                        continue; // Bỏ qua owner
+                    }
+            
+                    $user = User::find($member_id);
+                    if ($user) {
+                        $conversation->users()->attach($member_id);
+                    }
                 }
             }
             $data = $this->getAdminsAndChannels();
@@ -103,13 +114,13 @@ class ChatController extends Controller
 
         return response()->json(['status' => 'success', 'message' => $message]);
     }
-    
+
     protected function getAdminsAndChannels()
     {
         $roleUser = 'admin';
         $admins = User::whereHas('roles', function ($query) use ($roleUser) {
             $query->where('name', $roleUser);
-        })->get();
+        })->where('id', '!=', auth()->id())->get();
 
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không

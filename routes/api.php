@@ -18,7 +18,9 @@ use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
 use App\Http\Controllers\API\Instructor\PostController;
 use App\Http\Controllers\API\Instructor\RegisterController;
+use App\Http\Controllers\API\Instructor\RevenueController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
+use App\Http\Controllers\API\Instructor\StatisticController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
@@ -100,6 +102,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
         Route::get('/my-courses', [UserController::class, 'getUserCourses']);
         Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
+        Route::get('/orders', [UserController::class, 'getOrdersBought']);
+        Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
@@ -112,7 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LERNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
-        Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
+        Route::get('/{slug}/lesson',[ \App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
@@ -145,6 +149,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
             Route::prefix('statistics')
                 ->group(function () {
+                    Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
                 });
 
             Route::prefix('manage')
