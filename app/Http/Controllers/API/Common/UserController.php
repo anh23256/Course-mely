@@ -294,6 +294,7 @@ class UserController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
+
     public function getOrdersBought()
     {
         try {
