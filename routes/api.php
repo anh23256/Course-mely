@@ -102,6 +102,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
         Route::get('/my-courses', [UserController::class, 'getUserCourses']);
         Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
+        Route::get('/orders', [UserController::class, 'getOrdersBought']);
+        Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
