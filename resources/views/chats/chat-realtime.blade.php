@@ -775,7 +775,6 @@
                 let parentId = $('#parentMessageId').val();
                 let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
                 let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-
                  if (currentConversationId && content) { 
                     // Gửi tin nhắn vào nhóm hiện tại
                     $.ajax({
@@ -984,5 +983,13 @@
     //     }
 
     //     });
+    </script>
+    <script>
+        @if(session('success'))
+            toastr.success("{{ session('success') }}");
+        @endif
+        @if(session('error'))
+            toastr.error("{{ session('error') }}");
+        @endif
     </script>
 @endpush

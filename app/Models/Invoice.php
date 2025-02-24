@@ -26,7 +26,7 @@ class Invoice extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class)->with('instructor');;
     }
 
     public function user()

@@ -103,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
         Route::get('/my-courses', [UserController::class, 'getUserCourses']);
         Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
+        Route::get('/orders', [UserController::class, 'getOrdersBought']);
+        Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
         #============================== ROUTE Certificate =============================
         Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
@@ -141,7 +143,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     #============================== ROUTE INSTRUCTOR MANAGE =============================
     Route::prefix('instructor')
@@ -220,6 +223,13 @@ Route::middleware('auth:sanctum')->group(function () {
                         });
                 });
 
+            #============================== ROUTE TRANSACTION =============================
+            Route::prefix('transactions')
+                ->group(function () {
+                    Route::get('/participated-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getParticipatedCourses']);
+                    Route::get('/enrolled-free-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getCourseEnrollFree']);
+                });
+
             #============================== ROUTE POST =============================
             Route::prefix('posts')->as('posts.')->group(function () {
                 Route::get('/', [PostController::class, 'index']);
@@ -238,7 +248,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     #============================== ROUTE COUPON =============================
-    Route::prefix('coupons')->as('coupons.')->group(function () {});
+    Route::prefix('coupons')->as('coupons.')->group(function () {
+    });
 
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {
@@ -250,7 +261,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE CHAT =============================
     Route::prefix('chats')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     #============================== ROUTE COMMENT =============================
     Route::prefix('comments')

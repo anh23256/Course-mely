@@ -231,7 +231,7 @@ class TransactionController extends Controller
     {
         try {
             $vnp_HashSecret = config('vnpay.hash_secret');
-            $frontendUrl = config('app.fe_url') . "payment";
+            $frontendUrl = config('app.fe_url') . "/payment";
 
             $inputData = $request->all();
             if (!isset($inputData['vnp_SecureHash'])) {
@@ -274,11 +274,11 @@ class TransactionController extends Controller
             $course = Course::find($courseId);
 
             if (!$user) {
-                return redirect()->away($frontendUrl . "not-found");
+                return redirect()->away($frontendUrl . "/not-found");
             }
 
             if (!$course) {
-                return redirect()->away($frontendUrl . "not-found");
+                return redirect()->away($frontendUrl . "/not-found");
             }
 
             $originalAmount = $inputData['vnp_Amount'] / 100;
@@ -308,6 +308,7 @@ class TransactionController extends Controller
                 'coupon_discount' => $discountAmount,
                 'final_amount' => $finalAmount,
                 'status' => 'Đã thanh toán',
+                'code' => Str::random(10),
             ]);
 
             $courseUser = CourseUser::create([
@@ -326,7 +327,7 @@ class TransactionController extends Controller
                 'type' => 'invoice',
             ]);
 
-            $this->finalBuyCourse($userId, $course, $transaction, $invoice,$discount,$finalAmount);
+            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
 
             DB::commit();
 
@@ -503,7 +504,7 @@ class TransactionController extends Controller
         $student = User::find($userID);
 
         Mail::to($student->email)->send(
-            new StudentCoursePurchaseMail($student, $course, $transaction,$invoice)
+            new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
         );
     }
 }

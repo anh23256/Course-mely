@@ -8,6 +8,7 @@ use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\Invoice;
 use App\Models\Profile;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -290,6 +291,50 @@ class UserController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+
+    public function getOrdersBought()
+    {
+        try {
+            $user = Auth::user();
+            
+            $orders = Invoice::where('user_id', $user->id)
+                ->with('course:id,name')
+                ->select('id', 'course_id', 'created_at',
+                DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->get();
+
+            return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+    public function showOrdersBought($id)
+    {
+        try {
+            $user = Auth::user();
+            
+            $order = Invoice::where('id', $id)
+                ->with([
+                    'course' => function ($query) {
+                        $query->select('id', 'name', 'user_id')->with('instructor:id,name'); // Đổi instructor_id thành user_id
+                    }
+                    ])
+                ->where('user_id', $user->id)
+                ->select('id','course_id', 'code', 'coupon_code', 'coupon_discount', 'amount','created_at', 
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->first();
+
+            if (!$order) {
+                return $this->respondNotFound('Đơn hàng không tồn tại hoặc không thuộc về người dùng.');
+            }
+            $courseName = $order->course ? $order->course->name : 'Không xác định';
+            return $this->respondOk('Chi tiết đơn hàng ' . $courseName . ' của người dùng: ' . $user->name, $order);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
