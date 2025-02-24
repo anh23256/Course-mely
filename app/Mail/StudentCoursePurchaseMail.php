@@ -16,15 +16,17 @@ class StudentCoursePurchaseMail extends Mailable implements ShouldQueue
     private $student;
     private $course;
     private $transaction;
+    private $invoice;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($student, $course, $transaction)
+    public function __construct($student, $course, $transaction, $invoice)
     {
         $this->student = $student;
         $this->course = $course;
         $this->transaction = $transaction;
+        $this->invoice = $invoice;
     }
 
     public function build()
@@ -35,6 +37,7 @@ class StudentCoursePurchaseMail extends Mailable implements ShouldQueue
                 'student' => $this->student,
                 'course' => $this->course,
                 'transaction' => $this->transaction,
+                'invoice' => $this->invoice
             ]);
     }
 }

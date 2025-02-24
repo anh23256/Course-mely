@@ -68,7 +68,7 @@ class RegisterController extends Controller
 
             DB::commit();
 
-            return $this->respondCreated('Gửi yêu cầu đăng ký thành công', $user);
+            return $this->respondCreated('Gửi yêu cầu đăng ký thành công', $user->load('profile'));
         } catch (\Exception $e) {
             DB::rollBack();
 

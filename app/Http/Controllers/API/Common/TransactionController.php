@@ -260,7 +260,7 @@ class TransactionController extends Controller
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            $orderInfo = explode('-Thanh-toan-khoa-hoc-', $inputData['vnp_OrderInfo']);
+            $orderInfo = explode('-', str_replace('-Thanh-toan-khoa-hoc-', '-', $inputData['vnp_OrderInfo']));
 
             if (count($orderInfo) < 2) {
                 return redirect()->away($frontendUrl . "?status=error");
@@ -274,11 +274,11 @@ class TransactionController extends Controller
             $course = Course::find($courseId);
 
             if (!$user) {
-                return redirect()->away($frontendUrl . "not-found");
+                return redirect()->away($frontendUrl . "/not-found");
             }
 
             if (!$course) {
-                return redirect()->away($frontendUrl . "not-found");
+                return redirect()->away($frontendUrl . "/not-found");
             }
 
             $originalAmount = $inputData['vnp_Amount'] / 100;
@@ -308,6 +308,7 @@ class TransactionController extends Controller
                 'coupon_discount' => $discountAmount,
                 'final_amount' => $finalAmount,
                 'status' => 'Đã thanh toán',
+                'code' => Str::random(10),
             ]);
 
             $courseUser = CourseUser::create([
@@ -315,7 +316,6 @@ class TransactionController extends Controller
                 'course_id' => $courseId,
                 'enrolled_at' => now(),
             ]);
-
 
             $transaction = Transaction::create([
                 'transaction_code' => $inputData['vnp_TxnRef'],
@@ -327,7 +327,7 @@ class TransactionController extends Controller
                 'type' => 'invoice',
             ]);
 
-            $this->finalBuyCourse($userId, $course, $transaction, $discount, $inputData['vnp_Amount'] / 100);
+            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
 
             DB::commit();
 
@@ -397,8 +397,8 @@ class TransactionController extends Controller
                     'code' => 'HD' . strtoupper(Str::random(8)),
                     'coupon_code' => $validated['coupon_code'] ?? null,
                     'coupon_discount' => $discountAmount > 0 ? $discountAmount : null,
-                    'total' => $validated['amount'],
-                    'final_total' => $finalAmount,
+                    'amount' => $validated['amount'],
+                    'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
                 ]);
 
@@ -418,7 +418,7 @@ class TransactionController extends Controller
                     'enrolled_at' => now(),
                 ]);
 
-                $this->finalBuyCourse($userID, $course, $transaction, $discount);
+                $this->finalBuyCourse($userID, $course, $transaction, $invoice, $discount);
 
                 DB::commit();
 
@@ -431,7 +431,6 @@ class TransactionController extends Controller
                     return $this->respondOk('Chưa có bank');
                 } else {
                     $modifiedRequest = $request->merge([
-                        'amount' => $finalAmount,
                         'course_id' => $course->id
                     ]);
 
@@ -447,7 +446,7 @@ class TransactionController extends Controller
         }
     }
 
-    private function finalBuyCourse($userID, $course, $transaction, $discount = null, $finalAmount = null)
+    private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
         if ($discount) {
             $course->coupons()->attach($discount->id);
@@ -505,9 +504,7 @@ class TransactionController extends Controller
         $student = User::find($userID);
 
         Mail::to($student->email)->send(
-            new StudentCoursePurchaseMail($student, $course, $transaction)
+            new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
         );
-
     }
-
 }

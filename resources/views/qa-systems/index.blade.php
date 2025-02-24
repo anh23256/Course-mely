@@ -230,7 +230,7 @@
 
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.qa-systems.filter-search') }}";
+        var routeUrlFilter = "{{ route('admin.qa-systems.index') }}";
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>

@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\CommentController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
+use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\SearchController;
 use App\Http\Controllers\API\Common\TransactionController;
@@ -51,7 +52,6 @@ Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 
 Route::get('/reset-password/{token}', function ($token) {
     return view('emails.auth.reset-password', ['token' => $token]);
-
 })->middleware('guest')->name('password.reset');
 #============================== ROUTE SEARCH =============================
 Route::prefix('search')
@@ -59,6 +59,11 @@ Route::prefix('search')
         Route::get('/', [SearchController::class, 'search']);
     });
 
+Route::prefix('filters')
+    ->group(function () {
+        Route::get('/', [FilterController::class, 'filter']);
+        Route::get('/filter-orderby', [FilterController::class, 'filterOrderBy']);
+    });
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
@@ -107,7 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LERNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
-        Route::get('/{slug}/lesson',[ \App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
+        Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
@@ -209,6 +214,13 @@ Route::middleware('auth:sanctum')->group(function () {
                         });
                 });
 
+            #============================== ROUTE TRANSACTION =============================
+            Route::prefix('transactions')
+                ->group(function () {
+                    Route::get('/participated-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getParticipatedCourses']);
+                    Route::get('/enrolled-free-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getCourseEnrollFree']);
+                });
+
             #============================== ROUTE POST =============================
             Route::prefix('posts')->as('posts.')->group(function () {
                 Route::get('/', [PostController::class, 'index']);
@@ -269,7 +281,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('posts')->as('posts.')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
-
     });
 });
 

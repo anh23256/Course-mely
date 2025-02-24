@@ -20,9 +20,9 @@
                         <td>{{ $loop->index + 1 }}</td>
                         <td>{{ $transaction->transaction_code ?? 'Không có thông tin' }}</td>
                         <td><span
-                                class="text-primary fw-bold">{{ $transaction->invoice->user->name ?? 'Không có thông tin'}}</span>
+                                class="text-primary fw-bold">{{ $transaction->user->name ?? 'Không có thông tin'}}</span>
                         </td>
-                        <td>{{ $transaction->invoice->user->email ?? 'Không có thông tin' }}</td>
+                        <td>{{ $transaction->user->email ?? 'Không có thông tin' }}</td>
                         <td>{{ number_format($transaction->amount) ?? 0 }} VND</td>
                         <td>
                             @if ($transaction->type === 'invoice')
@@ -35,18 +35,18 @@
                                 </span>
                             @endif
                         </td>
-                        <td>
+                        <td class="col-1">
                             @if ($transaction->status === 'Giao dịch thành công')
-                                <span class="badge bg-success w-75">
-                                    Hoàn thành
+                                <span class="badge bg-success w-100">
+                                    {{ $transaction->status }}
                                 </span>
                             @elseif($transaction->status === 'Chờ xử lý')
-                                <span class="badge bg-warning w-75">
-                                    Đang xử lý
+                                <span class="badge bg-warning w-100">
+                                    {{ $transaction->status }}
                                 </span>
                             @else
-                                <span class="badge bg-danger w-75">
-                                    Thất bại
+                                <span class="badge bg-danger w-100">
+                                    {{ $transaction->status }}
                                 </span>
                             @endif
                         </td>
@@ -54,7 +54,7 @@
                         </td>
                         <td>
                             <a
-                                href="{{ route('admin.transactions.show', $transaction->transaction_code) }}">
+                                href="{{ route('admin.transactions.show', $transaction->id) }}">
                                 <button class="btn btn-sm btn-info edit-item-btn">
                                     <span class="ri-eye-line"></span>
                                 </button>
