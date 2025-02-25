@@ -23,28 +23,49 @@ class StatisticController extends Controller
         try {
             $user = Auth::user();
 
-
             if (!$user || !$user->hasRole('instructor')) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
-            $data = [];
+            $selectFilter = $request->input('selectFilter', 'today'); // Default to 'today'
 
-            $yearNow = now()->year();
+            // Determine the date range based on the selected filter
+            $startDate = now()->startOfDay(); // Default start date
+            $endDate = now()->endOfDay();     // Default end date
 
-            $year = $request->input('year', $yearNow);
+            switch ($selectFilter) {
+                case 'yesterday':
+                    $startDate = now()->subDay()->startOfDay();
+                    $endDate = now()->subDay()->endOfDay();
+                    break;
 
-            if (!$user) {
-                return $this->respondUnauthorized('Bạn không có quyền truy cập, vui lòng đăng nhập và thử lại');
+                case 'this_week':
+                    $startDate = now()->startOfWeek();
+                    $endDate = now()->endOfWeek();
+                    break;
+
+                case 'this_month':
+                    $startDate = now()->startOfMonth();
+                    $endDate = now()->endOfMonth();
+                    break;
+
+                case 'this_year':
+                    $startDate = now()->startOfYear();
+                    $endDate = now()->endOfYear();
+                    break;
+
+                case 'today':
+                default:
+                    // Defaults to today's range
+                    $startDate = now()->startOfDay();
+                    $endDate = now()->endOfDay();
             }
 
-            if ($year > $yearNow) $year = $yearNow;
-            if ($year < $user->created_at) $year = $user->created_at;
-
+            // Fetch total revenue
             $totalRevenue = Invoice::query()
                 ->select(
                     DB::raw('MONTH(created_at) as month'),
-                    DB::raw('SUM(final_amount) as total_revenue'),
+                    DB::raw('SUM(final_amount) as total_revenue')
                 )
                 ->where('status', 'Đã thanh toán')
                 ->whereExists(function ($query) use ($user) {
@@ -53,9 +74,12 @@ class StatisticController extends Controller
                         ->whereRaw('courses.id = invoices.course_id')
                         ->where('courses.user_id', $user->id);
                 })
+                ->whereBetween('created_at', [$startDate, $endDate]) // Filter data by date range
                 ->groupBy(DB::raw('MONTH(created_at)'))
-                ->orderBy('month')->whereYear('created_at', $year)->get();
+                ->orderBy('month')
+                ->get();
 
+            // Fetch users who bought courses
             $userBuyCourse = Invoice::query()
                 ->select('user_id', 'course_id')
                 ->where('status', 'Đã thanh toán')
@@ -66,9 +90,10 @@ class StatisticController extends Controller
                         ->where('courses.user_id', $user->id);
                 })
                 ->with(['user:id,name,avatar', 'course:id,name,slug'])
-                ->whereYear('created_at', $year)
+                ->whereBetween('created_at', [$startDate, $endDate]) // Filter data by date range
                 ->get();
 
+            // Fetch top courses
             $topCourse = Invoice::query()
                 ->select(
                     'course_id',
@@ -83,19 +108,20 @@ class StatisticController extends Controller
                         ->where('courses.user_id', $user->id);
                 })
                 ->with(['course:id,name,slug'])
-                ->whereYear('created_at', $year)
+                ->whereBetween('created_at', [$startDate, $endDate]) // Filter data by date range
                 ->groupBy(DB::raw('MONTH(created_at)'), 'course_id')
                 ->orderBy(DB::raw('MONTH(created_at)'))
                 ->get();
 
-            $data['total_revenue'] = $totalRevenue;
-            $data['user_buy_course'] = $userBuyCourse;
-            $data['topCourse'] = $topCourse;
+            $data = [
+                'total_revenue' => $totalRevenue,
+                'user_buy_course' => $userBuyCourse,
+                'topCourse' => $topCourse,
+            ];
 
             return $this->respondOk('Doanh thu và học viên mua khóa học của giảng viên ' . $user->name, $data);
         } catch (\Exception $e) {
             $this->logError($e);
-
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }

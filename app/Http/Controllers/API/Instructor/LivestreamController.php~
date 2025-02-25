@@ -63,7 +63,7 @@ class LivestreamController extends Controller
                         $query->select('user_id', 'live_session_id', 'role');
                     },
                     'conversation.users' => function ($query) {
-                        $query->select('conversation_id', 'user_id', 'is_blocked');
+                        $query->select('conversation_id', 'user_id', 'blocked'); 
                     },
                 ])
                 ->where(function ($query) {

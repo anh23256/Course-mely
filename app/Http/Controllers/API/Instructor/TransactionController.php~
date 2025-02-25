@@ -10,14 +10,13 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
 
-    public function getParticipatedCourses(Request $request)
+    public function getParticipatedCourses()
     {
         try {
             $user = Auth::user();
@@ -27,33 +26,22 @@ class TransactionController extends Controller
             }
 
             $courses = Course::query()
-                ->where('user_id', $user->id)->pluck('id')->toArray();
+                ->where('user_id', $user->id)->pluck('id')
+                ->toArray();
 
             if (empty($courses)) {
                 return $this->respondNotFound('Không tìm thấy khoá học');
             }
 
-            $query = Transaction::where('transactionable_type', Invoice::class)
+            $paidTransactions = Transaction::where('transactionable_type', Invoice::class)
                 ->where('amount', '>', 0)
-                ->whereIn('transactionable_id', function ($q) use ($courses) {
-                    $q->select('id')
+                ->whereIn('transactionable_id', function ($query) use ($courses) {
+                    $query->select('id')
                         ->from('invoices')
                         ->whereIn('course_id', $courses);
                 })
-                ->with(['user', 'transactionable.course']);
-
-            if ($request->has('fromDate')) {
-                $query->whereDate('created_at', '>=', $request->input('fromDate'));
-            }
-            if ($request->has('toDate')) {
-                $query->whereDate('created_at', '<=', $request->input('toDate'));
-            }
-
-            $paidTransactions = $query->get();
-
-            if ($paidTransactions->isEmpty()) {
-                return $this->respondNotFound('Không tìm thấy giao dịch');
-            }
+                ->with(['user', 'transactionable.course'])
+                ->get();
 
             $result = $paidTransactions->map(function ($transaction) {
                 $invoice = $transaction->transactionable;
@@ -61,7 +49,7 @@ class TransactionController extends Controller
                 return [
                     'course_thumbnail' => optional($invoice->course)->thumbnail,
                     'course_name' => optional($invoice->course)->name,
-                    'student_name' => $transaction->user->name ?? 'N/A',
+                    'student_name' => $transaction->user->name,
                     'amount_paid' => $transaction->amount,
                     'invoice_code' => $invoice->code,
                     'invoice_created_at' => $invoice->created_at,

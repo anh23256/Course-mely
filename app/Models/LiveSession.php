@@ -19,4 +19,20 @@ class LiveSession extends Model
         'start_time',
         'end_time',
     ];
+
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function conversation()
+    {
+        return $this->morphOne(Conversation::class, 'conversationable');
+    }
+
+    public function participants()
+    {
+        return $this->hasMany(LiveSessionParticipant::class);
+    }
+
 }

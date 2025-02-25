@@ -41,11 +41,11 @@ return [
             'provider' => 'users',
         ],
 
-        'api' => [
-            'driver' => 'sanctum',
-            'provider' => 'users',
-            'hash' => false,
-        ],
+//        'api' => [
+//            'driver' => 'sanctum',
+//            'provider' => 'users',
+//            'hash' => false,
+//        ],
     ],
 
     /*
