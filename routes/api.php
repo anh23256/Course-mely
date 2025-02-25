@@ -168,6 +168,12 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
                 });
 
+            #============================== ROUTE WALLET =============================
+            Route::prefix('wallet')
+                ->group(function () {
+                    Route::get('/', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWallet']);
+                    Route::post('/withdraw', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withdraw']);
+                });
 
             #============================== ROUTE LIVESTREAM =============================
             Route::prefix('livestreams')

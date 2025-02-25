@@ -46,7 +46,7 @@ class LearningPathController extends Controller
             }
 
             $chapters = $course->chapters()
-                ->with('lessons')
+                ->with('lessons.lessonable')
                 ->orderBy('order', 'asc')
                 ->get();
 
@@ -62,11 +62,15 @@ class LearningPathController extends Controller
 
             $response = [];
             $courseLevel = $course->level;
+            $totalLesson = $lessons->count();
 
             foreach ($chapters as $chapterIndex => $chapter) {
                 $chapterLessons = [];
                 $isChapterFirst = $chapterIndex === 0;
                 $previousChapterCompleted = true;
+                $totalChapterDuration = 0;
+
+                $chapterTotalLessons = $chapter->lessons->count();
 
                 if (!$isChapterFirst) {
                     $previousChapter = $chapters[$chapterIndex - 1];
@@ -90,6 +94,10 @@ class LearningPathController extends Controller
 
                     $isCompleted = $userLessonProgress[$lesson->id] ?? false;
 
+                    if ($lesson->type === 'video' && $lesson->lessonable_type === Video::class) {
+                        $totalChapterDuration += $lesson->lessonable->duration; // Cộng dồn thời lượng video cho chương
+                    }
+
                     $chapterLessons[] = [
                         'id' => $lesson->id,
                         'title' => $lesson->title,
@@ -104,11 +112,17 @@ class LearningPathController extends Controller
                 $response[] = [
                     'chapter_id' => $chapter->id,
                     'chapter_title' => $chapter->title,
+                    'total_chapter_duration' => $totalChapterDuration,
+                    'total_lessons' => $chapterTotalLessons,
                     'lessons' => $chapterLessons,
                 ];
             }
 
-            return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, $response);
+            return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, [
+                'course_name' => $course->name,
+                'total_lesson' => $totalLesson,
+                'chapter_lessons' => $response,
+            ]);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -147,6 +161,21 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Bài học không tồn tại');
             }
 
+            $currentChapter = $lesson->chapter;
+            $chapterLessons = $currentChapter->lessons()->orderBy('order', 'asc')->get();
+
+            $currentLessonIndex = $chapterLessons->search(function ($chapterLesson) use ($lesson) {
+                return $chapterLesson->id === $lesson->id;
+            });
+
+            $previousLesson = $currentLessonIndex > 0
+                ? $chapterLessons[$currentLessonIndex - 1]
+                : null;
+
+            $nextLesson = $currentLessonIndex < $chapterLessons->count() - 1
+                ? $chapterLessons[$currentLessonIndex + 1]
+                : null;
+
             $lessonProcess = LessonProgress::query()
                 ->firstOrCreate([
                     'user_id' => $user->id,
@@ -158,19 +187,25 @@ class LearningPathController extends Controller
                     ]
                 );
 
-            $nextLesson = $course->lessons()->where('lessons.id', '>', $lesson->id)
-                ->orderBy('lessons.id', 'asc')
-                ->first();
-
-            $previousLesson = $course->lessons()->where('lessons.id', '<', $lesson->id)
-                ->orderBy('lessons.id', 'desc')
-                ->first();
+            $dataLesson = array_merge(
+                $lesson->toArray(),
+                [
+                    'lessonable' => $lesson->lessonable
+                        ? array_merge(
+                            $lesson->lessonable->toArray(),
+                            $lesson->type === 'quiz'
+                                ? ['questions' => $lesson->lessonable->questions->load('answers')->toArray()]
+                                : []
+                        )
+                        : null
+                ]
+            );
 
             return $this->respondOk('Thông tin bài học: ' . $lesson->title, [
-                'lesson' => $lesson->load('lessonable'),
+                'lesson' => $dataLesson,
                 'lesson_process' => $lessonProcess,
                 'next_lesson' => $nextLesson,
-                'previous_lesson' => $previousLesson
+                'previous_lesson' => $previousLesson,
             ]);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
