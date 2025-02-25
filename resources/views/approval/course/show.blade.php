@@ -236,19 +236,18 @@
                                         <tbody>
                                             <tr>
                                                 <td class="fw-medium">Thời lượng</td>
-                                                <td>Product Designer</td>
+                                                <td><span class="badge bg-success-subtle text-success">
+                                                        {{ gmdate('H:i:s', $totalDuration) }}
+                                                    </span>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Chương học</td>
-                                                <td>Themesbrand</td>
+                                                <td>{{ $approval->approvable->chapters->count() ?? '' }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Bài học</td>
-                                                <td>Zuweihir, UAE</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Time</td>
-                                                <td><span class="badge bg-success-subtle text-success">Full Time</span>
+                                                <td> {{ $approval->approvable->chapters->sum(fn($chapter) => $chapter->lessons->count()) ?? '' }}
                                                 </td>
                                             </tr>
                                             <tr>
@@ -362,7 +361,122 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane" id="test-case" role="tabpanel"></div>
+            <div class="tab-pane" id="test-case" role="tabpanel">
+                <div class="tab-pane" id="test-case" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Danh sách tiêu chí kiểm duyệt khóa học</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="accordion" id="criteriaAccordion">
+                                        <!-- Tiêu chí 1: Thông tin cơ bản khóa học -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="criteriaHeadingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#criteriaCollapseOne" aria-expanded="true"
+                                                    aria-controls="criteriaCollapseOne">
+                                                    <strong>Tiêu chí 1:</strong> Thông tin cơ bản khóa học
+                                                </button>
+                                            </h2>
+                                            <div id="criteriaCollapseOne" class="accordion-collapse collapse show"
+                                                aria-labelledby="criteriaHeadingOne" data-bs-parent="#criteriaAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Khóa học phải có tên với tối thiểu 5 ký tự.</li>
+                                                                <li>Mô tả khóa học phải có tối thiểu 100 ký tự.</li>
+                                                                <li>Khóa học phải có hình đại diện.</li>
+                                                                <li>Khóa học phải có danh mục.</li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Khoá học phải có mức độ khó.</li>
+                                                                <li>Khóa học có phí phải có giá hợp lệ.</li>
+                                                                <li>Khóa học phải có từ 4 đến 10 lợi ích.</li>
+                                                                <li>Khóa học phải có từ 4 đến 10 yêu cầu.</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tiêu chí 2: Chương trình giảng dạy -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="criteriaHeadingTwo">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#criteriaCollapseTwo" aria-expanded="false"
+                                                    aria-controls="criteriaCollapseTwo">
+                                                    <strong>Tiêu chí 2:</strong> Chương trình giảng dạy
+                                                </button>
+                                            </h2>
+                                            <div id="criteriaCollapseTwo" class="accordion-collapse collapse"
+                                                aria-labelledby="criteriaHeadingTwo" data-bs-parent="#criteriaAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Khóa học phải có ít nhất 3 chương học.</li>
+                                                                <li>Mỗi chương (trừ chương đầu tiên) phải có ít nhất 3 bài
+                                                                    học.</li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Chương từ thứ hai trở đi phải có tổng thời lượng video
+                                                                    trên 30 phút.</li>
+                                                                <li>Tổng thời lượng video của khóa học phải lớn hơn 2 giờ.
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tiêu chí 3: Bài học -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="criteriaHeadingThree">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#criteriaCollapseThree" aria-expanded="false"
+                                                    aria-controls="criteriaCollapseThree">
+                                                    <strong>Tiêu chí 3:</strong> Bài học
+                                                </button>
+                                            </h2>
+                                            <div id="criteriaCollapseThree" class="accordion-collapse collapse"
+                                                aria-labelledby="criteriaHeadingThree"
+                                                data-bs-parent="#criteriaAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Mỗi bài học phải có tiêu đề.</li>
+                                                                <li>Bài giảng video phải có thời lượng từ 2 đến 40 phút.
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <ul>
+                                                                <li>Bài kiểm tra phải có từ 1 đến 10 câu hỏi.</li>
+                                                                <li>Bài tập lập trình phải có tiêu đề, ngôn ngữ lập trình và
+                                                                    đoạn mã mẫu.</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

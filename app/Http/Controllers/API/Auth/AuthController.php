@@ -37,6 +37,7 @@ class AuthController extends Controller
         // Kiểm tra email hợp lệ
         $request->validated();
 
+<<<<<<< HEAD
 
         $user = User::where('email', $request->email)->first();
 
@@ -50,6 +51,20 @@ class AuthController extends Controller
         // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
         $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
 
+=======
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Email không tồn tại'], 404);
+        }
+
+        // Tạo token reset ngẫu nhiên
+        $token = Str::random(60);
+
+        // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
+        $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
+
+>>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
         // Gửi email
         Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl));
 
@@ -203,7 +218,7 @@ class AuthController extends Controller
                 return response()->json([
                     'message' => 'Đăng nhập thành công',
                     'user' => $user,
-                    'role' =>  $role,
+                    'role' => $role,
                     'token' => $token->plainTextToken,
                     'expires_at' => $expiresAt
                 ], Response::HTTP_OK);

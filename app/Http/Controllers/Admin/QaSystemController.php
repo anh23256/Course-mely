@@ -8,20 +8,38 @@ use App\Http\Requests\Admin\QaSystems\StoreQaSystemRequest;
 use App\Http\Requests\Admin\QaSystems\UpdateQaSystemRequest;
 use App\Imports\QaSystemImport;
 use App\Models\QaSystem;
+use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
+
 use Maatwebsite\Excel\Facades\Excel;
+
+use Illuminate\Http\Request;
+
 
 class QaSystemController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait, FilterTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         try {
             $title = 'Hệ thống quản lý câu hỏi';
             $subTitle = 'Danh sách hệ thống quản lý câu hỏi';
 
-            $qaSystems = QaSystem::query()->latest('id')->paginate(10);
+            $queryQaSystems = QaSystem::query()->latest('id');
+
+            if ($request->ajax()) {
+                $queryQaSystems = $this->filter($request, $queryQaSystems);
+
+                $queryQaSystems = $this->search($request, $queryQaSystems);
+            }
+
+            $qaSystems = $queryQaSystems->paginate(10);
+
+            if ($request->ajax()) {
+                $html = view('qa-systems.includes.table', compact('qaSystems'))->render();
+                return response()->json(['html' => $html]);
+            }
 
             return view('qa-systems.index', compact([
                 'title',
@@ -136,19 +154,46 @@ class QaSystemController extends Controller
         }
     }
 
+
     public function importFile(ImportQaSystemRequest $request)
     {
-        // try {
+        try {
 
-            Excel::import(new QaSystemImport, $request->file('file'));
+        Excel::import(new QaSystemImport, $request->file('file'));
 
-            return redirect()->route('admin.qa-systems.index')->with('success', 'Import dữ liệu thành công');
-            
-        // } catch (\Exception $e) {
+        return redirect()->route('admin.qa-systems.index')->with('success', 'Import dữ liệu thành công');
 
-        //     $this->logError($e);
+        } catch (\Exception $e) {
 
-        //     return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
-        // }
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+    private function filter($request, $query)
+    {
+        $filters = [
+            'status' => ['queryWhere' => '='],
+            'title' => ['queryWhere' => 'LIKE'],
+            'answer_type' => ['queryWhere' => '='],
+            'created_at' => ['attribute' => ['startDate' => ">=", 'endDate' => "<="]],
+        ];
+
+        $query = $this->filterTrait($filters, $request, $query);
+
+        return $query;
+    }
+
+    private function search($request, $query)
+    {
+        if (!empty($request->search_full)) {
+            $searchTerm = $request->search_full;
+
+            $query->where(function ($query) use ($searchTerm) {
+                $query->where('title', 'LIKE', "%$searchTerm%");
+            });
+        }
+
+        return $query;
     }
 }

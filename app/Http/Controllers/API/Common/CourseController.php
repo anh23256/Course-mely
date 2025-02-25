@@ -4,8 +4,13 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
+use Illuminate\Redis\Connections\PredisConnection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 
 class CourseController
 {
@@ -147,7 +152,7 @@ class CourseController
         }
     }
 
-    public function getCourseDetail(string $slug)
+    public function getCourseDetail(Request $request, string $slug)
     {
         try {
             $course = Course::query()
@@ -168,12 +173,39 @@ class CourseController
                 ->where('slug', '=', $slug)
                 ->where('visibility', '=', 'public')
                 ->where('status', '=', 'approved')
-                ->where('slug', '=', $slug)
                 ->first();
 
             if (!$course) {
                 return $this->respondNotFound('Không có dữ liệu');
             }
+
+            $course->benefits = is_string($course->benefits) ? json_decode($course->benefits, true) : $course->benefits;
+            $course->requirements = is_string($course->requirements) ? json_decode($course->requirements, true) : $course->requirements;
+            $course->qa = is_string($course->qa) ? json_decode($course->qa, true) : $course->qa;
+
+            $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                return $chapter->lessons->where('lessonable_type', Video::class);
+            });
+
+            $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                return $lesson->lessonable->duration ?? 0;
+            });
+
+            $course->total_video_duration = $totalVideoDuration;
+
+//            $user = auth('sanctum')->user();
+//            $isCourseOwner = $user && $user->id === $course->user_id;
+//
+//            if (!$isCourseOwner) {
+//                $cacheKey = "course:{$course->id}:views:{$user->id}";
+//
+//                if (!Redis::exists($cacheKey)) {
+//                    $course->increment('views');
+//                    Redis::setex($cacheKey, 3600, true);
+//                }
+//            }
+
+            $course->increment('views');
 
             return $this->respondOk('Chi tiết khoá học: ' . $course->name, $course);
         } catch (\Exception $e) {

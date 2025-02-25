@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
+use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\SearchController;
 use App\Http\Controllers\API\Common\TransactionController;
@@ -15,13 +16,14 @@ use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
 use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
+use App\Http\Controllers\API\Instructor\PostController;
 use App\Http\Controllers\API\Instructor\RegisterController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
-use App\Http\Controllers\API\Verify\VerificationController;
-use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
-use App\Http\Controllers\API\Instructor\PostController;
+use App\Http\Controllers\API\Instructor\StatisticController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
+use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
+use App\Http\Controllers\API\Verify\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -49,16 +51,44 @@ Route::prefix('auth')->as('auth.')->group(function () {
 });
 
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
+
+Route::prefix('livestreams')->group(function () {
+    Route::get('/', [LivestreamController::class, 'index']);
+    Route::get('/{livestream}', [LivestreamController::class, 'show']);
+    Route::post('/{livestream}/join', [LivestreamController::class, 'joinLiveSession'])
+        ->middleware('optionalAuth');
+    Route::post('/{livestream}/leave', [LivestreamController::class, 'leave']);
+});
+
 Route::get('/reset-password/{token}', function ($token) {
     return view('emails.auth.reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');
+
 #============================== ROUTE SEARCH =============================
 Route::prefix('search')
     ->group(function () {
         Route::get('/', [SearchController::class, 'search']);
     });
 
+Route::prefix('filters')
+    ->group(function () {
+        Route::get('/', [FilterController::class, 'filter']);
+        Route::get('/filter-orderby', [FilterController::class, 'filterOrderBy']);
+    });
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/broadcasting/auth', function (Request $request) {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    });
+
+    Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
+
     Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
@@ -73,17 +103,38 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::prefix('livestreams')->group(function () {
+        Route::post('/{livestream}/send-message', [LivestreamController::class, 'sendMessage']);
+    });
+
     #============================== ROUTE USER =============================
-    Route::prefix('user')->group(function () {
+    Route::prefix('users')->group(function () {
         Route::get('/profile', [UserController::class, 'showProfile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/change-password', [UserController::class, 'changePassword']);
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
+        Route::get('/my-courses', [UserController::class, 'getUserCourses']);
+        Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
+        Route::get('/orders', [UserController::class, 'getOrdersBought']);
+        Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
+
+        #============================== ROUTE Certificate =============================
+        Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
             ->group(function () {
+                Route::get('/', [\App\Http\Controllers\API\Common\NotificationController::class, 'getNotifications']);
+                Route::put('/{id}/read', [\App\Http\Controllers\API\Common\NotificationController::class, 'markAsRead']);
             });
+    });
+
+
+    #============================== ROUTE LERNING =============================
+    Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
+        Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
+        Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
 
     #============================== ROUTE WISH LIST =============================
@@ -99,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{transactionID}', [TransactionController::class, 'show']);
         Route::post('/deposit', [TransactionController::class, 'deposit']);
         Route::post('/buyCourse', [TransactionController::class, 'buyCourse']);
+        Route::post('/enroll-free-course', [TransactionController::class, 'enrollFreeCourse']);
     });
 
     #============================== ROUTE LEARNING =============================
@@ -113,6 +165,15 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
             Route::prefix('statistics')
                 ->group(function () {
+                    Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
+                });
+
+
+            #============================== ROUTE LIVESTREAM =============================
+            Route::prefix('livestreams')
+                ->group(function () {
+                    Route::get('/', [LivestreamController::class, 'getLivestreams']);
+                    Route::post('/', [LivestreamController::class, 'startLivestream']);
                 });
 
             Route::prefix('manage')
@@ -122,6 +183,7 @@ Route::middleware('auth:sanctum')->group(function () {
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
+                            Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);
                             Route::post('/', [CourseController::class, 'store']);
                             Route::put('/{course}/courseOverView', [CourseController::class, 'updateCourseOverView']);
                             Route::put('/{course}/courseObjective', [CourseController::class, 'updateCourseObjectives']);
@@ -155,6 +217,9 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::delete('/{chapterId}/{lesson}', [LessonController::class, 'deleteLesson']);
 
                             Route::post('/{chapterId}/store-lesson-video', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'storeLessonVideo']);
+                            Route::get('/{chapterId}/{lesson}/show-lesson', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'getLessonVideo']);
+                            Route::put('/{chapterId}/{lesson}/update-lesson-video', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'updateLessonVideo']);
+
                             Route::post('/{chapterId}/store-lesson-quiz', [\App\Http\Controllers\API\Instructor\QuizController::class, 'storeLessonQuiz']);
 
                             Route::prefix('quiz')
@@ -169,13 +234,21 @@ Route::middleware('auth:sanctum')->group(function () {
                                     Route::delete('{question}/delete-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'deleteQuestion']);
                                 });
 
+                            Route::get('/{chapterId}/{lesson}/lesson-document', [DocumentController::class, 'getLessonDocument']);
                             Route::post('/{chapterId}/store-lesson-document', [DocumentController::class, 'storeLessonDocument']);
-                            Route::put('/{documentID}', [DocumentController::class, 'update']);
+                            Route::put('/{chapterId}/{lesson}/update-lesson-document', [DocumentController::class, 'updateLessonDocument']);
 
                             Route::post('/{chapterId}/store-lesson-coding', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'storeLessonCoding']);
                             Route::get('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'getCodingExercise']);
                             Route::put('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'updateCodingExercise']);
                         });
+                });
+
+            #============================== ROUTE TRANSACTION =============================
+            Route::prefix('transactions')
+                ->group(function () {
+                    Route::get('/participated-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getParticipatedCourses']);
+                    Route::get('/enrolled-free-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getCourseEnrollFree']);
                 });
 
             #============================== ROUTE POST =============================
@@ -228,17 +301,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/', [RatingController::class, 'store']);
         });
 
-    #============================== ROUTE LIVESTREAM =============================
-    Route::prefix('livestreams')
-        ->group(function () {
-            Route::post('/', [LivestreamController::class, 'createLiveStream']);
-        });
-
     #============================== ROUTE POST =============================
     Route::prefix('posts')->as('posts.')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
-
     });
 });
 

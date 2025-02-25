@@ -45,7 +45,7 @@ class RevenueStatisticController extends Controller
                 'users.email',
                 'users.avatar',
                 'users.created_at',
-                DB::raw('SUM(invoices.final_total) as total_revenue'),
+                DB::raw('SUM(invoices.final_amount) as total_revenue'),
                 DB::raw('COUNT(courses.id) as total_courses'),
                 DB::raw('COUNT(DISTINCT course_users.user_id) as total_enrolled_students'),
             )
@@ -63,7 +63,7 @@ class RevenueStatisticController extends Controller
                 'users.email',
                 'users.avatar',
                 DB::raw('COUNT(DISTINCT invoices.course_id) as total_courses_purchased'),
-                DB::raw('SUM(invoices.final_total) as total_spent'),
+                DB::raw('SUM(invoices.final_amount) as total_spent'),
                 DB::raw('MAX(invoices.created_at) as last_purchase_date')
             )
             ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar')
@@ -81,7 +81,7 @@ class RevenueStatisticController extends Controller
                 'courses.name',
                 'courses.thumbnail',
                 'courses.created_at',
-                DB::raw('SUM(invoices.final_total) as total_revenue'),
+                DB::raw('SUM(invoices.final_amount) as total_revenue'),
                 DB::raw('COUNT(DISTINCT course_users.user_id) as total_enrolled_students'),
                 DB::raw('COUNT(invoices.id) as total_sales'),
             )

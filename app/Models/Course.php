@@ -10,11 +10,11 @@ use Spatie\Permission\Traits\HasRoles;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes, HasRoles ;
+    use HasFactory, SoftDeletes, HasRoles;
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
-        'intermediate';
+    'intermediate';
     const LEVEL_ADVANCED = 'advanced';
 
     const STATUS_DRAFT = 'draft';
@@ -44,6 +44,7 @@ class Course extends Model
         'visibility',
         'modification_request',
         'accepted',
+        'views'
     ];
 
     public $attributes = [
@@ -89,6 +90,11 @@ class Course extends Model
         return $this->belongsToMany(Coupon::class);
     }
 
+    public function courseUsers()
+    {
+        return $this->hasMany(CourseUser::class);
+    }
+
     public function scopeSearch($query, $searchQuery)
     {
         return $query->when($searchQuery, function ($query) use ($searchQuery) {
@@ -105,5 +111,8 @@ class Course extends Model
     {
         return $this->belongsTo(Role::class);
     }
-
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

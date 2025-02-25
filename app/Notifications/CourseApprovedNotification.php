@@ -3,12 +3,17 @@
 namespace App\Notifications;
 
 use App\Models\Course;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
-class CourseApprovedNotification extends Notification
+class CourseApprovedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -29,32 +34,39 @@ class CourseApprovedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database', 'broadcast'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
-    }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    public function toDatabase($notifiable)
     {
+        Log::info("Saving notification to the database for user ID: " . $notifiable->id . " | Course ID: " . $this->course->id);
+
         return [
             'type' => 'register_course',
             'course_id' => $this->course->id,
-            'message' => "Khóa học \"{$this->course->name}\" đã được duyệt.",
-            'url' => 'sadsada'
+            'course_name' => $this->course->name,
+            'course_slug' => $this->course->slug,
+            'course_thumbnail' => $this->course->thumbnail,
+            'message' => 'Khóa học "' . $this->course->name . '" đã được gửi yêu cầu kiểm duyệt.',
         ];
+    }
+
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'course_id' => $this->course->id,
+            'course_name' => $this->course->name,
+            'course_slug' => $this->course->slug,
+            'course_thumbnail' => $this->course->thumbnail,
+            'message' => 'Khóa học của bạn đã được phê duyệt!',
+        ]);
+    }
+
+    public function broadcastOn()
+    {
+        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
+        Log::info('Broadcasting on channel: ' . $channel->name);
+        return $channel;
     }
 }

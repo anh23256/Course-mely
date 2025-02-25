@@ -21,6 +21,9 @@ class AutoApproveCourseJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+//    public $tries = 10;
+//    public $backoff = 5;
+
     protected $course;
 
     /**
@@ -28,6 +31,7 @@ class AutoApproveCourseJob implements ShouldQueue
      */
     public function __construct(Course $course)
     {
+        Log::info("Dispatching AutoApproveCourseJob for course: " . $course->id);
         $this->course = $course;
     }
 
@@ -37,6 +41,11 @@ class AutoApproveCourseJob implements ShouldQueue
     public function handle(): void
     {
         try {
+            if (!$this->course) {
+                Log::error('Course not found during job execution');
+                return;
+            }
+
             $course = $this->course;
 
             $approval = Approvable::query()->where('approvable_id', $this->course->id)
@@ -44,51 +53,48 @@ class AutoApproveCourseJob implements ShouldQueue
                 ->first();
 
             if (!$approval) {
+                Log::error('Approval record not found for course: ' . $this->course->id);
                 return;
             }
 
             $errors = CourseValidatorService::validateCourse($course);
 
             if (!empty($errors)) {
-                $approval->update([
-                    'status' => 'rejected',
-                    'note' => 'Khoá học chưa đạt yêu cầu kiểm duyệt.',
-                    'rejected_at' => now(),
-                    'approver_id' => null,
-                ]);
+                DB::transaction(function () use ($approval, $course) {
+                    $approval->update([
+                        'status' => 'rejected',
+                        'note' => 'Khoá học chưa đạt yêu cầu kiểm duyệt.',
+                        'rejected_at' => now(),
+                        'approver_id' => null,
+                    ]);
 
-                $this->course->update(['status' => 'rejected']);
+                    $course->update([
+                        'status' => 'rejected',
+                        'visibility' => 'private',
+                    ]);
+                });
 
                 $this->course->user->notify(new CourseRejectedNotification($this->course));
 
             } else {
-                $approval->update([
-                    'status' => 'approved',
-                    'approved_at' => now(),
-                    'note' => 'Khoá học đã được kiểm duyệt.',
-                    'approver_id' => null,
-                ]);
+                DB::transaction(function () use ($approval, $course) {
+                    $approval->update([
+                        'status' => 'approved',
+                        'approved_at' => now(),
+                        'note' => 'Khoá học đã được kiểm duyệt.',
+                        'approver_id' => null,
+                    ]);
 
-                $this->course->update([
-                    'status' => 'approved',
-                    'accepted' => now(),
-                ]);
+                    $course->update([
+                        'status' => 'approved',
+                        'visibility' => 'public',
+                        'accepted' => now(),
+                    ]);
+                });
 
                 $this->course->user->notify(new CourseApprovedNotification($this->course));
             }
-
-            $managers = User::query()->role([
-                'admin',
-            ])->get();
-
-            foreach ($managers as $manager) {
-                $manager->notify(new CourseApprovedNotification($this->course));
-            }
-
-            DB::commit();
         } catch (\Exception $e) {
-            DB::rollBack();
-
             Log::error("Lỗi tự động duyệt khóa học: " . $e->getMessage());
 
             return;

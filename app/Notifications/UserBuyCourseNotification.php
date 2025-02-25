@@ -51,7 +51,7 @@ class UserBuyCourseNotification extends Notification implements ShouldBroadcast,
             'type' => 'user_buy_course',
             'message' => $this->user->name . ' đã mua khóa học ' . $this->course->name,
             'user_avatar' => $this->user->avatar,
-            'url' => 'Xem chi tiết ' . $this->getUrl()
+            'url' => $this->getUrl()
         ];
     }
 

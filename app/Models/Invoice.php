@@ -15,8 +15,8 @@ class Invoice extends Model
         'code',
         'coupon_code',
         'coupon_discount',
-        'total',
-        'final_total',
+        'amount',
+        'final_amount',
         'status'
     ];
 
@@ -26,7 +26,7 @@ class Invoice extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class)->with('instructor');;
     }
 
     public function user()

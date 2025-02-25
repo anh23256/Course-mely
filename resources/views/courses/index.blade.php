@@ -28,11 +28,17 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-danger">Import dữ liệu</button>
-                            <a class="btn btn-sm btn-success"
-                                href="{{ route('admin.courses.exportFile') }}">Export dữ liệu</a>
-                            <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
-                            <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
+                            <div class="search-box ms-2">
+                                <input type="text" name="query" id="searchFull" class="form-control search h-75"
+                                    placeholder="Tìm kiếm..." data-search
+                                    value="{{ request()->input('query') ?? '' }}">
+                                <button id="search-full" class="h-75 ri-search-line search-icon m-0 p-0 border-0"
+                                    style="background: none;"></button>
+                            </div>
+                            <button class="btn btn-sm btn-danger h-75">Import dữ liệu</button>
+                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.courses.exportFile') }}">Export dữ
+                                liệu</a>
+                            <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
                             <div class="dropdown">
@@ -94,7 +100,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Giảng viên</label>
-                                    <input class="form-control form-control-sm" name="user_name" type="text"
+                                    <input class="form-control form-control-sm" name="user_name_course" type="text"
                                         value="{{ request()->input('user_name') ?? '' }}" placeholder="Nhập giảng viên..."
                                         data-advanced-filter>
                                 </div>

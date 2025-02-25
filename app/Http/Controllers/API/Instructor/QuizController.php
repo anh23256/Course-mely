@@ -62,6 +62,7 @@ class QuizController extends Controller
                 'lessonable_type' => Quiz::class,
                 'lessonable_id' => $quiz->id,
                 'order' => $data['order'],
+                'content' => $data['content'] ?? null,
                 'is_free_preview' => $data['is_free_preview'] ?? false,
             ]);
 

@@ -13,6 +13,7 @@ class Video extends Model
         'title',
         'type',
         'url',
+        'asset_id',
         'mux_playback_id',
         'duration',
     ];

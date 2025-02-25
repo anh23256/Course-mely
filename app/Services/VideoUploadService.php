@@ -43,13 +43,18 @@ class VideoUploadService
                 ]
             ]);
 
-            $response = json_decode($response->getBody()->getContents(), true);
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            $assetId = $responseData['data']['id'] ?? null;
+            $playbackId = $responseData['data']['playback_ids'][0]['id'] ?? null;
 
-            return $response['data']['id'];
+            return [
+                'asset_id' => $assetId,
+                'playback_id' => $playbackId
+            ];
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại');
         }
     }
 
@@ -58,7 +63,7 @@ class VideoUploadService
         try {
             $httpClient = new Client();
 
-            $response = $httpClient->request('GET', self::MUX_API_URL . $assetId, [
+            $response = $httpClient->request('GET', self::MUX_API_URL . '/' . $assetId, [
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'Authorization' => 'Basic ' . base64_encode($this->muxTokenId . ':' . $this->muxTokenSecret),
@@ -67,13 +72,13 @@ class VideoUploadService
 
             $data = json_decode($response->getBody()->getContents(), true);
 
-            $duration = $data['data']['duration'];
+            $duration = $data['data']['duration'] ?? null;
 
             return $duration;
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondServerError('Có lỗi xảy ra khi lấy thời lượng video, vui lòng thử lại', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError('Có lỗi xảy ra khi lấy thời lượng video, vui lòng thử lại');
         }
     }
 
@@ -97,7 +102,7 @@ class VideoUploadService
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondServerError('Có lỗi xảy ra khi xóa video, vui lòng thử lại', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError('Có lỗi xảy ra khi xóa video, vui lòng thử lại');
         }
     }
 }

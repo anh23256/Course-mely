@@ -56,6 +56,8 @@ return [
 
     'url' => env('APP_URL', 'http://127.0.0.1:8000'),
 
+    'fe_url' => env('FE_URL', 'http://localhost:3000'),
+
     'asset_url' => env('ASSET_URL', '/'),
 
     /*
@@ -214,6 +216,7 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'ExampleClass' => App\Example\ExampleClass::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+//        'Redis' => Illuminate\Support\Facades\Redis::class,
     ])->toArray(),
 
 ];

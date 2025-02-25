@@ -48,10 +48,10 @@ Route::prefix('admin')->as('admin.')->group(function () {
 });
 
 Route::get('email', function () {
-    //    \Illuminate\Support\Facades\Mail::to('thanhlongdevbe@gmail.com')
-    //        ->send(new \App\Mail\Auth\VerifyEmail());
-
     return view('emails.auth.verify');
+});
+Route::get('buyCourse', function () {
+    return view('emails.userBuyCourse');
 });
 Route::get('forgot-password', function () {
     return view('emails.auth.forgot-password');
@@ -304,7 +304,6 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/', [TransactionController::class, 'index'])->name('index');
                 Route::get('export', [TransactionController::class, 'export'])->name('export');
                 Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
-
                 Route::get('/check-transaction', [TransactionController::class, 'checkTransaction'])
                     ->name('check-transaction');
             });

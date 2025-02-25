@@ -1,0 +1,68 @@
+/* Cải thiện giao diện ô nhập liệu của select2 */
+.select2-container--default .select2-selection--single {
+    height: 35px !important;
+    line-height: 35px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important; /* Bo góc */
+    padding-left: 15px !important;
+    background-color: #f8f9fa !important; /* Màu nền sáng */
+    border: 1px solid #14d79d !important; /* Viền xanh */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important; /* Đổ bóng */
+}
+
+/* Cải thiện giao diện dropdown */
+.select2-dropdown {
+    background-color: #ffffff !important; /* Màu nền trắng */
+    border-radius: 8px !important; /* Bo góc */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important; /* Đổ bóng */
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+/* Cải thiện mục trong dropdown */
+.select2-results__option {
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+}
+
+/* Hiệu ứng hover cho các mục trong dropdown */
+.select2-results__option:hover {
+    background-color: #e9ecef !important;
+    color: #085c91 !important;
+    cursor: pointer !important;
+}
+
+/* Thêm hiệu ứng cho khi mục được chọn */
+.select2-results__option[aria-selected=true] {
+    background-color: #069b44 !important;
+    color: #ffffff !important;
+}
+
+/* Cải thiện thẻ tìm kiếm */
+.select2-container--default .select2-search--dropdown {
+    padding: 10px !important;
+    background-color: #f1f3f5 !important; /* Màu nền của thanh tìm kiếm */
+    border-radius: 4px !important;
+}
+
+/* Cải thiện các thẻ đã chọn (tag) */
+.select2-selection__choice {
+    background-color: #069b44 !important;
+    color: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 5px 10px !important;
+    margin: 2px 5px !important;
+    font-size: 14px !important;
+    display: inline-block !important;
+}
+
+/* Hiệu ứng hover khi rê chuột vào các thẻ đã chọn */
+.select2-selection__choice:hover {
+    background-color: #085c91 !important;
+    color: #ffffff !important;
+}
+
+/* Điều chỉnh chiều rộng của dropdown */
+.select2-container--default {
+    width: 100% !important; /* Đảm bảo dropdown chiếm đủ chiều rộng */
+}
