@@ -53,7 +53,7 @@
 
                 <td style="width: 50%; text-align: right; vertical-align: middle;">
                     <div style="text-align: center">
-                        <img src="#" alt="Chữ ký" style="width: 120px;">
+                        <img src="{{ url('images/signature.png') }}" alt="Chữ ký" style="width: 120px;">
                         <p style="margin: 5px 0 0 0; font-weight: bold;">{{ $course->user->name }}</p>
                     </div>
                 </td>

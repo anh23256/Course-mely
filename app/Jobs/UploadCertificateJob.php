@@ -2,84 +2,63 @@
 
 namespace App\Jobs;
 
-use App\Models\Approvable;
-use App\Models\Course;
-use App\Models\User;
-use App\Notifications\CourseApprovedNotification;
-use App\Notifications\CourseRejectedNotification;
-use App\Notifications\CourseSubmittedNotification;
-use App\Services\CourseValidatorService;
+use App\Models\Certificate;
+use App\Traits\LoggableTrait;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class UploadCertificateJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, LoggableTrait;
+    protected $pdfUrl;
+    protected $pdfContent;
+    protected $userId;
+    protected $courseId;
 
-    const FOLDER = 'certificates';
-    private $filePath;
-    private $user;
-    private $course;
-    private $template;
-
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(string $filePath, User $user, Course $course, $template = null)
+    public function __construct($pdfUrl, $pdfContent,$userId,$courseId)
     {
-        $this->filePath = $filePath;
-        $this->user = $user;
-        $this->course = $course;
-        $this->template = $template;
+        $this->pdfUrl = $pdfUrl;
+        $this->pdfContent = $pdfContent;
+        $this->userId = $userId;
+        $this->courseId = $courseId;
     }
 
-    /**
-     * Execute the job.
-     */
-    public function handle(): void
+    public function handle()
     {
         try {
-            if (!$this->filePath || !$this->user || !$this->course) {
-                Log::error('Không có đủ thông tin');
+            if(!$this->userId || !$this->courseId || !$this->pdfUrl){
+                Log::error('Không đủ dữ liệu'. $this->userId.'-'.$this->courseId.'-'.$this->pdfContent.'-'.$this->pdfUrl);
                 return;
             }
 
-            $user = $this->user;
-            $course = $this->course;
-            $template = $this->template ?? null;
-
-            $fullPath = storage_path("app/public/{$this->filePath}");
-
-            if (Storage::disk('public')->exists($this->filePath)) {
-                $uploadResult = Cloudinary::uploadFile($fullPath, [
-                    'folder' => 'certificates',
-                    'public_id' => pathinfo($this->filePath, PATHINFO_FILENAME),
-                ]);
-
-                Storage::disk('public')->delete($this->filePath);
-            }
+            $uploadResult = Cloudinary::upload(    'data:application/pdf;base64,' . $this->pdfContent, [
+                'folder' => 'certificates',
+                'resource_type' => 'auto',
+                'public_id' => "certificate_{$this->userId}_{$this->courseId}",
+            ]);
 
             $pdfUrl = $uploadResult->getSecurePath();
 
-            if (!$pdfUrl) {
-                Log::error('Không có url trả về');
+            if(!$pdfUrl){
+                Log::error('Không tạo được link upload lỗi');
                 return;
             }
 
-            if
+            Certificate::where('user_id', $this->userId)
+                ->where('course_id', $this->courseId)
+                ->update(['file_path' => $pdfUrl]);
 
-
+            if (Storage::exists($this->pdfUrl)) {
+                Storage::delete($this->pdfUrl);
+            }
         } catch (\Exception $e) {
-            Log::error("Lỗi tự động duyệt khóa học: " . $e->getMessage());
-
-            return;
+            return $this->logError($e);
         }
     }
 }
