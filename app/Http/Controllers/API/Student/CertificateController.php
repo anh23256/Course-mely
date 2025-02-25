@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\API\Student;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\UploadCertificateJob;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
-use App\Traits\UploadToCloudinaryTrait;
 use Barryvdh\DomPDF\Facade\Pdf;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CertificateController extends Controller
 {
@@ -40,18 +44,43 @@ class CertificateController extends Controller
                 return $this->respondError('Tiến độ chưa đạt 100%.');
             }
 
+            $images = [
+                'logo' => public_path('assets/images/logo-container.png'),
+                'daudo' => public_path('assets/images/daudocoursemely.jpeg'),
+            ];
+
+            $base64Images = [];
+
+            foreach ($images as $key => $path) {
+                if (file_exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $base64Images[$key] = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                }
+            }
+
             $pdf = Pdf::loadView('certificates.certificate', [
                 'course' => $course,
-                'user' => $user
-            ])->setPaper('A4', 'landscape');
+                'user' => $user,
+                'image' => $base64Images
+            ])->setPaper('A4', 'landscape')->setOptions(['dpi' => 96]);
 
             $fileName = "certificate_{$user->id}_{$course->id}.pdf";
+            $path = "certificates/{$fileName}";
 
-            return response()->streamDownload(
-                fn() => print($pdf->output()),
-                $fileName,
-                ['Content-Type' => 'application/pdf'] // Định dạng file
-            );
+            Storage::disk('public')->put($path, $pdf->output());
+
+            $pdfUrl = Storage::disk('public')->url($path);
+
+            
+
+            $start = microtime(true);
+
+            UploadCertificateJob::dispatch($path, $user, $course)->onQueue('certificate');
+
+            $end = microtime(true);
+
+            return $this->respondOk('Tạo chứng chỉ thành công', ['time' => $end - $start, 'pdf_url' => $pdfUrl]);
         } catch (\Exception $e) {
             $this->logError($e);
 
