@@ -27,8 +27,4 @@ class Message extends Model
         return $this->belongsTo(Message::class, 'parent_id');
     }
 
-    public function conversation()
-    {
-        return $this->belongsTo(Conversation::class);
-    }
 }
