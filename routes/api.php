@@ -22,6 +22,7 @@ use App\Http\Controllers\API\Instructor\RevenueController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
 use App\Http\Controllers\API\Instructor\StatisticController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
+use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
 use Illuminate\Http\Request;
@@ -105,6 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
+        #============================== ROUTE Certificate =============================
+        Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
+
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
             ->group(function () {
@@ -116,7 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LERNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
-        Route::get('/{slug}/lesson',[ \App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
+        Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
