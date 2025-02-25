@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 class CertificateController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
-    const UPLOAD_CERTIFICATE = 'ceritificates';
 
     public function generateCertificate(string $slug)
     {
@@ -46,15 +45,13 @@ class CertificateController extends Controller
                 'user' => $user
             ])->setPaper('A4', 'landscape');
 
-            $path = resource_path('pdfs/certificate_' . $course->code . '_' . $user->code . '.pdf');
+            $fileName = "certificate_{$user->id}_{$course->id}.pdf";
 
-            if (!file_exists(dirname($path))) {
-                mkdir(dirname($path), 0777, true);
-            }
-
-            $pdf->save($path);
-
-            return $this->respondOk('Tạo chứng nhận thành công', $path);
+            return response()->streamDownload(
+                fn() => print($pdf->output()),
+                $fileName,
+                ['Content-Type' => 'application/pdf'] // Định dạng file
+            );
         } catch (\Exception $e) {
             $this->logError($e);
 
