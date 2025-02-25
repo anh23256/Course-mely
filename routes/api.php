@@ -4,6 +4,7 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\RatingController;
@@ -276,6 +277,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
+       Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
+
     });
 
     #============================== ROUTE TRANSACTION =============================

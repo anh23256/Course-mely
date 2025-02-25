@@ -7,21 +7,22 @@
     $title = 'Thêm mới coupon';
 @endphp
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0 ps-2">{{ $title ?? '' }}</h4>
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 ps-2">{{ $title ?? '' }}</h4>
 
-            <div class="page-title-right pe-3">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}">Dashboard</a></li>
-                    <li class="breadcrumb-item active"><a href="{{route('admin.coupons.index')}}">{{ $title }}</a></li>
-                </ol>
+                <div class="page-title-right pe-3">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active"><a
+                                href="{{ route('admin.coupons.index') }}">{{ $title }}</a></li>
+                    </ol>
+                </div>
+
             </div>
-
         </div>
     </div>
-</div>
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12">
@@ -36,12 +37,31 @@
                                 <div class="d-flex">
                                     <div class="mb-3 col-6 pe-3">
                                         <label class="form-label">Tên mã giảm giá</label>
-                                        <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Nhập tên mã giảm giá">
+                                        <input type="text" name="name" class="form-control"
+                                            value="{{ old('name') }}" placeholder="Nhập tên mã giảm giá">
                                         @error('name')
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="mb-3 col-6">
+                                    <div class="mb-3 col-3 pe-3">
+                                        <label class="form-label">Ngày bắt đầu</label>
+                                        <input type="date" name="start_date" class="form-control"
+                                            value="{{ old('start_date') }}">
+                                        @error('start_date')
+                                            <div class="text-danger mt-3">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3 col-3">
+                                        <label class="form-label">Ngày kết thúc</label>
+                                        <input type="date" name="expire_date" class="form-control"
+                                            value="{{ old('expire_date') }}">
+                                        @error('expire_date')
+                                            <div class="text-danger mt-3">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="d-flex">
+                                    <div class="mb-3 col-6 pe-3">
                                         <label class="form-label">Mã giảm giá</label>
                                         <input type="text" name="code" class="form-control"
                                             value="{{ old('code') }}" placeholder="Nhập mã giảm giá">
@@ -49,11 +69,10 @@
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="mb-3 col-6 pe-3">
+                                    <div class="mb-3 col-6 ">
                                         <label class="form-label">Loại giảm giá</label>
-                                        <select name="discount_type" class="form-control" value="{{ old('discount_type') }}">
+                                        <select name="discount_type" id="discount_type" class="form-control"
+                                            value="{{ old('discount_type') }}">
                                             <option value="">Chọn loại giảm giá</option>
                                             <option value="fixed">Cố định</option>
                                             <option value="percentage">Phần trăm</option>
@@ -62,23 +81,17 @@
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="mb-3 col-6">
-                                        <label class="form-label">Giá trị giảm giá</label>
-                                        <input type="number" name="discount_value" class="form-control" value="{{ old('discount_value') }}" placeholder="Nhập giá trị giảm giá">
-                                        @error('discount_value')
-                                            <div class="text-danger mt-3">{{ $message }}</div>
-                                        @enderror
-                                    </div>
                                 </div>
                                 <div class="d-flex">
-                                    <div class="mb-3 col-6 pe-3">
+                                    <div class="mb-3 col-3 pe-3">
                                         <label class="form-label">Số lượng sử dụng</label>
-                                        <input type="int" name="used_count" class="form-control" value="{{ old('used_count') }}" placeholder="Nhập số lượng sử dụng">
+                                        <input type="int" name="used_count" class="form-control"
+                                            value="{{ old('used_count') }}" placeholder="Nhập số lượng sử dụng">
                                         @error('used_count')
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                        <div class="mb-3 col-6">
+                                    <div class="mb-3 col-3 pe-3">
                                         <label class="form-label">Trạng thái</label>
                                         <select name="status" class="form-select" value="{{ old('status') }}">
                                             <option value="" selected>Chọn trạng thái</option>
@@ -89,22 +102,26 @@
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>
+                                    <div class="mb-3 col-3 pe-3 discount-fields" style="display: none;">
+                                        <label class="form-label">Giá trị giảm giá</label>
+                                        <input type="number" name="discount_value" class="form-control"
+                                            value="{{ old('discount_value') }}" placeholder="Nhập giá trị giảm giá">
+                                        @error('discount_value')
+                                            <div class="text-danger mt-3">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3 col-3 pe-3" id="discount_max_value_field" style="display: none;">
+                                        <label class="form-label">Giảm giá tối đa</label>
+                                        <input type="number" name="discount_max_value" class="form-control"
+                                            value="{{ old('discount_max_value') }}"
+                                            placeholder="Nhập giá trị giảm giá tối đa">
+                                        @error('discount_max_value')
+                                            <div class="text-danger mt-3">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                                 <div class="d-flex">
-                                    <div class="mb-3 col-6 pe-3">
-                                        <label class="form-label">Ngày bắt đầu</label>
-                                        <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}">
-                                        @error('start_date')
-                                            <div class="text-danger mt-3">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="mb-3 col-6">
-                                        <label class="form-label">Ngày kết thúc</label>
-                                        <input type="date" name="expire_date" class="form-control" value="{{ old('expire_date') }}">
-                                        @error('expire_date')
-                                            <div class="text-danger mt-3">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+
 
                                 </div>
                                 <div class="mb-3">
@@ -116,8 +133,9 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary waves-effect waves-light">Thêm
                                     mới</button>
-                                <button type="reset" class="btn btn-info waves-effect waves-light" onclick="resetFilters()">Reset
-                                    </button>
+                                <button type="reset" class="btn btn-info waves-effect waves-light"
+                                    onclick="resetFilters()">Reset
+                                </button>
                                 <a href="{{ route('admin.coupons.index') }}" class="btn btn-dark">Danh sách</a>
                             </form>
                         </div>
@@ -141,4 +159,26 @@
 
     <!-- Dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard-analytics.init.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            // Ban đầu ẩn các trường giá trị giảm giá và giảm giá tối đa
+            $(".discount-fields").hide();
+            $("#discount_max_value_field").hide();
+            // Khi thay đổi lựa chọn loại giảm giá
+            $("#discount_type").change(function() {
+                var discountType = $(this).val(); // Lấy giá trị loại giảm giá
+
+                if (discountType === "fixed") {
+                    $(".discount-fields").show();
+                    $("#discount_max_value_field").hide();
+                } else if (discountType === "percentage"){
+                    $("#discount_max_value_field").show();
+                    $(".discount-fields").show(); 
+                } else {
+                    $(".discount-fields").hide();
+                    $("#discount_max_value_field").hide();
+                }
+            });
+        });
+    </script>
 @endpush
