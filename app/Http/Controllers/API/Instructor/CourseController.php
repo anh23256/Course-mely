@@ -8,6 +8,7 @@ use App\Http\Requests\API\Courses\UpdateContentCourse;
 use App\Http\Requests\API\Courses\UpdateCourseObjectives;
 use App\Models\Coding;
 use App\Models\Course;
+use App\Models\CourseUser;
 use App\Models\Document;
 use App\Models\Question;
 use App\Models\Quiz;
@@ -57,6 +58,61 @@ class CourseController extends Controller
             return $this->respondOk('Danh sách khoá học của: ' . Auth::user()->name,
                 $courses
             );
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại',
+            );
+        }
+    }
+
+    public function courseListOfUser(string $slug)
+    {
+        try {
+            $user = Auth::user();
+            $course = Course::query()
+                ->select('id', 'user_id', 'code', 'category_id', 'name', 'slug', 'thumbnail', 'intro', 'level', 'price', 'price_sale', 'total_student', 'accepted')
+                ->where('slug', $slug)
+                ->with([
+                    'user:id,name,email,avatar,created_at',
+                    'category:id,name,slug,parent_id',
+                ])
+                ->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Không tìm thấy khoá học');
+            }
+
+            if ($course->user_id !== $user->id) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $totalChapter = $course->chapters()->get();
+
+            $totalLesson = $totalChapter->sum(function ($chapter) {
+                return $chapter->lessons->count();
+            });
+
+            $studentProgress = CourseUser::query()->where('course_id', $course->id)
+                ->with(['user:id,name,avatar'])
+                ->get()
+                ->map(function ($enrollment) {
+                    return [
+                        'user_id' => $enrollment->user_id,
+                        'user_name' => $enrollment->user->name,
+                        'user_avatar' => $enrollment->user->avatar,
+                        'progress_percent' => $enrollment->progress_percent ?? 0,
+                        'enrolled_at' => $enrollment->enrolled_at,
+                        'completed_at' => $enrollment->completed_at
+                    ];
+                });
+
+            return $this->respondOk('Thông tin khoá học:' . $course->name, [
+                'course' => $course,
+                'total_chapter' => $totalChapter->count(),
+                'total_lesson' => $totalLesson,
+                'student_progress' => $studentProgress
+            ]);
         } catch (\Exception $e) {
             $this->logError($e);
 
