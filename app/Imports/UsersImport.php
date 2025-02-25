@@ -18,7 +18,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithSkipDuplicates;
 use Spatie\Permission\Models\Role;
 
-class UsersImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, SkipsEmptyRows, WithMapping, WithSkipDuplicates
+class UsersImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, SkipsEmptyRows, WithMapping, WithSkipDuplicates, ShouldQueue
 {
     use LoggableTrait;
 
