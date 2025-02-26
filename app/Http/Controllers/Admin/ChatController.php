@@ -26,6 +26,7 @@ class ChatController extends Controller
 {
     use LoggableTrait, UploadToCloudinaryTrait;
     const FOLDER = "messages";
+  
     public function index()
     {
         $data = $this->getAdminsAndChannels();
@@ -40,6 +41,7 @@ class ChatController extends Controller
     {
         try {
             $validated = $request->validated();
+
             if (!isset($request->members) || !is_array($request->members) || count($request->members) < 2) {
                 return response()->json([
                     'status' => 'error',
@@ -62,13 +64,14 @@ class ChatController extends Controller
                     if ($member_id == auth()->id()) {
                         continue; // Bỏ qua owner
                     }
-            
+
                     $user = User::find($member_id);
                     if ($user) {
                         $conversation->users()->attach($member_id);
                     }
                 }
             }
+
             $data = $this->getAdminsAndChannels();
             $data['conversation'] = $conversation;
 
@@ -90,6 +93,10 @@ class ChatController extends Controller
     public function sendGroupMessage(StoreSendMessageRequest $request)
     {
         $validated = $request->validated();
+
+        if ($request->hasFile('fileinput')) {
+            $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
+        }
         // if ($request->hasFile('fileinput')) {
         //     $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
         // }
@@ -97,10 +104,12 @@ class ChatController extends Controller
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => auth()->id(),
             'parent_id' => $validated['parent_id'] ?? null,
+
             'content' => $validated['content'],
             'type' => $validated['type'],
             'meta_data' => $validated['meta_data'],
         ]);
+
         // $media = Media::create(
         //     'file_path' => $validated
         //     'message_id' => $validated['message_id'],
@@ -131,6 +140,7 @@ class ChatController extends Controller
             'channels' => $channels
         ];
     }
+  
     public function getGroupInfo(Request $request)
     {
         try {
@@ -160,6 +170,7 @@ class ChatController extends Controller
             ]);
         }
     }
+  
     public function getGroupMessages($conversationId)
     {
         $messages = Message::where('conversation_id', $conversationId)

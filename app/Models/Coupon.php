@@ -24,5 +24,9 @@ class Coupon extends Model
         'used_count',
     ];
 
-    
+    public function scopeSearch($query, $keyword)
+    {
+        return $query->where('code', 'LIKE', "%{$keyword}%")
+            ->orWhere('name', 'LIKE', "%{$keyword}%");
+    }
 }

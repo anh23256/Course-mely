@@ -13,6 +13,7 @@ use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
 use App\Http\Controllers\API\Common\WishListController;
 use App\Http\Controllers\API\Instructor\ChapterController;
+use App\Http\Controllers\API\Instructor\CouponController as InstructorCouponController;
 use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
 use App\Http\Controllers\API\Instructor\LessonController;
@@ -156,8 +157,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     #============================== ROUTE INSTRUCTOR MANAGE =============================
     Route::prefix('instructor')
@@ -265,6 +265,14 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/', [PostController::class, 'store']);
                 Route::put('/{post}', [PostController::class, 'update']);
             });
+
+            #============================== ROUTE COUPON =============================
+            Route::prefix('coupons')->as('coupons.')->group(function () {
+                Route::get('/', [InstructorCouponController::class, 'index']);
+                Route::post('/', [InstructorCouponController::class, 'store']);
+                Route::put('/{couponId}', [InstructorCouponController::class, 'update']);
+                Route::delete('/{couponId}', [InstructorCouponController::class, 'destroy']);
+            });
         });
 
     #============================== ROUTE NOTE =============================
@@ -275,11 +283,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{note}', [NoteController::class, 'destroy']);
     });
 
+
+
+
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
        Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
 
     });
+
 
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {
@@ -291,8 +303,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE CHAT =============================
     Route::prefix('chats')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     #============================== ROUTE COMMENT =============================
     Route::prefix('comments')

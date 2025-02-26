@@ -37,6 +37,7 @@ class AuthController extends Controller
         // Kiểm tra email hợp lệ
         $request->validated();
 
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
