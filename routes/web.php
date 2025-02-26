@@ -360,6 +360,6 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
-                Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
+                // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
             });    
     });
