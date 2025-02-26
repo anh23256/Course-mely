@@ -158,6 +158,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
         });
 
+    Route::prefix('support-banks')->group(function () {
+        Route::get('/', [SupportBankController::class, 'index']);
+    });
+
     #============================== ROUTE INSTRUCTOR MANAGE =============================
     Route::prefix('instructor')
         ->middleware('roleHasInstructor')
@@ -168,11 +172,17 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
                 });
 
+            #============================== ROUTE SUPPORT BANK =================================
+            Route::prefix('support-banks')->group(function () {
+                Route::get('/', [SupportBankController::class, 'index']);
+                Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
+            });
+
             #============================== ROUTE WALLET =============================
             Route::prefix('wallet')
                 ->group(function () {
                     Route::get('/', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWallet']);
-                    Route::post('/withdraw', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withdraw']);
+                    Route::post('/withdraw-request', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withDrawRequest']);
                 });
 
             #============================== ROUTE LIVESTREAM =============================
@@ -336,12 +346,6 @@ Route::prefix('blogs')
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
     });
-
-#============================== ROUTE SUPPORT BANK =================================
-Route::prefix('support-banks')->group(function () {
-    Route::post('/', [SupportBankController::class, 'index']);
-    Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
-});
 
 #============================== ROUTE QA SYSTEM =================================
 Route::prefix('qa-systems')->group(function () {
