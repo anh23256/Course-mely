@@ -38,15 +38,15 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
         return  route('admin.coupons.accept', ['coupon_id' => $this->coupon->id]);
     }
 
-    public function toDatabase($notifiable)
+    public function notificationData()
     {
         return [
-            'message' => 'Mã giảm giá "' . $this->coupon->id . '" đã được tạo. Nhấn để nhận mã.',
+            'message' => 'Mã giảm giá "' . $this->coupon->name . '" đã được tạo. Nhấn để nhận mã.',
             'id' => $this->coupon->id,
             'code' => $this->coupon->code,
             'name' => $this->coupon->name,
             'discount_value' => $this->coupon->discount_value,
-            // 'action_url' => $this->getUrl(), // Liên kết nhận mã giảm giá
+            'action_url' => $this->getUrl(), // Liên kết nhận mã giảm giá
         ];
     }
     /**
