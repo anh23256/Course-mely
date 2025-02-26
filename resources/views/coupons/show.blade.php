@@ -81,7 +81,12 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3"><strong>Giá trị giảm giá:</strong></div>
-                            <div class="col-md-9">{{ $coupon->discount_value }}</div>
+                            <div class="col-md-9">{{ number_format($coupon->discount_value) }}
+                                {{ $coupon->discount_type == 'fixed' ? 'VND' : '%' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3"><strong>Giảm giá tối đa:</strong></div>
+                            <div class="col-md-9">{{ number_format($coupon->discount_max_value) }} VND</div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3"><strong>Ngày bắt đầu:</strong></div>

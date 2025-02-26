@@ -8,9 +8,9 @@
     <title>Certificate of Completion</title>
 </head>
 
-<body style="font-family: 'DejaVu Sans', sans-serif; text-align: center; margin: 0; padding: 0; background: #f8f9fa;">
+<body style="font-family: 'DejaVu Sans', sans-serif; text-align: center; margin: 0; padding: 0;background-image:url('{{public_path('assets/images/pngtree-red-and-gold-color-certificate-border-with-modern-style-png-image_6581429.png')}}');background-size: cover;">
     <div
-        style="position: relative;width: 900px; min-height: 400px; border: 10px solid #e67e22; border-radius: 15px; background: white; margin: 100px auto; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); padding: 40px;">
+        style="position: relative;width: 900px; min-height: 400px; border-radius: 15px; margin: 100px auto; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); padding: 40px;">
         <table style="width: 100%; position: absolute; top: 15px; left: 30px;">
             <tr>
                 <td style="width: 50%; text-align: left;">

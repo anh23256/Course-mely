@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Coupons\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupons\UpdateCouponRequest;
 use App\Models\Coupon;
+use App\Models\User;
+use App\Notifications\CouponCodeCreated;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -69,7 +71,16 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
-            Coupon::create($data);
+             // Gửi thông báo cho người dùng hoặc admin
+            $coupon = Coupon::create($data);
+            $roleUser = 'admin';
+             $admins = User::whereHas('roles', function ($query) use ($roleUser) {
+                 $query->where('name', $roleUser);
+             })->get();
+        
+            foreach ($admins as $admin) {
+                $admin->notify(new CouponCodeCreated($coupon)); // Gửi thông báo tới admin
+            }
             DB::commit();
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
