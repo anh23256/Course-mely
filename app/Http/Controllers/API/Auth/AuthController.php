@@ -50,7 +50,6 @@ class AuthController extends Controller
         // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
         $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
 
-
         // Gửi email
         Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl));
 

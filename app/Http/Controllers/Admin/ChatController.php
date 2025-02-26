@@ -24,9 +24,9 @@ use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
 {
-
     use LoggableTrait, UploadToCloudinaryTrait;
     const FOLDER = "messages";
+  
     public function index()
     {
         $data = $this->getAdminsAndChannels();
@@ -45,7 +45,7 @@ class ChatController extends Controller
             if (!isset($request->members) || !is_array($request->members) || count($request->members) < 2) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Nhóm phải có ít nhất 3 thành viên (bao gồm người tạo nhóm).'
+                    'error' => 'Nhóm phải có ít nhất 3 thành viên (bao gồm người tạo nhóm).'
                 ], 400);
             }
             // Tạo nhóm chat
@@ -97,6 +97,9 @@ class ChatController extends Controller
         if ($request->hasFile('fileinput')) {
             $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
         }
+        // if ($request->hasFile('fileinput')) {
+        //     $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
+        // }
         $message = Message::create([
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => auth()->id(),
@@ -131,17 +134,20 @@ class ChatController extends Controller
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
         })->get();
-
+        // $memberChannels = Con
         return [
             'admins' => $admins,
             'channels' => $channels
         ];
     }
+  
     public function getGroupInfo(Request $request)
     {
         try {
             $groupId = $request->id;
             $group = Conversation::findOrFail($groupId);
+            $member = $group->users()->select('user_id','name','avatar')->get();
+            $leader = User::find($group->owner_id);
 
             // Lấy số thành viên của nhóm
             $memberCount = $group->users()->count();
@@ -152,7 +158,9 @@ class ChatController extends Controller
                 'data' => [
                     'name' => $group->name,  // Tên nhóm
                     'memberCount' => $memberCount . ' thành viên', // Số thành viên
+                    'member' =>$member,
                     'group' => $group,
+                    'leader'=>$leader,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -162,6 +170,7 @@ class ChatController extends Controller
             ]);
         }
     }
+  
     public function getGroupMessages($conversationId)
     {
         $messages = Message::where('conversation_id', $conversationId)
