@@ -1072,6 +1072,17 @@
                 });
             }
 
+            function loadCourseRatingCharts(filterData) {
+                $.ajax({
+                    url: "{{ route('admin.revenue-statistics.index') }}",
+                    type: "GET",
+                    data: filterData,
+                    success: function(response) {
+                        updatePieChart(response.course_rating);
+                    }
+                });
+            }
+
             function getSelectedDateRange(keySelected) {
                 let button = $(keySelected);
 
@@ -1108,7 +1119,6 @@
                             "Hôm nay": [moment(), moment()],
                             "Hôm qua": [moment().subtract(1, "days"), moment().subtract(1, "days")],
                             "7 ngày trước": [moment().subtract(6, "days"), moment()],
-                            "30 ngày trước": [moment().subtract(29, "days"), moment()],
                             "Tháng này": [moment().startOf("month"), moment().endOf("month")],
                             "Tháng trước": [
                                 moment().subtract(1, "month").startOf("month"),
@@ -1142,7 +1152,7 @@
                         } else if (filter == "topCourseBoughtCourseMely") {
                             loadCoursesContent(data);
                         } else if (filter == "topRatingCourseMely") {
-
+                            loadCourseRatingCharts(data);
                         } else if (filter == "topStudentCourseMely") {
                             loadUsersContent(data);
                         }
@@ -1157,6 +1167,7 @@
         var chart;
         var pieChar;
         var newData = @json($system_Funds);
+        var ratingData = @json($courseRatings);
 
         function updateChart(newData) {
             let chartContainer = document.querySelector("#projects-overview-chart");
@@ -1253,8 +1264,13 @@
                 return;
             }
 
-            let labels = Object.keys(ratingData);
-            let series = Object.values(ratingData);
+            let series = [];
+            let labels = [];
+
+            ratingData.forEach(item => {   
+                series.push(parseFloat(item.total_courses));
+                labels.push(parseFloat(item.rating) + " sao");
+            });
 
             let pieOptions = {
                 series: series,
@@ -1271,14 +1287,6 @@
             pieChart = new ApexCharts(pieChartContainer, pieOptions);
             pieChart.render();
         }
-
-        let ratingData = {
-            "1 sao": 5,
-            "2 sao": 10,
-            "3 sao": 20,
-            "4 sao": 30,
-            "5 sao": 50
-        };
 
         updatePieChart(ratingData);
 

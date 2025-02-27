@@ -127,18 +127,21 @@ class RevenueStatisticController extends Controller
                     ->where('transactions.status', 'Giao dịch thành công');
             });
 
-        $courseRatings = DB::table('courses')
-            ->join('ratings', 'courses.id', '=', 'ratings.course_id')
-            ->selectRaw('FLOOR(AVG(ratings.rate)) as rating, COUNT(DISTINCT courses.id) as total_courses')
-            ->orderBy('rating', 'desc')->get();
+        $queryCourseRatings = DB::table(DB::raw('(SELECT course_id, FLOOR(AVG(rate)) as rating FROM ratings GROUP BY course_id) as subquery'))
+            ->join('courses', 'subquery.course_id', '=', 'courses.id')
+            ->selectRaw('rating, COUNT(course_id) as total_courses')
+            ->groupBy('rating')
+            ->orderBy('rating', 'desc');
 
-        list($queryTopInstructors, $queryTopUsers, $queryTopCourses, $querySystem_Funds, $querySumRevenueProfit) = $this->getFilterDataChart($request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $querySystem_Funds, $querySumRevenueProfit);
+        list($queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit) = $this->getFilterDataChart($request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit);
 
         $topInstructors = $queryTopInstructors->paginate(5);
 
         $topUsers = $queryTopUsers->paginate(5);
 
         $topCourses = $queryTopCourses->paginate(5);
+
+        $courseRatings = $queryCourseRatings->get();
 
         $system_Funds =  $querySystem_Funds->get();
 
@@ -154,6 +157,7 @@ class RevenueStatisticController extends Controller
                 'pagination_links_users' => $topUsers->links()->toHtml(),
                 'apexCharts' => $system_Funds,
                 'sumRevenueProfit' => $sumRevenueProfit,
+                'course_rating' => $courseRatings,
             ]);
         }
 
@@ -167,10 +171,11 @@ class RevenueStatisticController extends Controller
             'topUsers',
             'system_Funds',
             'sumRevenueProfit',
+            'courseRatings'
         ]));
     }
 
-    private function getFilterDataChart(Request $request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $querySystem_Funds, $querySumRevenueProfit)
+    private function getFilterDataChart(Request $request, $queryTopInstructors, $queryTopUsers, $queryTopCourses,  $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit)
     {
         $startDate = $request->input('startDate');
         $endDate = $request->input('endDate');
@@ -186,7 +191,7 @@ class RevenueStatisticController extends Controller
             } else if ($filter == "topCourseBoughtCourseMely") {
                 $queryTopCourses->where('invoices.created_at', '>=', $startDate)->where('invoices.created_at', '<=', $endDate);
             } else if ($filter == "topRatingCourseMely") {
-                $querySystem_Funds->where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate);
+                $queryCourseRatings->where('courses.created_at', '>=', $startDate)->where('courses.created_at', '<=', $endDate);
             } else if ($filter == "topStudentCourseMely") {
                 $queryTopUsers->where('invoices.created_at', '>=', $startDate)->where('invoices.created_at', '<=', $endDate);
             }
@@ -195,10 +200,13 @@ class RevenueStatisticController extends Controller
 
             $queryTopUsers->whereYear('invoices.created_at', $year);
 
+            $queryCourseRatings->whereYear('courses.created_at', $year);
+
             $querySystem_Funds->whereYear('created_at', $year);
+
             $querySumRevenueProfit->whereYear('created_at', $year);
         }
 
-        return [$queryTopInstructors, $queryTopUsers, $queryTopCourses, $querySystem_Funds, $querySumRevenueProfit];
+        return [$queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit];
     }
 }
