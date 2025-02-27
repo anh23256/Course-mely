@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', $title)
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
 @endpush
@@ -10,12 +11,12 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">{{ $title ?? '' }}</h4>
+                    <h4 class="mb-sm-0">Giao dịch thanh toán</h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item active"><a
-                                    href="{{ route('admin.withdrawals.index') }}">{{ $subTitle ?? '' }}</a></li>
+                                    href="{{ route('admin.transactions.index') }}">{{ $subTitle }}</a></li>
                         </ol>
                     </div>
 
@@ -26,35 +27,27 @@
 
         <!-- social-customer -->
         <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
                 <div class="card text-center h-75">
                     <div class="card-body">
-                        <h5 class="card-title">Tổng số yêu cầu rút tiền</h5>
-                        <p class="card-text fs-4">{{ $countWithdrawals->total_withdrawals ?? 0 }}</p>
+                        <h5 class="card-title">Tổng số giao dịch</h5>
+                        <p class="card-text fs-4">{{ $countTransactions->total_transactions ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
                 <div class="card text-center h-75">
                     <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền đang chờ duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $countWithdrawals->completed_withdrawals ?? 0 }}</p>
+                        <h5 class="card-title">Số giao dịch mua khóa học</h5>
+                        <p class="card-text fs-4 text-success">{{ $countTransactions->invoice_transactions ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
                 <div class="card text-center h-75">
                     <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thành công</h5>
-                        <p class="card-text fs-4 text-warning">{{ $countWithdrawals->pending_withdrawals ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thất bại</h5>
-                        <p class="card-text fs-4 text-danger">{{ $countWithdrawals->failed_withdrawals ?? 0 }}</p>
+                        <h5 class="card-title">Số giao dịch rút tiền</h5>
+                        <p class="card-text fs-4 text-warning">{{ $countTransactions->withdrawal_transactions ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -66,7 +59,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0">Danh sách yêu cầu rút tiền</h4>
+                        <h4 class="card-title mb-0">Danh sách giao dịch thanh toán</h4>
                         <div class="d-flex gap-2">
                             <div class="col-sm">
                                 <div class="d-flex justify-content-sm-end">
@@ -79,9 +72,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
-                                dữ
-                                liệu</a>
+
+                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.transactions.export') }}">Export
+                                dữ liệu</a>
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
@@ -116,18 +109,18 @@
                                             <div class="row">
                                                 <li class="col-6">
                                                     <div class="mb-2">
-                                                        <label for="startDate" class="form-label">Ngày yêu cầu</label>
+                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="request_date" id="dateRequest" data-filter
-                                                               value="{{ request()->input('request_date') ?? '' }}">
+                                                               name="startDate" id="dateRequest" data-filter
+                                                               value="{{ request()->input('startDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
                                                     <div class="mb-2">
-                                                        <label for="endDate" class="form-label">Ngày xác nhận</label>
+                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="completed_date" id="dateComplete" data-filter
-                                                               value="{{ request()->input('completed_date') ?? '' }}">
+                                                               name="endDate" id="dateComplete" data-filter
+                                                               value="{{ request()->input('endDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                             </div>
@@ -150,44 +143,49 @@
                         <form>
                             <div class="row">
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên chủ tài khoản</label>
-                                    <input class="form-control form-control-sm" name="account_holder" type="text"
-                                           placeholder="Nhập tên chủ tài khoản..."
-                                           value="{{ request()->input('account_holder') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Mã giao dịch</label>
+                                    <input class="form-control form-control-sm" name="transaction_code" type="text"
+                                           placeholder="Nhập tên mã giao dịch..."
+                                           value="{{ request()->input('transaction_code') ?? '' }}"
+                                           data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Số tài khoản</label>
-                                    <input class="form-control form-control-sm" name="account_number" type="text"
-                                           placeholder="Nhập tên số tài khoản..."
-                                           value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Người thực hiện giao dịch</label>
+                                    <input class="form-control form-control-sm" name="user_name_transaction" type="text"
+                                           placeholder="Nhập tên người thực hiện giao dịch..."
+                                           value="{{ request()->input('user_name_transaction') ?? '' }}"
+                                           data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="statusItem" class="form-label">Trạng thái</label>
-                                    <select class="form-select form-select-sm" name="status" id="statusItem"
+                                    <label for="statusTransaction" class="form-label">Trạng thái</label>
+                                    <select class="form-select form-select-sm" name="status" id="statusTransaction"
                                             data-advanced-filter>
                                         <option value="">Chọn trạng thái</option>
-                                        <option value="completed" @selected(request()->input('status') === 'completed')>
-                                            Hoàn thành
+                                        <option
+                                            value="Giao dịch thành công" @selected(request()->input('status') === 'Giao dịch thành công')>
+                                            Giao dịch thành công
                                         </option>
-                                        <option value="pending" @selected(request()->input('status') === 'pending')>Đang
+                                        <option value="Chờ xử lý" @selected(request()->input('status') === 'Chờ xử lý')>
+                                            Chờ
                                             xử lý
                                         </option>
-                                        <option value="failed" @selected(request()->input('status') === 'failed')>Thất
+                                        <option value="Thất bại" @selected(request()->input('status') === 'Thất bại')>
+                                            Thất
                                             bại
                                         </option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="bankName" class="form-label">Ngân hàng</label>
-                                    <select class="form-select form-select-sm" name="bank_name" id="bankName"
+                                    <label for="typeTransaction" class="form-label">Loại giao dịch</label>
+                                    <select class="form-select form-select-sm" name="type" id="typeTransaction"
                                             data-advanced-filter>
-                                        <option value="">Chọn ngân hàng</option>
-                                        @foreach ($supportedBank as $bank)
-                                            <option
-                                                value="{{ $bank->name }}" @selected(request()->input('bank_name') === $bank->name)>
-                                                {{ $bank->name . ' (' . $bank->short_name . ')' }}
-                                            </option>
-                                        @endforeach
+                                        <option value="">Chọn loại giao dịch</option>
+                                        <option value="invoice" @selected(request()->input('type') === 'invoice')>Mua
+                                            bán
+                                        </option>
+                                        <option value="withdrawal" @selected(request()->input('type') === 'withdrawal')>
+                                            Rút tiền
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="mt-3 text-end">
@@ -205,63 +203,71 @@
                                     <thead class="table-light">
                                     <tr>
                                         <th>STT</th>
-                                        <th>Ngân hàng</th>
-                                        <th>Tên chủ tài khoản</th>
-                                        <th>Số tài khoản</th>
+                                        <th>Mã giao dịch</th>
+                                        <th>Người thực hiện giao dịch</th>
+                                        <th>Email</th>
                                         <th>Số tiền</th>
-                                        <th>QR</th>
+                                        <th>Loại giao dịch</th>
                                         <th>Trạng thái</th>
-                                        <th>Ngày yêu cầu</th>
-                                        <th>Ngày xác nhận</th>
+                                        <th>Ngày tạo giao dịch</th>
                                         <th>Thao tác</th>
                                     </tr>
                                     </thead>
                                     <tbody class="list">
-                                    @foreach ($withdrawals as $withdrawal)
+                                    @foreach ($transactions as $transaction)
+                                        @dd($transaction->where('transation'))
                                         <tr>
                                             <td>{{ $loop->index + 1 }}</td>
-                                            <td>{{ \Illuminate\Support\Str::limit($withdrawal->bank_name ?? 'Không có thông tin',40) }}</td>
-                                            <td>{{ $withdrawal->account_holder ?? 'Không có thông tin' }}</td>
+                                            <td>{{ $transaction->transaction_code ?? 'Không có thông tin' }}</td>
                                             <td><span
-                                                    class="text-danger">{{ $withdrawal->account_number ?? 'Không có thông tin' }}</span>
+                                                    class="text-primary fw-bold">{{ $transaction->user->name ?? 'Không có thông tin'}}</span>
                                             </td>
-                                            <td>{{ number_format($withdrawal->amount ?? 0) }} VND</td>
+                                            <td>{{ $transaction->user->email ?? 'Không có thông tin' }}</td>
+                                            <td>{{ number_format($transaction->amount) ?? 0 }} VND</td>
                                             <td>
-                                                <img
-                                                    id="thumbnail-{{ $withdrawal->id }}"
-                                                    class="img-thumbnail img-preview"
-                                                    width="50"
-                                                    height="50"
-                                                    src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
-                                                    alt="QR Code {{ $withdrawal->id }}"
-                                                    style="cursor: pointer;"
-                                                />
-                                            </td>
-                                            <td>
-                                                @if ($withdrawal->status === 'Hoàn thành')
-                                                    <span class="badge bg-success w-100">Hoàn thành</span>
-                                                @elseif($withdrawal->status === 'Đang xử lý')
-                                                    <span class="badge bg-warning w-100">Đang xử lý</span>
-                                                @elseif($withdrawal->status === 'Chờ xác nhận lại')
-                                                    <span class="badge bg-primary w-100">Chờ xác nhận lại</span>
-                                                @elseif($withdrawal->status === 'Đã xử lý')
-                                                    <span class="badge bg-info w-100">Đã xử lý</span>
-                                                @elseif($withdrawal->status === 'Từ chối')
-                                                    <span class="badge bg-danger w-100">Từ chối</span>
-                                                @else
-                                                    <span class="badge bg-secondary w-100">Không xác định</span>
+                                                @if ($transaction->type === 'invoice')
+                                                    <span class="badge bg-success w-50">
+                                                            Mua bán
+                                                        </span>
+                                                @elseif($transaction->type === 'withdrawal')
+                                                    <span class="badge bg-info w-50">
+                                                            Rút tiền
+                                                        </span>
                                                 @endif
                                             </td>
-                                            <td>{!! $withdrawal->request_date ? \Carbon\Carbon::parse($withdrawal->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Không có thông tin</span>' !!}
+                                            <td class="col-1">
+                                                @if ($transaction->status === 'Giao dịch thành công')
+                                                    <span class="badge bg-success w-100">
+                                                            {{ $transaction->status }}
+                                                        </span>
+                                                @elseif($transaction->status === 'Chờ xử lý')
+                                                    <span class="badge bg-warning w-100">
+                                                            {{ $transaction->status }}
+                                                        </span>
+                                                @else
+                                                    <span class="badge bg-danger w-100">
+                                                            {{ $transaction->status }}
+                                                        </span>
+                                                @endif
                                             </td>
-                                            <td>{!! $withdrawal->completed_date ? \Carbon\Carbon::parse($withdrawal->completed_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa xác nhận</span>' !!}
+                                            <td>{{ $transaction->created_at ?? '' }}
                                             </td>
                                             <td>
-                                                <a href="{{ route('admin.withdrawals.show', $withdrawal->id) }}">
-                                                    <button class="btn btn-sm btn-info edit-item-btn">
-                                                        <span class="ri-eye-line"></span>
-                                                    </button>
-                                                </a>
+                                                @if($transaction->type === 'withdrawal')
+                                                    <a
+                                                        href="{{ route('admin.withdrawals.show', $transaction->transaction_code) }}">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                @else
+                                                    <a
+                                                        href="{{ route('admin.transactions.show', $transaction->transaction_code) }}">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -270,7 +276,7 @@
                             </div>
 
                             <div class="row justify-content-end">
-                                {{ $withdrawals->appends(request()->query())->links() }}
+                                {{ $transactions->appends(request()->query())->links() }}
                             </div>
                         </div>
                     </div>
@@ -281,18 +287,11 @@
         </div>
         <!-- end List-customer -->
     </div>
-
-    <div id="imagePreview"
-         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1050; justify-content: center; align-items: center;">
-        <img id="previewImage" src="" class="img-fluid"
-             style="max-width: 90%; max-height: 90%; border: 3px solid #fff; border-radius: 8px;"/>
-    </div>
-
 @endsection
 
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.withdrawals.index') }}";
+        var routeUrlFilter = "{{ route('admin.transactions.index') }}";
 
         function updateRange() {
             var minValue = $('#amountMinRange').val();
@@ -310,19 +309,6 @@
         $(document).on('click', '#resetFilter', function () {
             window.location = routeUrlFilter;
         });
-
-        $(document).ready(function () {
-            $('.img-preview').on('click', function () {
-                const imageUrl = $(this).attr('src');
-                $('#previewImage').attr('src', imageUrl);
-                $('#imagePreview').fadeIn();
-            });
-
-            $('#imagePreview').on('click', function () {
-                $(this).fadeOut();
-            });
-        });
-
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>

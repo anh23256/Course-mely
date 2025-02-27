@@ -8,11 +8,15 @@ use App\Models\SupportedBank;
 use App\Models\SystemFund;
 use App\Models\SystemFundTransaction;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\WithdrawalRequest;
+use App\Notifications\ConfirmPaymentToInstructorNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -99,6 +103,33 @@ class WithDrawalsRequestController extends Controller
                     'message' => 'Yêu cầu đã được xử lý, không thể thay đổi',
                 ]);
             }
+            if ($withdrawal->status === 'Chờ xác nhận lại') {
+                $transation = Transaction::query()
+                    ->where('transactionable_id', $withdrawal->id)
+                    ->where('transactionable_type', WithdrawalRequest::class)
+                    ->first();
+
+                $systemFundTransaction = SystemFundTransaction::query()
+                    ->where('transaction_id', $transation->id)
+                    ->first();
+
+                if ($systemFundTransaction) {
+                    $withdrawal->update([
+                        'status' => 'Đã xử lý',
+                        'admin_comment' => $request->input('admin_comment') ?? $withdrawal->admin_comment,
+                        'instructor_confirmation' => 'not_received',
+                    ]);
+                }
+
+                $this->sendOrUpdateNotification($withdrawal);
+
+                DB::commit();
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Xử lý yêu cầu phản hồi thành công',
+                ]);
+            }
 
             $systemFund = SystemFund::query()
                 ->lockForUpdate()
@@ -146,6 +177,8 @@ class WithDrawalsRequestController extends Controller
                 'completed_date' => now()
             ]);
 
+            $this->sendOrUpdateNotification($withdrawal);
+
             DB::commit();
 
             return response()->json([
@@ -155,6 +188,72 @@ class WithDrawalsRequestController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            $this->logError($e, $request->all());
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    protected function sendOrUpdateNotification($withdrawal)
+    {
+        $user = $withdrawal->wallet->user;
+
+        $message = $withdrawal->status === 'Đã xử lý'
+            ? "Yêu cầu thanh toán của bạn đã được xử lý với số tiền " . number_format($withdrawal->amount) . " VND."
+            : "Yêu cầu thanh toán của bạn đã được xử lý thành công";
+
+        $existingNotification = DatabaseNotification::query()
+            ->where('notifiable_id', $user->id)
+            ->where('notifiable_type', 'App\Models\User')
+            ->where('type', ConfirmPaymentToInstructorNotification::class)
+            ->whereJsonContains('data->withdrawal_id', $withdrawal->id)
+            ->first();
+
+        if ($existingNotification) {
+            $existingNotification->update([
+                'data' => [
+                    'withdrawal_id' => $withdrawal->id,
+                    'status' => $withdrawal->status,
+                    'amount' => $withdrawal->amount,
+                    'message' => $message,
+                ]
+            ]);
+
+            $user->notify(new ConfirmPaymentToInstructorNotification(
+                $withdrawal,
+                $message
+            ));
+        } else {
+            $user->notify(new ConfirmPaymentToInstructorNotification(
+                $withdrawal,
+                $message
+            ));
+        }
+    }
+
+    public function checkStatus(Request $request)
+    {
+        try {
+            $withdrawalId = $request->input('withdrawal_id');
+
+            Artisan::call('with-drawal-transation:check', [
+                'id' => $withdrawalId
+            ]);
+
+            $withdrawal = WithdrawalRequest::query()->find($withdrawalId);
+            $transaction = Transaction::query()
+                ->where('transactionable_type', WithdrawalRequest::class)
+                ->where('transactionable_id', $withdrawalId)
+                ->first();
+            $systemFundTransaction = SystemFundTransaction::query()
+                ->where('transaction_id', $transaction->id)->first();
+
+            return response()->json([
+                'withdrawal_request' => $withdrawal,
+                'transaction' => $transaction,
+                'system_fund_transaction' => $systemFundTransaction,
+            ]);
+        } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
