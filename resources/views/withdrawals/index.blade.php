@@ -165,14 +165,23 @@
                                     <select class="form-select form-select-sm" name="status" id="statusItem"
                                         data-advanced-filter>
                                         <option value="">Chọn trạng thái</option>
-                                        <option value="Thành công" @selected(request()->input('status') == 'Thành công')>
-                                            Thành công
+                                        <option value="Hoàn thành" @selected(request()->input('status') == 'Hoàn thành')>
+                                           Hoàn thành
                                         </option>
                                         <option value="Đang xử lý" @selected(request()->input('status') == 'Đang xử lý')>
                                             Đang xử lý
                                         </option>
-                                        <option value="Thất bại" @selected(request()->input('status') == 'Thất bại')>
-                                            Thất bại
+                                        <option value="Chờ xác nhận lại" @selected(request()->input('status') == 'Chờ xác nhận lại')>
+                                            Chờ xác nhận lại
+                                        </option>
+                                        <option value="Đã xử lý" @selected(request()->input('status') == 'Đã xử lý')>
+                                          Đã xử lý
+                                        </option>
+                                        <option value="Từ chối" @selected(request()->input('status') == 'Từ chối')>
+                                            Từ chối
+                                        </option>
+                                        <option value="Không xác định" @selected(request()->input('status') == 'Không xác định')>
+                                            Không xác định
                                         </option>
                                     </select>
                                 </div>
@@ -215,54 +224,54 @@
                                         </tr>
                                     </thead>
                                     <tbody class="list">
-                                    @foreach ($withdrawals as $withdrawal)
-                                        <tr>
-                                            <td>{{ $loop->index + 1 }}</td>
-                                            <td>{{ \Illuminate\Support\Str::limit($withdrawal->bank_name ?? 'Không có thông tin',40) }}</td>
-                                            <td>{{ $withdrawal->account_holder ?? 'Không có thông tin' }}</td>
-                                            <td><span
-                                                    class="text-danger">{{ $withdrawal->account_number ?? 'Không có thông tin' }}</span>
-                                            </td>
-                                            <td>{{ number_format($withdrawal->amount ?? 0) }} VND</td>
-                                            <td>
-                                                <img
-                                                    id="thumbnail-{{ $withdrawal->id }}"
-                                                    class="img-thumbnail img-preview"
-                                                    width="50"
-                                                    height="50"
-                                                    src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
-                                                    alt="QR Code {{ $withdrawal->id }}"
-                                                    style="cursor: pointer;"
-                                                />
-                                            </td>
-                                            <td>
-                                                @if ($withdrawal->status === 'Hoàn thành')
-                                                    <span class="badge bg-success w-100">Hoàn thành</span>
-                                                @elseif($withdrawal->status === 'Đang xử lý')
-                                                    <span class="badge bg-warning w-100">Đang xử lý</span>
-                                                @elseif($withdrawal->status === 'Chờ xác nhận lại')
-                                                    <span class="badge bg-primary w-100">Chờ xác nhận lại</span>
-                                                @elseif($withdrawal->status === 'Đã xử lý')
-                                                    <span class="badge bg-info w-100">Đã xử lý</span>
-                                                @elseif($withdrawal->status === 'Từ chối')
-                                                    <span class="badge bg-danger w-100">Từ chối</span>
-                                                @else
-                                                    <span class="badge bg-secondary w-100">Không xác định</span>
-                                                @endif
-                                            </td>
-                                            <td>{!! $withdrawal->request_date ? \Carbon\Carbon::parse($withdrawal->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Không có thông tin</span>' !!}
-                                            </td>
-                                            <td>{!! $withdrawal->completed_date ? \Carbon\Carbon::parse($withdrawal->completed_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa xác nhận</span>' !!}
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('admin.withdrawals.show', $withdrawal->id) }}">
-                                                    <button class="btn btn-sm btn-info edit-item-btn">
-                                                        <span class="ri-eye-line"></span>
-                                                    </button>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                                        @foreach ($withdrawals as $withdrawal)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ \Illuminate\Support\Str::limit($withdrawal->bank_name ?? 'Không có thông tin', 40) }}
+                                                </td>
+                                                <td>{{ $withdrawal->account_holder ?? 'Không có thông tin' }}</td>
+                                                <td><span
+                                                        class="text-danger">{{ $withdrawal->account_number ?? 'Không có thông tin' }}</span>
+                                                </td>
+                                                <td>{{ number_format($withdrawal->amount ?? 0) }} VND</td>
+                                                <td>
+                                                    <img id="thumbnail-{{ $withdrawal->id }}"
+                                                        class="img-thumbnail img-preview" width="50" height="50"
+                                                        src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
+                                                        alt="QR Code {{ $withdrawal->id }}" style="cursor: pointer;" />
+                                                </td>
+                                                <td>
+                                                    @if ($withdrawal->status === 'Hoàn thành')
+                                                        <span class="badge bg-success w-100">Hoàn thành</span>
+                                                    @elseif($withdrawal->status === 'Đang xử lý')
+                                                        <span class="badge bg-warning w-100">Đang xử lý</span>
+                                                    @elseif($withdrawal->status === 'Chờ xác nhận lại')
+                                                        <span class="badge bg-primary w-100">Chờ xác nhận lại</span>
+                                                    @elseif($withdrawal->status === 'Đã xử lý')
+                                                        <span class="badge bg-info w-100">Đã xử lý</span>
+                                                    @elseif($withdrawal->status === 'Từ chối')
+                                                        <span class="badge bg-danger w-100">Từ chối</span>
+                                                    @else
+                                                        <span class="badge bg-secondary w-100">Không xác định</span>
+                                                    @endif
+                                                </td>
+                                                <td>{!! $withdrawal->request_date
+                                                    ? \Carbon\Carbon::parse($withdrawal->request_date)->format('d/m/Y')
+                                                    : '<span class="btn btn-sm btn-soft-warning">Không có thông tin</span>' !!}
+                                                </td>
+                                                <td>{!! $withdrawal->completed_date
+                                                    ? \Carbon\Carbon::parse($withdrawal->completed_date)->format('d/m/Y')
+                                                    : '<span class="btn btn-sm btn-soft-warning">Chưa xác nhận</span>' !!}
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('admin.withdrawals.show', $withdrawal->id) }}">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
