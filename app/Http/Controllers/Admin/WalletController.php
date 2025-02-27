@@ -26,6 +26,8 @@ class WalletController extends Controller
             $search_full = $request->input('search') ?? '';
             $limitSystemFund = $request->input('page') ?? 10;
 
+            $balanceSystem = SystemFund::first();
+
             $systemFunds = DB::table('system_fund_transactions')
                 ->select(
                     DB::raw('DATE(created_at) as day'),
@@ -59,12 +61,10 @@ class WalletController extends Controller
                 ], 200);
             }
 
-            $wallet = Wallet::query()->where('user_id', Auth::id())->first();
-
             return view('wallets.index', compact([
                 'systemFunds',
-                'wallet',
                 'title',
+                'balanceSystem'
             ]));
         } catch (\Exception $e) {
             $this->logError($e);
