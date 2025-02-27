@@ -444,7 +444,7 @@ class LearningPathController extends Controller
 
             if ($progressPercent == 100) {
                 $courseUser->completed_at = now();
-                CreateCertificateJob::dispatch($userId, $courseId)->delay(20);
+                CreateCertificateJob::dispatch($userId, $courseId);
             } else {
                 $courseUser->completed_at = null;
             }

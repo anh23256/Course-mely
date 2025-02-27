@@ -53,7 +53,7 @@
                                             </div>
                                             <h4 class="fs-22 fw-semibold ff-secondary">
                                                 <span class="counter-value" data-target="559.25">
-                                                    {{ number_format($totalRevenue ?? 0) }}
+                                                    {{ number_format($totalAmount->totalRevenue ?? 0) }}
                                                 </span>
                                             </h4>
                                         </div>
@@ -86,7 +86,7 @@
                                             </div>
                                             <h4 class="fs-22 fw-semibold ff-secondary">
                                                 <span class="counter-value" data-target="36894">
-                                                    {{ number_format($totalProfit ?? 0) }}
+                                                    {{ number_format($totalAmount->totalProfit ?? 0) }}
                                                 </span>
                                             </h4>
                                         </div>
@@ -166,20 +166,7 @@
                             <div class="card">
                                 <div class="card-header border-0 align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Doanh thu 2025 CourseMeLy</h4>
-                                    <div class="d-flex gap-1">
-                                        <input type="date" id="datePicker" class="form-control btn-soft-danger btn-sm"
-                                            name="created_at">
-                                        <input type="button" class="btn btn-soft-secondary btn-sm filter-btn"
-                                            value="Tất cả" name="apex_chart_all">
-                                        <input type="button" class="btn btn-soft-secondary btn-sm filter-btn"
-                                            value="1 tháng trước" name="created_at"
-                                            data-value="{{ now(env('APP_TIMEZONE'))->subMonth() }}">
-                                        <input type="button" class="btn btn-soft-secondary btn-sm filter-btn"
-                                            value="6 tháng trước" name="created_at"
-                                            data-value="{{ now(env('APP_TIMEZONE'))->subMonths(6) }}">
-                                        <input type="button" class="btn btn-soft-primary btn-sm filter-btn"
-                                            value="1 năm trước" name="created_at"
-                                            data-value="{{ now(env('APP_TIMEZONE'))->subYear() }}">
+                                    <div class="dateRangePicker" data-filter="totalRevenueCourseMely">
                                     </div>
                                 </div>
                                 <!-- end card header -->
@@ -189,8 +176,7 @@
                                     <div class="row g-0 text-center">
                                         <div class="col-6 col-sm-6">
                                             <div class="p-3 border border-dashed border-start-0">
-                                                <h5 class="mb-1"><span class="counter-value-revenue"
-                                                        data-target="228.89">
+                                                <h5 class="mb-1"><span class="counter-value-revenue" data-target="228.89">
                                                         {{ number_format($sumRevenueProfit->total_revenue ?? 0) }}</span>
                                                     VND</h5>
                                                 <p class="text-muted mb-0">Doanh thu</p>
@@ -224,6 +210,8 @@
                             <div class="card card-height-100">
                                 <div class="card-header align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Người hướng dẫn nổi bật</h4>
+                                    <div class="dateRangePicker" data-filter="topInstructorCourseMely">
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive table-card">
@@ -297,20 +285,12 @@
                                     <h4 class="card-title mb-0 flex-grow-1">Top khoá học bán chạy </h4>
                                     <div class="flex-shrink-0">
                                         <div class="dropdown card-header-dropdown">
-                                            <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
+                                            <a class="text-reset" href="#" data-bs-toggle="dropdown"
                                                 aria-haspopup="true" aria-expanded="false">
-                                                <span class="fw-semibold text-uppercase fs-12">Sort by:
-                                                </span><span class="text-muted">Today<i
-                                                        class="mdi mdi-chevron-down ms-1"></i></span>
+                                                <div class="dateRangePicker" data-filter="topCourseBoughtCourseMely">
+                                                </div>
                                             </a>
-                                            <div class="dropdown-menu dropdown-menu-end">
-                                                <a class="dropdown-item" href="#">Today</a>
-                                                <a class="dropdown-item" href="#">Yesterday</a>
-                                                <a class="dropdown-item" href="#">Last 7 Days</a>
-                                                <a class="dropdown-item" href="#">Last 30 Days</a>
-                                                <a class="dropdown-item" href="#">This Month</a>
-                                                <a class="dropdown-item" href="#">Last Month</a>
-                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -381,26 +361,12 @@
                                     <h4 class="card-title mb-0 flex-grow-1">
                                         Đánh giá khoá học
                                     </h4>
-                                    <div class="flex-shrink-0">
-                                        <div class="dropdown card-header-dropdown">
-                                            <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                                aria-haspopup="true" aria-expanded="false">
-                                                <span class="text-muted">Report<i
-                                                        class="mdi mdi-chevron-down ms-1"></i></span>
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-end">
-                                                <a class="dropdown-item" href="#">Download Report</a>
-                                                <a class="dropdown-item" href="#">Export</a>
-                                                <a class="dropdown-item" href="#">Import</a>
-                                            </div>
-                                        </div>
+                                    <div class="dateRangePicker" data-filter="topRatingCourseMely">
                                     </div>
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
-                                    <div id="store-visits-source"
-                                        data-colors='["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]'
-                                        class="apex-charts" dir="ltr"></div>
+                                    <div id="rating-pie-chart" dir="ltr"></div>
                                 </div>
                             </div> <!-- .card-->
                         </div> <!-- .col-->
@@ -409,6 +375,8 @@
                             <div class="card">
                                 <div class="card-header align-items-center d-flex">
                                     <h4 class="card-title mb-0 flex-grow-1">Top học viên </h4>
+                                    <div class="dateRangePicker" data-filter="topStudentCourseMely">
+                                    </div>
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
@@ -974,6 +942,9 @@
     <!-- Dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard-ecommerce.init.js') }}"></script>
     {{-- <script src="{{ asset('assets/js/pages/dashboard-projects.init.js') }}"></script> --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
+    <script src="{{ asset('assets/js/pages/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             var currentHour = new Date().getHours();
@@ -994,25 +965,48 @@
             $(document).on('click', '#pagination-links-courses a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadCoursesContent(page);
+
+                const keySelected = ".dateRangePicker[data-filter='topCourseBoughtCourseMely']";
+
+                let dataFilter = getSelectedDateRange(keySelected);
+
+                dataFilter.page = page;
+
+                loadCoursesContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-instructors a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadInstructorsContent(page);
+
+                const keySelected = ".dateRangePicker[data-filter='topInstructorCourseMely']";
+
+                let dataFilter = getSelectedDateRange(keySelected);
+
+                dataFilter.page = page;
+
+                loadInstructorsContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-users a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadUsersContent(page);
+
+                const keySelected = ".dateRangePicker[data-filter='topStudentCourseMely']";
+
+                let dataFilter = getSelectedDateRange(keySelected);
+
+                dataFilter.page = page;
+
+                loadUsersContent(dataFilter);
             });
 
-            function loadCoursesContent(page) {
+            function loadCoursesContent(dataFilter) {
+                dataFilter.type = "courses";
                 $.ajax({
-                    url: "{{ route('admin.revenue-statistics.index') }}?page=" + page + "&type=courses",
+                    url: "{{ route('admin.revenue-statistics.index') }}",
                     type: "GET",
+                    data: dataFilter,
                     dataType: "json",
                     success: function(data) {
                         $('#table-courses tbody').html(data.top_courses_table);
@@ -1021,11 +1015,12 @@
                 });
             }
 
-            function loadInstructorsContent(page) {
+            function loadInstructorsContent(dataFilter) {
+                dataFilter.type = 'instructors';
                 $.ajax({
-                    url: "{{ route('admin.revenue-statistics.index') }}?page=" + page +
-                        "&type=instructors",
+                    url: "{{ route('admin.revenue-statistics.index') }}",
                     type: "GET",
+                    data: dataFilter,
                     dataType: "json",
                     success: function(data) {
                         $('#table-instructors tbody').html(data.top_instructors_table);
@@ -1034,10 +1029,12 @@
                 });
             }
 
-            function loadUsersContent(page) {
+            function loadUsersContent(dataFilter) {
+                dataFilter.type = 'user';
                 $.ajax({
-                    url: "{{ route('admin.revenue-statistics.index') }}?page=" + page + "&type=users",
+                    url: "{{ route('admin.revenue-statistics.index') }}",
                     type: "GET",
+                    data: dataFilter,
                     dataType: "json",
                     success: function(data) {
                         $('#table-users tbody').html(data.top_users_table);
@@ -1046,26 +1043,6 @@
                 });
             }
 
-            $(document).on("click", ".filter-btn", function() {
-                var selectedValue = $(this).data("value");
-                var key = $(this).attr("name");
-
-                var filterData = {};
-                filterData[key] = selectedValue;
-
-                loadApexCharts(filterData);
-            });
-
-            $(document).on("change", "#datePicker", function() {
-                var selectedValue = $(this).val();
-                var key = $(this).attr("name");
-
-                var filterData = {};
-                filterData[key] = selectedValue;
-
-                loadApexCharts(filterData);
-            });
-
             function loadApexCharts(filterData) {
                 $.ajax({
                     url: "{{ route('admin.revenue-statistics.index') }}",
@@ -1073,6 +1050,9 @@
                     data: filterData,
                     success: function(response) {
                         updateChart(response.apexCharts);
+
+                        console.log(response);
+
 
                         if (response.sumRevenueProfit) {
                             let totalRevenue = Math.floor(Number(response.sumRevenueProfit
@@ -1091,9 +1071,91 @@
                     }
                 });
             }
+
+            function getSelectedDateRange(keySelected) {
+                let button = $(keySelected);
+
+                return {
+                    startDate: button.attr("data-start"),
+                    endDate: button.attr("data-end"),
+                    filter: button.data("filter")
+                };
+            }
+
+            $(".dateRangePicker").each(function() {
+                let button = $(this);
+                let filter = $(this).data('filter');
+
+                function updateDateRangeText(start, end) {
+                    button.html("📅 " + start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY"));
+
+                    button.attr("data-start", start.format("YYYY-MM-DD"));
+                    button.attr("data-end", end.format("YYYY-MM-DD"));
+                }
+
+                let defaultStart = moment().startOf("year");
+                let defaultEnd = moment();
+
+                button.daterangepicker({
+                        autoUpdateInput: false,
+                        showDropdowns: true,
+                        linkedCalendars: false,
+                        minDate: moment("2000-01-01"),
+                        maxDate: moment(),
+                        startDate: defaultStart,
+                        endDate: defaultEnd,
+                        ranges: {
+                            "Hôm nay": [moment(), moment()],
+                            "Hôm qua": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+                            "7 ngày trước": [moment().subtract(6, "days"), moment()],
+                            "30 ngày trước": [moment().subtract(29, "days"), moment()],
+                            "Tháng này": [moment().startOf("month"), moment().endOf("month")],
+                            "Tháng trước": [
+                                moment().subtract(1, "month").startOf("month"),
+                                moment().subtract(1, "month").endOf("month"),
+                            ],
+                            "1 năm trước": [defaultStart, defaultEnd],
+                        },
+                        locale: {
+                            format: "DD/MM/YYYY",
+                            applyLabel: "Áp dụng",
+                            cancelLabel: "Hủy",
+                            customRangeLabel: "Tùy chỉnh",
+                        },
+                    },
+                    function(start, end) {
+                        updateDateRangeText(start, end);
+
+                        let data = {
+                            startDate: start.format("YYYY-MM-DD"),
+                            endDate: end.format("YYYY-MM-DD"),
+                            filter: filter,
+                            page: 1,
+                        };
+
+                        console.log("Filter:", filter, "data:", data);
+
+                        if (filter == "totalRevenueCourseMely") {
+                            loadApexCharts(data);
+                        } else if (filter == "topInstructorCourseMely") {
+                            loadInstructorsContent(data);
+                        } else if (filter == "topCourseBoughtCourseMely") {
+                            loadCoursesContent(data);
+                        } else if (filter == "topRatingCourseMely") {
+
+                        } else if (filter == "topStudentCourseMely") {
+                            loadUsersContent(data);
+                        }
+                    }
+                );
+
+                updateDateRangeText(defaultStart, defaultEnd);
+            });
+
         });
 
         var chart;
+        var pieChar;
         var newData = @json($system_Funds);
 
         function updateChart(newData) {
@@ -1119,7 +1181,7 @@
             let profitData = [];
 
             newData.forEach(item => {
-                categories.push("Tháng " + item.month);
+                categories.push("Tháng " + item.month + ", " + item.year);
                 revenueData.push(parseFloat(item.total_revenue));
                 profitData.push(parseFloat(item.total_profit));
             });
@@ -1140,13 +1202,25 @@
                     height: 374,
                     type: "line",
                     toolbar: {
-                        show: false
+                        show: true
+                    },
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800
                     }
                 },
+                colors: ["#007bff", "#ff4d4d"],
                 xaxis: {
-                    categories: categories
+                    categories: categories,
+                    tickPlacement: 'on',
+                    labels: {
+                        rotate: -45
+                    },
+                    scrollbar: {
+                        enabled: true
+                    }
                 },
-
                 tooltip: {
                     y: {
                         formatter: function(value) {
@@ -1160,6 +1234,53 @@
             chart = new ApexCharts(chartContainer, options);
             chart.render();
         }
+
+        function updatePieChart(ratingData) {
+            let pieChartContainer = document.querySelector("#rating-pie-chart");
+
+            if (typeof pieChart !== "undefined" && pieChart) {
+                pieChart.destroy();
+                pieChart = undefined;
+            }
+
+            pieChartContainer.innerHTML = "";
+
+            if (!ratingData || Object.keys(ratingData).length === 0) {
+                pieChartContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #999;">
+                <p><i class="fas fa-exclamation-circle"></i> Không có đánh giá nào</p>
+            </div>`;
+                return;
+            }
+
+            let labels = Object.keys(ratingData);
+            let series = Object.values(ratingData);
+
+            let pieOptions = {
+                series: series,
+                chart: {
+                    type: "pie",
+                    height: 350
+                },
+                labels: labels,
+                legend: {
+                    position: "bottom"
+                }
+            };
+
+            pieChart = new ApexCharts(pieChartContainer, pieOptions);
+            pieChart.render();
+        }
+
+        let ratingData = {
+            "1 sao": 5,
+            "2 sao": 10,
+            "3 sao": 20,
+            "4 sao": 30,
+            "5 sao": 50
+        };
+
+        updatePieChart(ratingData);
 
         updateChart(newData);
     </script>

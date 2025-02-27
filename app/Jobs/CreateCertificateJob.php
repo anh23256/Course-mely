@@ -86,8 +86,6 @@ class CreateCertificateJob implements ShouldQueue
                     }
                 }
 
-                $start = microtime(true);
-
                 $pdf = Pdf::loadHTML($content)->setPaper('A4', 'landscape');
                 $filename = "certificate_{$user->id}_{$course->id}";
                 $pdfContent = $pdf->output();
