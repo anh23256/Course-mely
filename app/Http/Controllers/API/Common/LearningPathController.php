@@ -238,6 +238,7 @@ class LearningPathController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
     public function updateLastTimeVdieo(Request $request, $lessonId)
     {
         try {
@@ -330,15 +331,15 @@ class LearningPathController extends Controller
 
                     $videoDuration = $lessonable->duration;
 
-                    if ($currentTime < $videoDuration) {
-                        return $this->respondError('Bạn cần xem hết video để hoàn thành bài học này');
+                    if ($currentTime < ($videoDuration * 2 / 3)) {
+                        return $this->respondError('Bạn cần xem ít nhất 2/3 thời gian video để hoàn thành bài học này');
                     }
 
                     if ($currentTime > $lessonProgress->last_time_video) {
                         $lessonProgress->last_time_video = $currentTime;
                     }
 
-                    if ($currentTime >= $videoDuration) {
+                    if ($currentTime >= ($videoDuration * 2 / 3)) {
                         $lessonProgress->is_completed = true;
                     } else {
                         $lessonProgress->save();
