@@ -10,13 +10,17 @@ use App\Models\CourseUser;
 use App\Models\Document;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\Question;
 use App\Models\Quiz;
+use App\Models\UserCodingSubmission;
+use App\Models\UserQuizSubmission;
 use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LearningPathController extends Controller
 {
@@ -240,7 +244,7 @@ class LearningPathController extends Controller
         }
     }
 
-    public function updateLastTimeVdieo(Request $request, $lessonId)
+    public function updateLastTimeVideo(Request $request, $lessonId)
     {
         try {
             $user = Auth::user();
@@ -269,7 +273,7 @@ class LearningPathController extends Controller
             $lessonProcess->last_time_video = $lastTime;
             $lessonProcess->save();
 
-            return $this->respondOk('Cập nhật tiến độ thành công', $lessonProcess);
+            return $this->respondOk('Lưu tiến trình thời gian thành công');
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -352,17 +356,46 @@ class LearningPathController extends Controller
 
                 case  Quiz::class:
                     $answers = $request->input('answers');
-                    if (!$answers || count($answers) < count($lessonable->questions)) {
-                        return $this->respondError('Bạn cần trả lời hết tất cả câu hỏi.');
+
+                    $quiz = Quiz::query()
+                        ->with('questions.answers')
+                        ->where('id', $lessonable->id)
+                        ->first();
+
+                    if (!$quiz) {
+                        return $this->respondNotFound('Không tìm thấy bài kiểm tra.');
                     }
 
+                    $check = 0;
                     $isCorrect = true;
-                    foreach ($lessonable->questions as $question) {
-                        if (!isset($answers[$question->id])
-                            || $answers[$question->id]
-                            != $question->correct_answer) {
+                    foreach ($answers as $answer) {
+                        $question = $quiz->questions()->where('id', $answer['question_id'])->first();
+
+                        if (!$question) {
                             $isCorrect = false;
                             break;
+                        }
+
+                        // Handle check answer single choice
+                        if (is_numeric($answer['answer_id'])) {
+                            $selectedAnswer = $question->answers->where('id', $answer['answer_id'])->first();
+
+                            if (!$selectedAnswer || $selectedAnswer->is_correct !== 1) {
+                                $check++;
+                                $isCorrect = false;
+                                break;
+                            }
+                        }
+
+
+                        // Handle check answer multiple choice
+                        if (is_array($answer['answer_id'])) {
+                            $correctAnswers = $question->answers->where('is_correct', true)->pluck('id')->toArray();
+
+                            if (array_diff($answer['answer_id'], $correctAnswers) || array_diff($correctAnswers, $answer['answer_id'])) {
+                                $isCorrect = false;
+                                break;
+                            }
                         }
                     }
 
@@ -372,6 +405,12 @@ class LearningPathController extends Controller
 
                     $lessonProgress->is_completed = true;
 
+                    UserQuizSubmission::query()->create([
+                        'user_id' => $user->id,
+                        'quiz_id' => $lessonable->id,
+                        'answers' => json_encode($answers)
+                    ]);
+
                     break;
 
                 case  Document::class:
@@ -380,6 +419,11 @@ class LearningPathController extends Controller
 
                 case Coding::class:
                     $userCodeResult = $request->input('code');
+
+                    if (!$userCodeResult) {
+                        return $this->respondError('Vui lòng thực hiện bài kiểm tra.');
+                    }
+
                     $expectedResult = $lessonable->result_code;
 
                     if (!$userCodeResult || $userCodeResult !== $expectedResult) {
@@ -387,6 +431,13 @@ class LearningPathController extends Controller
                     }
 
                     $lessonProgress->is_completed = true;
+
+                    UserCodingSubmission::query()->create([
+                        'user_id' => $user->id,
+                        'coding_id' => $lessonable->id,
+                        'code' => $userCodeResult,
+                        'result' => 1
+                    ]);
 
                     break;
 

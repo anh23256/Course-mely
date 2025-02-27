@@ -297,6 +297,8 @@ class UserController extends Controller
                     ];
                 }
 
+                dd($currentLesson);
+
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
@@ -307,7 +309,6 @@ class UserController extends Controller
                     'lessons_count' => $course->lessons_count,
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers->first()->progress_percent,
-                    'current_lesson' => $currentLesson,
                     'category' => [
                         'id' => $course->category->id ?? null,
                         'name' => $course->category->name ?? null,

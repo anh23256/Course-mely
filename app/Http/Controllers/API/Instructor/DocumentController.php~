@@ -145,10 +145,6 @@ class DocumentController extends Controller
                 return $this->respondNotFound('Không tìm thấy chương học');
             }
 
-            if ($chapter->course->status === 'approved' || $chapter->course->status === 'pending') {
-                return $this->respondError('Không thể thực hiện thao tác');
-            }
-
             if ($chapter->course->user_id !== auth()->id()) {
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
