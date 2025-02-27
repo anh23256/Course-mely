@@ -15,7 +15,7 @@
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item active"><a
-                                        href="{{ route('admin.withdrawals.index') }}">{{ $subTitle ?? '' }}</a></li>
+                                    href="{{ route('admin.withdrawals.index') }}">{{ $subTitle ?? '' }}</a></li>
                         </ol>
                     </div>
 
@@ -31,15 +31,14 @@
                     <div class="card-header align-items-center d-flex">
                         <h4 class="card-title mb-0 flex-grow-1">Thông tin yêu cầu rút
                             tiền: {{ $withDraw->id ?? '' }}</h4>
-                        @if($withDraw->is_received === 1)
-                            <button type="button" class="btn btn-info me-2" data-bs-toggle="modal"
-                                    data-bs-target="#exampleModal">
-                                Kiểm tra trạng thái giao dịch
-                            </button>
-                        @endif
+                        <button data-id="{{ $withDraw->id }}"
+                                type="button" class="btn btn-info me-2 check-status-btn" data-bs-toggle="modal"
+                                data-bs-target="#transactionModal">
+                            Kiểm tra trạng thái giao dịch
+                        </button>
 
                         @if(!is_null($withDraw) && $withDraw->status)
-                            @if($withDraw->status === 'Đang xử lý' || $withDraw->status === 'Chờ xử lý')
+                            @if($withDraw->status === 'Đang xử lý' || $withDraw->status === 'Chờ xác nhận lại')
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                         data-bs-target="#exampleModal">
                                     Xác nhận
@@ -104,8 +103,8 @@
                                                 <span class="badge bg-success">Hoàn thành</span>
                                             @elseif($withDraw->status === 'Đã từ chối')
                                                 <span class="badge bg-danger">Đã từ chối</span>
-                                            @elseif($withDraw->status === 'Chờ xử lý')
-                                                <span class="badge bg-info">Chờ xử lý</span>
+                                            @elseif($withDraw->status === 'Chờ xác nhận lại')
+                                                <span class="badge bg-info">Chờ xác nhận lại</span>
                                             @else
                                                 <span class="badge bg-secondary">Không xác định</span>
                                             @endif
@@ -134,11 +133,32 @@
                                 </div>
                             </div>
                         @endif
+                        <div class="mt-2">
+                            <a href="{{ route('admin.withdrawals.index') }}" class="btn  btn-primary">Danh sách</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="transactionModal"
+         class="modal fade" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transactionModalLabel">Chi tiết trạng thái giao dịch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="transaction-details">
+                        <p>Đang kiểm tra giao dịch...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -181,6 +201,50 @@
 @push('page-scripts')
     <script>
         $(document).ready(function () {
+            $(document).on('click', '.check-status-btn', function () {
+                var withdrawalId = $(this).data('id');
+
+                var modal = $('#transactionModal');
+                modal.modal('show');
+
+                $('#transaction-details').html(`
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status" id="loading-spinner">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p>Đang kiểm tra giao dịch...</p>
+        </div>
+    `);
+
+
+                $.ajax({
+                    url: "{{ route('admin.withdrawals.check-status') }}",
+                    type: "POST",
+                    data: {
+                        withdrawal_id: withdrawalId,
+                    },
+                    success: function (response) {
+                        console.log(response)
+                        var details = `
+                        <p><strong>Yêu Cầu Rút Tiền:</strong></p>
+                        <pre>${JSON.stringify(response.withdrawal_request, null, 2)}</pre>
+
+                        <p><strong>Giao Dịch:</strong></p>
+                        <pre>${JSON.stringify(response.transaction, null, 2)}</pre>
+
+                        <p><strong>System Fund Transaction:</strong></p>
+                        <pre>${JSON.stringify(response.system_fund_transaction, null, 2)}</pre>
+                    `;
+                        $('#transaction-details').html(details);
+                    },
+                    error: function (xhr, status, error) {
+                        $('#transaction-details').html('<p class="text-danger">Đã xảy ra lỗi trong quá trình kiểm tra giao dịch. Vui lòng thử lại sau.</p>');
+                        console.error(xhr.responseText);
+                    },
+                });
+            });
+
+
             $('#loadOldComment').on('click', function () {
                 var oldComment = $('#oldComment').val();
 
@@ -217,7 +281,7 @@
                         if (response.status === true) {
                             Swal.fire({
                                 title: 'Thao tác thành công!',
-                                text: 'Xác nhận thanh toán thành công',
+                                text: response.message,
                                 icon: 'success'
                             }).then(() => {
                                 $('#exampleModal').modal('hide');

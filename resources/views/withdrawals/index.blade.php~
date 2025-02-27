@@ -244,8 +244,6 @@
                                                     <span class="badge bg-warning w-100">Đang xử lý</span>
                                                 @elseif($withdrawal->status === 'Chờ xác nhận lại')
                                                     <span class="badge bg-primary w-100">Chờ xác nhận lại</span>
-                                                @elseif($withdrawal->status === 'Đã xử lý')
-                                                    <span class="badge bg-info w-100">Đã xử lý</span>
                                                 @elseif($withdrawal->status === 'Từ chối')
                                                     <span class="badge bg-danger w-100">Từ chối</span>
                                                 @else

@@ -145,7 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/{lesson}/lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentLesson']);
                     Route::post('/store-lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'storeCommentLesson']);
-                    Route::get('{comment}/replies',[\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
+                    Route::get('{comment}/replies',[\App\Http\Controllers\API\Common\CommentLessonController::class, 'replies']);
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class,'reply']);
                 });
         });
