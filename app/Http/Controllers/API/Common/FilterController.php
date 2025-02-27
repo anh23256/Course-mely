@@ -92,8 +92,8 @@ class FilterController extends Controller
                     DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
                     DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
                 ])
-                ->whereIn('courses.id', $courseIds)->with('user:id,name')->latest('id')
-                ->get();
+                ->whereIn('courses.id', $courseIds)->with('user:id,name')->orderByDesc('views')
+                ->paginate(5);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');
@@ -141,7 +141,7 @@ class FilterController extends Controller
                 'courses.total_student',
                 DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
                 DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
-            ])->get();
+            ])->paginate(5);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');
