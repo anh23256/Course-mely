@@ -394,6 +394,12 @@
                     thumbnail = notification.data.user_avatar ||
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
+
+                if (type === 'withdrawal') {
+                    title = 'Yêu cầu rút tiền';
+                    thumbnail = notification.data.instructor_avatar ||
+                        'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+                }
                 if (type === 'receive_message') {
                     title = 'Tin nhắn';
                     thumbnail = notification.data.message_user_avatar ||
@@ -431,7 +437,7 @@
         </div>
     `;
 
-                if (type === 'register_course' || type === 'register_instructor') {
+                if (type === 'register_course' || type === 'register_instructor' || type === 'withdrawal') {
                     if (isRealTime) {
                         $('#approvals-notifications-container').prepend(notificationItem);
                     } else {
@@ -494,7 +500,7 @@
 
             let countNotificationsData = {
                 approval: {
-                    type: ["register_course", "register_instructor"],
+                    type: ["register_course", "register_instructor", "withdrawal"],
                     count: 10
                 },
                 message: {
