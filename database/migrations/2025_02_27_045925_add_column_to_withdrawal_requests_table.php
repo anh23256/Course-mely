@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::table('withdrawal_requests', function (Blueprint $table) {
             $table->text('admin_comment')->nullable()->after('status');
             $table->enum('instructor_confirmation', ['confirmed', 'not_received'])->default('not_received')->after('admin_comment');
-            $table->enum('instructor_confirmation_note', ['confirmed', 'not_received'])->nullable()->after('instructor_confirmation');
+            $table->text('instructor_confirmation_note')->nullable()->after('instructor_confirmation');
             $table->timestamp('instructor_confirmation_date')->nullable()->after('instructor_confirmation_note');
             $table->boolean('is_received')->default(false)->after('instructor_confirmation_date');
         });
@@ -27,8 +27,9 @@ return new class extends Migration {
         Schema::table('withdrawal_requests', function (Blueprint $table) {
             $table->dropColumn('admin_comment');
             $table->dropColumn('instructor_confirmation');
-            $table->dropColumn('instructor_confirmation_date');
             $table->dropColumn('instructor_confirmation_note');
+            $table->dropColumn('instructor_confirmation_date');
+            $table->dropColumn('is_received');
         });
     }
 };
