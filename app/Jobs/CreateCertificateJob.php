@@ -1,50 +1,55 @@
 <?php
 
-namespace App\Http\Controllers\API\Student;
+namespace App\Jobs;
 
-use App\Http\Controllers\Controller;
-use App\Jobs\UploadCertificateJob;
 use App\Models\Certificate;
 use App\Models\CertificateTemplate;
 use App\Models\Course;
 use App\Models\CourseUser;
-use App\Traits\ApiResponseTrait;
+use App\Models\User;
 use App\Traits\LoggableTrait;
-use App\Traits\UploadToLocalTrait;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Barryvdh\Snappy\Facades\SnappyPdf;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
-class CertificateController extends Controller
+class CreateCertificateJob implements ShouldQueue
 {
-    use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, LoggableTrait;
+    protected $userId;
+    protected $courseId;
+    const FOLDER = "certificates";
 
-    public function generateCertificate(string $slug)
+    protected $tries = 2;
+    protected $backoff = 10;
+
+    public function __construct($userId, $courseId)
+    {
+        $this->userId = $userId;
+        $this->courseId = $courseId;
+    }
+
+    public function handle()
     {
         try {
-            $user = Auth::user();
+            if (!$this->userId || !$this->courseId) return;
 
-            if (!$user) {
-                return $this->respondUnauthorized('Bạn không có quyền truy cập, vui lòng đăng nhập và thử lại.');
-            }
+            $user = User::find($this->userId);
 
-            $course = Course::query()->where('slug', $slug)->first();
+            $course = Course::query()->where(['id' => $this->courseId, 'status' => 'approved'])->first();
 
-            if (!$course) {
-                return $this->respondNotFound('Không tìm thấy khóa học.');
-            }
+            if (!$course || !$user) return;
 
             $courseUser = CourseUser::query()->where(['user_id' => $user->id, 'course_id' => $course->id])->first();
 
-            if (!$courseUser) {
-                return $this->respondForbidden('Người dùng chưa mua khóa học này.');
-            }
+            if (!$courseUser) return;
 
-            if ($courseUser->progress_percent !== 100 || $courseUser->completed_at == null) {
-                return $this->respondError('Tiến độ chưa đạt 100%.');
-            }
+            if ($courseUser->progress_percent !== 100 || $courseUser->completed_at == null) return;
 
             $certificate = Certificate::query()->where(['user_id' => $user->id, 'course_id' => $course->id])->first();
 
@@ -53,9 +58,7 @@ class CertificateController extends Controller
                 $certificateTemplate = CertificateTemplate::query()->where('status', 1)->first();
                 $ngayHoanThanh = Carbon::now(env('APP_TIMEZONE'))->locale('vi')->translatedFormat('d F, Y');
 
-                if (!$certificateTemplate) {
-                    return $this->respondError('Không có mẫu chứng chỉ');
-                }
+                if (!$certificateTemplate) return;
 
                 $images = [
                     'logo_course_mely' => public_path('assets/images/logo-container.png'),
@@ -83,19 +86,19 @@ class CertificateController extends Controller
                     }
                 }
 
-                $start = microtime(true);
-
                 $pdf = Pdf::loadHTML($content)->setPaper('A4', 'landscape');
-                $filename = "certificate_{$user->id}_{$course->id}.pdf";
+                $filename = "certificate_{$user->id}_{$course->id}";
                 $pdfContent = $pdf->output();
 
-                $end = microtime(true);
-                Storage::disk('public')->put("certificates/{$filename}",  $pdfContent);
-                $pdfUrl = Storage::url("certificates/{$filename}");
+                $uploadResult = Cloudinary::upload('data:application/pdf;base64,' . base64_encode($pdfContent), [
+                    'folder' => 'certificates',
+                    'resource_type' => 'auto',
+                    'public_id' => $filename,
+                ]);
 
-                if (!$pdfUrl) {
-                    return $this->respondError('Không thể tạo đường dẫn chứng chỉ');
-                }
+                $pdfUrl = $uploadResult->getSecurePath();
+
+                if (!$pdfUrl) return;
 
                 $certificate = Certificate::create([
                     'user_id' => $user->id,
@@ -105,16 +108,9 @@ class CertificateController extends Controller
                     'issued_at' => now(env('APP_TIMEZONE')),
                     'file_path' => $pdfUrl,
                 ]);
-
-                UploadCertificateJob::dispatch('certificates/' . $filename, base64_encode($pdfContent), $user->id, $course->id)
-                    ->delay(3600);
             }
-
-            return $this->respondOk('Tạo đường dẫn chứng chỉ thành công', ['pdf_url' => $certificate->file_path]);
         } catch (\Exception $e) {
-            $this->logError($e);
-
-            return $this->respondServerError('Có lỗi xảy ra, chưa thể tạo chứng chỉ');
+            Log::error("Tạo chứng chỉ thất bại",['error' => $e->getMessage()]);
         }
     }
 }

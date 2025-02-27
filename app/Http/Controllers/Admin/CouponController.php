@@ -38,21 +38,21 @@ class CouponController extends Controller
                 SUM(CASE WHEN used_count > 0 THEN 1 ELSE 0 END) as used_coupons
             ')
             ->first();
-        if ($request->hasAny(['name','discount_type','used_count', 'code', 'status', 'start_date', 'expire_date'])) {
+        if ($request->hasAny(['name', 'discount_type', 'used_count', 'code', 'status', 'start_date', 'expire_date'])) {
             $queryCoupons = $this->filter($request, $queryCoupons);
         }
 
         $queryCouponCounts = Coupon::query()
-        ->selectRaw('
+            ->selectRaw('
             COUNT(id) as total_coupons,
             SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as active_coupons,
             SUM(CASE WHEN expire_date < NOW() THEN 1 ELSE 0 END) as expire_coupons,
             SUM(CASE WHEN used_count > 0 THEN 1 ELSE 0 END) as used_coupons
-        ');    
-  
+        ');
+
         // Lấy dữ liệu và phân trang
         $coupons = $queryCoupons->orderBy('id', 'desc')->paginate(10);
-        
+
         if ($request->ajax()) {
             $html = view('coupons.table', compact('coupons'))->render();
             return response()->json(['html' => $html]);
@@ -71,15 +71,15 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
-             // Gửi thông báo cho người dùng hoặc admin
+            // Gửi thông báo cho người dùng hoặc admin
             $coupon = Coupon::create($data);
-            $roleUser = 'admin';
-             $admins = User::whereHas('roles', function ($query) use ($roleUser) {
-                 $query->where('name', $roleUser);
-             })->get();
-        
-            foreach ($admins as $admin) {
-                $admin->notify(new CouponCodeCreated($coupon)); // Gửi thông báo tới admin
+            $roleUser = ['member', 'instructor'];
+            $users = User::whereHas('roles', function ($query) use ($roleUser) {
+                $query->whereIn('name', $roleUser);
+            })->get();
+
+            foreach ($users as $user) {
+                $user->notify(new CouponCodeCreated($coupon));
             }
             DB::commit();
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
@@ -159,12 +159,12 @@ class CouponController extends Controller
             'name' => ['queryWhere' => 'LIKE'],
             'code' => ['queryWhere' => 'LIKE'],
             'status' => ['queryWhere' => '='],
-            'discount_type'=>['queryWhere' => '='],
-            'used_count'=>['queryWhere' => '>='],
+            'discount_type' => ['queryWhere' => '='],
+            'used_count' => ['queryWhere' => '>='],
             'deleted_at' => ['attribute' => ['start_deleted' => '>=', 'end_deleted' => '<=',]],
         ];
 
-        $query = $this->filterTrait($filters, $request,$query);
+        $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
     }

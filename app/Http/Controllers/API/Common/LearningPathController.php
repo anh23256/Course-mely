@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CreateCertificateJob;
 use App\Models\Coding;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -443,6 +444,7 @@ class LearningPathController extends Controller
 
             if ($progressPercent == 100) {
                 $courseUser->completed_at = now();
+                CreateCertificateJob::dispatch($userId, $courseId);
             } else {
                 $courseUser->completed_at = null;
             }

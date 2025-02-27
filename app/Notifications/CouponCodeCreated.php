@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -27,7 +28,7 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
      */
     public function via(object $notifiable): array
     {
-        return ['database','broadcast'];
+        return ['broadcast'];
     }
 
     /**
@@ -35,7 +36,7 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
      */
     private function getUrl()
     {
-        return  route('admin.coupons.accept', ['coupon_id' => $this->coupon->id]);
+        return  'Chưa tao duong dan';
     }
 
     public function notificationData()
@@ -46,18 +47,12 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
             'code' => $this->coupon->code,
             'name' => $this->coupon->name,
             'discount_value' => $this->coupon->discount_value,
-            'action_url' => $this->getUrl(), // Liên kết nhận mã giảm giá
+            'action_url' => $this->getUrl(),
         ];
     }
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return [
-            //
-        ];
+        return new BroadcastMessage($this->notificationData());
     }
 }
