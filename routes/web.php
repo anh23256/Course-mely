@@ -256,7 +256,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
-            
+
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -287,13 +287,15 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
         });
-        
+
 
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
             ->as('withdrawals.')
             ->group(function () {
                 Route::get('/', [WithDrawalsRequestController::class, 'index'])->name('index');
+                Route::get('/{withdrawal}', [WithDrawalsRequestController::class, 'show'])->name('show');
+                Route::post('/confirm-payment', [WithDrawalsRequestController::class, 'confirmPayment'])->name('confirmPayment');
                 Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
             });
 
@@ -356,10 +358,10 @@ Route::prefix('admin')->as('admin.')
             ->as('chats.')
             ->group(function () {
                 Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
-                Route::post('/chat-realtime',[ChatController::class, 'createGroupChat'])->name('create');
+                Route::post('/chat-realtime', [ChatController::class, 'createGroupChat'])->name('create');
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
-            });    
+            });
     });

@@ -93,10 +93,10 @@ class WithDrawalsRequestController extends Controller
                 ->with(['wallet.user'])
                 ->find($data['withdrawal_id']);
 
-            if ($withdrawal->status === 'Hoàn thành') {
+            if ($withdrawal->status == 'completed') {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Yêu cầu đã được xử lý, không thể thay đổi',
+                    'message' => 'Yêu cầu rút tiền nay dã biễu lý',
                 ]);
             }
 

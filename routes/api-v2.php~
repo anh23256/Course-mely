@@ -50,9 +50,7 @@ Route::post('qr', function () {
     $base64Str = $data['data']['qrDataURL'];
     $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64Str));
 
-    $filePath = storage_path('app/public/qr/qr_code.png');
-    file_put_contents($filePath, $imageData);
-
+    file_put_contents(storage_path('app/public/qr/qr_code.png'), $imageData);
 
 //    return response()->json([
 //        'message' => 'QR code created successfully',

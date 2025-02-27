@@ -25,7 +25,7 @@ class StoreGenerateQrRequest extends BaseFormRequest
         return [
             'accountNo' => 'required|numeric',
             'accountName' => 'required|string',
-            'acqId' => 'nullable|numeric',
+            'acqId' => 'required|numeric',
             'amount' => 'required|numeric',
             'addInfo' => 'nullable|string',
             'format' => 'nullable|string',

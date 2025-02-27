@@ -157,7 +157,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {});
+        ->group(function () {
+        });
+
+    Route::prefix('support-banks')->group(function () {
+        Route::get('/', [SupportBankController::class, 'index']);
+    });
 
     #============================== ROUTE INSTRUCTOR MANAGE =============================
     Route::prefix('instructor')
@@ -169,11 +174,20 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
                 });
 
+            #============================== ROUTE SUPPORT BANK =================================
+            Route::prefix('support-banks')->group(function () {
+                Route::get('/', [SupportBankController::class, 'index']);
+                Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
+            });
+
             #============================== ROUTE WALLET =============================
             Route::prefix('wallet')
                 ->group(function () {
                     Route::get('/', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWallet']);
-                    Route::post('/withdraw', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withdraw']);
+                    Route::get('/withdraw-requests', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithdrawalRequests']);
+                    Route::get('/withdraw-request/{withdrawalRequest}', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithDrawRequest']);
+                    Route::put('/withdraw-request/{withdrawalRequest}/handleConfirm', [\App\Http\Controllers\API\Instructor\WalletController::class, 'handleConfirmWithdrawal']);
+                    Route::post('/withdraw-request', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withDrawRequest']);
                 });
 
             #============================== ROUTE LIVESTREAM =============================
@@ -284,11 +298,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-
-
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
-       Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
+        Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
 
     });
 
@@ -303,7 +315,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE CHAT =============================
     Route::prefix('chats')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     #============================== ROUTE COMMENT =============================
     Route::prefix('comments')
@@ -350,12 +363,6 @@ Route::prefix('blogs')
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
     });
-
-#============================== ROUTE SUPPORT BANK =================================
-Route::prefix('support-banks')->group(function () {
-    Route::post('/', [SupportBankController::class, 'index']);
-    Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
-});
 
 #============================== ROUTE QA SYSTEM =================================
 Route::prefix('qa-systems')->group(function () {
