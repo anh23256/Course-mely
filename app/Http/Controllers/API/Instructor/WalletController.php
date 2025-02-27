@@ -219,7 +219,7 @@ class WalletController extends Controller
                 return $this->respondNotFound('Không tìm thấy giao dịch');
             }
 
-            $status = $data['is_received'] == 1 ? 'Chờ xử lý' : 'Hoàn thành';
+            $status = $data['is_received'] == 1 ? 'Chờ xác nhận lại' : 'Hoàn thành';
 
             $withdrawalRequest->update([
                 'instructor_confirmation' => 'confirmed',

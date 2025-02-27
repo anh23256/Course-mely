@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\CreateCertificateJob;
 use App\Models\Coding;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -239,7 +238,6 @@ class LearningPathController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
     public function updateLastTimeVdieo(Request $request, $lessonId)
     {
         try {
@@ -332,15 +330,15 @@ class LearningPathController extends Controller
 
                     $videoDuration = $lessonable->duration;
 
-                    if ($currentTime < ($videoDuration * 2 / 3)) {
-                        return $this->respondError('Bạn cần xem ít nhất 2/3 thời gian video để hoàn thành bài học này');
+                    if ($currentTime < $videoDuration) {
+                        return $this->respondError('Bạn cần xem hết video để hoàn thành bài học này');
                     }
 
                     if ($currentTime > $lessonProgress->last_time_video) {
                         $lessonProgress->last_time_video = $currentTime;
                     }
 
-                    if ($currentTime >= ($videoDuration * 2 / 3)) {
+                    if ($currentTime >= $videoDuration) {
                         $lessonProgress->is_completed = true;
                     } else {
                         $lessonProgress->save();
@@ -444,7 +442,6 @@ class LearningPathController extends Controller
 
             if ($progressPercent == 100) {
                 $courseUser->completed_at = now();
-                CreateCertificateJob::dispatch($userId, $courseId)->delay(20);
             } else {
                 $courseUser->completed_at = null;
             }

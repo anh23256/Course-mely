@@ -229,9 +229,13 @@ class WalletController extends Controller
                 'status' => $status,
             ]);
 
+            $message = $data['is_received'] == 1
+                ? 'Yêu cầu khiếu lại của bạn đã được gửi đi!'
+                : 'Yêu cầu đã được xử lý thành công!';
+
             DB::commit();
 
-            return $this->respondOk('Xử lý yêu cầu thành công');
+            return $this->respondOk($message);
         } catch (\Exception $e) {
             DB::rollBack();
 

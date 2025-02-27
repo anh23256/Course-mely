@@ -215,6 +215,7 @@
                                     </thead>
                                     <tbody class="list">
                                     @foreach ($transactions as $transaction)
+                                        @dd($transaction->where('transation'))
                                         <tr>
                                             <td>{{ $loop->index + 1 }}</td>
                                             <td>{{ $transaction->transaction_code ?? 'Không có thông tin' }}</td>
@@ -254,7 +255,7 @@
                                             <td>
                                                 @if($transaction->type === 'withdrawal')
                                                     <a
-                                                        href="{{ route('admin.withdrawals.show', $transaction->transactionable_id) }}">
+                                                        href="{{ route('admin.withdrawals.show', $transaction->transaction_code) }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">
                                                             <span class="ri-eye-line"></span>
                                                         </button>

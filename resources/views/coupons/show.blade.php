@@ -53,15 +53,6 @@
 
             <div class="card-body px-5">
                 <div class="row">
-                    {{-- <div class="col-4">
-                        <div class="p-2 text-center">
-                            <div class="mx-auto mb-3">
-                                <img src="{{ $coupon->avatar }}" alt="Hình avatar" class="img-fluid rounded-circle">
-                            </div>
-                            <h6 class="mb-1">Avatar</h6>
-                        </div>
-                    </div> --}}
-
                     <div class="col-6">
                         <div class="row mb-3">
                             <div class="col-md-3"><strong>ID:</strong></div>
