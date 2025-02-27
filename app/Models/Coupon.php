@@ -17,11 +17,16 @@ class Coupon extends Model
         'description',
         'discount_type',
         'discount_value',
+        'discount_max_value',
         'start_date',
         'expire_date',
         'status',
         'used_count',
     ];
 
-    
+    public function scopeSearch($query, $keyword)
+    {
+        return $query->where('code', 'LIKE', "%{$keyword}%")
+            ->orWhere('name', 'LIKE', "%{$keyword}%");
+    }
 }

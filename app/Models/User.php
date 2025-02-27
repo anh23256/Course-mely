@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Notifications\Notification;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -99,8 +98,4 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(WishList::class, 'user_id');
     }
 
-    public function conversations()
-    {
-        return $this->belongsToMany(Conversation::class);
-    }
 }

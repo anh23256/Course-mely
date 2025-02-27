@@ -37,6 +37,7 @@ class AuthController extends Controller
         // Kiểm tra email hợp lệ
         $request->validated();
 
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -72,7 +73,8 @@ class AuthController extends Controller
                     ])->save();
 
                     $user->token()->delete(); // Hủy token API cũ nếu dùng Sanctum
-                });
+                }
+            );
 
             if ($status === Password::PASSWORD_RESET) {
                 return response()->json([
@@ -80,7 +82,6 @@ class AuthController extends Controller
                     'message' => __($status),
                 ], 200);
             }
-
         } catch (\Exception $e) {
             $this->logError($e);
 

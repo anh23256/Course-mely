@@ -4,6 +4,7 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\RatingController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
 use App\Http\Controllers\API\Common\WishListController;
 use App\Http\Controllers\API\Instructor\ChapterController;
+use App\Http\Controllers\API\Instructor\CouponController as InstructorCouponController;
 use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
 use App\Http\Controllers\API\Instructor\LessonController;
@@ -182,6 +184,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::prefix('wallet')
                 ->group(function () {
                     Route::get('/', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWallet']);
+                    Route::get('/withdraw-requests', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithdrawalRequests']);
+                    Route::get('/withdraw-request/{withdrawalRequest}', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithDrawRequest']);
+                    Route::put('/withdraw-request/{withdrawalRequest}/handleConfirm', [\App\Http\Controllers\API\Instructor\WalletController::class, 'handleConfirmWithdrawal']);
                     Route::post('/withdraw-request', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withDrawRequest']);
                 });
 
@@ -274,6 +279,14 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/', [PostController::class, 'store']);
                 Route::put('/{post}', [PostController::class, 'update']);
             });
+
+            #============================== ROUTE COUPON =============================
+            Route::prefix('coupons')->as('coupons.')->group(function () {
+                Route::get('/', [InstructorCouponController::class, 'index']);
+                Route::post('/', [InstructorCouponController::class, 'store']);
+                Route::put('/{couponId}', [InstructorCouponController::class, 'update']);
+                Route::delete('/{couponId}', [InstructorCouponController::class, 'destroy']);
+            });
         });
 
     #============================== ROUTE NOTE =============================
@@ -284,9 +297,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{note}', [NoteController::class, 'destroy']);
     });
 
+
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
+        Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
+
     });
+
 
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {

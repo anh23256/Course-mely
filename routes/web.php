@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\WalletController;
@@ -255,7 +256,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
-            
+
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -286,13 +287,15 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
         });
-        
+
 
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
             ->as('withdrawals.')
             ->group(function () {
                 Route::get('/', [WithDrawalsRequestController::class, 'index'])->name('index');
+                Route::get('/{withdrawal}', [WithDrawalsRequestController::class, 'show'])->name('show');
+                Route::post('/confirm-payment', [WithDrawalsRequestController::class, 'confirmPayment'])->name('confirmPayment');
                 Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
             });
 
@@ -337,6 +340,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'index'])->name('index');
                 Route::get('/create', [\App\Http\Controllers\Admin\QaSystemController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'store'])->name('store');
+                Route::post('/import', [QaSystemController::class, 'importFile'])->name('import');
                 Route::get('/edit/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'edit'])->name('edit');
                 Route::put('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'update'])->name('update');
                 Route::delete('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'destroy'])->name('destroy');
@@ -354,9 +358,10 @@ Route::prefix('admin')->as('admin.')
             ->as('chats.')
             ->group(function () {
                 Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
-                Route::post('/chat-realtime',[ChatController::class, 'createGroupChat'])->name('create');
+                Route::post('/chat-realtime', [ChatController::class, 'createGroupChat'])->name('create');
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
-            });    
+                // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
+            });
     });

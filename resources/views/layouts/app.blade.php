@@ -10,7 +10,18 @@
     <title> {{ !empty($title) ? $title : 'Dashboard' }} - CourseMeLy </title>
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
+    {{-- <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9MJ6G4PMEJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-9MJ6G4PMEJ');
+    </script> --}}
     <!-- CSS -->
     @include('layouts.partials.css')
 

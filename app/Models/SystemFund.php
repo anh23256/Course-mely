@@ -10,26 +10,6 @@ class SystemFund extends Model
     use HasFactory;
 
     protected $fillable = [
-        'transaction_id',
-        'course_id',
-        'user_id',
-        'total_amount',
-        'retained_amount',
-        'type',
-        'description'
+        'balance'
     ];
-
-    public function transaction()
-    {
-        return $this->belongsTo(Transaction::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-    public function course()
-    {
-        return $this->belongsTo(Course::class);
-    }
 }

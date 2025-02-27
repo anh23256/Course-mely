@@ -103,7 +103,7 @@ class WalletController extends Controller
                 'qr_code' => $filePath,
                 'status' => 'Đang xử lý',
                 'request_date' => now(),
-            ]); 
+            ]);
 
             $user->wallet->decrement('balance', $data['amount']);
 
@@ -127,6 +127,117 @@ class WalletController extends Controller
             return $this->respondServerError(
                 'Có lỗi xảy ra, vui lòng thử lại sau'
             );
+        }
+    }
+
+    public function getWithdrawalRequests(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $query = WithdrawalRequest::query()
+                ->whereHas('wallet.user', function ($query) {
+                    $query->whereColumn('users.id', 'wallets.user_id');
+                })
+                ->with('wallet.user');
+
+            if ($request->has('fromDate')) {
+                $query->whereDate('created_at', '>=', $request->input('fromDate'));
+            }
+
+            if ($request->has('toDate')) {
+                $query->whereDate('created_at', '<=', $request->input('toDate'));
+            }
+
+            $withdrawalRequests = $query->get();
+
+            if ($withdrawalRequests->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách yêu cầu của: ' . $user->name, $withdrawalRequests);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function getWithDrawRequest(string $id)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập');
+            }
+
+            $withdrawalRequest = WithdrawalRequest::query()
+                ->whereHas('wallet.user', function ($query) {
+                    $query->whereColumn('users.id', 'wallets.user_id');
+                })
+                ->with('wallet.user')
+                ->find($id);
+
+            if (!$withdrawalRequest) {
+                return $this->respondNotFound('Không tìm thấy dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách yêu cầu của: ' . $user->name, $withdrawalRequest);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function handleConfirmWithdrawal(Request $request, string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $data = $request->validate([
+                'is_received' => 'nullable|in:0,1',
+                'instructor_confirmation_note' => 'required_if:instructor_confirmation,confirmed',
+            ]);
+
+            $withdrawalRequest = WithdrawalRequest::query()
+                ->with('wallet.user')
+                ->find($id);
+
+            if (!$withdrawalRequest) {
+                return $this->respondNotFound('Không tìm thấy giao dịch');
+            }
+
+            $status = $data['is_received'] == 1 ? 'Chờ xử lý' : 'Hoàn thành';
+
+            $withdrawalRequest->update([
+                'instructor_confirmation' => 'confirmed',
+                'instructor_confirmation_note' => $data['instructor_confirmation_note'] ?? null,
+                'instructor_confirmation_date' => now(),
+                'is_received' => $data['is_received'] ?? 0,
+                'status' => $status,
+            ]);
+
+            DB::commit();
+
+            return $this->respondOk('Xử lý yêu cầu thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 }
