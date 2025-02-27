@@ -293,17 +293,17 @@ class LearningPathController extends Controller
                 ->where('order', '<', $lesson->order)
                 ->orderBy('order', 'desc')
                 ->first();
-//
-//            if ($previousLesson) {
-//                $previousLessonProgress = LessonProgress::query()
-//                    ->where('lesson_id', $previousLesson->id)
-//                    ->where('user_id', $user->id)
-//                    ->first();
-//
-//                if (!$previousLessonProgress || !$previousLessonProgress->is_completed) {
-//                    return $this->respondOk('Bạn cần hoàn thành bài học trước trước khi tiếp tục.');
-//                }
-//            }
+
+            if ($previousLesson) {
+                $previousLessonProgress = LessonProgress::query()
+                    ->where('lesson_id', $previousLesson->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if (!$previousLessonProgress || !$previousLessonProgress->is_completed) {
+                    return $this->respondOk('Bạn cần hoàn thành bài học trước trước khi tiếp tục.');
+                }
+            }
 
 
             $lessonableType = $lesson->lessonable_type;

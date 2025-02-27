@@ -48,7 +48,7 @@ class CommentLessonController extends Controller
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
-            $data = $request->validated();
+            $data = $request->validate();
 
             $lessons = Lesson::query()->find($data['lesson_id']);
 
@@ -111,7 +111,7 @@ class CommentLessonController extends Controller
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
-            $data = $request->validated();
+            $data = $request->validate();
 
             $parentComment = Comment::query()->find($commentId);
 
