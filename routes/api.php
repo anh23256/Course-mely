@@ -120,7 +120,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
-        #============================== ROUTE Certificate =============================
+        #============================== ROUTE CAREERS =============================
+        Route::prefix('careers')->group(function(){
+            Route::post('/', [UserController::class, 'storeCareers']);
+            Route::put('/{careerID}', [UserController::class, 'updateCareers']);
+            Route::delete('/{careerID}', [UserController::class, 'deleteCareers']);
+        });
+
+        #============================== ROUTE CERTIFICATES =============================
         Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
 
         #============================== ROUTE NOTIFICATION =============================
@@ -145,8 +152,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/{lesson}/lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentLesson']);
                     Route::post('/store-lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'storeCommentLesson']);
-                    Route::get('{comment}/replies',[\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
-                    Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class,'reply']);
+                    Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
+                    Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                 });
         });
 
@@ -168,8 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -273,7 +279,6 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::post('/{chapterId}/store-lesson-coding', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'storeLessonCoding']);
                             Route::get('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'getCodingExercise']);
                             Route::put('/{lesson}/{coding}/coding-exercise', [\App\Http\Controllers\API\Instructor\LessonCodingController::class, 'updateCodingExercise']);
-
                         });
                 });
 
@@ -313,7 +318,6 @@ Route::middleware('auth:sanctum')->group(function () {
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
         Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
-
     });
 
 
@@ -327,8 +331,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE CHAT =============================
     Route::prefix('chats')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     #============================== ROUTE COMMENT =============================
     Route::prefix('comments')
