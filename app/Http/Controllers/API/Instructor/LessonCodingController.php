@@ -79,6 +79,10 @@ class LessonCodingController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
+            if ($lesson->chapter->course->status === 'approved' || $lesson->chapter->course->status === 'pending') {
+                return $this->respondError('Không thể thực hiện thao tác');
+            }
+
             $coding = $lesson->lessonable->find($coding);
 
             if (!$coding) {

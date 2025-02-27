@@ -17,4 +17,9 @@ class LessonProgress extends Model
         'is_completed',
         'last_time_video',
     ];
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 }

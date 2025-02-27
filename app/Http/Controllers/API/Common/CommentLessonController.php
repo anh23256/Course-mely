@@ -21,7 +21,11 @@ class CommentLessonController extends Controller
     {
         try {
             $commentLessons = Comment::query()
-                ->with('user')
+                ->with([
+                    'user:id,name,avatar,email',
+                    'replies.user:id,name,email,avatar'
+                ])
+                ->withCount('replies')
                 ->where('commentable_type', Lesson::class)
                 ->where('commentable_id', $lessonId)
                 ->where('parent_id', null)
@@ -31,7 +35,35 @@ class CommentLessonController extends Controller
                 return $this->respondNotFound('Không tìm thấy bình luận');
             }
 
-            return $this->respondSuccess('Danh sách bình luận', $commentLessons);
+            $filteredComments = $commentLessons->map(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'email' => $comment->user->email,
+                        'avatar' => $comment->user->avatar,
+                    ],
+                    'replies_count' => $comment->replies_count,
+                    'replies' => $comment->replies->map(function ($reply) {
+                        return [
+                            'id' => $reply->id,
+                            'content' => $reply->content,
+                            'created_at' => $reply->created_at,
+                            'user' => [
+                                'id' => $reply->user->id,
+                                'name' => $reply->user->name,
+                                'email' => $reply->user->email,
+                                'avatar' => $reply->user->avatar,
+                            ]
+                        ];
+                    })
+                ];
+            });
+
+            return $this->respondSuccess('Danh sách bình luận', $filteredComments);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -134,4 +166,44 @@ class CommentLessonController extends Controller
             return $this->respondServerError();
         }
     }
+
+    public function deleteComment(string $commentId)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $comment = Comment::query()->find($commentId);
+
+            if (!$comment) {
+                return $this->respondNotFound('Không tìm thấy bình luận');
+            }
+
+            $isRootComment = $comment->parent_id === null;
+
+            if ($isRootComment && $comment->user_id !== $user->id) {
+                return $this->respondForbidden('Bạn không có quyền xóa bình luận gốc này');
+            }
+
+            if (!$isRootComment && $comment->user_id !== $user->id) {
+                return $this->respondForbidden('Bạn không có quyền xóa bình luận này');
+            }
+
+            if ($isRootComment) {
+                $comment->replies()->delete();
+            }
+
+            $comment->delete();
+
+            return $this->respondOk('Xóa bình luận thành công');
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
 }
