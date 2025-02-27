@@ -473,6 +473,10 @@
                 const readed = "{{ now() }}";
                 const urlRedirect = $(`.stretched-link-${notificationId}`).attr('href');
 
+                if(urlRedirect == "#"){
+                    return;
+                }
+
                 if (isChecked || !notificationId) {
                     window.location.href = urlRedirect;
                     return;
