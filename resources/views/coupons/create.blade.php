@@ -120,10 +120,6 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="d-flex">
-
-
-                                </div>
                                 <div class="mb-3">
                                     <label class="form-label">Mô tả</label>
                                     <textarea name="description" class="form-control" value="{{ old('description') }}" placeholder="Nhập mô tả"></textarea>
