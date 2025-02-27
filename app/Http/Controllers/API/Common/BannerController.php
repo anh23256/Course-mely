@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Banners\StoreBannerRequest;
 use App\Http\Requests\API\Banners\UpdateBannerRequest;
 use App\Models\Banner;
+use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 
 class BannerController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait;
+    use LoggableTrait, UploadToCloudinaryTrait, ApiResponseTrait;
 
     public function index()
     {
