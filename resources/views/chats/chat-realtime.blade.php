@@ -421,11 +421,6 @@
                                                                         </div>
                                                         
                                                                         <div class="d-flex gap-2 justify-content-center">
-                                                                            <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Message">
-                                                                                <span class="avatar-title rounded bg-light text-body">
-                                                                                    <i class="ri-question-answer-line"></i>
-                                                                                </span>
-                                                                            </button>
                                                         
                                                                             <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Favourite">
                                                                                 <span class="avatar-title rounded bg-light text-body">
@@ -438,7 +433,11 @@
                                                                                     <i class="ri-phone-line"></i>
                                                                                 </span>
                                                                             </button>
-                                                        
+                                                                            <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Thêm thành viên" data-toggle="modal" data-target="addMemberGroupModal">
+                                                                                <span class="avatar-title rounded bg-light text-body">
+                                                                                    <i class="las la-user-plus"></i>
+                                                                                </span>
+                                                                            </button>
                                                                             <div class="dropdown">
                                                                                 <button class="btn avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                                                     <span class="avatar-title bg-light text-body rounded">
@@ -682,7 +681,53 @@
                                     Message copied
                                 </div>
                             </div>
-
+                            <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade" id="addMemberGroupModal"
+                            role="dialog" tabindex="-1">
+                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
+                                <div class="modal-content rounded-3 shadow-lg">
+                                    <div class="modal-header bg-primary text-white rounded-top p-3">
+                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
+                                            Thêm nhóm
+                                        </h5>
+                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
+                                            type="button">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body p-4 bg-light rounded-bottom">
+                                        <form id="createGroupChatForm">
+                                            @csrf
+                                            <div class="form-group mb-3">
+                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
+                                                <input class="form-control py-2" name="name" id="groupName"
+                                                    placeholder="Nhập tên nhóm" type="text" />
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupType" class="font-weight-bold">Chọn kiểu nhóm</label>
+                                                <select class="form-select py-2" name="type" id="groupType">
+                                                    <option value="#">Chọn kiểu nhóm</option>
+                                                    <option value="1">Personal</option>
+                                                    <option value="2">Group</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupMembers" class="font-weight-bold">Add Members</label>
+                                                <select tabindex="-1" id="groupMembers" name="members[]"
+                                                    multiple="multiple">
+                                                    @foreach ($data['admins'] as $admin)
+                                                        <option value="{{ $admin->id }}">
+                                                            {{ $admin->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary w-100 py-2" type="submit">
+                                                Add Group
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                             {{-- <div class="position-relative" id="channel-chat">
                                 <div class="p-3 user-chat-topbar">
                                     <div class="row align-items-center">

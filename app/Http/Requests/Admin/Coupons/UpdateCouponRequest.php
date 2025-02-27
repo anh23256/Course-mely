@@ -29,6 +29,7 @@ class UpdateCouponRequest extends FormRequest
             'description' => 'nullable|string',
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric',
+            'discount_max_value' => 'nullable|numeric|min:0',
             'start_date' => 'required|date',
             'expire_date' => 'required|date|after:start_date',
             'used_count' => 'required|integer',
@@ -61,6 +62,10 @@ class UpdateCouponRequest extends FormRequest
             'discount_value.required' => 'Trường discount_value là bắt buộc.',
             'discount_value.numeric' => 'Trường discount_value phải là số.',
 
+            //Discount_max_value
+            'discount_max_value.numeric' => 'Trường discount_max_value phải là số.',
+            'discount_max_value.min' => 'Trường discount_max_value phải lớn hơn 0.',
+            
             //Description
             'description.string' => 'Trường description phải là chuỗi ký tự.',
 
