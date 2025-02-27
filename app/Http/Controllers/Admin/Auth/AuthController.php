@@ -62,7 +62,7 @@ class AuthController extends Controller
 
                 $user =  Auth::user();
 
-                if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
+                if ($user->hasRole('admin') || $user->hasRole('employee')) {
                     return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công');
                 } else {
                     Auth::logout();

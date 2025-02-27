@@ -126,7 +126,7 @@ class ChatController extends Controller
 
     protected function getAdminsAndChannels()
     {
-        $roleUser = 'admin';
+        $roleUser = 'employee';
         $admins = User::whereHas('roles', function ($query) use ($roleUser) {
             $query->where('name', $roleUser);
         })->where('id', '!=', auth()->id())->get();
@@ -180,4 +180,45 @@ class ChatController extends Controller
 
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
+    public function addMembersToConversation(StoreGroupChatRequest $request, $conversationId)
+{
+    try {
+        $request->validated();
+        $conversation = Conversation::findOrFail($conversationId);
+
+        if ($conversation->owner_id !== auth()->id()) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 'Bạn không có quyền thêm thành viên vào nhóm này.'
+            ], 403);
+        }
+
+        // Thêm các thành viên vào nhóm
+        foreach ($request->members as $memberId) {
+            if ($memberId == auth()->id()) {
+                continue; // Bỏ qua nếu thành viên là người tạo nhóm
+            }
+            $user = User::find($memberId);
+            if ($user) {
+                $conversation->users()->attach($memberId);
+            }
+        }
+        $data = $this->getAdminsAndChannels();
+        $data['conversation'] = $conversation;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Thêm thành viên thành công.',
+            'data' => $data
+        ]);
+    } catch (\Exception $e) {
+        $this->logError($e, $request->all());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Thao tác không thành công.',
+        ]);
+    }
+}
+
 }

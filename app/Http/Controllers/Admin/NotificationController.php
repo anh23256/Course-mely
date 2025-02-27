@@ -24,7 +24,7 @@ class NotificationController extends Controller
 
             $typeGroups = [
                 'approval' => [
-                    'type' => ['register_course', 'register_instructor'],
+                    'type' => ['register_course', 'register_instructor', "withdrawal"],
                     'count' => 10
                 ],
                 'message' => [
