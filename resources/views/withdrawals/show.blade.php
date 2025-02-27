@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @push('page-css')
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -31,16 +31,15 @@
                     <div class="card-header align-items-center d-flex">
                         <h4 class="card-title mb-0 flex-grow-1">Thông tin yêu cầu rút
                             tiền: {{ $withDraw->id ?? '' }}</h4>
-                        <button data-id="{{ $withDraw->id }}"
-                                type="button" class="btn btn-info me-2 check-status-btn" data-bs-toggle="modal"
-                                data-bs-target="#transactionModal">
+                        <button data-id="{{ $withDraw->id }}" type="button" class="btn btn-info me-2 check-status-btn"
+                            data-bs-toggle="modal" data-bs-target="#transactionModal">
                             Kiểm tra trạng thái giao dịch
                         </button>
 
-                        @if(!is_null($withDraw) && $withDraw->status)
-                            @if($withDraw->status === 'Đang xử lý' || $withDraw->status === 'Chờ xác nhận lại')
+                        @if (!is_null($withDraw) && $withDraw->status)
+                            @if ($withDraw->status === 'Đang xử lý' || $withDraw->status === 'Chờ xác nhận lại')
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal">
+                                    data-bs-target="#exampleModal">
                                     Xác nhận
                                 </button>
                             @endif
@@ -52,82 +51,82 @@
                             <div class="table-responsive">
                                 <table class="table border table-nowrap align-middle mb-0">
                                     <tbody>
-                                    <tr>
-                                        <td>Người gửi yêu cầu</td>
-                                        <td>{{ $withDraw->wallet->user->name ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ngân hàng</td>
-                                        <td>{{ $withDraw->bank_name ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Số tài khoản</td>
-                                        <td>{{ $withDraw->account_number ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Chủ tài khoản</td>
-                                        <td>{{ $withDraw->account_holder ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Số tiền</td>
-                                        <td>{{ number_format($withDraw->amount) ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Mã QR</td>
-                                        <td>
-                                            <img height="200"
-                                                 src="{{ \Illuminate\Support\Facades\Storage::url($withDraw->qr_code ?? '') }}"
-                                                 alt="">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ngày gửi yêu cầu</td>
-                                        <td>{{ $withDraw->request_date ?? '' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ghi chú</td>
-                                        <td>{{ $withDraw->note ?? '' }}</td>
-                                    </tr>
-                                    @if($withDraw->completed_date)
                                         <tr>
-                                            <td>Ngày xử lý yêu cầu</td>
-                                            <td>{{ $withDraw->completed_date ?? '' }}</td>
+                                            <td>Người gửi yêu cầu</td>
+                                            <td>{{ $withDraw->wallet->user->name ?? '' }}</td>
                                         </tr>
-                                    @endif
-                                    <tr>
-                                        <td>Trạng thái</td>
-                                        <td>
-                                            @if($withDraw->status === 'Đang xử lý')
-                                                <span class="badge bg-warning">Đang xử lý</span>
-                                            @elseif($withDraw->status === 'Hoàn thành')
-                                                <span class="badge bg-success">Hoàn thành</span>
-                                            @elseif($withDraw->status === 'Đã từ chối')
-                                                <span class="badge bg-danger">Đã từ chối</span>
-                                            @elseif($withDraw->status === 'Chờ xác nhận lại')
-                                                <span class="badge bg-info">Chờ xác nhận lại</span>
-                                            @else
-                                                <span class="badge bg-secondary">Không xác định</span>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td>Ngân hàng</td>
+                                            <td>{{ $withDraw->bank_name ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Số tài khoản</td>
+                                            <td>{{ $withDraw->account_number ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Chủ tài khoản</td>
+                                            <td>{{ $withDraw->account_holder ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Số tiền</td>
+                                            <td>{{ number_format($withDraw->amount) ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Mã QR</td>
+                                            <td>
+                                                <img height="200"
+                                                    src="{{ \Illuminate\Support\Facades\Storage::url($withDraw->qr_code ?? '') }}"
+                                                    alt="">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ngày gửi yêu cầu</td>
+                                            <td>{{ $withDraw->request_date ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ghi chú</td>
+                                            <td>{{ $withDraw->note ?? '' }}</td>
+                                        </tr>
+                                        @if ($withDraw->completed_date)
+                                            <tr>
+                                                <td>Ngày xử lý yêu cầu</td>
+                                                <td>{{ $withDraw->completed_date ?? '' }}</td>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <td>Trạng thái</td>
+                                            <td>
+                                                @if ($withDraw->status === 'Đang xử lý')
+                                                    <span class="badge bg-warning">Đang xử lý</span>
+                                                @elseif($withDraw->status === 'Hoàn thành')
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                @elseif($withDraw->status === 'Đã từ chối')
+                                                    <span class="badge bg-danger">Đã từ chối</span>
+                                                @elseif($withDraw->status === 'Chờ xác nhận lại')
+                                                    <span class="badge bg-info">Chờ xác nhận lại</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Không xác định</span>
+                                                @endif
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        @if($withDraw->instructor_confirmation === 'confirmed')
+                        @if ($withDraw->instructor_confirmation === 'confirmed')
                             <div class="live-preview mt-4">
                                 <h5>Giảng viên xác nhận</h5>
                                 <div class="table-responsive">
                                     <table class="table border table-nowrap align-middle mb-0">
                                         <tbody>
-                                        <tr>
-                                            <td>Phản hồi</td>
-                                            <td>{{ $withDraw->instructor_confirmation_note ?? '' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Thời gian phản hồi</td>
-                                            <td>{{ $withDraw->instructor_confirmation_date ?? '' }}</td>
-                                        </tr>
+                                            <tr>
+                                                <td>Phản hồi</td>
+                                                <td>{{ $withDraw->instructor_confirmation_note ?? '' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Thời gian phản hồi</td>
+                                                <td>{{ $withDraw->instructor_confirmation_date ?? '' }}</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -142,9 +141,8 @@
         </div>
     </div>
 
-    <div id="transactionModal"
-         class="modal fade" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div id="transactionModal" class="modal fade" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Thêm modal-lg hoặc modal-xl -->
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="transactionModalLabel">Chi tiết trạng thái giao dịch</h5>
@@ -160,6 +158,7 @@
     </div>
 
 
+
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="confirmForm" action="{{ route('admin.withdrawals.confirmPayment') }}" method="post">
@@ -170,11 +169,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        @if($withDraw->admin_comment)
+                        @if ($withDraw->admin_comment)
                             <div>
-                                <textarea id="oldComment" readonly rows="3" style="resize: none"
-                                          class="form-control mb-3"
-                                          placeholder="Phản hồi trước đó">{{ $withDraw->admin_comment ?? '' }}</textarea>
+                                <textarea id="oldComment" readonly rows="3" style="resize: none" class="form-control mb-3"
+                                    placeholder="Phản hồi trước đó">{{ $withDraw->admin_comment ?? '' }}</textarea>
                             </div>
                         @endif
                         <input id="withdrawal_id" type="hidden" value="{{ $withDraw->id }}">
@@ -184,9 +182,7 @@
                                     hồi trước đó
                                 </button>
                             </div>
-                            <textarea id="comment" rows="3" style="resize: none"
-                                      class="form-control mb-3"
-                                      placeholder="Nhập nội dung">{{ old('admin_comment', '') }}</textarea>
+                            <textarea id="comment" rows="3" style="resize: none" class="form-control mb-3" placeholder="Nhập nội dung">{{ old('admin_comment', '') }}</textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -200,8 +196,8 @@
 @endsection
 @push('page-scripts')
     <script>
-        $(document).ready(function () {
-            $(document).on('click', '.check-status-btn', function () {
+        $(document).ready(function() {
+            $(document).on('click', '.check-status-btn', function() {
                 var withdrawalId = $(this).data('id');
 
                 var modal = $('#transactionModal');
@@ -223,35 +219,114 @@
                     data: {
                         withdrawal_id: withdrawalId,
                     },
-                    success: function (response) {
+                    success: function(response) {
                         console.log(response)
                         var details = `
-                        <p><strong>Yêu Cầu Rút Tiền:</strong></p>
-                        <pre>${JSON.stringify(response.withdrawal_request, null, 2)}</pre>
+    <div class="card">
+        <div class="card-body px-5">
+            <div class="row">
+                <!-- Cột 1: Yêu Cầu Rút Tiền -->
+                <div class="col-md-6">
+                    <h5 class="text-primary">Yêu Cầu Rút Tiền</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Số tiền:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.amount} VND</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Ngân hàng:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.bank_name}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Số tài khoản:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.account_number}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Chủ tài khoản:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.account_holder}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Ghi chú:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.note}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Trạng thái:</strong></div>
+                        <div class="col-md-8"><span class="badge bg-success">${response.withdrawal_request.status}</span></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Ngày yêu cầu:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.request_date}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Ngày hoàn thành:</strong></div>
+                        <div class="col-md-8">${response.withdrawal_request.completed_date}</div>
+                    </div>
+                </div>
 
-                        <p><strong>Giao Dịch:</strong></p>
-                        <pre>${JSON.stringify(response.transaction, null, 2)}</pre>
+                <!-- Cột 2: Giao Dịch -->
+                <div class="col-md-6">
+                    <h5 class="text-primary">Giao Dịch</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Mã giao dịch:</strong></div>
+                        <div class="col-md-8">${response.transaction.transaction_code}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Loại giao dịch:</strong></div>
+                        <div class="col-md-8">${response.transaction.type}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Số tiền:</strong></div>
+                        <div class="col-md-8">${response.transaction.amount} VND</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Trạng thái:</strong></div>
+                        <div class="col-md-8"><span class="badge bg-success">${response.transaction.status}</span></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Ngày tạo:</strong></div>
+                        <div class="col-md-8">${response.transaction.created_at}</div>
+                    </div>
+                </div>
+            </div>
 
-                        <p><strong>System Fund Transaction:</strong></p>
-                        <pre>${JSON.stringify(response.system_fund_transaction, null, 2)}</pre>
-                    `;
+            <hr>
+
+            <!-- System Fund Transaction -->
+            <h5 class="text-primary">System Fund Transaction</h5>
+            <div class="row">
+                <div class="col-md-4"><strong>Mô tả:</strong></div>
+                <div class="col-md-8">${response.system_fund_transaction.description}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Số tiền:</strong></div>
+                <div class="col-md-8">${response.system_fund_transaction.total_amount} VND</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Ngày tạo:</strong></div>
+                <div class="col-md-8">${response.system_fund_transaction.created_at}</div>
+            </div>
+        </div>
+    </div>
+`;
+
                         $('#transaction-details').html(details);
                     },
-                    error: function (xhr, status, error) {
-                        $('#transaction-details').html('<p class="text-danger">Đã xảy ra lỗi trong quá trình kiểm tra giao dịch. Vui lòng thử lại sau.</p>');
+                    error: function(xhr, status, error) {
+                        $('#transaction-details').html(
+                            '<p class="text-danger">Đã xảy ra lỗi trong quá trình kiểm tra giao dịch. Vui lòng thử lại sau.</p>'
+                        );
                         console.error(xhr.responseText);
                     },
                 });
             });
 
 
-            $('#loadOldComment').on('click', function () {
+            $('#loadOldComment').on('click', function() {
                 var oldComment = $('#oldComment').val();
 
                 $('#comment').val(oldComment);
             });
 
-            $('#confirmPayment').on('click', function () {
+            $('#confirmPayment').on('click', function() {
                 const comment = $("#comment").val();
 
                 if (comment.trim() === '') {
@@ -268,7 +343,9 @@
                 cancelButton.prop('disabled', true);
 
                 const originalButtonText = confirmButton.html();
-                confirmButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                confirmButton.html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...'
+                );
 
                 $.ajax({
                     type: 'POST',
@@ -277,7 +354,7 @@
                         withdrawal_id: $('#withdrawal_id').val(),
                         admin_comment: comment,
                     },
-                    success: function (response) {
+                    success: function(response) {
                         if (response.status === true) {
                             Swal.fire({
                                 title: 'Thao tác thành công!',
@@ -285,7 +362,8 @@
                                 icon: 'success'
                             }).then(() => {
                                 $('#exampleModal').modal('hide');
-                                window.location.href = "{{ route('admin.withdrawals.index') }}";
+                                window.location.href =
+                                    "{{ route('admin.withdrawals.index') }}";
                             });
                         } else {
                             Swal.fire({
@@ -295,14 +373,14 @@
                             });
                         }
                     },
-                    error: function (error) {
+                    error: function(error) {
                         Swal.fire({
                             title: 'Thao tác thất bại!',
                             text: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
                             icon: 'error'
                         });
                     },
-                    complete: function () {
+                    complete: function() {
                         confirmButton.prop('disabled', false);
                         cancelButton.prop('disabled', false);
                         confirmButton.html(originalButtonText);
