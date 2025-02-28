@@ -36,5 +36,8 @@ class Coupon extends Model
         return $this->hasMany(CouponUse::class);
     }
 
-
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -307,7 +307,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/{couponId}', [InstructorCouponController::class, 'show']);
                 Route::post('/', [InstructorCouponController::class, 'store']);
                 Route::put('/{couponId}', [InstructorCouponController::class, 'update']);
-                Route::put('/{couponId}/{action}', [InstructorCouponController::class, 'toggleStatus'])->where('action', 'enable|disable');
+                Route::put('/{couponId}/toggleStatus', [InstructorCouponController::class, 'toggleStatus']);
                 Route::delete('/{couponId}', [InstructorCouponController::class, 'destroy']);
             });
         });

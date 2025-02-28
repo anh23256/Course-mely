@@ -184,6 +184,7 @@ class CouponController extends Controller
 
             $status = $action === 'enable' ? '1' : '0';
 
+            dd($status);
             $coupon->status = $status;
             $coupon->save();
 

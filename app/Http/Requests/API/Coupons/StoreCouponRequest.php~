@@ -31,7 +31,6 @@ class StoreCouponRequest extends BaseFormRequest
             'start_date' => 'required|date',
             'expire_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
-            'max_usage' => 'nullable|numeric|min:0',
             'user_ids' => 'array|nullable',
             'user_ids.*' => 'exists:users,id',
         ];
