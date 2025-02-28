@@ -71,19 +71,18 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
-            // Gửi thông báo cho người dùng hoặc admin
+
             $coupon = Coupon::create($data);
+            
             $roleUser = ['member', 'instructor'];
+
             $users = User::whereHas('roles', function ($query) use ($roleUser) {
                 $query->whereIn('name', $roleUser);
             })->get();
 
-            $user = User::where('email', 'ducmely@gmail.com')->first();
-
-            $user->notify(new CouponCodeCreated($coupon));
-            // foreach ($users as $user) {
-            //     $user->notify(new CouponCodeCreated($coupon));
-            // }
+            foreach ($users as $user) {
+                $user->notify(new CouponCodeCreated($coupon));
+            }
             DB::commit();
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
