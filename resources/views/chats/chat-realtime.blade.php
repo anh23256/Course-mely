@@ -187,7 +187,7 @@
                                 <div class="modal-content rounded-3 shadow-lg">
                                     <div class="modal-header bg-primary text-white rounded-top p-3">
                                         <h5 class="modal-title text-white" id="addGroupModalLabel">
-                                            Thêm nhóm
+                                            Thêm hội thoại
                                         </h5>
                                         <button aria-label="Close" class="close text-white" data-dismiss="modal"
                                             type="button">
@@ -198,17 +198,17 @@
                                         <form id="createGroupChatForm">
                                             @csrf
                                             <div class="form-group mb-3">
-                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
-                                                <input class="form-control py-2" name="name" id="groupName"
-                                                    placeholder="Nhập tên nhóm" type="text" />
-                                            </div>
-                                            <div class="form-group mb-3">
                                                 <label for="groupType" class="font-weight-bold">Chọn kiểu nhóm</label>
                                                 <select class="form-select py-2" name="type" id="groupType">
                                                     <option value="#">Chọn kiểu nhóm</option>
                                                     <option value="1">Personal</option>
                                                     <option value="2">Group</option>
                                                 </select>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
+                                                <input class="form-control py-2" name="name" id="groupName"
+                                                    placeholder="Nhập tên nhóm" type="text" />
                                             </div>
                                             <div class="form-group mb-3">
                                                 <label for="groupMembers" class="font-weight-bold">Add Members</label>
@@ -283,8 +283,33 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list" id="userList">
-
+                                <ul class="list-unstyled chat-list chat-user-list conversationList">
+                                    @foreach ($data['channels'] as $channel)
+                                        @if ($channel->type == 'private')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-channel-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    <img src="{{ $channel->users->last()->avatar }}"
+                                                                        class="avatar-xs rounded-circle" alt="">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->users->last()->name }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
                                 </ul>
                             </div>
 
@@ -305,26 +330,31 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
+                                <ul class="list-unstyled chat-list chat-user-list mb-0 conversationList">
                                     @foreach ($data['channels'] as $channel)
-                                        <li class="">
-                                            <a href="#" class="unread-msg-user group-button"
-                                                data-channel-id="{{ $channel->id }}">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                        <div class="avatar-xxs">
-                                                            <div class="avatar-title bg-light rounded-circle text-body">#
+                                        @if ($channel->type == 'group')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-channel-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    #
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->name }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-truncate mb-0">
-                                                            {{ $channel->name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </li>
+                                                </a>
+                                            </li>
+                                        @endif
                                     @endforeach
 
                                 </ul>
@@ -365,8 +395,9 @@
                                                     <div class="d-flex align-items-center">
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            <img src="{{ asset('assets/images/users/multi-user.jpg') }}"
-                                                                class="rounded-circle avatar-xs" alt="">
+                                                            @if ($channel->type == "private")
+                                                            <img id="image" src="" class="rounded-circle avatar-xs" alt="">
+                                                            @endif
                                                             <span class="user-status"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
@@ -814,8 +845,7 @@
                                                 <li class="list-inline-item m-0">
                                                     <button type="button" class="btn btn-ghost-secondary btn-icon"
                                                         title="Thêm thành viên" data-bs-toggle="modal"
-                                                        data-bs-target="#myModal" 
-                                                        id="addMembersButton"
+                                                        data-bs-target="#myModal" id="addMembersButton"
                                                         data-channel-id="3">
                                                         <i class="las la-user-plus"
                                                             style="font-size: 20px;color:black"></i>
@@ -1123,7 +1153,7 @@
                 });
             });
 
-            $('#conversationList a').click(function(event) {
+            $('.conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
                 var channelId = $(this).data('channel-id'); // Lấy ID của nhóm chat
@@ -1141,6 +1171,8 @@
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
                             $('.memberCount').text(response.data.memberCount);
+                            $('#nameUser').text(response.data.direct);
+                            $('#image').html(response.data.name);
                             loadMessages(response.data.group.id);
                             let membersHtml = '';
                             response.data.member.forEach(function(member) {
@@ -1186,13 +1218,13 @@
                     });
             });
             $('#addMembersButton').click(function() {
-                event.preventDefault(); 
+                event.preventDefault();
                 var conversationId = $(this).data(
                     'channel-id'); // Giả sử bạn có conversationId từ data attribute của nút
                 $('#addMembers').select2(); // ID của select trong modal
                 var members = []; // Mảng chứa id các thành viên mới
                 console.log(conversationId);
-                
+
                 // Lấy tất cả các thành viên mới (có thể từ checkbox hoặc select box)
                 $('input[name="members[]"]:checked').each(function() {
                     members.push($(this).val()); // Thêm id thành viên vào mảng members
@@ -1211,7 +1243,7 @@
                             if (response.status === 'success') {
                                 // Cập nhật UI sau khi thêm thành viên thành công
                                 var newMemberIds = response.data.conversation
-                                .users; // Giả sử trả về danh sách người dùng
+                                    .users; // Giả sử trả về danh sách người dùng
                                 newMemberIds.forEach(function(userId) {
                                     // Thêm thành viên vào UI (ví dụ: danh sách thành viên trong nhóm)
                                     $('#memberList').append('<li>' + userId + '</li>');
@@ -1226,7 +1258,7 @@
                             alert('Thao tác không thành công.');
                         }
                     });
-                } 
+                }
             });
             // Khi người dùng nhấn gửi tin nhắn
             $('#sendMessageButton').click(function(e) {
@@ -1259,131 +1291,22 @@
                     alert("Vui lòng chọn nhóm và nhập tin nhắn!");
                 }
             });
-            // function appendMessage(msg) {
-            //     let messagesDiv = $('#messages');
-            //     let messageElement = $('<div></div>');
+        });
 
-            //     if (msg.type === 'text') {
-            //         messageElement.html(`<p>${msg.content}</p>`);
-            //     } else if (msg.type === 'file' && msg.media.length > 0) {
-            //         let file = msg.media[0]; // Chỉ lấy file đầu tiên (có thể sửa để lấy nhiều file)
+        function loadMessages(conversationId) {
+            $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+                if (response.status === 'success') {
+                    // Lấy tất cả các tin nhắn
+                    $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
-            //         if (file.type.includes('image')) {
-            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
-        //                     <img src="${file.file_path}" alt="image" style="max-width: 200px;">`);
-            //         } else {
-            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
-        //                     <a href="${file.file_path}" target="_blank">📂 ${file.original_name}</a>`);
-            //         }
-            //     }
+                    const messagesHtml = response.messages.map(message => {
+                        console.log(response);
 
-            //     messagesDiv.append(messageElement);
-            // }
-
-            // $('#sendMessageButton').click(function() {
-            //     var content = $('#messageInput').val();
-            //     var conversationId = $(this).data('conversation-id'); // ID của nhóm chat hiện tại
-            //     var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
-            //     var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
-            //     var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-            //     console.log('Conversation ID:', conversationId); // Kiểm tra giá trị của conversationId
-            //     if (content) {
-            //         $.ajax({
-            //             url: "{{ route('admin.chats.sendGroupMessage') }}",
-            //             method: 'POST',
-            //             data: {
-            //                 conversation_id: conversationId,
-            //                 content: content,
-            //                 parent_id: parentId, // Nếu có
-            //                 type: type,
-            //                 meta_data: metaData,
-            //                 _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
-            //             },
-            //             success: function(response) {
-            //                 if (response.status === 'success') {
-            //                     $('#messageInput').val(''); // Xóa nội dung nhập
-            //                     loadMessages(conversationId); // Tải lại tin nhắn
-            //                 }
-            //             }
-            //         });
-            //     }
-
-
-            // Lấy và hiển thị tin nhắn
-            // function loadMessages(currentConversationId) {
-
-            //     $.get('admin.chats.getGroupMessages. ' + currentConversationId, function(response) {
-            //         if (response.status === 'success') {
-            //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-            //             response.messages.forEach(function(message) {
-            //                 var messageHtml = `
-
-    });
-
-    // function loadMessages(conversationId) {
-    //     $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
-    //         if (response.status === 'success') {
-    //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-
-    //             const messagesHtml = response.messages.map(message => {
-    //                 const messageClass = message.sender.id == userId ? 'sender' : 'received';
-    //                 const time = formatTime(message.created_at);
-    //                 let messageContent = `<p>${message.content}</p>`; // Mặc định là text
-
-    //                 // Kiểm tra nếu tin nhắn có file
-    //                 if (message.meta_data) {
-    //                     try {
-    //                         let fileData = JSON.parse(message.meta_data); // Chuyển JSON thành object
-    //                         if (fileData.type.includes('image')) {
-    //                             messageContent =
-    //                                 `<img src="${fileData.file_path}" alt="Hình ảnh" style="max-width: 200px;">`;
-    //                         } else {
-    //                             messageContent =
-    //                                 `<a href="${fileData.file_path}" target="_blank">📂 ${fileData.original_name}</a>`;
-    //                         }
-    //                     } catch (error) {
-    //                         console.error("Lỗi phân tích meta_data:", error);
-    //                     }
-    //                 }
-
-    //                 return `
-        //                     <div class="message ${messageClass}">
-        //                         <div class="message-avatar">
-        //                             <img src="${message.sender.avatar}" alt="avatar">
-        //                         </div>
-        //                         <div class="message-content">
-        //                             <div class="message-header">
-        //                                 <strong>${message.sender.name}</strong>
-        //                                 <span class="message-time">${time}</span>
-        //                             </div>
-        //                             ${messageContent}
-        //                         </div>
-        //                     </div>`;
-    //             }).join('');
-
-    //             $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
-    //             $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
-    //         } else {
-    //             $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
-    //         }
-    //     });
-    // }
-
-
-    function loadMessages(conversationId) {
-        $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
-            if (response.status === 'success') {
-                // Lấy tất cả các tin nhắn
-                $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-
-                const messagesHtml = response.messages.map(message => {
-                    console.log(response);
-
-                    // Kiểm tra ID người gửi và người nhận
-                    const messageClass = message.sender.id == userId ? 'sender' :
-                        'received'; // Xác định lớp tin nhắn   
-                    const time = formatTime(message.created_at);
-                    return `
+                        // Kiểm tra ID người gửi và người nhận
+                        const messageClass = message.sender.id == userId ? 'sender' :
+                            'received'; // Xác định lớp tin nhắn   
+                        const time = formatTime(message.created_at);
+                        return `
                                                                 <div class=" message ${messageClass}">
                                                                     <div class="message-avatar">
                                                                         <img src="${message.sender.avatar}" alt="avatar">
@@ -1398,42 +1321,42 @@
                                                                                 </p>
                                                                          </div>
                                                                     </div>`;
-                }).join(''); // Chuyển mảng thành chuỗi HTML
+                    }).join(''); // Chuyển mảng thành chuỗi HTML
 
-                $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
-                $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
-            } else {
-                $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
-            }
-        });
-    }
+                    $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
+                    $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
+                } else {
+                    $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
+                }
+            });
+        }
 
-    function formatTime(dateString) {
-        const date = new Date(dateString);
+        function formatTime(dateString) {
+            const date = new Date(dateString);
 
-        // Sử dụng toLocaleTimeString() để xử lý múi giờ và định dạng theo yêu cầu (giờ và phút)
-        const options = {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Asia/Ho_Chi_Minh', // Chỉnh múi giờ về Việt Nam (hoặc múi giờ khác nếu cần)
-        };
+            // Sử dụng toLocaleTimeString() để xử lý múi giờ và định dạng theo yêu cầu (giờ và phút)
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Asia/Ho_Chi_Minh', // Chỉnh múi giờ về Việt Nam (hoặc múi giờ khác nếu cần)
+            };
 
-        return date.toLocaleTimeString('vi-VN', options); // Sử dụng 'vi-VN' để định dạng tiếng Việt
-    }
+            return date.toLocaleTimeString('vi-VN', options); // Sử dụng 'vi-VN' để định dạng tiếng Việt
+        }
 
-    // function addReaction(event) {
-    //     const reactionContainer = event.target.closest('.message').querySelector('.reaction-container');
-    //     const reaction = document.createElement('div');
-    //     reaction.classList.add('reaction');
-    //     reaction.innerHTML = event.target.innerHTML; // Thêm ký hiệu reaction (❤️ hoặc 👍)
+        // function addReaction(event) {
+        //     const reactionContainer = event.target.closest('.message').querySelector('.reaction-container');
+        //     const reaction = document.createElement('div');
+        //     reaction.classList.add('reaction');
+        //     reaction.innerHTML = event.target.innerHTML; // Thêm ký hiệu reaction (❤️ hoặc 👍)
 
-    //     // Vị trí ngẫu nhiên trên tin nhắn
-    //     const xOffset = Math.random() * 20 - 10; // Xê dịch ngẫu nhiên
-    //     const yOffset = Math.random() * 20 - 10;
+        //     // Vị trí ngẫu nhiên trên tin nhắn
+        //     const xOffset = Math.random() * 20 - 10; // Xê dịch ngẫu nhiên
+        //     const yOffset = Math.random() * 20 - 10;
 
-    //     // Đặt vị trí reaction
-    //     reaction.style.left = `${xOffset}px`;
-    //     reaction.style.top = `${yOffset}px`;
+        //     // Đặt vị trí reaction
+        //     reaction.style.left = `${xOffset}px`;
+        //     reaction.style.top = `${yOffset}px`;
 
         //         // Thêm reaction vào container
         //         reactionContainer.appendChild(reaction);
@@ -1444,7 +1367,6 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
 
-        //     });
     </script>
     <script>
         @if (session('success'))

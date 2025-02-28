@@ -41,16 +41,9 @@ class ChatController extends Controller
     {
         try {
             $validated = $request->validated();
-
-            if (!isset($request->members) || !is_array($request->members) || count($request->members) < 2) {
-                return response()->json([
-                    'status' => 'error',
-                    'error' => 'Nhóm phải có ít nhất 3 thành viên (bao gồm người tạo nhóm).'
-                ], 400);
-            }
             // Tạo nhóm chat
             $conversation = Conversation::create([
-                'name' => $validated['name'],
+                'name' => $validated['name'] ?? 'Nhóm ẩn danh',
                 'owner_id' => auth()->id(),
                 'type' => $validated['type'],
                 'status' => '1',
@@ -146,18 +139,23 @@ class ChatController extends Controller
         try {
             $groupId = $request->id;
             $group = Conversation::findOrFail($groupId);
+            if ($group->type == 'group') {
+                $name = $group->name;
+                $memberCount = $group->users()->count() . ' thành viên';
+            }
+            elseif($group->type == 'private'){
+                $name = $group->users->last()->name;
+                $memberCount = "";
+            }
             $member = $group->users()->select('user_id','name','avatar')->get();
             $leader = User::find($group->owner_id);
-
-            // Lấy số thành viên của nhóm
-            $memberCount = $group->users()->count();
 
             // Trả về thông tin nhóm
             return response()->json([
                 'status' => 'success',
                 'data' => [
-                    'name' => $group->name,  // Tên nhóm
-                    'memberCount' => $memberCount . ' thành viên', // Số thành viên
+                    'name' => $name,  // Tên nhóm
+                    'memberCount' => $memberCount, // Số thành viên
                     'member' =>$member,
                     'group' => $group,
                     'leader'=>$leader,
