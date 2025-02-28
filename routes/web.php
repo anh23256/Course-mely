@@ -37,7 +37,6 @@ use Illuminate\Http\Request;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
 #============================== ROUTE GOOGLE AUTH =============================
 Route::prefix('admin')->as('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'login'])->name('login');
