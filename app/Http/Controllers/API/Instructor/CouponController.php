@@ -17,7 +17,7 @@ class CouponController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
@@ -26,7 +26,16 @@ class CouponController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
             }
 
-            $coupons = Coupon::query()->where('user_id', $user->id)->get();
+            $query = Coupon::query()->where('user_id', $user->id);
+
+            if ($request->has('fromDate')) {
+                $query->whereDate('start_date', '>=', $request->input('fromDate'));
+            }
+            if ($request->has('toDate')) {
+                $query->whereDate('start_date', '<=', $request->input('toDate'));
+            }
+
+            $coupons = $query->latest()->get();
 
             if ($coupons->isEmpty()) {
                 return $this->respondForbidden('Không có mã giảm giá nào!');
@@ -58,6 +67,8 @@ class CouponController extends Controller
             $data = $request->validated();
 
             $data['user_id'] = $user->id;
+            $data['start_date'] = $data['start_date'] ?? now();
+            $data['max_usage'] = $data['max_usage'] === 0 ? null : $data['max_usage'];
 
             $coupon = Coupon::query()->create($data);
 
@@ -144,12 +155,45 @@ class CouponController extends Controller
                 return $this->respondNotFound('Không có mã giảm giá nào!');
             }
 
+            if (isset($data['discount_type']) && $data['discount_type'] === 'fixed') {
+                $data['discount_max_value'] = 0;
+            }
+
+            if (isset($data['max_usage']) && $data['max_usage'] === 0) {
+                $data['max_usage'] = null;
+            }
+
             $coupon->update($data);
 
-            if ($data('remove_user_ids')) {
-                foreach ($data['remove_user_ids'] as $user_id) {
-                    $coupon->user()->detach($user_id);
+            if (isset($data['user_ids']) && is_array($data['user_ids'])) {
+                if (count($data['user_ids']) === 0) {
+                    CouponUse::query()
+                        ->where('coupon_id', $coupon->id)
+                        ->delete();
+                } else {
+                    CouponUse::query()
+                        ->where('coupon_id', $coupon->id)
+                        ->whereNotIn('user_id', $data['user_ids'])
+                        ->delete();
+
+                    foreach ($data['user_ids'] as $user_id) {
+                        CouponUse::query()->updateOrCreate(
+                            [
+                                'user_id' => $user_id,
+                                'coupon_id' => $coupon->id
+                            ],
+                            [
+                                'status' => 'unused',
+                                'applied_at' => $data['start_date'] ?? null,
+                                'expired_at' => $data['expire_date'] ?? null
+                            ]
+                        );
+                    }
                 }
+            } else {
+                CouponUse::query()
+                    ->where('coupon_id', $coupon->id)
+                    ->delete();
             }
 
             DB::commit();

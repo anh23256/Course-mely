@@ -7,6 +7,7 @@ use App\Http\Requests\API\Transaction\BuyCourseRequest;
 use App\Http\Requests\API\Transaction\DepositTransactionRequest;
 use App\Mail\StudentCoursePurchaseMail;
 use App\Models\Coupon;
+use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
@@ -167,7 +168,9 @@ class TransactionController extends Controller
                 return $this->respondError('Bạn đã sở hữu khoá học này rồi');
             }
 
-            $amount = number_format($validated['amount'], 0, '', '');
+            $couponData = $this->checkCoupon($validated['coupon_code'], $validated['amount']);
+            $finalAmount = $couponData['final_amount'];
+            $amountVNPay = number_format($finalAmount, 0, '', '');
 
             $vnp_TmnCode = config('vnpay.tmn_code');
             $vnp_HashSecret = config('vnpay.hash_secret');
@@ -176,7 +179,6 @@ class TransactionController extends Controller
 
             $vnp_TxnRef = 'ORDER' . time();
             $vnp_OrderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $validated['course_id'];
-            $vnp_Amount = $amount * 100;
             if (!empty($validated['coupon_code'])) {
                 $vnp_OrderInfo .= '-' . $validated['coupon_code'];
             }
@@ -187,7 +189,7 @@ class TransactionController extends Controller
                 "vnp_Version" => "2.1.0",
                 "vnp_Command" => "pay",
                 "vnp_TmnCode" => $vnp_TmnCode,
-                "vnp_Amount" => $vnp_Amount,
+                "vnp_Amount" => $amountVNPay * 100,
                 "vnp_CreateDate" => now()->format('YmdHis'),
                 "vnp_CurrCode" => "VND",
                 "vnp_IpAddr" => $vnp_IpAddr,
@@ -271,8 +273,8 @@ class TransactionController extends Controller
             $courseId = filter_var(trim($orderInfo[1], '"'), FILTER_VALIDATE_INT);
             $couponCode = isset($orderInfo[2]) ? trim($orderInfo[2], '"') : null;
 
-            $user = User::find($userId);
-            $course = Course::find($courseId);
+            $user = User::query()->find($userId);
+            $course = Course::query()->find($courseId);
 
             if (!$user) {
                 return redirect()->away($frontendUrl . "/not-found");
@@ -289,7 +291,7 @@ class TransactionController extends Controller
             // Kiểm tra mã giảm giá (nếu có)
             $discount = null;
             if (!empty($couponCode)) {
-                $discount = Coupon::where(['code' => $couponCode, 'status' => '1'])->first();
+                $discount = Coupon::query()->where(['code' => $couponCode, 'status' => '1'])->first();
                 if ($discount) {
                     if ($discount->type == 'percent') {
                         $discountAmount = ($originalAmount * $discount->value) / 100;
@@ -451,7 +453,7 @@ class TransactionController extends Controller
     {
         if ($discount) {
             $course->coupons()->attach($discount->id);
-            if ($discount->used_count > 0) $discount->decrement('used_count');
+            if ($discount->used_count > 0) $discount->increment('used_count');
         }
 
         $course->increment('total_student');
@@ -511,5 +513,82 @@ class TransactionController extends Controller
         Mail::to($student->email)->send(
             new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
         );
+    }
+
+    public function applyCoupon(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $data = $request->validate([
+                'code' => 'required|string',
+                'amount' => 'required|numeric|min:0',
+            ]);
+
+            return $this->checkCoupon($data['code'], $data['amount']);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    private function checkCoupon(?string $code, float $amount)
+    {
+        if (empty($code)) {
+            return [
+                'original_amount' => $amount,
+                'discount_amount' => 0,
+                'final_amount' => $amount,
+            ];
+        }
+
+        $coupon = Coupon::query()->where('code', $code)->where('status', '1')->first();
+
+        if (!$coupon) {
+            return $this->respondNotFound('Mã giảm giá không hợp lệ');
+        }
+
+        $alreadyUsed = CouponUse::query()
+            ->where('user_id', Auth::id())
+            ->where('coupon_id', $coupon->id)
+            ->where('status', 'used')
+            ->exists();
+
+        if ($alreadyUsed) {
+            return $this->respondError('Bạn đã sử dụng mã giảm giá này');
+        }
+
+        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
+            return $this->respondError('Mã giảm giá đã hết số lượt sử dụng');
+        }
+
+        if ($coupon->start_date && now()->lessThan($coupon->start_date)) {
+            return $this->respondError('Mã giảm giá chưa được kích hoạt');
+        }
+
+        $discountAmount = 0;
+
+        if ($coupon->discount_type === 'percentage') {
+            $discountAmount = ($amount * $coupon->discount_value) / 100;
+        } elseif ($coupon->discount_type === 'fixed') {
+            $discountAmount = min($coupon->discount_value, $amount);
+        }
+
+        if (!empty($coupon->discount_max_value)) {
+            $discountAmount = min($discountAmount, $coupon->discount_max_value);
+        }
+
+        $finalAmount = max($amount - $discountAmount, 0);
+
+        return $this->respondOk('Áp dụng mã giảm giá thành công', [
+            'original_amount' => $amount,
+            'discount_amount' => $discountAmount,
+            'final_amount' => $finalAmount
+        ]);
     }
 }

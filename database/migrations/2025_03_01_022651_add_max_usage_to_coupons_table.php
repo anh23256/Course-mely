@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('coupons', function (Blueprint $table) {
-            $table->integer('max_usage')->default(0)->after('description');
+            $table->integer('max_usage')->nullable()->after('description');
         });
     }
 

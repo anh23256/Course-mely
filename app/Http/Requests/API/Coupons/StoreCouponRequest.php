@@ -26,9 +26,24 @@ class StoreCouponRequest extends BaseFormRequest
             'code' => 'required|string|unique:coupons,code|max:255',
             'name' => 'required|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
+            'discount_value' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if ($this->input('discount_type') === 'fixed') {
+                        if ($value < 10000 || $value > 1000000) {
+                            $fail('Giá trị giảm giá theo tiền phải nằm trong khoảng từ 10.000 đến 1.000.000 VND.');
+                        }
+                    } elseif ($this->input('discount_type') === 'percentage') {
+                        if ($value < 10 || $value > 100) {
+                            $fail('Giá trị giảm giá theo phần trăm phải nằm trong khoảng từ 10% đến 100%.');
+                        }
+                    }
+                }
+            ],
             'discount_max_value' => 'required_if:discount_type,percentage|numeric|min:1',
-            'start_date' => 'required|date',
+            'start_date' => 'nullable|date',
             'expire_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
             'max_usage' => 'nullable|numeric|min:0',
@@ -55,6 +70,9 @@ class StoreCouponRequest extends BaseFormRequest
             'discount_value.required' => 'Giá trị giảm giá là bắt buộc.',
             'discount_value.numeric' => 'Giá trị giảm giá phải là số.',
             'discount_value.min' => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+
+            'discount_value.fixed_range' => 'Giá trị giảm giá phải nằm trong khoảng từ 10.000 đến 1.000.000 VND nếu giảm giá theo tiền.',
+            'discount_value.percentage_range' => 'Giá trị giảm giá phải nằm trong khoảng từ 10% đến 100% nếu giảm giá theo phần trăm.',
 
             'discount_max_value.required_if' => 'Giá trị giảm tối đa là bắt buộc khi loại giảm giá là phần trăm.',
             'discount_max_value.numeric' => 'Giá trị giảm tối đa phải là số.',

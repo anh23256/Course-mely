@@ -28,9 +28,10 @@ class StoreCouponRequest extends BaseFormRequest
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'discount_max_value' => 'required_if:discount_type,percentage|numeric|min:1',
-            'start_date' => 'required|date',
+            'start_date' => 'nullable|date',
             'expire_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
+            'max_usage' => 'nullable|numeric|min:0',
             'user_ids' => 'array|nullable',
             'user_ids.*' => 'exists:users,id',
         ];
