@@ -11,7 +11,7 @@
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9MJ6G4PMEJ"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('analytics.property_code') }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
 
@@ -20,7 +20,7 @@
         }
         gtag('js', new Date());
 
-        gtag('config', 'G-9MJ6G4PMEJ');
+        gtag('config', '{{ config('analytics.property_code') }}');
     </script>
     <!-- CSS -->
     @include('layouts.partials.css')

@@ -73,7 +73,9 @@ class CouponController extends Controller
             $data = $request->validated();
             // Gửi thông báo cho người dùng hoặc giảng viên
             $coupon = Coupon::create($data);
+            
             $roleUser = ['member', 'instructor'];
+
             $users = User::whereHas('roles', function ($query) use ($roleUser) {
                 $query->whereIn('name', $roleUser);
             })->get();

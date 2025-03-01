@@ -5,15 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Settings\StoreSettingRequest;
 use App\Http\Requests\Admin\Settings\UpdateSettingRequest;
+use App\Models\CertificateTemplate;
 use App\Models\Setting;
 use App\Notifications\CrudNotification;
+use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SettingController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait, ApiResponseTrait;
     /**
      * Display a listing of the resource.
      */
@@ -25,8 +27,9 @@ class SettingController extends Controller
             $subTitle = 'Danh sách các cài đặt';
 
             $settings = Setting::latest('id')->paginate(10);
+            $templateCertificates = CertificateTemplate::query()->limit(3)->get();
 
-            return view('settings.index', compact(['title', 'subTitle', 'settings']));
+            return view('settings.index', compact(['title', 'subTitle', 'settings', 'templateCertificates']));
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -65,8 +68,6 @@ class SettingController extends Controller
             $data = $request->validated();
 
             $setting = Setting::create($data);
-
-            CrudNotification::sendToMany([],$setting->id);
 
             return redirect()->route('admin.settings.index')->with('success', true);
         } catch (\Exception $e) {
@@ -123,8 +124,6 @@ class SettingController extends Controller
 
             $setting->update($data);
 
-            CrudNotification::sendToMany([],$setting->id);
-
             return redirect()->route('admin.settings.edit', $id)->with('success', true);
         } catch (\Exception $e) {
 
@@ -146,7 +145,7 @@ class SettingController extends Controller
 
                 $settingID = explode(',', $id);
 
-                $setting = Setting::query()->whereIn('id',$settingID)->delete();
+                $setting = Setting::query()->whereIn('id', $settingID)->delete();
             } else {
                 $setting = Setting::query()->findOrFail($id);
 
@@ -154,8 +153,6 @@ class SettingController extends Controller
             }
 
             DB::commit();
-
-            CrudNotification::sendToMany([],$id);
 
             return response()->json([
                 'status' => 'success',
@@ -171,6 +168,24 @@ class SettingController extends Controller
                 'status' => 'error',
                 'message' => 'Xóa thất bại'
             ]);
+        }
+    }
+
+    public function updateStatusCertificates(string $id)
+    {
+        try {
+            $certificateTemplate = CertificateTemplate::query()->findOrFail($id);
+
+            $certificateTemplate->update(['status' => 1]);
+
+            $certificateEsle = CertificateTemplate::where('id', '<>', $id)->update(['status' => 0]);
+
+            return $this->respondOk('Thao tác thành công');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return $this->respondError('Vui lòng thử lại');
         }
     }
 }
