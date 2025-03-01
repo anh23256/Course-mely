@@ -1004,7 +1004,6 @@
                     success: function(response) {
                         console.log(response);
                         if (response) {
-                            console.log(response);
 
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
@@ -1012,6 +1011,7 @@
                             $('#nameUser').text(response.data.direct);
                             $('#imageUser').attr('src', response.data.avatar);
                             loadMessages(response.data.group.id);
+                            loadSentFiles(response.data.group.id);
                             let membersHtml = '';
                             response.data.member.forEach(function(member) {
                                 membersHtml += `<li class="list-group-item">
@@ -1052,6 +1052,7 @@
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
                         loadMessages(currentConversationId);
+                        
                         // alert('Đã nhận tin nhắn mới');
                     });
             });
@@ -1156,7 +1157,7 @@
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
                     const messagesHtml = response.messages.map(message => {
-                        console.log(response);
+                        // console.log(response);
 
                         // Kiểm tra ID người gửi và người nhận
                         const messageClass = message.sender.id == userId ? 'sender' :
@@ -1208,8 +1209,10 @@
         }
 
         function loadSentFiles(conversationId) {
+            console.log('test: ----------------------------------');
             $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
-                console.log('test:', response);
+                console.log(response);
+                
                 
                 if (response.status === 'success') {
                     $('#sentFilesList').html(''); // Xóa danh sách cũ
@@ -1233,43 +1236,8 @@
                                 </div>
                                 <div
                                     class="flex-grow-1 overflow-hidden">
-                                    <h5 class="fs-13 mb-1"><a
-                                            href="#"
-                                            class="text-body text-truncate d-block">${file.name}</a></h5>
-                                    <div class="text-muted">${file.file_size}</div>
+
                                 </div>
-                                // <div class="flex-shrink-0 ms-2">
-                                //     <div class="d-flex gap-1">
-                                //         <button type="button"
-                                //             class="btn btn-icon text-muted btn-sm fs-18"><i
-                                //                 class="ri-download-2-line"></i></button>
-                                //         <div class="dropdown">
-                                //             <button
-                                //                 class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                //                 type="button"
-                                //                 data-bs-toggle="dropdown"
-                                //                 aria-expanded="false">
-                                //                 <i
-                                //                     class="ri-more-fill"></i>
-                                //             </button>
-                                //             <ul class="dropdown-menu">
-                                //                 <li><a class="dropdown-item"
-                                //                         href="#"><i
-                                //                             class="ri-share-line align-bottom me-2 text-muted"></i>
-                                //                         Share</a></li>
-                                //                 <li><a class="dropdown-item"
-                                //                         href="#"><i
-                                //                             class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                //                         Bookmark</a>
-                                //                 </li>
-                                //                 <li><a class="dropdown-item"
-                                //                         href="#"><i
-                                //                             class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                //                         Delete</a></li>
-                                //             </ul>
-                                //         </div>
-                                //     </div>
-                                // </div>
                             </div> `;
                     }).join('');
 

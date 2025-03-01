@@ -533,7 +533,6 @@
                 });
             });
 
-
             window.Echo.private(`App.Models.User.${userID}`)
                 .notification((notification) => {
                     console.log('Thông báo mới:', notification);

@@ -75,7 +75,7 @@ Route::prefix('search')
 Route::prefix('filters')
     ->group(function () {
         Route::get('/', [FilterController::class, 'filter']);
-        Route::get('/', [FilterController::class, 'filterOrderBy']);
+        Route::get('/filter-orderby', [FilterController::class, 'filterOrderBy']);
     });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
+        Route::get('/best-coupon', [UserController::class, 'getBestCoupon']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function(){

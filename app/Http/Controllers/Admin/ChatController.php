@@ -232,13 +232,17 @@ class ChatController extends Controller
     }
     public function getSentFiles($conversationId)
     {
+       try {
         $files = Media::whereHas('message', function ($query) use ($conversationId) {
             $query->where('conversation_id', $conversationId);
         })->orderBy('created_at', 'desc')->get();
-        dd($files);
+        
         return response()->json([
             'status' => 'success',
             'files' => $files
         ]);
+       } catch (\Exception $e) {
+            $this->logError($e);
+       }
     }
 }

@@ -38,7 +38,6 @@ use Illuminate\Support\Facades\Auth;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
 #============================== ROUTE GOOGLE AUTH =============================
 Route::prefix('admin')->as('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'login'])->name('login');
@@ -217,6 +216,8 @@ Route::prefix('admin')->as('admin.')
                 ->can('setting.update');
             Route::put('/{setting}', [SettingController::class, 'update'])->name('update')
                 ->can('setting.update');
+            Route::put('/certificates/{certificateId}', [SettingController::class, 'updateStatusCertificates'])->name('updateStatusCertificates')
+                ->can('setting.update');
             Route::delete('/{setting}', [SettingController::class, 'destroy'])->name('destroy')
                 ->can('setting.delete');
         });
@@ -257,7 +258,6 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
-
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -364,9 +364,9 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
+                Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
                 // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
                 Route::post('/conversations/{conversationId}/add-members', [ChatController::class, 'addMembersToConversation']);
-                Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
 
             });
     });

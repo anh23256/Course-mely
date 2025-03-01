@@ -1124,7 +1124,11 @@
                                 moment().subtract(1, "month").startOf("month"),
                                 moment().subtract(1, "month").endOf("month"),
                             ],
-                            "1 năm trước": [defaultStart, defaultEnd],
+                            "1 năm trước": [
+                                moment().subtract(1, "year").startOf("year"),
+                                moment().subtract(1, "year").endOf("year")
+                            ],
+
                         },
                         locale: {
                             format: "DD/MM/YYYY",
@@ -1205,7 +1209,7 @@
                     },
                     {
                         name: "Lợi nhuận",
-                        type: "area",
+                        type: "bar",
                         data: profitData
                     }
                 ],
@@ -1267,7 +1271,7 @@
             let series = [];
             let labels = [];
 
-            ratingData.forEach(item => {   
+            ratingData.forEach(item => {
                 series.push(parseFloat(item.total_courses));
                 labels.push(parseFloat(item.rating) + " sao");
             });

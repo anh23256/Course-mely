@@ -53,16 +53,18 @@ class FilterController extends Controller
                 $query->whereIn('level', $request->levels);
             }
 
-            if ($request->has('is_free') && !empty($request->is_free) && $request->is_free == 1) {
-                $query->where('is_free', $request->is_free);
+            if ($request->has('price') && !empty($request->price) && $request->price == 'free') {
+                $query->where('is_free', 1);
             }
             
-            if ($request->has('is_free') && $request->is_free !== null && $request->is_free == 0) {
-                $query->where('is_free', $request->is_free);
+            if ($request->has('price') && $request->price !== null && $request->price == 'price') {
+                $query->where('price', '!=', 0)
+                ->where('price_sale', '=', 0);
             }
 
-            if ($request->has('price_sale') && !empty($request->price_sale) && $request->price_sale == 1) {
-                $query->where('is_free', $request->is_free);
+            if ($request->has('price') && !empty($request->price) && $request->price == 'price_sale') {
+                $query->where('price_sale', '!=', 0)
+                ->where('price','!=', '0');
             }
 
             if ($request->has('features') && !empty($request->features) && is_array($request->features)) {
@@ -93,7 +95,7 @@ class FilterController extends Controller
                     DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
                 ])
                 ->whereIn('courses.id', $courseIds)->with('user:id,name')->orderByDesc('views')
-                ->paginate(5);
+                ->paginate(9);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');
@@ -141,7 +143,7 @@ class FilterController extends Controller
                 'courses.total_student',
                 DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
                 DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
-            ])->paginate(5);
+            ])->paginate(9);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');

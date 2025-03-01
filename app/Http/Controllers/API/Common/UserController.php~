@@ -4,8 +4,11 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\User\ChangePasswordRequest;
+use App\Http\Requests\API\User\StoreCareerRequest;
+use App\Http\Requests\API\User\UpdateCareerRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
+use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
@@ -86,40 +89,6 @@ class UserController extends Controller
                         : $profile->certificates,
                     'bio' => $request->bio ? $this->prepareBioData($request->bio, $profile) : $profile->bio,
                 ]);
-            }
-
-            if ($request->has('careers')) {
-                foreach ($request->careers as $careerData) {
-                    if (!empty($careerData['id'])) {
-                        $career = Career::query()->where('id', $careerData['id'])->first();
-
-                        if ($career) {
-                            $career->update(
-                                [
-                                    'profile_id' => $profile->id,
-                                    'degree' => $careerData['degree'],
-                                    'major' => $careerData['major'],
-                                    'start_date' => $careerData['start_date'],
-                                    'end_date' => $careerData['end_date'],
-                                    'description' => $careerData['description'],
-                                    'institution_name' => $careerData['institution_name'],
-                                ]
-                            );
-                        }
-                    } else {
-                        Career::create(
-                            [
-                                'profile_id' => $profile->id,
-                                'degree' => $careerData['degree'],
-                                'major' => $careerData['major'],
-                                'start_date' => $careerData['start_date'],
-                                'end_date' => $careerData['end_date'],
-                                'description' => $careerData['description'],
-                                'institution_name' => $careerData['institution_name'],
-                            ]
-                        );
-                    }
-                }
             }
 
             DB::commit();
@@ -297,8 +266,6 @@ class UserController extends Controller
                     ];
                 }
 
-                dd($currentLesson);
-
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
@@ -309,6 +276,7 @@ class UserController extends Controller
                     'lessons_count' => $course->lessons_count,
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers->first()->progress_percent,
+                    'current_lesson' => $currentLesson,
                     'category' => [
                         'id' => $course->category->id ?? null,
                         'name' => $course->category->name ?? null,
@@ -369,6 +337,13 @@ class UserController extends Controller
                 ->with('course:id,name')
                 ->select('id', 'course_id', 'created_at',
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->get();
 
             return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
@@ -392,6 +367,17 @@ class UserController extends Controller
                 ->where('user_id', $user->id)
                 ->select('id', 'course_id', 'code', 'coupon_code', 'coupon_discount', 'amount', 'created_at',
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'code',
+                    'coupon_code',
+                    'coupon_discount',
+                    'amount',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->first();
 
             if (!$order) {
@@ -402,6 +388,216 @@ class UserController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+
+    public function storeCareers(StoreCareerRequest $request)
+    {
+        try {
+            if ($request->has('careers')) {
+                $user = Auth::user();
+
+                if (!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+
+                $profile = Profile::query()->firstOrCreate([
+                    'user_id' => $user->id
+                ]);
+
+                foreach ($request->careers as $careerData) {
+                    Career::create(
+                        [
+                            'profile_id' => $profile->id,
+                            'degree' => $careerData['degree'],
+                            'major' => $careerData['major'],
+                            'start_date' => $careerData['start_date'],
+                            'end_date' => $careerData['end_date'],
+                            'description' => $careerData['description'] ?? null,
+                            'institution_name' => $careerData['institution_name'],
+                        ]
+                    );
+                }
+                return $this->respondCreated('Thêm mới sự nghiệp thành công', ['user' => $user->load('profile.careers')]);
+            } else {
+                return $this->respondError('Không có dữ liệu để thêm mới');
+            }
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function updateCareers(UpdateCareerRequest $request, string $id)
+    {
+        try {
+            if ($request->has('careers') && !empty($request->careers) && is_array($request->careers)) {
+
+                $user = Auth::user();
+
+                if (!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+
+                $profile = Profile::query()->firstOrCreate([
+                    'user_id' => $user->id
+                ]);
+
+                $careerData = $request->careers;
+
+                $career = Career::query()->where('id', $id)->first();
+
+                if ($career) {
+                    $career->update(
+                        [
+                            'profile_id' => $profile->id,
+                            'degree' => $careerData[0]['degree'],
+                            'major' => $careerData[0]['major'],
+                            'start_date' => $careerData[0]['start_date'],
+                            'end_date' => $careerData[0]['end_date'],
+                            'description' => $careerData[0]['description'] ?? null,
+                            'institution_name' => $careerData[0]['institution_name'],
+                        ]
+                    );
+                } else return $this->respondNotFound('Không tìm thấy thông tin');
+            }
+
+            return $this->respondOk('Cập nhật thành công', ['user' => $user->load('profile.careers')]);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function deleteCareers(string $id)
+    {
+        try {
+            $career = Career::destroy($id);
+
+            if (!$career) {
+                return $this->respondNotFound('Không tìm thấy thông tin');
+            } else {
+                return $this->respondNoContent();
+            }
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function getCouponUser()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $couponUse = CouponUse::query()
+                ->with('coupon', function ($query) {
+                    $query->select('id', 'code', 'name', 'discount_value', 'discount_type', 'status', 'specific_course')
+                        ->orderBy('discount_value', 'desc')
+                        ->with('couponCourses:id,name');
+                })
+                ->whereHas('coupon', function ($query) {
+                    $query->where('status', 1);
+                })
+                ->where('user_id', $user->id)
+                ->where('status', 'unused')
+                ->where(function ($query) {
+                    $query->whereNull('expired_at')
+                        ->orWhere('expired_at', '>', now());
+                })
+                ->select('id', 'user_id', 'coupon_id', 'applied_at', 'expired_at', 'status')
+                ->get();
+
+            if (!$couponUse) {
+                return $this->respondNotFound('Không tìm thấy mã giảm giá');
+            }
+            return $this->respondOk('Danh sách mã giảm giá của người dùng' . $user->name, $couponUse);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getBestCoupon(Request $request) {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $amount = $request->input('amount', 0);
+            $courseId = $request->input('course_id', null);
+
+            $coupons = CouponUse::query()
+                ->where('user_id', $user->id) // Bộ lọc: mã giảm giá của người dùng
+                ->whereHas('coupon', function ($query) use ($courseId) {
+                    $query->where('status', 1) // Mã phải đang ở trạng thái hoạt động
+                    ->where(function ($query) {
+                        $query->whereNull('expire_date') // Không có ngày hết hạn
+                        ->orWhere('expire_date', '>', now()); // Hoặc chưa hết hạn
+                    })
+                        ->where(function ($query) {
+                            $query->whereNull('start_date') // Không có ngày bắt đầu
+                            ->orWhere('start_date', '<=', now()); // Hoặc đã bắt đầu
+                        })
+                        ->where(function ($query) use ($courseId) {
+                            if ($courseId) {
+                                $query->whereNull('specific_course')
+                                    ->orWhere('specific_course', $courseId);
+                            } else {
+                                $query->whereNull('specific_course');
+                            }
+                        });
+                })
+                ->where(function ($query) {
+                    $query->where('status', 'unused'); // Mã giảm giá phải chưa được sử dụng
+                })
+                ->get();
+
+            if ($coupons->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy mã giảm giá nào phù hợp');
+            }
+
+            $validCoupons = $couponUse->map(function ($couponUse) use ($amount) {
+                $coupon = $couponUse->coupon;
+
+                $discountAmount = 0;
+
+                // Tính mức giảm giá
+                if ($coupon->discount_type === 'percentage') {
+                    $discountAmount = ($amount * $coupon->discount_value) / 100;
+                } elseif ($coupon->discount_type === 'fixed') {
+                    $discountAmount = min($coupon->discount_value, $amount);
+                }
+
+                // Kiểm tra giá trị giảm tối đa (nếu có)
+                if (!empty($coupon->discount_max_value)) {
+                    $discountAmount = min($discountAmount, $coupon->discount_max_value);
+                }
+
+                // Gắn thêm thông tin vào object
+                $couponUse->discount_amount = $discountAmount;
+                $couponUse->final_amount = $amount - $discountAmount;
+
+                return $couponUse;
+            });
+
+            $sortedCoupons = $validCoupons->sortByDesc('discount_amount')->values();
+
+            if ($sortedCoupons->isEmpty()) {
+                return $this->respondError('Không có mã giảm giá nào phù hợp');
+            }
+
+            return $this->respondOk('Danh sách mã giảm giá tốt nhất', $sortedCoupons);
+        }catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
         }
     }
 }
