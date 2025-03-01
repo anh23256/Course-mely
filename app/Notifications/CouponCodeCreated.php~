@@ -12,9 +12,7 @@ use Illuminate\Notifications\Notification;
 class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
-
     protected $coupon;
-
     /**
      * Create a new notification instance.
      */

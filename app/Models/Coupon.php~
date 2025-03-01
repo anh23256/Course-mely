@@ -23,7 +23,7 @@ class Coupon extends Model
         'status',
         'max_usage',
         'used_count',
-        'specific_course'
+        'apply_all_courses'
     ];
 
     public function scopeSearch($query, $keyword)

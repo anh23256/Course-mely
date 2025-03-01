@@ -22,9 +22,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int)$user->id === (int)$id;
 });
 
+Broadcast::channel('member.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
+
+
 Broadcast::channel('instructor.{id}', function ($user, $id) {
-    Log::info($user);
-    Log::info($id);
     return (int) $user->id === (int) $id;
 });
 
