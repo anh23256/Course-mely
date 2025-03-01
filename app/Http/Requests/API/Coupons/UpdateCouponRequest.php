@@ -51,6 +51,9 @@ class UpdateCouponRequest extends BaseFormRequest
             'status' => 'sometimes|in:0,1',
             'user_ids' => 'array|nullable',
             'user_ids.*' => 'exists:users,id',
+            'specific_course' => 'nullable|in:1,0',
+            'course_ids' => 'array|nullable',
+            'course_ids.*' => 'exists:courses,id'
         ];
     }
 

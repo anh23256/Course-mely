@@ -23,6 +23,7 @@ class Coupon extends Model
         'status',
         'max_usage',
         'used_count',
+        'specific_course'
     ];
 
     public function scopeSearch($query, $keyword)
@@ -39,5 +40,10 @@ class Coupon extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function couponCourses()
+    {
+        return $this->belongsToMany(Course::class);
     }
 }

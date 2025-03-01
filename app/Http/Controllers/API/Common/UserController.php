@@ -495,10 +495,19 @@ class UserController extends Controller
 
             $couponUse = CouponUse::query()
                 ->with('coupon', function ($query) {
-                    $query->select('id', 'code', 'name', 'discount_value')->orderBy('discount_value', 'desc');
+                    $query->select('id', 'code', 'name', 'discount_value', 'discount_type', 'status', 'specific_course')
+                        ->orderBy('discount_value', 'desc')
+                        ->with('couponCourses:id,name');
+                })
+                ->whereHas('coupon', function ($query) {
+                    $query->where('status', 1);
                 })
                 ->where('user_id', $user->id)
                 ->where('status', 'unused')
+                ->where(function ($query) {
+                    $query->whereNull('expired_at')
+                        ->orWhere('expired_at', '>', now());
+                })
                 ->select('id', 'user_id', 'coupon_id', 'applied_at', 'expired_at', 'status')
                 ->get();
 

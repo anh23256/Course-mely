@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
+        Route::get('/best-coupon', [UserController::class, 'getBestCoupon']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function(){
@@ -174,6 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
         Route::get('/{transactionID}', [TransactionController::class, 'show']);
         Route::post('/deposit', [TransactionController::class, 'deposit']);
+        Route::post('/apply-coupon', [TransactionController::class, 'applyCoupon']);
         Route::post('/buyCourse', [TransactionController::class, 'buyCourse']);
         Route::post('/enroll-free-course', [TransactionController::class, 'enrollFreeCourse']);
     });

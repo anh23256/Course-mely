@@ -46,9 +46,12 @@ class StoreCouponRequest extends BaseFormRequest
             'start_date' => 'nullable|date',
             'expire_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
+            'specific_course' => 'nullable|in:1,0',
             'max_usage' => 'nullable|numeric|min:0',
             'user_ids' => 'array|nullable',
             'user_ids.*' => 'exists:users,id',
+            'course_ids' => 'array|nullable',
+            'course_ids.*' => 'exists:courses,id'
         ];
     }
 
@@ -88,6 +91,9 @@ class StoreCouponRequest extends BaseFormRequest
 
             'user_ids.array' => 'Danh sách người dùng phải là một mảng.',
             'user_ids.*.exists' => 'Một hoặc nhiều người dùng không tồn tại.',
+
+            'course_ids.array' => 'Danh sách khóa học phải là một mảng.',
+            'course_ids.*.exists' => 'Khóa học không tồn tại.',
         ];
     }
 }

@@ -168,7 +168,7 @@ class TransactionController extends Controller
                 return $this->respondError('Bạn đã sở hữu khoá học này rồi');
             }
 
-            $couponData = $this->checkCoupon($validated['coupon_code'], $validated['amount']);
+            $couponData = $this->checkCoupon($validated['coupon_code'], $validated['amount'], $validated['course_id']);
             $finalAmount = $couponData['final_amount'];
             $amountVNPay = number_format($finalAmount, 0, '', '');
 
@@ -527,9 +527,10 @@ class TransactionController extends Controller
             $data = $request->validate([
                 'code' => 'required|string',
                 'amount' => 'required|numeric|min:0',
+                'course_id' => 'nullable|integer|exists:courses,id',
             ]);
 
-            return $this->checkCoupon($data['code'], $data['amount']);
+            return $this->checkCoupon($data['code'], $data['amount'], $data['course_id']);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -537,7 +538,7 @@ class TransactionController extends Controller
         }
     }
 
-    private function checkCoupon(?string $code, float $amount)
+    private function checkCoupon(?string $code, float $amount, $courseId = null)
     {
         if (empty($code)) {
             return [
@@ -569,6 +570,19 @@ class TransactionController extends Controller
 
         if ($coupon->start_date && now()->lessThan($coupon->start_date)) {
             return $this->respondError('Mã giảm giá chưa được kích hoạt');
+        }
+
+        if ($coupon->specific_course) {
+            if (is_null($courseId)) {
+                return $this->respondError('Mã giảm giá này chỉ áp dụng cho khóa học cụ thể. Vui lòng cung cấp ID khóa học');
+            }
+
+            $isApplicable = $coupon
+                ->couponCourses()
+                ->where('course_id', $courseId)->exists();
+            if (!$isApplicable) {
+                return $this->respondError('Mã giảm giá này không áp dụng cho khóa học này');
+            }
         }
 
         $discountAmount = 0;

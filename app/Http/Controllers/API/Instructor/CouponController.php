@@ -7,6 +7,8 @@ use App\Http\Requests\API\Coupons\StoreCouponRequest;
 use App\Http\Requests\API\Coupons\UpdateCouponRequest;
 use App\Models\Coupon;
 use App\Models\CouponUse;
+use App\Models\User;
+use App\Notifications\CouponSendStudentNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -72,6 +74,18 @@ class CouponController extends Controller
 
             $coupon = Coupon::query()->create($data);
 
+            if (!empty($data['specific_course'] === 1) && !empty($data['course_ids']) && is_array($data['course_ids'])) {
+                foreach ($data['course_ids'] as $course_id) {
+                    DB::table('coupon_course')->insert([
+                        'coupon_id' => $coupon->id,
+                        'course_id' => $course_id,
+                    ]);
+                }
+                $coupon->update([
+                    'specific_course' => 1
+                ]);
+            }
+
             if (!empty($data['user_ids']) && is_array($data['user_ids'])) {
                 foreach ($data['user_ids'] as $user_id) {
                     CouponUse::query()->updateOrCreate(
@@ -85,6 +99,15 @@ class CouponController extends Controller
                             'expired_at' => $data['expire_date'] ?? null
                         ]
                     );
+
+                    $notificationMember = User::query()->find($user_id);
+
+                    if ($notificationMember) {
+                        $notificationMember->notify(new CouponSendStudentNotification(
+                            $user,
+                            $notificationMember
+                        ));
+                    }
                 }
             }
 
@@ -115,6 +138,7 @@ class CouponController extends Controller
             $coupon = Coupon::query()
                 ->with([
                     'couponUses.user',
+                    'couponCourses:id,name'
                 ])
                 ->where('user_id', $user->id)
                 ->find($id);
@@ -161,6 +185,20 @@ class CouponController extends Controller
 
             if (isset($data['max_usage']) && $data['max_usage'] === 0) {
                 $data['max_usage'] = null;
+            }
+
+            if (!empty($data['specific_course']) && !empty($data['course_ids']) && is_array($data['course_ids'])) {
+                DB::table('coupon_course')->where('coupon_id', $coupon->id)->delete();
+
+                foreach ($data['course_ids'] as $course_id) {
+                    DB::table('coupon_course')->insert([
+                        'coupon_id' => $coupon->id,
+                        'course_id' => $course_id,
+                    ]);
+                }
+
+            } else {
+                DB::table('coupon_course')->where('coupon_id', $coupon->id)->delete();
             }
 
             $coupon->update($data);

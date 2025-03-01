@@ -495,12 +495,20 @@ class UserController extends Controller
 
             $couponUse = CouponUse::query()
                 ->with('coupon', function ($query) {
-                    $query->select('id', 'code', 'name', 'discount_value');
+                    $query->select('id', 'code', 'name', 'discount_value', 'discount_type', 'status', 'specific_course')
+                        ->orderBy('discount_value', 'desc')
+                        ->with('couponCourses:id,name');
+                })
+                ->whereHas('coupon', function ($query) {
+                    $query->where('status', 1);
                 })
                 ->where('user_id', $user->id)
                 ->where('status', 'unused')
-                ->select('id', 'user_id', 'coupon_id', 'discount_value', 'applied_at', 'expired_at', 'status')
-                ->orderBy('discount_value', 'desc')
+                ->where(function ($query) {
+                    $query->whereNull('expired_at')
+                        ->orWhere('expired_at', '>', now());
+                })
+                ->select('id', 'user_id', 'coupon_id', 'applied_at', 'expired_at', 'status')
                 ->get();
 
             if (!$couponUse) {
@@ -508,6 +516,85 @@ class UserController extends Controller
             }
             return $this->respondOk('Danh sách mã giảm giá của người dùng' . $user->name, $couponUse);
         } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getBestCoupon(Request $request) {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $amount = $request->input('amount', 0);
+            $courseId = $request->input('course_id', null);
+
+            $coupons = CouponUse::query()
+                ->where('user_id', $user->id) // Bộ lọc: mã giảm giá của người dùng
+                ->whereHas('coupon', function ($query) use ($courseId) {
+                    $query->where('status', 1) // Mã phải đang ở trạng thái hoạt động
+                    ->where(function ($query) {
+                        $query->whereNull('expire_date') // Không có ngày hết hạn
+                        ->orWhere('expire_date', '>', now()); // Hoặc chưa hết hạn
+                    })
+                        ->where(function ($query) {
+                            $query->whereNull('start_date') // Không có ngày bắt đầu
+                            ->orWhere('start_date', '<=', now()); // Hoặc đã bắt đầu
+                        })
+                        ->where(function ($query) use ($courseId) {
+                            if ($courseId) {
+                                $query->whereNull('specific_course')
+                                    ->orWhere('specific_course', $courseId);
+                            } else {
+                                $query->whereNull('specific_course');
+                            }
+                        });
+                })
+                ->where(function ($query) {
+                    $query->where('status', 'unused'); // Mã giảm giá phải chưa được sử dụng
+                })
+                ->get();
+
+            if ($coupons->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy mã giảm giá nào phù hợp');
+            }
+
+            $validCoupons = $couponUse->map(function ($couponUse) use ($amount) {
+                $coupon = $couponUse->coupon;
+
+                $discountAmount = 0;
+
+                // Tính mức giảm giá
+                if ($coupon->discount_type === 'percentage') {
+                    $discountAmount = ($amount * $coupon->discount_value) / 100;
+                } elseif ($coupon->discount_type === 'fixed') {
+                    $discountAmount = min($coupon->discount_value, $amount);
+                }
+
+                // Kiểm tra giá trị giảm tối đa (nếu có)
+                if (!empty($coupon->discount_max_value)) {
+                    $discountAmount = min($discountAmount, $coupon->discount_max_value);
+                }
+
+                // Gắn thêm thông tin vào object
+                $couponUse->discount_amount = $discountAmount;
+                $couponUse->final_amount = $amount - $discountAmount;
+
+                return $couponUse;
+            });
+
+            $sortedCoupons = $validCoupons->sortByDesc('discount_amount')->values();
+
+            if ($sortedCoupons->isEmpty()) {
+                return $this->respondError('Không có mã giảm giá nào phù hợp');
+            }
+
+            return $this->respondOk('Danh sách mã giảm giá tốt nhất', $sortedCoupons);
+        }catch (\Exception $e) {
             $this->logError($e);
 
             return $this->respondServerError();
