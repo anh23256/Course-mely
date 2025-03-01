@@ -75,7 +75,7 @@ Route::prefix('search')
 Route::prefix('filters')
     ->group(function () {
         Route::get('/', [FilterController::class, 'filter']);
-        Route::get('/filter-orderby', [FilterController::class, 'filterOrderBy']);
+        Route::get('/', [FilterController::class, 'filterOrderBy']);
     });
 
 Route::middleware('auth:sanctum')->group(function () {
