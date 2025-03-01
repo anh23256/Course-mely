@@ -22,7 +22,7 @@ class StoreGroupChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',  // Kiểm tra tên nhóm
+            'name' => 'nullable|string|max:255',  // Kiểm tra tên nhóm
             'type' => 'required|int',  // Kiểm tra loại nhóm
             'members' => 'required|array',  // Kiểm tra danh sách thành viên
             'members.*' => 'exists:users,id',  // Kiểm tra từng thành viên có tồn tại trong bảng users
@@ -31,7 +31,6 @@ class StoreGroupChatRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' =>'Tên là bắt buộc',
             'name.string' =>'Tên phải là chuỗi',
             'type.required' =>'Loại nhóm là bắt buộc',
             'type.string' =>'Loại nhóm phải là chuỗi',
