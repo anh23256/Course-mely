@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use PhpParser\Node\Expr\FuncCall;
 use Spatie\Analytics\Facades\Analytics;
@@ -13,24 +14,38 @@ use Spatie\Analytics\Period;
 class AnalyticController extends Controller
 {
     use  LoggableTrait;
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $analyticsVisitorAndPageViews = Analytics::fetchVisitorsAndPageViews(Period::days(7));
+            $startDate = Carbon::parse($request->input('startDate', Carbon::now()->subDays(7)));
+            $endDate = Carbon::parse($request->input('endDate', Carbon::now()));
+
+            $start = Carbon::parse($startDate);
+            $end = Carbon::parse($endDate);
+
+            $daysDifference = $start->diffInDays($end);
+            $groupBy = ($daysDifference > 60) ? 'yearMonth' : ($daysDifference >= 14 ? 'yearWeek' : 'date');
+
+            $analyticsVisitorAndPageViews = Analytics::fetchVisitorsAndPageViews(Period::create($start, $end));
 
             $analyticsData = Analytics::get(
-                Period::days(7),
-                ['sessions'],
-                ['country']
+                Period::create($start, $end),
+                ['newUsers', 'totalUsers', 'sessions'],
+                [$groupBy]
             );
 
-            // dd($analyticsData, $analyticsVisitorAndPageViews);
+            $analyticsUserSession = Analytics::get(
+                Period::create($start, $end),
+                ['totalUsers', 'sessions']
+            );
 
-            return view('analytics.index');
+            $analyticsCountriesSession = Analytics::fetchTopCountries(Period::create($start, $end));
+
+            return view('analytics.index', compact(['analyticsData', 'analyticsUserSession', 'analyticsCountriesSession']));
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return redirect()->back()->with('error','Có lỗi xảy ra, vui lòng thử lại');
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại');
         }
     }
 }
