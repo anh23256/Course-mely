@@ -396,7 +396,7 @@
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
                                                             @if ($channel->type == "private")
-                                                            <img id="image" src="" class="rounded-circle avatar-xs" alt="">
+                                                            <img id="imageUser" src="" class="rounded-circle avatar-xs" alt="">
                                                             @endif
                                                             <span class="user-status"></span>
                                                         </div>
@@ -1115,6 +1115,10 @@
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
+            document.getElementById("fileInput").addEventListener("change", function () {
+                let fileName = this.files.length > 0 ? this.files[0].name : "";
+                document.getElementById("messageInput").value = fileName;
+            });
         });
     </script>
     <script>
@@ -1167,12 +1171,14 @@
                     },
                     success: function(response) {
                         console.log(response);
-                        if (response.status === 'success') {
+                        if (response) {
+                            console.log(response);
+                            
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
                             $('.memberCount').text(response.data.memberCount);
                             $('#nameUser').text(response.data.direct);
-                            $('#image').html(response.data.name);
+                            $('#imageUser').attr('src', response.data.avatar);
                             loadMessages(response.data.group.id);
                             let membersHtml = '';
                             response.data.member.forEach(function(member) {

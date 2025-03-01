@@ -40,6 +40,7 @@ class ChatController extends Controller
     public function createGroupChat(StoreGroupChatRequest $request)
     {
         try {
+            DB::beginTransaction();
             $validated = $request->validated();
             // Tạo nhóm chat
             $conversation = Conversation::create([
@@ -64,7 +65,7 @@ class ChatController extends Controller
                     }
                 }
             }
-
+            DB::commit();
             $data = $this->getAdminsAndChannels();
             $data['conversation'] = $conversation;
 
@@ -74,6 +75,7 @@ class ChatController extends Controller
                 'data' => $data
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->logError($e, $request->all());
 
             return response()->json([
@@ -85,6 +87,7 @@ class ChatController extends Controller
 
     public function sendGroupMessage(StoreSendMessageRequest $request)
     {
+        DB::beginTransaction();
         $validated = $request->validated();
 
         if ($request->hasFile('fileinput')) {
@@ -107,6 +110,7 @@ class ChatController extends Controller
         //     'file_path' => $validated
         //     'message_id' => $validated['message_id'],
         // );
+        DB::commit();
         broadcast(new GroupMessageSent($message));
 
         $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
@@ -145,6 +149,7 @@ class ChatController extends Controller
             }
             elseif($group->type == 'private'){
                 $name = $group->users->last()->name;
+                $avatar = $group->users->last()->avatar;
                 $memberCount = "";
             }
             $member = $group->users()->select('user_id','name','avatar')->get();
@@ -159,9 +164,12 @@ class ChatController extends Controller
                     'member' =>$member,
                     'group' => $group,
                     'leader'=>$leader,
+                    'avatar'=>$avatar ?? url('assets/images/users/multi-user.jpg'),
                 ]
             ]);
         } catch (\Exception $e) {
+            $this->logError($e);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Không thể lấy thông tin nhóm'
