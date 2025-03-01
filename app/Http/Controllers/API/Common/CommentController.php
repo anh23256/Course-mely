@@ -47,6 +47,9 @@ class CommentController extends Controller
     {
         try {
             $comment = Comment::findOrFail($id);
+            if (!Auth::check()) {
+                return response()->json(['message' => 'Bạn cần đăng nhập để thực hiện thao tác này'], 403);
+            }
             $this->authorize('update', $comment);
 
             $updatedComment = $this->commentRepository->update($comment, $request->validated());
@@ -55,7 +58,11 @@ class CommentController extends Controller
                 'message' => 'Bình luận đã được cập nhật thành công',
                 'comment' => $updatedComment
             ]);
-        } catch (\Exception $e) {
+        } 
+        catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật bình luận này'], 403);
+        }
+            catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError();
         }
@@ -65,12 +72,19 @@ class CommentController extends Controller
     {
         try {
             $comment = Comment::findOrFail($id);
+            if (!Auth::check()) {
+                return response()->json(['message' => 'Bạn cần đăng nhập để thực hiện thao tác này'], 403);
+            }
             $this->authorize('delete', $comment);
 
             $this->commentRepository->delete($comment);
 
             return response()->json(['message' => 'Bình luận đã được xóa thành công']);
-        } catch (\Exception $e) {
+        } 
+        catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json(['message' => 'Bạn không có quyền cập nhật bình luận này'], 403);
+        }
+        catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError();
         }

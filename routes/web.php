@@ -366,6 +366,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
                 Route::post('/conversations/{conversationId}/add-members', [ChatController::class, 'addMembersToConversation']);
+                Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
 
             });
     });

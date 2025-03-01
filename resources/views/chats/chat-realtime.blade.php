@@ -93,9 +93,10 @@
         /* Đảm bảo độ cao tối thiểu cho tin nhắn */
         .sender {
             min-height: 40px;
-            max-height: 200px;
+            max-height: 300px;
             /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
-            overflow: auto;
+            overflow: visible !important;
+            /* Hiển thị đầy đủ nội dung */
         }
 
         .sender {
@@ -165,6 +166,12 @@
                 transform: translateY(-50px);
                 opacity: 0;
             }
+        }
+
+        #messagesList {
+            max-height: 500px;
+            /* Điều chỉnh chiều cao phù hợp */
+            overflow-y: auto;
         }
     </style>
 @endpush
@@ -395,8 +402,9 @@
                                                     <div class="d-flex align-items-center">
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            @if ($channel->type == "private")
-                                                            <img id="imageUser" src="" class="rounded-circle avatar-xs" alt="">
+                                                            @if ($channel->type == 'private')
+                                                                <img id="imageUser" src=""
+                                                                    class="rounded-circle avatar-xs" alt="">
                                                             @endif
                                                             <span class="user-status"></span>
                                                         </div>
@@ -541,223 +549,12 @@
                                                                     </div>
 
                                                                     <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Attached Files</h5>
+                                                                        <h5 class="fs-15 mb-3">File đã gửi</h5>
 
                                                                         <div class="vstack gap-2">
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-folder-zip-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">App
-                                                                                                pages.zip</a></h5>
-                                                                                        <div class="text-muted">2.2MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                            <div class="border rounded border-dashed p-2"
+                                                                                id="sentFilesList">
 
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-file-ppt-2-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">Velzon
-                                                                                                admin.ppt</a></h5>
-                                                                                        <div class="text-muted">2.4MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-folder-zip-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">Images.zip</a>
-                                                                                        </h5>
-                                                                                        <div class="text-muted">1.2MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-image-2-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">bg-pattern.png</a>
-                                                                                        </h5>
-                                                                                        <div class="text-muted">1.1MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
                                                                             </div>
 
                                                                             <div class="text-center mt-2">
@@ -997,8 +794,18 @@
                                 <form id="chatinput-form" enctype="multipart/form-data">
                                     @csrf
                                     <div class="row g-0 align-items-center">
+                                        <div id="previewContainer"
+                                            style="display: none; align-items: center; gap: 8px; max-width: 100%; padding: 5px; border-radius: 8px; position: relative;">
+                                            <img id="imagePreview" src="" alt="Image Preview"
+                                                style="max-width: 100px; max-height: 100px; border-radius: 5px; object-fit: cover;">
+                                            <button type="button" onclick="removeImage()"
+                                                style="border: none; background: red; color: white; padding: 5px; border-radius: 50%; font-size: 12px; width: 20px; height: 20px; cursor: pointer; position: absolute; top: -5px; right: -5px;">
+                                                ✖
+                                            </button>
+                                        </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links me-2">
+
                                                 <div class="links-list-item">
                                                     <button type="button"
                                                         class="btn btn-link text-decoration-none emoji-btn"
@@ -1010,12 +817,13 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" id="fileInput" style="display: none;">
+                                                    <input type="file" name="fileinput" id="fileInput"
+                                                        style="display: none;">
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="col">
+
                                             <div class="chat-input-feedback">
                                                 Please Enter a Message
                                             </div>
@@ -1115,11 +923,35 @@
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
-            document.getElementById("fileInput").addEventListener("change", function () {
-                let fileName = this.files.length > 0 ? this.files[0].name : "";
-                document.getElementById("messageInput").value = fileName;
+            document.getElementById("fileInput").addEventListener("change", function() {
+                let file = this.files[0];
+                let messageInput = document.getElementById("messageInput");
+                let previewContainer = document.getElementById("previewContainer");
+                let imagePreview = document.getElementById("imagePreview");
+
+                if (file) {
+                    // messageInput.value = file.name;
+
+                    // Kiểm tra xem tệp có phải ảnh không
+                    if (file.type.startsWith("image/")) {
+                        let reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            previewContainer.style.display = "block"; // Hiển thị khu vực ảnh
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewContainer.style.display = "none"; // Ẩn nếu không phải ảnh
+                    }
+                }
             });
         });
+
+        function removeImage() {
+            document.getElementById("imagePreview").src = "";
+            document.getElementById("previewContainer").style.display = "none";
+            document.getElementById("chatinput-form").reset();
+        }
     </script>
     <script>
         $(document).ready(function() {
@@ -1173,7 +1005,7 @@
                         console.log(response);
                         if (response) {
                             console.log(response);
-                            
+
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
                             $('.memberCount').text(response.data.memberCount);
@@ -1273,28 +1105,46 @@
                 let parentId = $('#parentMessageId').val();
                 let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
                 let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-                if (currentConversationId && content) {
+                let formData = new FormData();
+
+                // Thêm dữ liệu tin nhắn
+                formData.append('conversation_id', currentConversationId);
+                formData.append('content', content);
+                formData.append('parent_id', parentId || '');
+                formData.append('type', type);
+                // Kiểm tra nếu có ảnh được chọn
+                let fileInput = $('#fileInput')[0].files[0];
+                if (fileInput) {
+                    formData.append('fileinput', fileInput);
+                    type = 'image'; // Đổi type thành image nếu có file ảnh
+                    formData.set('type', type);
+                }
+                if (currentConversationId && content || fileInput) {
                     // Gửi tin nhắn vào nhóm hiện tại
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
                         method: 'POST',
-                        data: {
-                            conversation_id: currentConversationId,
-                            content: content,
-                            parent_id: parentId, // Nếu có
-                            type: type,
-                            meta_data: metaData,
-                        },
+                        data: formData,
+                        processData: false,
+                        contentType: false,
                         success: function(response) {
-                            if (response.status === 'success') {
+                            if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
+                                $('#fileInput').val(''); // Reset input file
+                                $('#imagePreviewContainer')
+                                    .hide(); // Ẩn preview ảnh sau khi gửi
                                 loadMessages(
                                     currentConversationId); // Tải lại tin nhắn của nhóm
+                                scrollToBottom(); // Cuộn xuống ngay khi gửi tin nhắn
                             }
+                        },
+                        error: function(xhr) {
+                            alert("Gửi tin nhắn thất bại, thử lại!");
+                            console.error(xhr.responseText);
                         }
                     });
                 } else {
-                    alert("Vui lòng chọn nhóm và nhập tin nhắn!");
+                    alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
             });
         });
@@ -1312,29 +1162,125 @@
                         const messageClass = message.sender.id == userId ? 'sender' :
                             'received'; // Xác định lớp tin nhắn   
                         const time = formatTime(message.created_at);
+                        let messageContent = '';
+                        try {
+                            // Kiểm tra nếu có `media` và lấy ảnh đầu tiên
+                            if (message.media && message.media.length > 0) {
+                                let mediaFile = message.media[0].file_path; // Lấy đường dẫn ảnh
+                                messageContent = `
+                                    <p>${message.content}</p>
+                                    <img src="/storage/${mediaFile}" alt="Hình ảnh" 
+                                    style=max-width:350px; border-radius: 8px;">
+                                    `;
+                            } else {
+                                messageContent =
+                                    `<p>${message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                            }
+                        } catch (error) {
+                            console.error("Lỗi lấy ảnh:", error);
+                            messageContent =
+                                `<p>${message.content}</p>`; // Nếu lỗi, fallback về content
+                        }
                         return `
-                                                                <div class=" message ${messageClass}">
-                                                                    <div class="message-avatar">
-                                                                        <img src="${message.sender.avatar}" alt="avatar">
-                                                                    </div>
-                                                                    <div class="message-content">
-                                                                        <div class="message-header">
-                                                                            <strong>${message.sender.name}</strong>
-                                                                            <span class="message-time">${time}</span>
-                                                                            </div>
-                                                                            <p>   
-                                                                                ${message.metaData ? message.metaData : message.content}
-                                                                                </p>
-                                                                         </div>
-                                                                    </div>`;
+                            <div class=" message ${messageClass} style="padding-top: 10px">
+                                <div class="message-avatar">
+                                    <img src="${message.sender.avatar}" alt="avatar">
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <strong>${message.sender.name}</strong>
+                                        <span class="message-time">${time}</span>
+                                        </div>
+                                        <p>   
+                                             ${messageContent}
+                                            </p>
+                                        </div>
+                                </div>`;
                     }).join(''); // Chuyển mảng thành chuỗi HTML
 
                     $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
                     $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
+                    scrollToBottom();
                 } else {
                     $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
                 }
             });
+        }
+
+        function loadSentFiles(conversationId) {
+            $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
+                console.log('test:', response);
+                
+                if (response.status === 'success') {
+                    $('#sentFilesList').html(''); // Xóa danh sách cũ
+
+                    if (response.files.length === 0) {
+                        $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        return;
+                    }
+
+                    const filesHtml = response.files.map(file => {
+                        return `
+                                    <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="avatar-xs">
+                                        <div
+                                            class="avatar-title bg-light text-secondary rounded fs-20">
+                                            <img src="/storage/${file.file_path}" alt="File đã gửi"
+                                            style="max-width: 100px; border-radius: 8px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex-grow-1 overflow-hidden">
+                                    <h5 class="fs-13 mb-1"><a
+                                            href="#"
+                                            class="text-body text-truncate d-block">${file.name}</a></h5>
+                                    <div class="text-muted">${file.file_size}</div>
+                                </div>
+                                // <div class="flex-shrink-0 ms-2">
+                                //     <div class="d-flex gap-1">
+                                //         <button type="button"
+                                //             class="btn btn-icon text-muted btn-sm fs-18"><i
+                                //                 class="ri-download-2-line"></i></button>
+                                //         <div class="dropdown">
+                                //             <button
+                                //                 class="btn btn-icon text-muted btn-sm fs-18 dropdown"
+                                //                 type="button"
+                                //                 data-bs-toggle="dropdown"
+                                //                 aria-expanded="false">
+                                //                 <i
+                                //                     class="ri-more-fill"></i>
+                                //             </button>
+                                //             <ul class="dropdown-menu">
+                                //                 <li><a class="dropdown-item"
+                                //                         href="#"><i
+                                //                             class="ri-share-line align-bottom me-2 text-muted"></i>
+                                //                         Share</a></li>
+                                //                 <li><a class="dropdown-item"
+                                //                         href="#"><i
+                                //                             class="ri-bookmark-line align-bottom me-2 text-muted"></i>
+                                //                         Bookmark</a>
+                                //                 </li>
+                                //                 <li><a class="dropdown-item"
+                                //                         href="#"><i
+                                //                             class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
+                                //                         Delete</a></li>
+                                //             </ul>
+                                //         </div>
+                                //     </div>
+                                // </div>
+                            </div> `;
+                    }).join('');
+
+                    $('#sentFilesList').append(filesHtml);
+                }
+            });
+        }
+
+        function scrollToBottom() {
+            let messageContainer = document.getElementById("messagesList");
+            messageContainer.scrollTop = messageContainer.scrollHeight;
         }
 
         function formatTime(dateString) {
@@ -1372,7 +1318,6 @@
         //             reaction.remove();
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
-
     </script>
     <script>
         @if (session('success'))
