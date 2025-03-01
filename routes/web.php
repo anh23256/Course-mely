@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,7 +61,7 @@ Route::prefix('admin')->as('admin.')
     ->group(function () {
         #============================== ROUTE AUTH =============================
         Route::get('dashboard', function () {
-            return view('dashboard');
+                return view('dashboard');
         })->name('dashboard')->middleware('verified');
 
         #============================== ROUTE USER =============================

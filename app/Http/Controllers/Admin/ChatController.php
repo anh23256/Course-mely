@@ -40,17 +40,11 @@ class ChatController extends Controller
     public function createGroupChat(StoreGroupChatRequest $request)
     {
         try {
+            DB::beginTransaction();
             $validated = $request->validated();
-
-            if (!isset($request->members) || !is_array($request->members) || count($request->members) < 2) {
-                return response()->json([
-                    'status' => 'error',
-                    'error' => 'Nhóm phải có ít nhất 3 thành viên (bao gồm người tạo nhóm).'
-                ], 400);
-            }
             // Tạo nhóm chat
             $conversation = Conversation::create([
-                'name' => $validated['name'],
+                'name' => $validated['name'] ?? 'Nhóm ẩn danh',
                 'owner_id' => auth()->id(),
                 'type' => $validated['type'],
                 'status' => '1',
@@ -71,7 +65,7 @@ class ChatController extends Controller
                     }
                 }
             }
-
+            DB::commit();
             $data = $this->getAdminsAndChannels();
             $data['conversation'] = $conversation;
 
@@ -81,6 +75,7 @@ class ChatController extends Controller
                 'data' => $data
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->logError($e, $request->all());
 
             return response()->json([
@@ -92,6 +87,7 @@ class ChatController extends Controller
 
     public function sendGroupMessage(StoreSendMessageRequest $request)
     {
+        DB::beginTransaction();
         $validated = $request->validated();
 
         if ($request->hasFile('fileinput')) {
@@ -114,6 +110,7 @@ class ChatController extends Controller
         //     'file_path' => $validated
         //     'message_id' => $validated['message_id'],
         // );
+        DB::commit();
         broadcast(new GroupMessageSent($message));
 
         $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
@@ -146,24 +143,33 @@ class ChatController extends Controller
         try {
             $groupId = $request->id;
             $group = Conversation::findOrFail($groupId);
+            if ($group->type == 'group') {
+                $name = $group->name;
+                $memberCount = $group->users()->count() . ' thành viên';
+            }
+            elseif($group->type == 'private'){
+                $name = $group->users->last()->name;
+                $avatar = $group->users->last()->avatar;
+                $memberCount = "";
+            }
             $member = $group->users()->select('user_id','name','avatar')->get();
             $leader = User::find($group->owner_id);
-
-            // Lấy số thành viên của nhóm
-            $memberCount = $group->users()->count();
 
             // Trả về thông tin nhóm
             return response()->json([
                 'status' => 'success',
                 'data' => [
-                    'name' => $group->name,  // Tên nhóm
-                    'memberCount' => $memberCount . ' thành viên', // Số thành viên
+                    'name' => $name,  // Tên nhóm
+                    'memberCount' => $memberCount, // Số thành viên
                     'member' =>$member,
                     'group' => $group,
                     'leader'=>$leader,
+                    'avatar'=>$avatar ?? url('assets/images/users/multi-user.jpg'),
                 ]
             ]);
         } catch (\Exception $e) {
+            $this->logError($e);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Không thể lấy thông tin nhóm'
