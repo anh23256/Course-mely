@@ -573,7 +573,7 @@ class UserController extends Controller
             }
 
             $certificate = Certificate::query()
-                ->where('user_id', $user->id)
+                ->where('user_id', !$user->id)
                 ->get();
 
             if (!$certificate) {

@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
+        Route::get('/certificates', [UserController::class, 'getCertificate']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
@@ -365,6 +366,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('ratings')
         ->group(function () {
             Route::get('/{courseId}', [RatingController::class, 'index']);
+            Route::get('/{slug}/checkCourseState', [RatingController::class, 'checkCourseState']);
             Route::post('/', [RatingController::class, 'store']);
         });
 

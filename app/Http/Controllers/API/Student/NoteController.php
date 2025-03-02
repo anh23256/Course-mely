@@ -129,6 +129,16 @@ class NoteController extends Controller
 
             $user = Auth::user();
 
+            if (!$user) {
+                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
+
+            $lesson = Lesson::query()->find($data['lesson_id']);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Không tìm thấy bài học');
+            }
+
             $note = Note::query()->find($id);
 
             if (!$note) {
@@ -140,7 +150,6 @@ class NoteController extends Controller
             }
 
             $note->update([
-                'time' => $data['time'],
                 'content' => $data['content'],
             ]);
 
@@ -156,6 +165,10 @@ class NoteController extends Controller
     {
         try {
             $user = Auth::user();
+
+            if (!$user) {
+                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
 
             $note = Note::query()->find($id);
 
