@@ -68,6 +68,7 @@ class NoteController extends Controller
                     'created_at' => $note->created_at,
                     'chapter_name' => $note->lesson->chapter->title ?? null,
                     'lesson_name' => $note->lesson->title ?? null,
+                    'lesson_id' => $note->lesson_id,
                     'time' => $note->time
                 ];
             });
@@ -128,6 +129,16 @@ class NoteController extends Controller
 
             $user = Auth::user();
 
+            if (!$user) {
+                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
+
+            $lesson = Lesson::query()->find($data['lesson_id']);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Không tìm thấy bài học');
+            }
+
             $note = Note::query()->find($id);
 
             if (!$note) {
@@ -139,7 +150,6 @@ class NoteController extends Controller
             }
 
             $note->update([
-                'time' => $data['time'],
                 'content' => $data['content'],
             ]);
 

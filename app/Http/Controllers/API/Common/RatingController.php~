@@ -59,7 +59,7 @@ class RatingController extends Controller
                 ['content' => $data['content'], 'rate' => $data['rate']]
             );
 
-            $user->notify(new RatingNotification($course, $course->instructor));
+            $user->notify(new RatingNotification($course, $user));
 
             return $this->respondCreated('Gửi đánh giá thành công');
         } catch (\Exception $e) {
