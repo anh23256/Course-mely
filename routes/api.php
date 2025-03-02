@@ -192,7 +192,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
             Route::prefix('statistics')
                 ->group(function () {
-                    Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
+                    Route::get('/getCourseOverview', [StatisticController::class, 'getCourseOverview']);
+                    Route::get('/getCourseRevenue', [StatisticController::class, 'getCourseRevenue']);
                 });
 
             #============================== ROUTE SUPPORT BANK =================================
