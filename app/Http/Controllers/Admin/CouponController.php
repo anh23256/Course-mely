@@ -111,6 +111,9 @@ class CouponController extends Controller
             DB::beginTransaction();
             $coupon = Coupon::findOrFail($id);
             $coupon->update($request->validated());
+            $user = User::where('email', 'ducmely@gmail.com')->first();
+            $admin = User::where('email', 'quaixe121811@gmail.com')->first();
+            $user->notify(new CouponCodeCreated($coupon,$admin));
             DB::commit();
             return redirect()->route('admin.coupons.edit', $coupon->id)->with('success', 'Cập nhật thành công');
         } catch (\Exception $e) {

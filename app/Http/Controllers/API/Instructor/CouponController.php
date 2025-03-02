@@ -44,7 +44,6 @@ class CouponController extends Controller
             }
 
             return $this->respondOk('Danh sách mã giảm giá', $coupons);
-
         } catch (\Exception $e) {
             $this->logError($e);
 

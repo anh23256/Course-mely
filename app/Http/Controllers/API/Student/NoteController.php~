@@ -166,10 +166,6 @@ class NoteController extends Controller
         try {
             $user = Auth::user();
 
-            if (!$user) {
-                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
-            }
-
             $note = Note::query()->find($id);
 
             if (!$note) {

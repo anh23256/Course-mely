@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Invoice;
+use App\Models\Rating;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -138,6 +139,46 @@ class StatisticController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getRatingStats()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $courseIds = Course::query()->where('user_id', $user->id)->pluck('id');
+
+            if ($courseIds->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu rating cho các khóa học.');
+            }
+
+            $ratingStats = Rating::query()->whereIn('course_id', $courseIds)
+                ->selectRaw('rate, COUNT(*) as count')
+                ->groupBy('rate')
+                ->get();
+
+            $totalRatings = $ratingStats->sum('count');
+
+            $data = $ratingStats->map(function ($stat) use ($totalRatings) {
+                return [
+                    'rate' => $stat->rate,
+                    'count' => $stat->count,
+                    'percentage' => $totalRatings > 0
+                        ? round(($stat->count / $totalRatings) * 100, 2)
+                        : 0,
+                ];
+            });
+
+            return $this->respondOk('Bao cáo tỷ lệ đánh giá', $data);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
         }
     }
 }

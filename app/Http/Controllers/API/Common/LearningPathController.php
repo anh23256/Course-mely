@@ -270,8 +270,30 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Bài học chưa được bắt đầu');
             }
 
-            $lessonProcess->last_time_video = $lastTime;
-            $lessonProcess->save();
+            $videoDuration = $lesson->lessonable->duration;
+            if ($lastTime > $videoDuration) {
+                return $this->respondBadRequest('Thời gian không thể vượt quá tổng thời lượng video');
+            }
+
+            $needsUpdate = false;
+
+            if ($lastTime > $lessonProcess->last_time_video) {
+                $lessonProcess->last_time_video = $lastTime;
+
+                $completionThreshold = 2 / 3;
+                if ($lastTime >= $videoDuration * $completionThreshold) {
+                    $lessonProcess->is_completed = true;
+                    $needsUpdate = true;
+                }
+
+                $lessonProcess->save();
+            }
+
+            if ($needsUpdate) {
+                $chapter = $lesson->chapter;
+                $courseId = $chapter->course_id;
+                $this->updateCourseProgress($courseId, $user->id);
+            }
 
             return $this->respondOk('Lưu tiến trình thời gian thành công');
         } catch (\Exception $e) {

@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\MessageNotification;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
@@ -24,9 +25,9 @@ use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait;
+    use LoggableTrait, UploadToLocalTrait;
     const FOLDER = "messages";
-  
+
     public function index()
     {
         $data = $this->getAdminsAndChannels();
@@ -90,12 +91,6 @@ class ChatController extends Controller
         DB::beginTransaction();
         $validated = $request->validated();
 
-        if ($request->hasFile('fileinput')) {
-            $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
-        }
-        // if ($request->hasFile('fileinput')) {
-        //     $message['meta_data'] = $this->uploadImage($request->file('fileinput'), self::FOLDER);
-        // }
         $message = Message::create([
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => auth()->id(),
@@ -103,13 +98,23 @@ class ChatController extends Controller
 
             'content' => $validated['content'],
             'type' => $validated['type'],
-            'meta_data' => $validated['meta_data'],
+            'meta_data' => $validated['meta_data'] ?? null,
         ]);
 
-        // $media = Media::create(
-        //     'file_path' => $validated
-        //     'message_id' => $validated['message_id'],
-        // );
+        if ($request->hasFile('fileinput')) {
+            $file = $request->file('fileinput');
+            $filePath = $this->uploadToLocal($file, self::FOLDER);
+
+            $media = Media::create([
+                'file_path' => $filePath,
+                'file_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+                'message_id' => $message->id,
+            ]);
+
+            // Cập nhật meta_data trong message để chứa ID của ảnh
+            $message->update(['meta_data' => json_encode(['media_id' => $media->id])]);
+        }
         DB::commit();
         broadcast(new GroupMessageSent($message));
 
@@ -137,7 +142,7 @@ class ChatController extends Controller
             'channels' => $channels
         ];
     }
-  
+
     public function getGroupInfo(Request $request)
     {
         try {
@@ -146,13 +151,12 @@ class ChatController extends Controller
             if ($group->type == 'group') {
                 $name = $group->name;
                 $memberCount = $group->users()->count() . ' thành viên';
-            }
-            elseif($group->type == 'private'){
+            } elseif ($group->type == 'private') {
                 $name = $group->users->last()->name;
                 $avatar = $group->users->last()->avatar;
                 $memberCount = "";
             }
-            $member = $group->users()->select('user_id','name','avatar')->get();
+            $member = $group->users()->select('user_id', 'name', 'avatar')->get();
             $leader = User::find($group->owner_id);
 
             // Trả về thông tin nhóm
@@ -161,10 +165,10 @@ class ChatController extends Controller
                 'data' => [
                     'name' => $name,  // Tên nhóm
                     'memberCount' => $memberCount, // Số thành viên
-                    'member' =>$member,
+                    'member' => $member,
                     'group' => $group,
-                    'leader'=>$leader,
-                    'avatar'=>$avatar ?? url('assets/images/users/multi-user.jpg'),
+                    'leader' => $leader,
+                    'avatar' => $avatar ?? url('assets/images/users/multi-user.jpg'),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -176,55 +180,69 @@ class ChatController extends Controller
             ]);
         }
     }
-  
+
     public function getGroupMessages($conversationId)
     {
         $messages = Message::where('conversation_id', $conversationId)
-            ->with('sender') // Lấy thông tin người gửi
-            ->latest()
+            ->with('sender', 'media') // Lấy thông tin người gửi
+            ->orderBy('created_at', 'asc')
             ->get();
 
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
     public function addMembersToConversation(StoreGroupChatRequest $request, $conversationId)
-{
-    try {
-        $request->validated();
-        $conversation = Conversation::findOrFail($conversationId);
+    {
+        try {
+            $request->validated();
+            $conversation = Conversation::findOrFail($conversationId);
 
-        if ($conversation->owner_id !== auth()->id()) {
+            if ($conversation->owner_id !== auth()->id()) {
+                return response()->json([
+                    'status' => 'error',
+                    'error' => 'Bạn không có quyền thêm thành viên vào nhóm này.'
+                ], 403);
+            }
+
+            // Thêm các thành viên vào nhóm
+            foreach ($request->members as $memberId) {
+                if ($memberId == auth()->id()) {
+                    continue; // Bỏ qua nếu thành viên là người tạo nhóm
+                }
+                $user = User::find($memberId);
+                if ($user) {
+                    $conversation->users()->attach($memberId);
+                }
+            }
+            $data = $this->getAdminsAndChannels();
+            $data['conversation'] = $conversation;
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Thêm thành viên thành công.',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
             return response()->json([
                 'status' => 'error',
-                'error' => 'Bạn không có quyền thêm thành viên vào nhóm này.'
-            ], 403);
+                'message' => 'Thao tác không thành công.',
+            ]);
         }
-
-        // Thêm các thành viên vào nhóm
-        foreach ($request->members as $memberId) {
-            if ($memberId == auth()->id()) {
-                continue; // Bỏ qua nếu thành viên là người tạo nhóm
-            }
-            $user = User::find($memberId);
-            if ($user) {
-                $conversation->users()->attach($memberId);
-            }
-        }
-        $data = $this->getAdminsAndChannels();
-        $data['conversation'] = $conversation;
-
+    }
+    public function getSentFiles($conversationId)
+    {
+       try {
+        $files = Media::whereHas('message', function ($query) use ($conversationId) {
+            $query->where('conversation_id', $conversationId);
+        })->orderBy('created_at', 'desc')->get();
+        
         return response()->json([
             'status' => 'success',
-            'message' => 'Thêm thành viên thành công.',
-            'data' => $data
+            'files' => $files
         ]);
-    } catch (\Exception $e) {
-        $this->logError($e, $request->all());
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Thao tác không thành công.',
-        ]);
+       } catch (\Exception $e) {
+            $this->logError($e);
+       }
     }
-}
-
 }

@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\API\Note;
 
+use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateNoteRequest extends FormRequest
+class UpdateNoteRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,23 +23,18 @@ class UpdateNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer',
             'lesson_id' => 'required|integer',
-            'time' => 'required|integer',
-            'content'=>'required|max:2000',
+            'content' => 'required|max:2000',
         ];
     }
+
     public function messages()
     {
         return [
-            'user_id.required' => 'user_id là bắt buộc',
-            'user_id.integer' => 'user_id phải là số nguyên',
-            'lesson_id.required'=>'lesson_id là bắt buộc',
+            'lesson_id.required' => 'lesson_id là bắt buộc',
             'lesson_id.integer' => 'lesson_id phải là số nguyên',
-            'time.required' => 'time là bắt buộc',
-            'time.integer' => 'time phải là số nguyên',
             'content.required' => 'content là bắt buộc',
-            'content.max'=>'content không được vượt quá 2000 kí tự'
+            'content.max' => 'content không được vượt quá 2000 kí tự'
         ];
     }
 }

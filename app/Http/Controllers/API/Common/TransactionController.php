@@ -168,7 +168,13 @@ class TransactionController extends Controller
                 return $this->respondError('Bạn đã sở hữu khoá học này rồi');
             }
 
-            $couponData = $this->checkCoupon($validated['coupon_code'], $validated['amount'], $validated['course_id']);
+            $couponResponse
+                = $this->checkCouponNoJson($validated['coupon_code'], $validated['amount'], $validated['course_id']);
+            if (!$couponResponse['success']) {
+                return $this->respondError($couponResponse['error']);
+            }
+
+            $couponData = $couponResponse['data'];
             $finalAmount = $couponData['final_amount'];
             $amountVNPay = number_format($finalAmount, 0, '', '');
 
@@ -291,13 +297,14 @@ class TransactionController extends Controller
             // Kiểm tra mã giảm giá (nếu có)
             $discount = null;
             if (!empty($couponCode)) {
-                $discount = Coupon::query()->where(['code' => $couponCode, 'status' => '1'])->first();
+                $discount = Coupon::query()
+                    ->where(['code' => $couponCode, 'status' => '1'])
+                    ->first();
                 if ($discount) {
-                    if ($discount->type == 'percent') {
-                        $discountAmount = ($originalAmount * $discount->value) / 100;
-                    } else {
-                        $discountAmount = min($discount->value, $originalAmount);
-                    }
+                    $discountAmount = $discount->type === 'percent'
+                        ? min(($originalAmount * $discount->discount_value) / 100, $discount->discount_max_value ?? $originalAmount)
+                        : min($discount->discount_value, $originalAmount);
+
                     $finalAmount = max($originalAmount - $discountAmount, 0);
                 }
             }
@@ -452,10 +459,20 @@ class TransactionController extends Controller
     private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
         if ($discount) {
-            $course->coupons()->attach($discount->id);
-            if ($discount->used_count > 0) $discount->increment('used_count');
+            $discount->refresh();
+            $discount->increment('used_count');
+
+            $couponUse = CouponUse::query()->where([
+                'coupon_id' => $discount->id,
+                'user_id' => $userID
+            ]);
+
+            $couponUse->update([
+                'status' => 'used',
+            ]);
         }
 
+        $course->refresh();
         $course->increment('total_student');
 
         $walletInstructor = Wallet::query()
@@ -474,7 +491,6 @@ class TransactionController extends Controller
             ]);
 
         $walletWeb->balance += $finalAmount * self::adminRate;
-
         $walletWeb->save();
 
         SystemFund::query()->create([
@@ -589,12 +605,12 @@ class TransactionController extends Controller
 
         if ($coupon->discount_type === 'percentage') {
             $discountAmount = ($amount * $coupon->discount_value) / 100;
+
+            if (!empty($coupon->discount_max_value)) {
+                $discountAmount = min($discountAmount, $coupon->discount_max_value);
+            }
         } elseif ($coupon->discount_type === 'fixed') {
             $discountAmount = min($coupon->discount_value, $amount);
-        }
-
-        if (!empty($coupon->discount_max_value)) {
-            $discountAmount = min($discountAmount, $coupon->discount_max_value);
         }
 
         $finalAmount = max($amount - $discountAmount, 0);
@@ -604,5 +620,101 @@ class TransactionController extends Controller
             'discount_amount' => $discountAmount,
             'final_amount' => $finalAmount
         ]);
+    }
+
+    private function checkCouponNoJson(?string $code, float $amount, $courseId = null): array
+    {
+        if (empty($code)) {
+            return [
+                'success' => true,
+                'data' => [
+                    'original_amount' => $amount,
+                    'discount_amount' => 0,
+                    'final_amount' => $amount,
+                ],
+            ];
+        }
+
+        $coupon = Coupon::query()
+            ->where('code', $code)
+            ->where('status', '1')
+            ->first();
+
+        if (!$coupon) {
+            return [
+                'success' => false,
+                'error' => 'Mã giảm giá không hợp lệ',
+            ];
+        }
+
+        $alreadyUsed = CouponUse::query()
+            ->where('user_id', Auth::id())
+            ->where('coupon_id', $coupon->id)
+            ->where('status', 'used')
+            ->exists();
+
+        if ($alreadyUsed) {
+            return [
+                'success' => false,
+                'error' => 'Bạn đã sử dụng mã giảm giá này',
+            ];
+        }
+
+        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
+            return [
+                'success' => false,
+                'error' => 'Mã giảm giá đã hết số lượt sử dụng',
+            ];
+        }
+
+        if ($coupon->start_date && now()->lessThan($coupon->start_date)) {
+            return [
+                'success' => false,
+                'error' => 'Mã giảm giá chưa được kích hoạt',
+            ];
+        }
+
+        if ($coupon->specific_course) {
+            if (is_null($courseId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Mã giảm giá này chỉ áp dụng cho khóa học cụ thể. Vui lòng cung cấp ID khóa học',
+                ];
+            }
+
+            $isApplicableToCourse = $coupon->couponCourses()
+                ->where('course_id', $courseId)
+                ->exists();
+
+            if (!$isApplicableToCourse) {
+                return [
+                    'success' => false,
+                    'error' => 'Mã giảm giá này không áp dụng cho khóa học này',
+                ];
+            }
+        }
+
+        $discountAmount = 0;
+
+        if ($coupon->discount_type === 'percentage') {
+            $discountAmount = ($amount * $coupon->discount_value) / 100;
+
+            if (!empty($coupon->discount_max_value)) {
+                $discountAmount = min($discountAmount, $coupon->discount_max_value);
+            }
+        } elseif ($coupon->discount_type === 'fixed') {
+            $discountAmount = min($coupon->discount_value, $amount);
+        }
+
+        $finalAmount = max($amount - $discountAmount, 0);
+
+        return [
+            'success' => true,
+            'data' => [
+                'original_amount' => $amount,
+                'discount_amount' => $discountAmount,
+                'final_amount' => $finalAmount,
+            ],
+        ];
     }
 }
