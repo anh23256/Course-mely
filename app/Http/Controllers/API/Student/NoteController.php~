@@ -68,7 +68,6 @@ class NoteController extends Controller
                     'created_at' => $note->created_at,
                     'chapter_name' => $note->lesson->chapter->title ?? null,
                     'lesson_name' => $note->lesson->title ?? null,
-                    'lesson_id' => $note->lesson_id,
                     'time' => $note->time
                 ];
             });

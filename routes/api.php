@@ -120,9 +120,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
+        Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
 
         #============================== ROUTE CAREERS =============================
-        Route::prefix('careers')->group(function(){
+        Route::prefix('careers')->group(function () {
             Route::post('/', [UserController::class, 'storeCareers']);
             Route::put('/{careerID}', [UserController::class, 'updateCareers']);
             Route::delete('/{careerID}', [UserController::class, 'deleteCareers']);
@@ -146,6 +147,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
         Route::put('/lesson/{lessonId}/update-last-time-video', [\App\Http\Controllers\API\Common\LearningPathController::class, 'updateLastTimeVideo']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
+        Route::get('/{lesson}/get-chapter-from-lesson', [LessonController::class, 'getChapterFromLesson']);
     });
 
     Route::prefix('lessons')
@@ -181,7 +183,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -323,7 +326,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE NOTE =============================
     Route::prefix('notes')->as('notes.')->group(function () {
-        Route::get('/{courseId}', [NoteController::class, 'index']);
+        Route::get('/{courseSlug}/get-notes', [NoteController::class, 'index']);
         Route::post('/', [NoteController::class, 'store']);
         Route::put('/{note}', [NoteController::class, 'update']);
         Route::delete('/{note}', [NoteController::class, 'destroy']);
@@ -346,7 +349,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE CHAT =============================
     Route::prefix('chats')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     #============================== ROUTE COMMENT =============================
     Route::prefix('comments')

@@ -107,7 +107,7 @@ class CertificateController extends Controller
                 ]);
 
                 UploadCertificateJob::dispatch('certificates/' . $filename, base64_encode($pdfContent), $user->id, $course->id)
-                    ->delay(120);
+                    ->delay(3600);
             }
 
             return $this->respondOk('Tạo đường dẫn chứng chỉ thành công', ['pdf_url' => $certificate->file_path]);
