@@ -23,14 +23,13 @@ class StatisticController extends Controller
         try {
             $user = Auth::user();
 
-
             if (!$user || !$user->hasRole('instructor')) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
             $data = [];
 
-            $yearNow = now()->year();
+            $yearNow = now()->year;
 
             $year = $request->input('year', $yearNow);
 
@@ -41,7 +40,7 @@ class StatisticController extends Controller
             if ($year > $yearNow) $year = $yearNow;
             if ($year < $user->created_at) $year = $user->created_at;
 
-            $totalRevenue = Invoice::query()
+            $totalRevenue = DB::table('invoices')
                 ->select(
                     DB::raw('MONTH(created_at) as month'),
                     DB::raw('SUM(final_amount) as total_revenue'),

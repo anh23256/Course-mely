@@ -223,9 +223,9 @@
                                 <div>
                                     <div style="width: 80px;"
                                         class="progress animated-progress custom-progress progress-label">
-                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 30%"
-                                            aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
-                                            <div class="label">30%</div>
+                                        <div class="progress-bar bg-danger" id="progressCourseStyle" role="progressbar"
+                                            style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="label" id="progressCourse">0%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -370,36 +370,20 @@
                                     <h5 class="mb-0">Danh sách tiêu chí kiểm duyệt khóa học</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="accordion" id="criteriaAccordion">
+                                    <div class="accordion" id="criteriaAccordionCourse">
                                         <!-- Tiêu chí 1: Thông tin cơ bản khóa học -->
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="criteriaHeadingOne">
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
                                                     data-bs-target="#criteriaCollapseOne" aria-expanded="true"
                                                     aria-controls="criteriaCollapseOne">
-                                                    <strong>Tiêu chí 1:</strong> Thông tin cơ bản khóa học
+                                                    <strong>Tiêu chí 1:</strong> Tổng quan về khóa học
                                                 </button>
                                             </h2>
                                             <div id="criteriaCollapseOne" class="accordion-collapse collapse show"
                                                 aria-labelledby="criteriaHeadingOne" data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Khóa học phải có tên với tối thiểu 5 ký tự.</li>
-                                                                <li>Mô tả khóa học phải có tối thiểu 100 ký tự.</li>
-                                                                <li>Khóa học phải có hình đại diện.</li>
-                                                                <li>Khóa học phải có danh mục.</li>
-                                                            </ul>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Khoá học phải có mức độ khó.</li>
-                                                                <li>Khóa học có phí phải có giá hợp lệ.</li>
-                                                                <li>Khóa học phải có từ 4 đến 10 lợi ích.</li>
-                                                                <li>Khóa học phải có từ 4 đến 10 yêu cầu.</li>
-                                                            </ul>
-                                                        </div>
+                                                    <div class="row" id="criteria_course_overview">
                                                     </div>
                                                 </div>
                                             </div>
@@ -417,27 +401,7 @@
                                             <div id="criteriaCollapseTwo" class="accordion-collapse collapse"
                                                 aria-labelledby="criteriaHeadingTwo" data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Khóa học phải có ít nhất 3 chương học.</li>
-                                                                <li>Mỗi chương (trừ chương đầu tiên) phải có ít nhất 3
-                                                                    bài
-                                                                    học.
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Chương từ thứ hai trở đi phải có tổng thời lượng
-                                                                    video
-                                                                    trên 30 phút.
-                                                                </li>
-                                                                <li>Tổng thời lượng video của khóa học phải lớn hơn 2
-                                                                    giờ.
-                                                                </li>
-                                                            </ul>
-                                                        </div>
+                                                    <div class="row" id="criteria_course_curriculum">
                                                     </div>
                                                 </div>
                                             </div>
@@ -449,30 +413,14 @@
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
                                                     data-bs-target="#criteriaCollapseThree" aria-expanded="false"
                                                     aria-controls="criteriaCollapseThree">
-                                                    <strong>Tiêu chí 3:</strong> Bài học
+                                                    <strong>Tiêu chí 3:</strong> Mục tiêu khóa học
                                                 </button>
                                             </h2>
                                             <div id="criteriaCollapseThree" class="accordion-collapse collapse"
                                                 aria-labelledby="criteriaHeadingThree"
                                                 data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Mỗi bài học phải có tiêu đề.</li>
-                                                                <li>Bài giảng video phải có thời lượng từ 2 đến 40 phút.
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <ul>
-                                                                <li>Bài kiểm tra phải có từ 1 đến 10 câu hỏi.</li>
-                                                                <li>Bài tập lập trình phải có tiêu đề, ngôn ngữ lập
-                                                                    trình và
-                                                                    đoạn mã mẫu.
-                                                                </li>
-                                                            </ul>
-                                                        </div>
+                                                    <div class="row" id="criteria_course_objectives">
                                                     </div>
                                                 </div>
                                             </div>
@@ -547,21 +495,60 @@
                     }
                 });
             });
+
+            getCriteriaApprovalCourse();
         });
 
-        // function getCriteriaApprovalCourse() {
-        //     $.ajax({
-        //         type: 'GET',
-        //         url: "http://127.0.0.1:8000/api/instructor/manage/courses/" + "{{ $approval->course->slug }}" +
-        //             "/validate-course",
-        //         headers: {
-        //             "Authorization": "Bearer " + token,
-        //         },
-        //         success: function(response) {
-        //             console.log(response);
-        //         },
-        //     });
-        // }
-        // getCriteriaApprovalCourse();
+        function getCriteriaApprovalCourse() {
+            $.ajax({
+                type: 'GET',
+                url: "http://127.0.0.1:8000/api/{{ Auth::user()->code }}/{{ $approval->course->slug }}/get-validate-course",
+                beforeSend: function() {
+                    $("#criteria_course_overview, #criteria_course_curriculum, #criteria_course_objectives")
+                        .html(`
+                <span class="col-md-12 mt-2 text-center">
+                    <i class='bx bx-loader bx-spin' style="color: gray; font-size: 20px;"></i>
+                    Đang tải...
+                </span>
+            `);
+                },
+                success: function(response) {
+                    console.log(response);
+                    if (response.data) {
+                        let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;
+                        $('#progressCourse').html(progress + '%');
+                        $('#progressCourseStyle').css('width', progress + '%');
+                        $('#progressCourseStyle').attr('aria-valuenow', progress);
+
+                        function renderCriteria(containerId, criteria) {
+                            let container = $(containerId);
+                            container.empty();
+
+                            if (!criteria.status) {
+                                criteria.errors.forEach(error => {
+                                    container.append(`
+                                <span class="col-md-6 mt-2">
+                                    <i class='bx bx-x-circle' style="color: red;"></i> ${error}
+                                </span>
+                            `);
+                                });
+                            }
+                            criteria.pass.forEach(pas => {
+                                container.append(`
+                            <span class="col-md-6 mt-2">
+                                <i class='bx bx-check-circle' style="color: green;"></i> ${pas}
+                            </span>
+                        `);
+                            });
+                        }
+
+                        let completion = response.data.completionStatus;
+                        renderCriteria("#criteria_course_overview", completion.course_overview);
+                        renderCriteria("#criteria_course_curriculum", completion.course_curriculum);
+                        renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                    }
+                }
+            });
+        }
     </script>
 @endpush

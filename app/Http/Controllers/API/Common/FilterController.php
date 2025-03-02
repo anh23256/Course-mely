@@ -18,6 +18,8 @@ class FilterController extends Controller
     {
         try {
             $query = Course::query();
+            
+            $sortBy = $request->sort_by ?? '';
 
             if ($request->has('categories') && !empty($request->categories) && is_array($request->categories)) {
                 $query->whereExists(function ($q) use ($request) {
@@ -56,15 +58,15 @@ class FilterController extends Controller
             if ($request->has('price') && !empty($request->price) && $request->price == 'free') {
                 $query->where('is_free', 1);
             }
-            
+
             if ($request->has('price') && $request->price !== null && $request->price == 'price') {
                 $query->where('price', '!=', 0)
-                ->where('price_sale', '=', 0);
+                    ->where('price_sale', '=', 0);
             }
 
             if ($request->has('price') && !empty($request->price) && $request->price == 'price_sale') {
                 $query->where('price_sale', '!=', 0)
-                ->where('price','!=', '0');
+                    ->where('price', '!=', '0');
             }
 
             if ($request->has('features') && !empty($request->features) && is_array($request->features)) {
@@ -78,7 +80,7 @@ class FilterController extends Controller
 
             $courseIds = $query->pluck('id');
 
-            $courses = Course::query()
+            $queryCourses = Course::query()
                 ->select([
                     'courses.id',
                     'courses.user_id',
@@ -94,56 +96,23 @@ class FilterController extends Controller
                     DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
                     DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
                 ])
-                ->whereIn('courses.id', $courseIds)->with('user:id,name')->orderByDesc('views')
-                ->paginate(9);
-
-            if ($courses->isEmpty()) {
-                return $this->respondNotFound('Không có dữ liệu');
-            }
-
-            return $this->respondOk('Kết quả tìm kiếm', $courses);
-        } catch (\Exception $e) {
-            $this->logError($e);
-
-            return $this->respondServerError('Internal Server Error');
-        }
-    }
-
-    public function filterOrderBy(Request $request)
-    {
-        try {
-            $query = Course::query();
-
-            $sortBy = $request->sort_by ?? '';
+                ->whereIn('courses.id', $courseIds)->with('user:id,name');
 
             switch ($sortBy) {
                 case 'price_asc':
-                    $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) ASC');
+                    $queryCourses->orderBy('courses.price', 'asc');
                     break;
 
                 case 'price_desc':
-                    $query->orderByRaw('COALESCE(NULLIF(price_sale, 0), price) DESC');
+                    $queryCourses->orderBy('courses.price', 'desc');
                     break;
 
                 default:
-                    $query->orderByDesc('views');
+                    $queryCourses->orderByDesc('courses.views');
                     break;
             }
 
-            $courses = $query->select([
-                'courses.id',
-                'courses.user_id',
-                'courses.category_id',
-                'courses.name',
-                'courses.slug',
-                'courses.thumbnail',
-                'courses.price',
-                'courses.price_sale',
-                'courses.is_free',
-                'courses.total_student',
-                DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
-                DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
-            ])->paginate(9);
+            $courses = $queryCourses->paginate(9);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');

@@ -146,9 +146,9 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [BannerController::class, 'index'])->name('index');
             Route::get('/deleted', [BannerController::class, 'listDeleted'])->name('deleted');
             Route::get('/create', [BannerController::class, 'create'])->name('create')
-                ->can('banner.create');
+                ->can('banners.create');
             Route::post('/', [BannerController::class, 'store'])->name('store')
-                ->can('banner.create');
+                ->can('banners.create');
 
             Route::get('/{id}', [BannerController::class, 'show'])->name('show');
             Route::get('/edit/{banner}', [BannerController::class, 'edit'])->name('edit');
