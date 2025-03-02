@@ -199,6 +199,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::prefix('statistics')
                 ->group(function () {
                     Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
+                    Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
             #============================== ROUTE SUPPORT BANK =================================
@@ -222,6 +223,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/', [LivestreamController::class, 'getLivestreams']);
                     Route::post('/', [LivestreamController::class, 'startLivestream']);
+                });
+
+            #============================== ROUTE FEEDBACK =============================
+            Route::prefix('feedbacks')
+                ->group(function () {
+                    Route::get('/', [\App\Http\Controllers\API\Instructor\FeedBackController::class, 'getFeedbacks']);
                 });
 
             Route::prefix('manage')

@@ -14,11 +14,12 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
     use Queueable;
 
     protected $coupon;
+    protected $user;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($coupon)
+    public function __construct($coupon,$user)
     {
         $this->coupon = $coupon;
     }
@@ -38,18 +39,16 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
      */
     private function getUrl()
     {
-        return  'Chưa tao duong dan';
+        $url = config('app.fe_url');
+        return $url . '/my-courses?tab=coupon';
     }
 
     public function notificationData()
     {
         return [
-            'message' => 'Mã giảm giá "' . $this->coupon->name . '" đã được tạo. Nhấn để nhận mã.',
-            'id' => $this->coupon->id,
-            'code' => $this->coupon->code,
-            'name' => $this->coupon->name,
-            'discount_value' => $this->coupon->discount_value,
-            'action_url' => $this->getUrl(),
+            'message' => 'Bạn vừa nhận được một mã từ nhân viên' . $this->coupon->user_id. ' Nhấn để nhận mã',
+            'name' =>$this->coupon->user_id,
+            'url' => $this->getUrl(),
         ];
     }
 
