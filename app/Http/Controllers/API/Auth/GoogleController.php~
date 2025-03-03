@@ -32,7 +32,6 @@ class GoogleController extends Controller
             $googleUser = Socialite::driver('google')->stateless()->user();
 
             Log::info('Google Callback:', $request->all());
-            Log::info('Google User:', (array) $googleUser);
             $user = null;
 
             DB::beginTransaction();
