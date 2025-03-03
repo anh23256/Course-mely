@@ -100,7 +100,7 @@ class StatisticController extends Controller
 
             $startDate = $startDate->format('Y-m-d 00:00:00');
             $endDate = $endDate->format('Y-m-d 23:59:59');
-            
+
             $monthlyRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6,2) as revenue')
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
@@ -118,12 +118,28 @@ class StatisticController extends Controller
             }
 
             $courseRevenue = DB::table('invoices')
-                ->select('courses.id', 'courses.name', 'courses.slug', DB::raw('SUM(invoices.final_amount) as total_revenue'))
+                ->select(
+                    'courses.id',
+                    'courses.name',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.slug',
+                    DB::raw('SUM(invoices.final_amount) as total_revenue'),
+                    DB::raw('COUNT(DISTINCT course_users.id) as total_student'),
+                    DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
+                )
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'invoices.status' => 'Đã thanh toán'])
-                ->groupBy('courses.id', 'courses.name', 'courses.slug')
+                ->join('course_users', 'courses.id', '=', 'course_users.course_id')
+                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                ->where([
+                    'courses.user_id' => $user->id,
+                    'invoices.status' => 'Đã thanh toán'
+                ])
+                ->groupBy('courses.slug')
                 ->orderByDesc('total_revenue')
                 ->get();
+
 
             $newPurchases = DB::table('invoices')
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
