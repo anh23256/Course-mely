@@ -51,7 +51,6 @@ Route::prefix('auth')->as('auth.')->group(function () {
     Route::get('google', [GoogleController::class, 'redirectToGoogle']);
     Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback']);
 });
-
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 
 Route::prefix('livestreams')->group(function () {
@@ -75,7 +74,6 @@ Route::prefix('search')
 Route::prefix('filters')
     ->group(function () {
         Route::get('/', [FilterController::class, 'filter']);
-        Route::get('/', [FilterController::class, 'filterOrderBy']);
     });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -198,7 +196,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
             Route::prefix('statistics')
                 ->group(function () {
-                    Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
+                    Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
+                    Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
@@ -253,7 +252,6 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::get('/{slug}/chapters', [CourseController::class, 'getChapters']);
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
-
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
                         });
 
@@ -424,3 +422,4 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
 Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
+Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);

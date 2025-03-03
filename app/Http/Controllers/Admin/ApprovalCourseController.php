@@ -8,7 +8,9 @@ use App\Models\Course;
 use App\Models\Video;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ApprovalCourseController extends Controller
@@ -97,7 +99,7 @@ class ApprovalCourseController extends Controller
                 'title',
                 'subTitle',
                 'approval',
-                'totalDuration'
+                'totalDuration',
             ]));
         } catch (\Exception $e) {
             $this->logError($e);

@@ -38,13 +38,14 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
         return route('admin.chats.index');
     }
 
-    private function notificationData(object $notifiable): array
+    private function notificationData(object $notifiable, bool $isDatabase = false): array
     {
         $existingNotification = $notifiable->notifications()
+            ->where('read_at', '==', null)
             ->whereJsonContains('data->conversation_id', $this->message->conversation_id)
-            ->first();;
+            ->first();
 
-        $count = $existingNotification ? ($existingNotification->data['count'] ? $existingNotification->data['count'] + 1 : 1) : 1;
+        $count = $existingNotification ? (!empty($existingNotification->data['count']) ? $existingNotification->data['count'] + 1 : 1) : 1;
 
         return [
             'type' => 'receive_message',
@@ -52,11 +53,11 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
             'sender_id' => $this->message->sender_id,
             'conversation_id' => $this->message->conversation_id,
             'message_user_avatar' => $this->message->sender->avatar,
-            'count' => $count, 
-            'message' => 'Bạn có ' . $count . ' tin nhắn mới từ' . 
-                         ($this->message->conversation->type == "group" 
-                            ? ' nhóm ' . $this->message->conversation->name 
-                            : ' người dùng ' . $this->message->sender->name),
+            'count' => $isDatabase ? $count : ($existingNotification->data['count'] ?? 1),
+            'message' => 'Bạn có ' . ($isDatabase ? $count : ($existingNotification->data['count'] ?? 1)) . ' tin nhắn mới từ' .
+                ($this->message->conversation->type == "group"
+                    ? ' nhóm ' . $this->message->conversation->name
+                    : ' người dùng ' . $this->message->sender->name),
             'url' => $this->getUrl(),
         ];
     }
@@ -66,9 +67,10 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
      */
     public function toDatabase(object $notifiable): array
     {
-        $notificationData = $this->notificationData($notifiable);
+        $notificationData = $this->notificationData($notifiable, true);
 
         $existingNotification = $notifiable->notifications()
+            ->where('read_at', '==', null)
             ->whereJsonContains('data->conversation_id', $this->message->conversation_id)
             ->first();
 
@@ -84,6 +86,6 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage($this->notificationData($notifiable));
+        return new BroadcastMessage($this->notificationData($notifiable, false));
     }
 }
