@@ -322,7 +322,7 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Số tiền:</strong></div>
-                        <div class="col-md-8">${formatCurrency(response.system_fund_transaction?.total_amount)}</div>
+                        <div class="col-md-8">${formatCurrency(response.system_fund_transaction?.total_amount)</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Ngày tạo:</strong></div>

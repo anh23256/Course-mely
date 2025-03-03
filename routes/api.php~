@@ -149,7 +149,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
         Route::get('/{lesson}/get-chapter-from-lesson', [LessonController::class, 'getChapterFromLesson']);
         Route::get('/lesson/{lessonId}/get-quiz-submission/{submissionQuizId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getQuizSubmission']);
-        Route::get('/lesson/{lessonId}/get-coding-submission/{submissionCodingId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getCodingSubmission']);
     });
 
     Route::prefix('lessons')

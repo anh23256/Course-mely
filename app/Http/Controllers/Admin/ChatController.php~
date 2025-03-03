@@ -26,7 +26,6 @@ use Psr\Log\LoggerTrait;
 class ChatController extends Controller
 {
     use LoggableTrait, UploadToLocalTrait;
-
     const FOLDER = "messages";
 
     public function index()
@@ -237,7 +236,7 @@ class ChatController extends Controller
         $files = Media::whereHas('message', function ($query) use ($conversationId) {
             $query->where('conversation_id', $conversationId);
         })->orderBy('created_at', 'desc')->get();
-
+        
         return response()->json([
             'status' => 'success',
             'files' => $files

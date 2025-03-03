@@ -9,6 +9,8 @@ class SocialAccount extends Model
 {
     use HasFactory;
 
+    const PROVIDER_GOOGLE = 'google';
+
     protected $fillable = [
         'user_id',
         'provider',
