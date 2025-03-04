@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreBannerRequest;
-use App\Http\Requests\API\Banners\UpdateBannerRequest;
+use App\Http\Requests\Admin\Banners\StoreBannerRequest;
+use App\Http\Requests\Admin\Banners\UpdateBannerRequest;
 use App\Models\Banner;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class BannerController extends Controller
 {
@@ -71,7 +72,8 @@ class BannerController extends Controller
             if ($request->hasFile('image')) {
                 $data['image'] = $this->uploadImage($request->file('image'), self::FOLDER);
             }
-
+            $data['redirect_url'] = !empty($data['title']) ? Str::slug($data['title']) : null;
+            $data['status'] ??= 0;
             Banner::query()->create($data);
 
             DB::commit();
