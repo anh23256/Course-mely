@@ -88,42 +88,47 @@ class ChatController extends Controller
 
     public function sendGroupMessage(StoreSendMessageRequest $request)
     {
-        DB::beginTransaction();
-        $validated = $request->validated();
+        try {
+            DB::beginTransaction();
+            $validated = $request->validated();
 
-        $message = Message::create([
-            'conversation_id' => $validated['conversation_id'],
-            'sender_id' => auth()->id(),
-            'parent_id' => $validated['parent_id'] ?? null,
+            $message = Message::create([
+                'conversation_id' => $validated['conversation_id'],
+                'sender_id' => auth()->id(),
+                'parent_id' => $validated['parent_id'] ?? null,
 
-            'content' => $validated['content'],
-            'type' => $validated['type'],
-            'meta_data' => $validated['meta_data'] ?? null,
-        ]);
-
-        if ($request->hasFile('fileinput')) {
-            $file = $request->file('fileinput');
-            $filePath = $this->uploadToLocal($file, self::FOLDER);
-
-            $media = Media::create([
-                'file_path' => $filePath,
-                'file_type' => $file->getClientMimeType(),
-                'file_size' => $file->getSize(),
-                'message_id' => $message->id,
+                'content' => $validated['content'] ?? null,
+                'type' => $validated['type'],
+                'meta_data' => $validated['meta_data'] ?? null,
             ]);
 
-            // Cập nhật meta_data trong message để chứa ID của ảnh
-            $message->update(['meta_data' => json_encode(['media_id' => $media->id])]);
+            if ($request->hasFile('fileinput')) {
+                $file = $request->file('fileinput');
+                $filePath = $this->uploadToLocal($file, self::FOLDER);
+
+                $media = Media::create([
+                    'file_path' => $filePath,
+                    'file_type' => $file->getClientMimeType(),
+                    'file_size' => $file->getSize(),
+                    'message_id' => $message->id,
+                ]);
+
+                $message->update(['meta_data' => json_encode(['media_id' => $media->id])]);
+            }
+            $message->load(['sender', 'media']);
+
+            DB::commit();
+            broadcast(new GroupMessageSent($message))->toOthers();
+
+            $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
+                ->where('user_id', '<>', auth()->id())->pluck('user_id');
+
+            User::whereIn('id', $users)->get()->each->notify(new MessageNotification($message));
+
+            return response()->json(['status' => 'success', 'message' => $message]);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
         }
-        DB::commit();
-        broadcast(new GroupMessageSent($message));
-
-        $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
-            ->where('user_id', '<>', auth()->id())->pluck('user_id');
-
-        User::whereIn('id', $users)->get()->each->notify(new MessageNotification($message));
-
-        return response()->json(['status' => 'success', 'message' => $message]);
     }
 
     protected function getAdminsAndChannels()
@@ -136,7 +141,7 @@ class ChatController extends Controller
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
         })->get();
-        // $memberChannels = Con
+
         return [
             'admins' => $admins,
             'channels' => $channels
@@ -232,17 +237,17 @@ class ChatController extends Controller
     }
     public function getSentFiles($conversationId)
     {
-       try {
-        $files = Media::whereHas('message', function ($query) use ($conversationId) {
-            $query->where('conversation_id', $conversationId);
-        })->orderBy('created_at', 'desc')->get();
-        
-        return response()->json([
-            'status' => 'success',
-            'files' => $files
-        ]);
-       } catch (\Exception $e) {
+        try {
+            $files = Media::whereHas('message', function ($query) use ($conversationId) {
+                $query->where('conversation_id', $conversationId);
+            })->orderBy('created_at', 'desc')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'files' => $files
+            ]);
+        } catch (\Exception $e) {
             $this->logError($e);
-       }
+        }
     }
 }

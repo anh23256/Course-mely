@@ -170,8 +170,6 @@
 
         #messagesList {
             max-height: 500px;
-            /* Điều chỉnh chiều cao phù hợp */
-            overflow-y: auto;
         }
     </style>
 @endpush
@@ -1051,8 +1049,8 @@
                 console.log('Đã chọn nhóm với ID:', currentConversationId);
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
-                        loadMessages(currentConversationId);
-                        
+                        $('#messagesList').append(renderMessage(event));
+                        scrollToBottom();
                         // alert('Đã nhận tin nhắn mới');
                     });
             });
@@ -1129,14 +1127,17 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
+                            console.log(response);
+
                             if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
                                 $('#fileInput').val(''); // Reset input file
                                 $('#imagePreviewContainer')
                                     .hide(); // Ẩn preview ảnh sau khi gửi
-                                loadMessages(
-                                    currentConversationId); // Tải lại tin nhắn của nhóm
-                                scrollToBottom(); // Cuộn xuống ngay khi gửi tin nhắn
+
+
+                                $('#messagesList').append(renderMessage(response));
+                                scrollToBottom();
                             }
                         },
                         error: function(xhr) {
@@ -1209,11 +1210,8 @@
         }
 
         function loadSentFiles(conversationId) {
-            console.log('test: ----------------------------------');
             $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
-                console.log(response);
-                
-                
+
                 if (response.status === 'success') {
                     $('#sentFilesList').html(''); // Xóa danh sách cũ
 
@@ -1247,9 +1245,19 @@
         }
 
         function scrollToBottom() {
-            let messageContainer = document.getElementById("messagesList");
-            messageContainer.scrollTop = messageContainer.scrollHeight;
+            let chatBox = document.getElementById("chatBox");
+            let simpleBarInstance = SimpleBar.instances.get(chatBox);
+
+            if (simpleBarInstance) {
+                requestAnimationFrame(() => {
+                    simpleBarInstance.getScrollElement().scrollTop = simpleBarInstance
+                        .getScrollElement()
+                        .scrollHeight;
+                });
+            }
         }
+
+
 
         function formatTime(dateString) {
             const date = new Date(dateString);
@@ -1286,6 +1294,49 @@
         //             reaction.remove();
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
+        function renderMessage(response) {
+            
+            const messageClass = response.message.sender.id == userId ?
+                'sender' : 'received';
+            const time = formatTime(response.message.created_at);
+            let messageContent = '';
+
+            try {
+                if (response.message.media && response.message.media
+                    .length > 0) {
+                    let mediaFile = response.message.media[0]
+                        .file_path; // Lấy đường dẫn ảnh
+                    messageContent = `
+                <p>${response.message.content}</p>
+                <img src="/storage/${mediaFile}" alt="Hình ảnh" 
+                style="max-width:350px; border-radius: 8px;">
+            `;
+                } else {
+                    messageContent =
+                        `<p>${response.message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                }
+            } catch (error) {
+                console.error("Lỗi lấy ảnh:", error);
+                messageContent =
+                    `<p>${response.message.content}</p>`; // Nếu lỗi, fallback về content
+            }
+
+            let messageHtml = `
+        <div class="message ${messageClass}" style="padding-top: 10px">
+            <div class="message-avatar">
+                <img src="${response.message.sender.avatar}" alt="avatar">
+            </div>
+            <div class="message-content">
+                <div class="message-header">
+                    <strong>${response.message.sender.name}</strong>
+                    <span class="message-time">${time}</span>
+                </div>
+                ${messageContent}
+            </div>
+        </div>
+    `;
+            return messageHtml;
+        }
     </script>
     <script>
         @if (session('success'))
