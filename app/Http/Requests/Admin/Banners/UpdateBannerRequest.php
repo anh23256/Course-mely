@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests\Admin\Banners;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateBannerRequest extends FormRequest
 {
@@ -26,8 +27,7 @@ class UpdateBannerRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'order' => 'nullable|integer',
             'content'=>'nullable|string|max:255',
-            'status' => 'required',
-            'redirect_url' => 'nullable|max:255',
+            'status'      => [Rule::in(0,1)],
         ];
     }
     public function messages()
@@ -38,9 +38,7 @@ class UpdateBannerRequest extends FormRequest
             'order.interger'=>'Order phải là sô nguyên',
             'content.string'=>'Content phải là chuỗi kí tự',
             'content.max'=>'Content không được quá 255 kí tự',
-            'status.required'=>'Trạng thái là bắt buộc',
-            'redirect_url.url'=>'Trường này phải là đường dẫn',
-            'redirect_url.max'=>'Trường này không được quá 255 kí tự',
+            'status.in'     => 'Trạng thái không hợp lệ',
         ];
     }
 }

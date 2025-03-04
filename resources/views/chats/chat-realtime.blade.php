@@ -4,174 +4,7 @@
     <!-- glightbox css -->
     <link rel="stylesheet" href="{{ asset('assets/libs/glightbox/css/glightbox.min.css') }}">
     <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" type="text/css" />
-    <style>
-        .file-input {
-            display: none;
-        }
-
-        .message {
-            display: flex;
-            align-items: flex-start;
-            padding: 10px;
-            background-color: #f0f2f5;
-            /* Màu nền nhạt */
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin-right: 10px;
-        }
-
-        .message-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Nội dung tin nhắn */
-        .message-content {
-            flex: 1;
-            background-color: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .message-header strong {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .message-time {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .message p {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        /* Các nút hành động */
-        .message-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .like-btn,
-        .thumbs-up-btn {
-            border: none;
-            background: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .like-btn {
-            color: #e74c3c;
-            /* Màu đỏ cho nút ❤️ */
-        }
-
-        .thumbs-up-btn {
-            color: #3498db;
-            /* Màu xanh cho nút 👍 */
-        }
-
-        /* Đảm bảo độ cao tối thiểu cho tin nhắn */
-        .sender {
-            min-height: 40px;
-            max-height: 300px;
-            /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
-            overflow: visible !important;
-            /* Hiển thị đầy đủ nội dung */
-        }
-
-        .sender {
-            /* Gradient cho người gửi */
-            color: black;
-            text-align: left;
-            /* Đưa tin nhắn vào bên phải */
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            max-width: 50%;
-            /* Giới hạn chiều rộng */
-            margin-left: auto;
-            /* Đẩy sang bên phải */
-            word-wrap: break-word;
-            /* Đảm bảo văn bản dài sẽ tự động xuống dòng */
-        }
-
-        .received {
-            /* Gradient cho người nhận */
-            color: black;
-            text-align: left;
-            /* Đưa tin nhắn vào bên trái */
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            max-width: 50%;
-            /* Giới hạn chiều rộng */
-            margin-right: auto;
-            /* Đẩy sang bên trái */
-        }
-
-        /* Các nút hành động */
-        .message-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .reaction-btn {
-            border: none;
-            background: none;
-            font-size: 20px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            /* Hiệu ứng khi bấm vào */
-        }
-
-        /* Các reaction thả ra */
-        .reaction-container {
-            position: relative;
-        }
-
-        .reaction {
-            position: absolute;
-            font-size: 18px;
-            opacity: 1;
-            animation: floatUp 1s ease-in-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-        }
-
-        #messagesList {
-            max-height: 500px;
-        }
-    </style>
+    <link href="{{ asset('assets/css/cssChat.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 @php
     $title = 'Chat';
@@ -537,15 +370,12 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-
                                                                     <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b
-                                                                                class="memberCount"></b>)</h5>
+                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b class="memberCount"></b>)</h5>
                                                                         <ul class="list-group" id="membersList">
 
                                                                         </ul>
-                                                                    </div>
-
+                                                                    </div> 
                                                                     <div class="border-top border-top-dashed p-3">
                                                                         <h5 class="fs-15 mb-3">File đã gửi</h5>
 
@@ -554,9 +384,8 @@
                                                                                 id="sentFilesList">
 
                                                                             </div>
-
                                                                             <div class="text-center mt-2">
-                                                                                <button type="button"
+                                                                                <button  id="loadMore" type="button"
                                                                                     class="btn btn-danger">Load more <i
                                                                                         class="ri-arrow-right-fill align-bottom ms-1"></i></button>
                                                                             </div>
@@ -680,111 +509,6 @@
                                 </div>
                             </div>
                             <!-- Default Modals -->
-
-                            {{-- <div class="position-relative" id="channel-chat">
-                                <div class="p-3 user-chat-topbar">
-                                    <div class="row align-items-center">
-                                        <div class="col-sm-4 col-8">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0 d-block d-lg-none me-3">
-                                                    <a href="javascript: void(0);" class="user-chat-remove fs-18 p-1"><i
-                                                            class="ri-arrow-left-s-line align-bottom"></i></a>
-                                                </div>
-                                                <div class="flex-grow-1 overflow-hidden">
-                                                    <div class="d-flex align-items-center">
-                                                        <div
-                                                            class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            <img src="{{ asset('assets/images/users/avatar-2.jpg') }}"
-                                                                class="rounded-circle avatar-xs" alt="">
-                                                        </div>
-                                                        <div class="flex-grow-1 overflow-hidden">
-                                                            <h5 class="text-truncate mb-0 fs-16"><a
-                                                                    class="text-reset username" data-bs-toggle="offcanvas"
-                                                                    href="#userProfileCanvasExample"
-                                                                    aria-controls="userProfileCanvasExample">Lisa
-                                                                    Parker</a></h5>
-                                                            <p class="text-truncate text-muted fs-14 mb-0 userStatus">
-                                                                <small>24 Members</small>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-8 col-4">
-                                            <ul class="list-inline user-chat-nav text-end mb-0">
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="search" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
-                                                            <div class="p-2">
-                                                                <div class="search-box">
-                                                                    <input type="text"
-                                                                        class="form-control bg-light border-light"
-                                                                        placeholder="Search here..."
-                                                                        onkeyup="searchMessages()" id="searchMessage">
-                                                                    <i class="ri-search-2-line search-icon"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-
-                                                <li class="list-inline-item d-none d-lg-inline-block m-0">
-                                                    <button type="button" class="btn btn-ghost-secondary btn-icon"
-                                                        data-bs-toggle="offcanvas"
-                                                        data-bs-target="#userProfileCanvasExample"
-                                                        aria-controls="userProfileCanvasExample">
-                                                        <i data-feather="info" class="icon-sm"></i>
-                                                    </button>
-                                                </li>
-
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="more-vertical" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <a class="dropdown-item d-block d-lg-none user-profile-show"
-                                                                href="#"><i
-                                                                    class="ri-user-2-fill align-bottom text-muted me-2"></i>
-                                                                View Profile</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-inbox-archive-line align-bottom text-muted me-2"></i>
-                                                                Archive</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-mic-off-line align-bottom text-muted me-2"></i>
-                                                                Muted</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>
-                                                                Delete</a>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                </div>
-                                <!-- end chat user head -->
-                                <div class="chat-conversation p-3 p-lg-4" id="chat-conversation" data-simplebar>
-                                    <ul class="list-unstyled chat-conversation-list" id="channel-conversation">
-                                    </ul>
-                                    <!-- end chat-conversation-list -->
-
-                                </div>
-                                <div class="alert alert-warning alert-dismissible copyclipboard-alert px-4 fade show "
-                                    id="copyClipBoardChannel" role="alert">
-                                    Message copied
-                                </div>
-                            </div> --}}
-
                             <!-- end chat-conversation -->
 
                             <div class="chat-input-section p-3 p-lg-4">
@@ -1219,27 +943,37 @@
                         $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
                         return;
                     }
+                    let visibleImages = 6; // Số ảnh hiển thị ban đầu
+                    let allFiles = response.files; // Lưu toàn bộ danh sách ảnh
+                    function renderImages() {
+                        $('#sentFilesList').html(''); // Xóa nội dung cũ
+                        let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
 
-                    const filesHtml = response.files.map(file => {
-                        return `
-                                    <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar-xs">
-                                        <div
-                                            class="avatar-title bg-light text-secondary rounded fs-20">
-                                            <img src="/storage/${file.file_path}" alt="File đã gửi"
-                                            style="max-width: 100px; border-radius: 8px;">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex-grow-1 overflow-hidden">
+                        const filesHtml = filesToShow.map(file => {
+                            return `
+                        <div class="gallery-item">
+                            <img src="/storage/${file.file_path}" alt="File đã gửi">
+                        </div>
+                    `;
+                        }).join('');
 
-                                </div>
-                            </div> `;
-                    }).join('');
+                        $('#sentFilesList').append(filesHtml);
 
-                    $('#sentFilesList').append(filesHtml);
+                        if (visibleImages >= allFiles.length) {
+                            $('#loadMore').hide(); // Ẩn nút khi không còn ảnh để load
+                        } else {
+                            $('#loadMore').show(); // Hiển thị nút nếu còn ảnh
+                        }
+                    }
+
+                    // Render ảnh ban đầu
+                    renderImages();
+
+                    // Xử lý khi bấm nút "Xem thêm"
+                    $('#loadMore').off('click').on('click', function() {
+                        visibleImages += 6;
+                        renderImages();
+                    });
                 }
             });
         }

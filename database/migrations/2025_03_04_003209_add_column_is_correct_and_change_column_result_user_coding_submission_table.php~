@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('user_coding_submissions', function (Blueprint $table) {
+            if (Schema::hasColumn('user_coding_submissions', 'result')) {
+                $table->renameColumn('result', 'is_correct');
+            }
+
+            if (!Schema::hasColumn('user_coding_submissions', 'result')) {
+                $table->text('result')->nullable()->after('code');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('user_coding_submissions', function (Blueprint $table) {
+            if (Schema::hasColumn('user_coding_submissions', 'is_correct')) {
+                $table->renameColumn('is_correct', 'result');
+            }
+
+            if (Schema::hasColumn('user_coding_submissions', 'result')) {
+                $table->dropColumn('result');
+            }
+        });
+    }
+};
