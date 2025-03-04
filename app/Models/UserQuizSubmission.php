@@ -14,4 +14,9 @@ class UserQuizSubmission extends Model
         'quiz_id',
         'answers'
     ];
+
+    public function quiz()
+    {
+        return $this->belongsTo(Quiz::class);
+    }
 }

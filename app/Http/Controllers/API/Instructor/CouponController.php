@@ -6,35 +6,45 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Coupons\StoreCouponRequest;
 use App\Http\Requests\API\Coupons\UpdateCouponRequest;
 use App\Models\Coupon;
+use App\Models\CouponUse;
+use App\Models\User;
+use App\Notifications\CouponSendStudentNotification;
 use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CouponController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    use ApiResponseTrait;
-    public function index()
+    use LoggableTrait, ApiResponseTrait;
+
+    public function index(Request $request)
     {
-        //
         try {
-            //code...
             $user = Auth::user();
 
-            $coupons = Coupon::where('user_id',$user->id)->get();
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
 
-            if($coupons->isEmpty())
-            {
+            $query = Coupon::query()->where('user_id', $user->id);
+
+            if ($request->has('fromDate')) {
+                $query->whereDate('start_date', '>=', $request->input('fromDate'));
+            }
+            if ($request->has('toDate')) {
+                $query->whereDate('start_date', '<=', $request->input('toDate'));
+            }
+
+            $coupons = $query->latest()->get();
+
+            if ($coupons->isEmpty()) {
                 return $this->respondForbidden('Không có mã giảm giá nào!');
             }
 
-            return $this->respondOk('Danh sách mã giảm giá' , $coupons);
-            
+            return $this->respondOk('Danh sách mã giảm giá', $coupons);
         } catch (\Exception $e) {
-            //throw $th;
-
             $this->logError($e);
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -46,31 +56,67 @@ class CouponController extends Controller
      */
     public function store(StoreCouponRequest $request)
     {
-        //
         try {
-            //code...
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
 
             $data = $request->validated();
 
-            $data['user_id'] = Auth::id();
+            $data['user_id'] = $user->id;
+            $data['start_date'] = $data['start_date'] ?? now();
+            $data['max_usage'] = $data['max_usage'] === 0 ? null : $data['max_usage'];
 
-            $data['status'] = 1;
+            $coupon = Coupon::query()->create($data);
 
-            $data['used_count'] = 0;
-
-            if($data['user_id']  !== Auth::id())
-            {
-                return $this->respondForbidden('Không có quyền thực hiện thao tác');
+            if (!empty($data['specific_course'] === 1) && !empty($data['course_ids']) && is_array($data['course_ids'])) {
+                foreach ($data['course_ids'] as $course_id) {
+                    DB::table('coupon_course')->insert([
+                        'coupon_id' => $coupon->id,
+                        'course_id' => $course_id,
+                    ]);
+                }
+                $coupon->update([
+                    'specific_course' => 1
+                ]);
             }
 
-            $coupon = Coupon::create($data);
+            if (!empty($data['user_ids']) && is_array($data['user_ids'])) {
+                foreach ($data['user_ids'] as $user_id) {
+                    CouponUse::query()->updateOrCreate(
+                        [
+                            'user_id' => $user_id,
+                            'coupon_id' => $coupon->id
+                        ],
+                        [
+                            'status' => 'unused',
+                            'applied_at' => $data['start_date'] ?? null,
+                            'expired_at' => $data['expire_date'] ?? null
+                        ]
+                    );
+
+                    $notificationMember = User::query()->find($user_id);
+
+                    if ($notificationMember) {
+                        $notificationMember->notify(new CouponSendStudentNotification(
+                            $user,
+                            $notificationMember
+                        ));
+                    }
+                }
+            }
+
+            DB::commit();
 
             return $this->respondCreated('Tạo mã giảm giá thành công', $coupon);
-
         } catch (\Exception $e) {
-            //throw $th;
+            DB::rollBack();
 
-            $this->logError($e);
+            $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
@@ -81,7 +127,31 @@ class CouponController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $coupon = Coupon::query()
+                ->with([
+                    'couponUses.user',
+                    'couponCourses:id,name'
+                ])
+                ->where('user_id', $user->id)
+                ->find($id);
+
+            if (!$coupon) {
+                return $this->respondNotFound('Không có má giảm giá nào!');
+            }
+
+            return $this->respondOk('Thông tin mã giảm giá', $coupon);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
     }
 
     /**
@@ -89,35 +159,122 @@ class CouponController extends Controller
      */
     public function update(UpdateCouponRequest $request, string $id)
     {
-        //
         try {
-            //code...
-            $coupon = Coupon::find($id);
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $coupon = Coupon::query()
+                ->where('user_id', $user->id)
+                ->find($id);
 
             $data = $request->validated();
 
-            if(!$coupon)
-            {
-                return $this->respondForbidden('Không có mã giảm giá nào!');
+            if (!$coupon) {
+                return $this->respondNotFound('Không có mã giảm giá nào!');
             }
 
-            if($coupon->user_id  !== Auth::id())
-            {
-                return $this->respondForbidden('Không có quyền thực hiện thao tác');
+            if (isset($data['discount_type']) && $data['discount_type'] === 'fixed') {
+                $data['discount_max_value'] = 0;
+            }
+
+            if (isset($data['max_usage']) && $data['max_usage'] === 0) {
+                $data['max_usage'] = null;
+            }
+
+            if (!empty($data['specific_course']) && !empty($data['course_ids']) && is_array($data['course_ids'])) {
+                DB::table('coupon_course')->where('coupon_id', $coupon->id)->delete();
+
+                foreach ($data['course_ids'] as $course_id) {
+                    DB::table('coupon_course')->insert([
+                        'coupon_id' => $coupon->id,
+                        'course_id' => $course_id,
+                    ]);
+                }
+
+            } else {
+                DB::table('coupon_course')->where('coupon_id', $coupon->id)->delete();
             }
 
             $coupon->update($data);
 
-            return $this->respondOk('Thao tác thành công' , $coupon);
-            
-        } catch (\Exception $e) {
-            //throw $th;
+            if (isset($data['user_ids']) && is_array($data['user_ids'])) {
+                if (count($data['user_ids']) === 0) {
+                    CouponUse::query()
+                        ->where('coupon_id', $coupon->id)
+                        ->delete();
+                } else {
+                    CouponUse::query()
+                        ->where('coupon_id', $coupon->id)
+                        ->whereNotIn('user_id', $data['user_ids'])
+                        ->delete();
 
+                    foreach ($data['user_ids'] as $user_id) {
+                        CouponUse::query()->updateOrCreate(
+                            [
+                                'user_id' => $user_id,
+                                'coupon_id' => $coupon->id
+                            ],
+                            [
+                                'status' => 'unused',
+                                'applied_at' => $data['start_date'] ?? null,
+                                'expired_at' => $data['expire_date'] ?? null
+                            ]
+                        );
+                    }
+                }
+            } else {
+                CouponUse::query()
+                    ->where('coupon_id', $coupon->id)
+                    ->delete();
+            }
+
+            DB::commit();
+
+            return $this->respondOk('Thao tác thành công', $coupon);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+
+    }
+
+    public function toggleStatus(string $id, string $action)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $coupon = Coupon::query()
+                ->where('user_id', $user->id)
+                ->find($id);
+
+            if (!$coupon) {
+                return $this->respondForbidden('Không có mã giảm giá nào!');
+            }
+
+            $status = $action === 'enable' ? '1' : '0';
+
+            $coupon->status = $status;
+            $coupon->save();
+
+            $message = $action === 'enable' ? 'Kích hoạt thành công' : 'Vô hiệu hóa thành công';
+            return $this->respondOk($message);
+        } catch (\Exception $e) {
             $this->logError($e);
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
-        
     }
 
     /**
@@ -125,28 +282,25 @@ class CouponController extends Controller
      */
     public function destroy(string $id)
     {
-        //
         try {
-            //code...
-            $coupon = Coupon::findOrFail($id);
+            $user = Auth::user();
 
-            if(!$coupon)
-            {
-                return $this->respondForbidden('Không có mã giảm giá nào!');
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
             }
 
-            if($coupon->user_id  !== Auth::id())
-            {
-                return $this->respondForbidden('Không có quyền thực hiện thao tác');
+            $coupon = Coupon::query()
+                ->where('user_id', $user->id)
+                ->findOrFail($id);
+
+            if (!$coupon) {
+                return $this->respondNotFound('Không có mã giảm giá nào!');
             }
 
             $coupon->delete();
 
-            return $this->respondOk('Thao tác thành công' );
-            
+            return $this->respondOk('Thao tác thành công');
         } catch (\Exception $e) {
-            //throw $th;
-
             $this->logError($e);
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

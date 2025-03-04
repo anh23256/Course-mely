@@ -8,6 +8,8 @@ use App\Http\Requests\API\User\StoreCareerRequest;
 use App\Http\Requests\API\User\UpdateCareerRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
+use App\Models\Certificate;
+use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
@@ -389,13 +391,14 @@ class UserController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
+
     public function storeCareers(StoreCareerRequest $request)
     {
         try {
             if ($request->has('careers')) {
                 $user = Auth::user();
 
-                if(!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+                if (!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
 
                 $profile = Profile::query()->firstOrCreate([
                     'user_id' => $user->id
@@ -432,7 +435,7 @@ class UserController extends Controller
 
                 $user = Auth::user();
 
-                if(!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+                if (!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
 
                 $profile = Profile::query()->firstOrCreate([
                     'user_id' => $user->id
@@ -455,9 +458,9 @@ class UserController extends Controller
                         ]
                     );
                 } else return $this->respondNotFound('Không tìm thấy thông tin');
-            } 
+            }
 
-            return $this->respondOk('Cập nhật thành công',['user' => $user->load('profile.careers')]);
+            return $this->respondOk('Cập nhật thành công', ['user' => $user->load('profile.careers')]);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -479,6 +482,109 @@ class UserController extends Controller
             $this->logError($e);
 
             return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function getCouponUser()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $couponUse = CouponUse::query()
+                ->with('coupon', function ($query) {
+                    $query->select('id', 'code', 'name', 'discount_value', 'discount_type', 'status', 'specific_course')
+                        ->orderBy('discount_value', 'desc')
+                        ->with('couponCourses:id,name');
+                })
+                ->whereHas('coupon', function ($query) {
+                    $query->where('status', 1);
+                })
+                ->where('user_id', $user->id)
+                ->where('status', 'unused')
+                ->where(function ($query) {
+                    $query->whereNull('expired_at')
+                        ->orWhere('expired_at', '>', now());
+                })
+                ->select('id', 'user_id', 'coupon_id', 'applied_at', 'expired_at', 'status')
+                ->get();
+
+            if (!$couponUse) {
+                return $this->respondNotFound('Không tìm thấy mã giảm giá');
+            }
+            return $this->respondOk('Danh sách mã giảm giá của người dùng' . $user->name, $couponUse);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function downloadCertificate(Request $request, string $slug)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $course = Course::query()->where('slug', $slug)->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Không tìm thấy khoá học');
+            }
+
+            $courseUser = CourseUser::query()->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if (!$courseUser) {
+                return $this->respondNotFound('Bạn chưa tham gia khoá học');
+            }
+
+            $certificate = Certificate::query()
+                ->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if (!$certificate) {
+                return $this->respondNotFound('Không tìm thấy chứng chỉ');
+            }
+
+            return $this->respondOk('Thao tác thành công', $certificate->file_path);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getCertificate()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $certificate = Certificate::query()
+                ->where('user_id', $user->id)
+                ->get();
+
+            if (!$certificate) {
+                return $this->respondNotFound('Không tìm thấy chứng chỉ');
+            }
+
+            return $this->respondOk('Danh sách chứng chỉ', $certificate);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
         }
     }
 }

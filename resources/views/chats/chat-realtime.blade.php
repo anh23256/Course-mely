@@ -4,169 +4,7 @@
     <!-- glightbox css -->
     <link rel="stylesheet" href="{{ asset('assets/libs/glightbox/css/glightbox.min.css') }}">
     <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" type="text/css" />
-    <style>
-        .file-input {
-            display: none;
-        }
-
-        .message {
-            display: flex;
-            align-items: flex-start;
-            padding: 10px;
-            background-color: #f0f2f5;
-            /* Màu nền nhạt */
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin-right: 10px;
-        }
-
-        .message-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Nội dung tin nhắn */
-        .message-content {
-            flex: 1;
-            background-color: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .message-header strong {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .message-time {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .message p {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        /* Các nút hành động */
-        .message-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .like-btn,
-        .thumbs-up-btn {
-            border: none;
-            background: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .like-btn {
-            color: #e74c3c;
-            /* Màu đỏ cho nút ❤️ */
-        }
-
-        .thumbs-up-btn {
-            color: #3498db;
-            /* Màu xanh cho nút 👍 */
-        }
-
-        /* Đảm bảo độ cao tối thiểu cho tin nhắn */
-        .sender {
-            min-height: 40px;
-            max-height: 200px;
-            /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
-            overflow: auto;
-        }
-
-        .sender {
-            /* Gradient cho người gửi */
-            color: black;
-            text-align: left;
-            /* Đưa tin nhắn vào bên phải */
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            max-width: 50%;
-            /* Giới hạn chiều rộng */
-            margin-left: auto;
-            /* Đẩy sang bên phải */
-            word-wrap: break-word;
-            /* Đảm bảo văn bản dài sẽ tự động xuống dòng */
-        }
-
-        .received {
-            /* Gradient cho người nhận */
-            color: black;
-            text-align: left;
-            /* Đưa tin nhắn vào bên trái */
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            max-width: 50%;
-            /* Giới hạn chiều rộng */
-            margin-right: auto;
-            /* Đẩy sang bên trái */
-        }
-
-        /* Các nút hành động */
-        .message-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .reaction-btn {
-            border: none;
-            background: none;
-            font-size: 20px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            /* Hiệu ứng khi bấm vào */
-        }
-
-        /* Các reaction thả ra */
-        .reaction-container {
-            position: relative;
-        }
-
-        .reaction {
-            position: absolute;
-            font-size: 18px;
-            opacity: 1;
-            animation: floatUp 1s ease-in-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-        }
-    </style>
+    <link href="{{ asset('assets/css/cssChat.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 @php
     $title = 'Chat';
@@ -187,7 +25,7 @@
                                 <div class="modal-content rounded-3 shadow-lg">
                                     <div class="modal-header bg-primary text-white rounded-top p-3">
                                         <h5 class="modal-title text-white" id="addGroupModalLabel">
-                                            Thêm nhóm
+                                            Thêm hội thoại
                                         </h5>
                                         <button aria-label="Close" class="close text-white" data-dismiss="modal"
                                             type="button">
@@ -198,17 +36,17 @@
                                         <form id="createGroupChatForm">
                                             @csrf
                                             <div class="form-group mb-3">
-                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
-                                                <input class="form-control py-2" name="name" id="groupName"
-                                                    placeholder="Nhập tên nhóm" type="text" />
-                                            </div>
-                                            <div class="form-group mb-3">
                                                 <label for="groupType" class="font-weight-bold">Chọn kiểu nhóm</label>
                                                 <select class="form-select py-2" name="type" id="groupType">
                                                     <option value="#">Chọn kiểu nhóm</option>
                                                     <option value="1">Personal</option>
                                                     <option value="2">Group</option>
                                                 </select>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
+                                                <input class="form-control py-2" name="name" id="groupName"
+                                                    placeholder="Nhập tên nhóm" type="text" />
                                             </div>
                                             <div class="form-group mb-3">
                                                 <label for="groupMembers" class="font-weight-bold">Add Members</label>
@@ -283,8 +121,33 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list" id="userList">
-
+                                <ul class="list-unstyled chat-list chat-user-list conversationList">
+                                    @foreach ($data['channels'] as $channel)
+                                        @if ($channel->type == 'private')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-channel-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    <img src="{{ $channel->users->last()->avatar }}"
+                                                                        class="avatar-xs rounded-circle" alt="">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->users->last()->name }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
                                 </ul>
                             </div>
 
@@ -305,26 +168,31 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
+                                <ul class="list-unstyled chat-list chat-user-list mb-0 conversationList">
                                     @foreach ($data['channels'] as $channel)
-                                        <li class="">
-                                            <a href="#" class="unread-msg-user group-button"
-                                                data-channel-id="{{ $channel->id }}">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                        <div class="avatar-xxs">
-                                                            <div class="avatar-title bg-light rounded-circle text-body">#
+                                        @if ($channel->type == 'group')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-channel-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    #
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->name }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-truncate mb-0">
-                                                            {{ $channel->name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </li>
+                                                </a>
+                                            </li>
+                                        @endif
                                     @endforeach
 
                                 </ul>
@@ -365,8 +233,10 @@
                                                     <div class="d-flex align-items-center">
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            <img src="{{ asset('assets/images/users/multi-user.jpg') }}"
-                                                                class="rounded-circle avatar-xs" alt="">
+                                                            @if ($channel->type == 'private')
+                                                                <img id="imageUser" src=""
+                                                                    class="rounded-circle avatar-xs" alt="">
+                                                            @endif
                                                             <span class="user-status"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
@@ -500,237 +370,22 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-
                                                                     <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b
-                                                                                class="memberCount"></b>)</h5>
+                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b class="memberCount"></b>)</h5>
                                                                         <ul class="list-group" id="membersList">
 
                                                                         </ul>
-                                                                    </div>
-
+                                                                    </div> 
                                                                     <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Attached Files</h5>
+                                                                        <h5 class="fs-15 mb-3">File đã gửi</h5>
 
                                                                         <div class="vstack gap-2">
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-folder-zip-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">App
-                                                                                                pages.zip</a></h5>
-                                                                                        <div class="text-muted">2.2MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                            <div class="border rounded border-dashed p-2"
+                                                                                id="sentFilesList">
 
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-file-ppt-2-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">Velzon
-                                                                                                admin.ppt</a></h5>
-                                                                                        <div class="text-muted">2.4MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
                                                                             </div>
-
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-folder-zip-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">Images.zip</a>
-                                                                                        </h5>
-                                                                                        <div class="text-muted">1.2MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div class="border rounded border-dashed p-2">
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="flex-shrink-0 me-3">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div
-                                                                                                class="avatar-title bg-light text-secondary rounded fs-20">
-                                                                                                <i
-                                                                                                    class="ri-image-2-line"></i>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        class="flex-grow-1 overflow-hidden">
-                                                                                        <h5 class="fs-13 mb-1"><a
-                                                                                                href="#"
-                                                                                                class="text-body text-truncate d-block">bg-pattern.png</a>
-                                                                                        </h5>
-                                                                                        <div class="text-muted">1.1MB</div>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="d-flex gap-1">
-                                                                                            <button type="button"
-                                                                                                class="btn btn-icon text-muted btn-sm fs-18"><i
-                                                                                                    class="ri-download-2-line"></i></button>
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-icon text-muted btn-sm fs-18 dropdown"
-                                                                                                    type="button"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
-                                                                                                    <i
-                                                                                                        class="ri-more-fill"></i>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-share-line align-bottom me-2 text-muted"></i>
-                                                                                                            Share</a></li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-bookmark-line align-bottom me-2 text-muted"></i>
-                                                                                                            Bookmark</a>
-                                                                                                    </li>
-                                                                                                    <li><a class="dropdown-item"
-                                                                                                            href="#"><i
-                                                                                                                class="ri-delete-bin-line align-bottom me-2 text-muted"></i>
-                                                                                                            Delete</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
                                                                             <div class="text-center mt-2">
-                                                                                <button type="button"
+                                                                                <button  id="loadMore" type="button"
                                                                                     class="btn btn-danger">Load more <i
                                                                                         class="ri-arrow-right-fill align-bottom ms-1"></i></button>
                                                                             </div>
@@ -814,8 +469,7 @@
                                                 <li class="list-inline-item m-0">
                                                     <button type="button" class="btn btn-ghost-secondary btn-icon"
                                                         title="Thêm thành viên" data-bs-toggle="modal"
-                                                        data-bs-target="#myModal" 
-                                                        id="addMembersButton"
+                                                        data-bs-target="#myModal" id="addMembersButton"
                                                         data-channel-id="3">
                                                         <i class="las la-user-plus"
                                                             style="font-size: 20px;color:black"></i>
@@ -855,111 +509,6 @@
                                 </div>
                             </div>
                             <!-- Default Modals -->
-
-                            {{-- <div class="position-relative" id="channel-chat">
-                                <div class="p-3 user-chat-topbar">
-                                    <div class="row align-items-center">
-                                        <div class="col-sm-4 col-8">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0 d-block d-lg-none me-3">
-                                                    <a href="javascript: void(0);" class="user-chat-remove fs-18 p-1"><i
-                                                            class="ri-arrow-left-s-line align-bottom"></i></a>
-                                                </div>
-                                                <div class="flex-grow-1 overflow-hidden">
-                                                    <div class="d-flex align-items-center">
-                                                        <div
-                                                            class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            <img src="{{ asset('assets/images/users/avatar-2.jpg') }}"
-                                                                class="rounded-circle avatar-xs" alt="">
-                                                        </div>
-                                                        <div class="flex-grow-1 overflow-hidden">
-                                                            <h5 class="text-truncate mb-0 fs-16"><a
-                                                                    class="text-reset username" data-bs-toggle="offcanvas"
-                                                                    href="#userProfileCanvasExample"
-                                                                    aria-controls="userProfileCanvasExample">Lisa
-                                                                    Parker</a></h5>
-                                                            <p class="text-truncate text-muted fs-14 mb-0 userStatus">
-                                                                <small>24 Members</small>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-8 col-4">
-                                            <ul class="list-inline user-chat-nav text-end mb-0">
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="search" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
-                                                            <div class="p-2">
-                                                                <div class="search-box">
-                                                                    <input type="text"
-                                                                        class="form-control bg-light border-light"
-                                                                        placeholder="Search here..."
-                                                                        onkeyup="searchMessages()" id="searchMessage">
-                                                                    <i class="ri-search-2-line search-icon"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-
-                                                <li class="list-inline-item d-none d-lg-inline-block m-0">
-                                                    <button type="button" class="btn btn-ghost-secondary btn-icon"
-                                                        data-bs-toggle="offcanvas"
-                                                        data-bs-target="#userProfileCanvasExample"
-                                                        aria-controls="userProfileCanvasExample">
-                                                        <i data-feather="info" class="icon-sm"></i>
-                                                    </button>
-                                                </li>
-
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="more-vertical" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <a class="dropdown-item d-block d-lg-none user-profile-show"
-                                                                href="#"><i
-                                                                    class="ri-user-2-fill align-bottom text-muted me-2"></i>
-                                                                View Profile</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-inbox-archive-line align-bottom text-muted me-2"></i>
-                                                                Archive</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-mic-off-line align-bottom text-muted me-2"></i>
-                                                                Muted</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>
-                                                                Delete</a>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                </div>
-                                <!-- end chat user head -->
-                                <div class="chat-conversation p-3 p-lg-4" id="chat-conversation" data-simplebar>
-                                    <ul class="list-unstyled chat-conversation-list" id="channel-conversation">
-                                    </ul>
-                                    <!-- end chat-conversation-list -->
-
-                                </div>
-                                <div class="alert alert-warning alert-dismissible copyclipboard-alert px-4 fade show "
-                                    id="copyClipBoardChannel" role="alert">
-                                    Message copied
-                                </div>
-                            </div> --}}
-
                             <!-- end chat-conversation -->
 
                             <div class="chat-input-section p-3 p-lg-4">
@@ -967,8 +516,18 @@
                                 <form id="chatinput-form" enctype="multipart/form-data">
                                     @csrf
                                     <div class="row g-0 align-items-center">
+                                        <div id="previewContainer"
+                                            style="display: none; align-items: center; gap: 8px; max-width: 100%; padding: 5px; border-radius: 8px; position: relative;">
+                                            <img id="imagePreview" src="" alt="Image Preview"
+                                                style="max-width: 100px; max-height: 100px; border-radius: 5px; object-fit: cover;">
+                                            <button type="button" onclick="removeImage()"
+                                                style="border: none; background: red; color: white; padding: 5px; border-radius: 50%; font-size: 12px; width: 20px; height: 20px; cursor: pointer; position: absolute; top: -5px; right: -5px;">
+                                                ✖
+                                            </button>
+                                        </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links me-2">
+
                                                 <div class="links-list-item">
                                                     <button type="button"
                                                         class="btn btn-link text-decoration-none emoji-btn"
@@ -980,12 +539,13 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" id="fileInput" style="display: none;">
+                                                    <input type="file" name="fileinput" id="fileInput"
+                                                        style="display: none;">
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="col">
+
                                             <div class="chat-input-feedback">
                                                 Please Enter a Message
                                             </div>
@@ -1085,7 +645,35 @@
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
+            document.getElementById("fileInput").addEventListener("change", function() {
+                let file = this.files[0];
+                let messageInput = document.getElementById("messageInput");
+                let previewContainer = document.getElementById("previewContainer");
+                let imagePreview = document.getElementById("imagePreview");
+
+                if (file) {
+                    // messageInput.value = file.name;
+
+                    // Kiểm tra xem tệp có phải ảnh không
+                    if (file.type.startsWith("image/")) {
+                        let reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            previewContainer.style.display = "block"; // Hiển thị khu vực ảnh
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewContainer.style.display = "none"; // Ẩn nếu không phải ảnh
+                    }
+                }
+            });
         });
+
+        function removeImage() {
+            document.getElementById("imagePreview").src = "";
+            document.getElementById("previewContainer").style.display = "none";
+            document.getElementById("chatinput-form").reset();
+        }
     </script>
     <script>
         $(document).ready(function() {
@@ -1123,7 +711,7 @@
                 });
             });
 
-            $('#conversationList a').click(function(event) {
+            $('.conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
                 var channelId = $(this).data('channel-id'); // Lấy ID của nhóm chat
@@ -1137,11 +725,15 @@
                     },
                     success: function(response) {
                         console.log(response);
-                        if (response.status === 'success') {
+                        if (response) {
+
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
                             $('.memberCount').text(response.data.memberCount);
+                            $('#nameUser').text(response.data.direct);
+                            $('#imageUser').attr('src', response.data.avatar);
                             loadMessages(response.data.group.id);
+                            loadSentFiles(response.data.group.id);
                             let membersHtml = '';
                             response.data.member.forEach(function(member) {
                                 membersHtml += `<li class="list-group-item">
@@ -1181,18 +773,19 @@
                 console.log('Đã chọn nhóm với ID:', currentConversationId);
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
-                        loadMessages(currentConversationId);
+                        $('#messagesList').append(renderMessage(event));
+                        scrollToBottom();
                         // alert('Đã nhận tin nhắn mới');
                     });
             });
             $('#addMembersButton').click(function() {
-                event.preventDefault(); 
+                event.preventDefault();
                 var conversationId = $(this).data(
                     'channel-id'); // Giả sử bạn có conversationId từ data attribute của nút
                 $('#addMembers').select2(); // ID của select trong modal
                 var members = []; // Mảng chứa id các thành viên mới
                 console.log(conversationId);
-                
+
                 // Lấy tất cả các thành viên mới (có thể từ checkbox hoặc select box)
                 $('input[name="members[]"]:checked').each(function() {
                     members.push($(this).val()); // Thêm id thành viên vào mảng members
@@ -1211,7 +804,7 @@
                             if (response.status === 'success') {
                                 // Cập nhật UI sau khi thêm thành viên thành công
                                 var newMemberIds = response.data.conversation
-                                .users; // Giả sử trả về danh sách người dùng
+                                    .users; // Giả sử trả về danh sách người dùng
                                 newMemberIds.forEach(function(userId) {
                                     // Thêm thành viên vào UI (ví dụ: danh sách thành viên trong nhóm)
                                     $('#memberList').append('<li>' + userId + '</li>');
@@ -1226,7 +819,7 @@
                             alert('Thao tác không thành công.');
                         }
                     });
-                } 
+                }
             });
             // Khi người dùng nhấn gửi tin nhắn
             $('#sendMessageButton').click(function(e) {
@@ -1235,205 +828,197 @@
                 let parentId = $('#parentMessageId').val();
                 let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
                 let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-                if (currentConversationId && content) {
+                let formData = new FormData();
+
+                // Thêm dữ liệu tin nhắn
+                formData.append('conversation_id', currentConversationId);
+                formData.append('content', content);
+                formData.append('parent_id', parentId || '');
+                formData.append('type', type);
+                // Kiểm tra nếu có ảnh được chọn
+                let fileInput = $('#fileInput')[0].files[0];
+                if (fileInput) {
+                    formData.append('fileinput', fileInput);
+                    type = 'image'; // Đổi type thành image nếu có file ảnh
+                    formData.set('type', type);
+                }
+                if (currentConversationId && content || fileInput) {
                     // Gửi tin nhắn vào nhóm hiện tại
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
                         method: 'POST',
-                        data: {
-                            conversation_id: currentConversationId,
-                            content: content,
-                            parent_id: parentId, // Nếu có
-                            type: type,
-                            meta_data: metaData,
-                        },
+                        data: formData,
+                        processData: false,
+                        contentType: false,
                         success: function(response) {
-                            if (response.status === 'success') {
+                            console.log(response);
+
+                            if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
-                                loadMessages(
-                                    currentConversationId); // Tải lại tin nhắn của nhóm
+                                $('#fileInput').val(''); // Reset input file
+                                $('#imagePreviewContainer')
+                                    .hide(); // Ẩn preview ảnh sau khi gửi
+
+
+                                $('#messagesList').append(renderMessage(response));
+                                scrollToBottom();
                             }
+                        },
+                        error: function(xhr) {
+                            alert("Gửi tin nhắn thất bại, thử lại!");
+                            console.error(xhr.responseText);
                         }
                     });
                 } else {
-                    alert("Vui lòng chọn nhóm và nhập tin nhắn!");
+                    alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
             });
-            // function appendMessage(msg) {
-            //     let messagesDiv = $('#messages');
-            //     let messageElement = $('<div></div>');
-
-            //     if (msg.type === 'text') {
-            //         messageElement.html(`<p>${msg.content}</p>`);
-            //     } else if (msg.type === 'file' && msg.media.length > 0) {
-            //         let file = msg.media[0]; // Chỉ lấy file đầu tiên (có thể sửa để lấy nhiều file)
-
-            //         if (file.type.includes('image')) {
-            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
-        //                     <img src="${file.file_path}" alt="image" style="max-width: 200px;">`);
-            //         } else {
-            //             messageElement.html(`<p><strong>${msg.content}</strong></p>
-        //                     <a href="${file.file_path}" target="_blank">📂 ${file.original_name}</a>`);
-            //         }
-            //     }
-
-            //     messagesDiv.append(messageElement);
-            // }
-
-            // $('#sendMessageButton').click(function() {
-            //     var content = $('#messageInput').val();
-            //     var conversationId = $(this).data('conversation-id'); // ID của nhóm chat hiện tại
-            //     var parentId = $('#parentMessageId').val(); // Nếu đây là tin nhắn trả lời, lấy ID của tin nhắn cha
-            //     var type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
-            //     var metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-            //     console.log('Conversation ID:', conversationId); // Kiểm tra giá trị của conversationId
-            //     if (content) {
-            //         $.ajax({
-            //             url: "{{ route('admin.chats.sendGroupMessage') }}",
-            //             method: 'POST',
-            //             data: {
-            //                 conversation_id: conversationId,
-            //                 content: content,
-            //                 parent_id: parentId, // Nếu có
-            //                 type: type,
-            //                 meta_data: metaData,
-            //                 _token: $('meta[name="csrf-token"]').attr('content') // CSRF token
-            //             },
-            //             success: function(response) {
-            //                 if (response.status === 'success') {
-            //                     $('#messageInput').val(''); // Xóa nội dung nhập
-            //                     loadMessages(conversationId); // Tải lại tin nhắn
-            //                 }
-            //             }
-            //         });
-            //     }
-
-
-            // Lấy và hiển thị tin nhắn
-            // function loadMessages(currentConversationId) {
-
-            //     $.get('admin.chats.getGroupMessages. ' + currentConversationId, function(response) {
-            //         if (response.status === 'success') {
-            //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-            //             response.messages.forEach(function(message) {
-            //                 var messageHtml = `
-
-    });
-
-    // function loadMessages(conversationId) {
-    //     $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
-    //         if (response.status === 'success') {
-    //             $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-
-    //             const messagesHtml = response.messages.map(message => {
-    //                 const messageClass = message.sender.id == userId ? 'sender' : 'received';
-    //                 const time = formatTime(message.created_at);
-    //                 let messageContent = `<p>${message.content}</p>`; // Mặc định là text
-
-    //                 // Kiểm tra nếu tin nhắn có file
-    //                 if (message.meta_data) {
-    //                     try {
-    //                         let fileData = JSON.parse(message.meta_data); // Chuyển JSON thành object
-    //                         if (fileData.type.includes('image')) {
-    //                             messageContent =
-    //                                 `<img src="${fileData.file_path}" alt="Hình ảnh" style="max-width: 200px;">`;
-    //                         } else {
-    //                             messageContent =
-    //                                 `<a href="${fileData.file_path}" target="_blank">📂 ${fileData.original_name}</a>`;
-    //                         }
-    //                     } catch (error) {
-    //                         console.error("Lỗi phân tích meta_data:", error);
-    //                     }
-    //                 }
-
-    //                 return `
-        //                     <div class="message ${messageClass}">
-        //                         <div class="message-avatar">
-        //                             <img src="${message.sender.avatar}" alt="avatar">
-        //                         </div>
-        //                         <div class="message-content">
-        //                             <div class="message-header">
-        //                                 <strong>${message.sender.name}</strong>
-        //                                 <span class="message-time">${time}</span>
-        //                             </div>
-        //                             ${messageContent}
-        //                         </div>
-        //                     </div>`;
-    //             }).join('');
-
-    //             $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
-    //             $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
-    //         } else {
-    //             $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
-    //         }
-    //     });
-    // }
-
-
-    function loadMessages(conversationId) {
-        $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
-            if (response.status === 'success') {
-                // Lấy tất cả các tin nhắn
-                $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
-
-                const messagesHtml = response.messages.map(message => {
-                    console.log(response);
-
-                    // Kiểm tra ID người gửi và người nhận
-                    const messageClass = message.sender.id == userId ? 'sender' :
-                        'received'; // Xác định lớp tin nhắn   
-                    const time = formatTime(message.created_at);
-                    return `
-                                                                <div class=" message ${messageClass}">
-                                                                    <div class="message-avatar">
-                                                                        <img src="${message.sender.avatar}" alt="avatar">
-                                                                    </div>
-                                                                    <div class="message-content">
-                                                                        <div class="message-header">
-                                                                            <strong>${message.sender.name}</strong>
-                                                                            <span class="message-time">${time}</span>
-                                                                            </div>
-                                                                            <p>   
-                                                                                ${message.metaData ? message.metaData : message.content}
-                                                                                </p>
-                                                                         </div>
-                                                                    </div>`;
-                }).join(''); // Chuyển mảng thành chuỗi HTML
-
-                $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
-                $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
-            } else {
-                $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
-            }
         });
-    }
 
-    function formatTime(dateString) {
-        const date = new Date(dateString);
+        function loadMessages(conversationId) {
+            $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+                if (response.status === 'success') {
+                    // Lấy tất cả các tin nhắn
+                    $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
-        // Sử dụng toLocaleTimeString() để xử lý múi giờ và định dạng theo yêu cầu (giờ và phút)
-        const options = {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Asia/Ho_Chi_Minh', // Chỉnh múi giờ về Việt Nam (hoặc múi giờ khác nếu cần)
-        };
+                    const messagesHtml = response.messages.map(message => {
+                        // console.log(response);
 
-        return date.toLocaleTimeString('vi-VN', options); // Sử dụng 'vi-VN' để định dạng tiếng Việt
-    }
+                        // Kiểm tra ID người gửi và người nhận
+                        const messageClass = message.sender.id == userId ? 'sender' :
+                            'received'; // Xác định lớp tin nhắn   
+                        const time = formatTime(message.created_at);
+                        let messageContent = '';
+                        try {
+                            // Kiểm tra nếu có `media` và lấy ảnh đầu tiên
+                            if (message.media && message.media.length > 0) {
+                                let mediaFile = message.media[0].file_path; // Lấy đường dẫn ảnh
+                                messageContent = `
+                                    <p>${message.content}</p>
+                                    <img src="/storage/${mediaFile}" alt="Hình ảnh" 
+                                    style=max-width:350px; border-radius: 8px;">
+                                    `;
+                            } else {
+                                messageContent =
+                                    `<p>${message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                            }
+                        } catch (error) {
+                            console.error("Lỗi lấy ảnh:", error);
+                            messageContent =
+                                `<p>${message.content}</p>`; // Nếu lỗi, fallback về content
+                        }
+                        return `
+                            <div class=" message ${messageClass} style="padding-top: 10px">
+                                <div class="message-avatar">
+                                    <img src="${message.sender.avatar}" alt="avatar">
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <strong>${message.sender.name}</strong>
+                                        <span class="message-time">${time}</span>
+                                        </div>
+                                        <p>   
+                                             ${messageContent}
+                                            </p>
+                                        </div>
+                                </div>`;
+                    }).join(''); // Chuyển mảng thành chuỗi HTML
 
-    // function addReaction(event) {
-    //     const reactionContainer = event.target.closest('.message').querySelector('.reaction-container');
-    //     const reaction = document.createElement('div');
-    //     reaction.classList.add('reaction');
-    //     reaction.innerHTML = event.target.innerHTML; // Thêm ký hiệu reaction (❤️ hoặc 👍)
+                    $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
+                    $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
+                    scrollToBottom();
+                } else {
+                    $('#elmLoader').show(); // Hiển thị loader nếu có lỗi
+                }
+            });
+        }
 
-    //     // Vị trí ngẫu nhiên trên tin nhắn
-    //     const xOffset = Math.random() * 20 - 10; // Xê dịch ngẫu nhiên
-    //     const yOffset = Math.random() * 20 - 10;
+        function loadSentFiles(conversationId) {
+            $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
 
-    //     // Đặt vị trí reaction
-    //     reaction.style.left = `${xOffset}px`;
-    //     reaction.style.top = `${yOffset}px`;
+                if (response.status === 'success') {
+                    $('#sentFilesList').html(''); // Xóa danh sách cũ
+
+                    if (response.files.length === 0) {
+                        $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        return;
+                    }
+                    let visibleImages = 6; // Số ảnh hiển thị ban đầu
+                    let allFiles = response.files; // Lưu toàn bộ danh sách ảnh
+                    function renderImages() {
+                        $('#sentFilesList').html(''); // Xóa nội dung cũ
+                        let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
+
+                        const filesHtml = filesToShow.map(file => {
+                            return `
+                        <div class="gallery-item">
+                            <img src="/storage/${file.file_path}" alt="File đã gửi">
+                        </div>
+                    `;
+                        }).join('');
+
+                        $('#sentFilesList').append(filesHtml);
+
+                        if (visibleImages >= allFiles.length) {
+                            $('#loadMore').hide(); // Ẩn nút khi không còn ảnh để load
+                        } else {
+                            $('#loadMore').show(); // Hiển thị nút nếu còn ảnh
+                        }
+                    }
+
+                    // Render ảnh ban đầu
+                    renderImages();
+
+                    // Xử lý khi bấm nút "Xem thêm"
+                    $('#loadMore').off('click').on('click', function() {
+                        visibleImages += 6;
+                        renderImages();
+                    });
+                }
+            });
+        }
+
+        function scrollToBottom() {
+            let chatBox = document.getElementById("chatBox");
+            let simpleBarInstance = SimpleBar.instances.get(chatBox);
+
+            if (simpleBarInstance) {
+                requestAnimationFrame(() => {
+                    simpleBarInstance.getScrollElement().scrollTop = simpleBarInstance
+                        .getScrollElement()
+                        .scrollHeight;
+                });
+            }
+        }
+
+
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+
+            // Sử dụng toLocaleTimeString() để xử lý múi giờ và định dạng theo yêu cầu (giờ và phút)
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Asia/Ho_Chi_Minh', // Chỉnh múi giờ về Việt Nam (hoặc múi giờ khác nếu cần)
+            };
+
+            return date.toLocaleTimeString('vi-VN', options); // Sử dụng 'vi-VN' để định dạng tiếng Việt
+        }
+
+        // function addReaction(event) {
+        //     const reactionContainer = event.target.closest('.message').querySelector('.reaction-container');
+        //     const reaction = document.createElement('div');
+        //     reaction.classList.add('reaction');
+        //     reaction.innerHTML = event.target.innerHTML; // Thêm ký hiệu reaction (❤️ hoặc 👍)
+
+        //     // Vị trí ngẫu nhiên trên tin nhắn
+        //     const xOffset = Math.random() * 20 - 10; // Xê dịch ngẫu nhiên
+        //     const yOffset = Math.random() * 20 - 10;
+
+        //     // Đặt vị trí reaction
+        //     reaction.style.left = `${xOffset}px`;
+        //     reaction.style.top = `${yOffset}px`;
 
         //         // Thêm reaction vào container
         //         reactionContainer.appendChild(reaction);
@@ -1443,8 +1028,49 @@
         //             reaction.remove();
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
+        function renderMessage(response) {
+            
+            const messageClass = response.message.sender.id == userId ?
+                'sender' : 'received';
+            const time = formatTime(response.message.created_at);
+            let messageContent = '';
 
-        //     });
+            try {
+                if (response.message.media && response.message.media
+                    .length > 0) {
+                    let mediaFile = response.message.media[0]
+                        .file_path; // Lấy đường dẫn ảnh
+                    messageContent = `
+                <p>${response.message.content}</p>
+                <img src="/storage/${mediaFile}" alt="Hình ảnh" 
+                style="max-width:350px; border-radius: 8px;">
+            `;
+                } else {
+                    messageContent =
+                        `<p>${response.message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                }
+            } catch (error) {
+                console.error("Lỗi lấy ảnh:", error);
+                messageContent =
+                    `<p>${response.message.content}</p>`; // Nếu lỗi, fallback về content
+            }
+
+            let messageHtml = `
+        <div class="message ${messageClass}" style="padding-top: 10px">
+            <div class="message-avatar">
+                <img src="${response.message.sender.avatar}" alt="avatar">
+            </div>
+            <div class="message-content">
+                <div class="message-header">
+                    <strong>${response.message.sender.name}</strong>
+                    <span class="message-time">${time}</span>
+                </div>
+                ${messageContent}
+            </div>
+        </div>
+    `;
+            return messageHtml;
+        }
     </script>
     <script>
         @if (session('success'))

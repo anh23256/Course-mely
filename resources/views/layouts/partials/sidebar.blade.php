@@ -180,11 +180,12 @@
                     </li>
                 </ul>
             </div>
-
+            @canany(['coupons.create', 'coupons.edit', 'coupons.read', 'coupons.delete'])
             <a class="nav-link menu-link" href="#sidebarCoupon" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarCoupon">
                 <i class=" ri-coupon-line"></i> <span data-key="t-authentication">Quản lý mã giảm giá</span>
             </a>
+            @endcanany
             <div class="collapse menu-dropdown" id="sidebarCoupon">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">

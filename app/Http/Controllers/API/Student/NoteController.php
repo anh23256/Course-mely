@@ -18,7 +18,7 @@ class NoteController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
 
-    public function index(Request $request, string $courseId)
+    public function index(Request $request, string $slug)
     {
         try {
             $user = Auth::user();
@@ -27,38 +27,54 @@ class NoteController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
-            $hasPurchased = $this->hashPurchasedCourse($user->id, $courseId);
-
-            if (!$hasPurchased) {
-                return $this->respondForbidden('Bạn chưa mua khoá học này');
-            }
+            $chapterId = $request->query('chapterId');
+            $sortOrder = $request->query('sortOrder', 'desc');
 
             $course = Course::with([
-                'chapters.lessons.notes' => function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                }
-            ])->find($courseId);
+                'chapters.lessons'
+            ])->where('slug', $slug)->first();
+
+            $courseId = $course->id;
 
             if (!$course) {
                 return $this->respondNotFound('Không tìm thấy khoá học');
             }
 
+            $hasPurchased = $this->hashPurchasedCourse($user->id, $course->id);
+
+            if (!$hasPurchased) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            }
+
             $query = Note::query()->where('user_id', $user->id)
                 ->whereHas('lesson.chapter.course', function ($q) use ($courseId) {
                     $q->where('id', $courseId);
-                });
+                })
+                ->when($chapterId, function ($q) use ($chapterId) {
+                    $q->whereHas('lesson.chapter', function ($subQuery) use ($chapterId) {
+                        $subQuery->where('id', $chapterId);
+                    });
+                })->with([
+                    'lesson:id,title,chapter_id',
+                    'lesson.chapter:id,title'
+                ])
+                ->orderBy('created_at', $sortOrder)
+                ->get();
 
-            if ($request->filled('lesson_id')) {
-                $query->where('lesson_id', $request->lesson_id);
-            }
+            $formattedNotes = $query->map(function ($note) {
+                return [
+                    'id' => $note->id,
+                    'content' => $note->content,
+                    'created_at' => $note->created_at,
+                    'chapter_name' => $note->lesson->chapter->title ?? null,
+                    'lesson_name' => $note->lesson->title ?? null,
+                    'lesson_id' => $note->lesson_id,
+                    'time' => $note->time
+                ];
+            });
 
-            if ($request->filled('time_min') && $request->filled('time_max')) {
-                $query->whereBetween('time', [$request->time_min, $request->time_max]);
-            }
-
-            $notes = $query->paginate(10);
-
-            return $this->respondOk('Danh sách ghi chú của khoá học: ' . $course->name, $notes);
+            return $this->respondOk('Danh sách ghi chú của khoá học: ' . $course->name, $formattedNotes
+            );
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -113,6 +129,16 @@ class NoteController extends Controller
 
             $user = Auth::user();
 
+            if (!$user) {
+                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
+
+            $lesson = Lesson::query()->find($data['lesson_id']);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Không tìm thấy bài học');
+            }
+
             $note = Note::query()->find($id);
 
             if (!$note) {
@@ -124,7 +150,6 @@ class NoteController extends Controller
             }
 
             $note->update([
-                'time' => $data['time'],
                 'content' => $data['content'],
             ]);
 
@@ -140,6 +165,10 @@ class NoteController extends Controller
     {
         try {
             $user = Auth::user();
+
+            if (!$user) {
+                $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
+            }
 
             $note = Note::query()->find($id);
 

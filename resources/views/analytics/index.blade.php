@@ -12,9 +12,7 @@
 
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboards</a>
-                            </li>
-                            <li class="breadcrumb-item active">Thống kê truy cập</li>
+                            <li class="breadcrumb-item active dateRangePicker"></li>
                         </ol>
                     </div>
 
@@ -23,217 +21,72 @@
         </div>
 
         <div class="row">
-            <div class="col-xxl-5">
-                <div class="d-flex flex-column h-100">
-                    <div class="row h-100">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="row align-items-end">
-                                        <div class="col-sm-8">
-                                            <div class="p-3">
-                                                <p class="fs-16 lh-base">Upgrade your plan from a <span
-                                                        class="fw-semibold">Free trial</span>, to ‘Premium
-                                                    Plan’ <i class="mdi mdi-arrow-right"></i></p>
-                                                <div class="mt-3">
-                                                    <a href="pages-pricing.html" class="btn btn-success">Upgrade
-                                                        Account!</a>
-                                                </div>
-                                            </div>
+            <div class="col-xxl-7">
+                <div class="d-flex flex-column">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card card-animate">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="fw-medium text-muted mb-0">Tổng người dùng duyệt web</p>
+                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
+                                                    data-target="28.05">{{ number_format($analyticsUserSession[0]['totalUsers'] ?? 0) }}
+                                                    người</span>
+                                            </h2>
                                         </div>
-                                        <div class="col-sm-4">
-                                            <div class="px-3">
-                                                <img src="../assets/images/user-illustarator-2.png" class="img-fluid"
-                                                    alt="">
+                                        <div>
+                                            <div class="avatar-sm flex-shrink-0">
+                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                                    <i class="bx bx-user text-info"></i>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                </div> <!-- end card-body-->
+                                </div><!-- end card body -->
+                            </div> <!-- end card-->
+                        </div> <!-- end col-->
+
+                        <div class="col-md-6">
+                            <div class="card card-animate">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="fw-medium text-muted mb-0">Số phiên duyệt web</p>
+                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
+                                                    data-target="97.66">{{ number_format($analyticsUserSession[0]['sessions'] ?? 0) }}
+                                                    phiên</span>
+                                            </h2>
+                                        </div>
+                                        <div>
+                                            <div class="avatar-sm flex-shrink-0">
+                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                                    <i class="bx bx-pulse text-info"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!-- end card body -->
+                            </div> <!-- end card-->
+                        </div> <!-- end col-->
+                    </div> <!-- end row-->
+                    <div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="line_chart_basic" data-colors='["--vz-primary","--vz-success","--vz-danger"]'
+                                    class="apex-charts" dir="ltr"></div>
                             </div>
-                        </div> <!-- end col-->
-                    </div> <!-- end row-->
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Users</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="28.05">0</span>k
-                                            </h2>
-                                            <p class="mb-0 text-muted"><span class="badge bg-light text-success mb-0"> <i
-                                                        class="ri-arrow-up-line align-middle"></i> 16.24 %
-                                                </span> vs. previous month</p>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i data-feather="users" class="text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Sessions</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="97.66">0</span>k
-                                            </h2>
-                                            <p class="mb-0 text-muted"><span class="badge bg-light text-danger mb-0"> <i
-                                                        class="ri-arrow-down-line align-middle"></i> 3.96
-                                                    % </span> vs. previous month</p>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i data-feather="activity" class="text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-                    </div> <!-- end row-->
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Avg. Visit Duration</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="3">0</span>m
-                                                <span class="counter-value" data-target="40">0</span>sec
-                                            </h2>
-                                            <p class="mb-0 text-muted"><span class="badge bg-light text-danger mb-0"> <i
-                                                        class="ri-arrow-down-line align-middle"></i> 0.24
-                                                    % </span> vs. previous month</p>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i data-feather="clock" class="text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Bounce Rate</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="33.48">0</span>%
-                                            </h2>
-                                            <p class="mb-0 text-muted"><span class="badge bg-light text-success mb-0"> <i
-                                                        class="ri-arrow-up-line align-middle"></i> 7.05 %
-                                                </span> vs. previous month</p>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i data-feather="external-link" class="text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-                    </div> <!-- end row-->
+                        </div>
+                    </div>
                 </div>
             </div> <!-- end col-->
 
-            <div class="col-xxl-7">
-                <div class="row h-100">
-                    <div class="col-xl-6">
-                        <div class="card card-height-100">
+            <div class="col-xxl-5">
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
                             <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Live Users By Country</h4>
-                                <div class="flex-shrink-0">
-                                    <button type="button" class="btn btn-soft-primary btn-sm">
-                                        Export Report
-                                    </button>
-                                </div>
-                            </div><!-- end card header -->
-
-                            <!-- card body -->
-                            <div class="card-body">
-
-                                <div id="users-by-country" data-colors='["--vz-light"]' class="text-center"
-                                    style="height: 252px"></div>
-
-                                <div class="table-responsive table-card mt-3">
-                                    <table
-                                        class="table table-borderless table-sm table-centered align-middle table-nowrap mb-1">
-                                        <thead
-                                            class="text-muted border-dashed border border-start-0 border-end-0 bg-light-subtle">
-                                            <tr>
-                                                <th>Duration (Secs)</th>
-                                                <th style="width: 30%;">Sessions</th>
-                                                <th style="width: 30%;">Views</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="border-0">
-                                            <tr>
-                                                <td>0-30</td>
-                                                <td>2,250</td>
-                                                <td>4,250</td>
-                                            </tr>
-                                            <tr>
-                                                <td>31-60</td>
-                                                <td>1,501</td>
-                                                <td>2,050</td>
-                                            </tr>
-                                            <tr>
-                                                <td>61-120</td>
-                                                <td>750</td>
-                                                <td>1,600</td>
-                                            </tr>
-                                            <tr>
-                                                <td>121-240</td>
-                                                <td>540</td>
-                                                <td>1,040</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <!-- end card body -->
-                        </div><!-- end card -->
-                    </div><!-- end col -->
-
-                    <div class="col-xl-6">
-                        <div class="card card-height-100">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Sessions by Countries</h4>
-                                <div>
-                                    <button type="button" class="btn btn-soft-secondary btn-sm">
-                                        ALL
-                                    </button>
-                                    <button type="button" class="btn btn-soft-primary btn-sm">
-                                        1M
-                                    </button>
-                                    <button type="button" class="btn btn-soft-secondary btn-sm">
-                                        6M
-                                    </button>
-                                </div>
+                                <h4 class="card-title mb-0 flex-grow-1">Số phiên duyệt web theo đất nước</h4>
                             </div>
                             <div class="card-body p-0">
                                 <div>
@@ -336,7 +189,8 @@
                     <div class="card-body p-0">
                         <div>
                             <div id="audiences-sessions-country-charts" data-colors='["--vz-success", "--vz-info"]'
-                                class="apex-charts" dir="ltr"> </div>
+                                class="apex-charts" dir="ltr">
+                            </div>
                         </div>
                     </div><!-- end cardbody -->
                 </div><!-- end card -->
@@ -523,7 +377,8 @@
                         </div><!-- end -->
 
                         <div class="mt-2 text-center">
-                            <a href="javascript:void(0);" class="text-muted text-decoration-underline">Show All</a>
+                            <a href="javascript:void(0);" class="text-muted text-decoration-underline">Show
+                                All</a>
                         </div>
 
                     </div><!-- end card body -->
@@ -631,4 +486,206 @@
 
     <!-- Dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard-analytics.init.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
+    <script src="{{ asset('assets/js/pages/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
+
+    <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
+    <!-- Marketplace init -->
+    <script src="{{ asset('assets/js/pages/dashboard-nft.init.js') }}"></script>
+
+    <script>
+        $(".dateRangePicker").each(function() {
+            let button = $(this);
+
+            function updateDateRangeText(start, end) {
+                button.html("📅 " + start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY"));
+
+                button.attr("data-start", start.format("YYYY-MM-DD"));
+                button.attr("data-end", end.format("YYYY-MM-DD"));
+            }
+
+            let defaultStart = moment().startOf("month");
+            let defaultEnd = moment();
+
+            button.daterangepicker({
+                    autoUpdateInput: false,
+                    showDropdowns: true,
+                    linkedCalendars: false,
+                    minDate: moment("2000-01-01"),
+                    maxDate: moment(),
+                    startDate: defaultStart,
+                    endDate: defaultEnd,
+                    ranges: {
+                        "Hôm nay": [moment(), moment()],
+                        "Hôm qua": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+                        "7 ngày trước": [moment().subtract(6, "days"), moment()],
+                        "Tháng này": [moment().startOf("month"), moment().endOf("month")],
+                        "Tháng trước": [
+                            moment().subtract(1, "month").startOf("month"),
+                            moment().subtract(1, "month").endOf("month"),
+                        ],
+                        "1 năm trước": [
+                            moment().subtract(1, "year").startOf("year"),
+                            moment().subtract(1, "year").endOf("year")
+                        ],
+
+                    },
+                    locale: {
+                        format: "DD/MM/YYYY",
+                        applyLabel: "Áp dụng",
+                        cancelLabel: "Hủy",
+                        customRangeLabel: "Tùy chỉnh",
+                    },
+                },
+                function(start, end) {
+                    updateDateRangeText(start, end);
+                }
+            );
+
+            updateDateRangeText(defaultStart, defaultEnd);
+        });
+
+        function getFirstDayOfWeek(year, weekNumber) {
+            let firstDayOfYear = new Date(year, 0, 1);
+            let dayOffset = firstDayOfYear.getDay() === 0 ? 1 : (8 - firstDayOfYear.getDay());
+            let firstWeekDate = new Date(year, 0, 1 + (weekNumber - 1) * 7 + dayOffset);
+            return firstWeekDate.toISOString().split("T")[0]; // YYYY-MM-DD
+        }
+
+        function extractSeries(data, groupBy, metric) {
+            let seriesData = {};
+
+            data.forEach(item => {
+                let formattedDate = "";
+
+                if (groupBy === "yearWeek" && item.yearWeek) {
+                    const year = parseInt(item.yearWeek.substring(0, 4), 10);
+                    const weekNumber = parseInt(item.yearWeek.substring(4), 10);
+                    formattedDate = getFirstDayOfWeek(year, weekNumber);
+                } else if (groupBy === "yearMonth" && item.yearMonth) {
+                    const year = parseInt(item.yearMonth.substring(0, 4), 10);
+                    const month = parseInt(item.yearMonth.substring(4), 10);
+                    formattedDate = `${year}-${String(month).padStart(2, "0")}-01`;
+                } else if (groupBy === "date" && item.date) {
+                    formattedDate = new Date(item.date).toISOString().split("T")[0];
+                }
+
+                if (formattedDate) {
+                    seriesData[formattedDate] = (seriesData[formattedDate] || 0) + (parseInt(item[metric]) || 0);
+                }
+            });
+
+            return Object.keys(seriesData).map(date => ({
+                date: date,
+                value: seriesData[date]
+            }));
+        }
+
+        let charCountries;
+
+        function updateCountriesChart(countriesData = []) {
+            let chartContainer = document.querySelector("#countries_charts");
+
+            if (typeof charCountries !== "undefined" && charCountries) {
+                charCountries.destroy();
+                charCountries = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!countriesData || countriesData.length === 0) {
+                chartContainer.innerHTML = `
+<div style="text-align: center; padding: 20px; color: #999;">
+    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+</div>`;
+                return;
+            }
+            let countries = [];
+            let viewPage = [];
+            countriesData.forEach(item => {             
+                countries.push(item.country);
+                viewPage.push(parseFloat(item.screenPageViews));
+            });
+
+            let options = {
+                series: [{
+                    name: 'Lượt',
+                    data: viewPage
+                }],
+                xaxis: {
+                    categories: countries
+                },
+                chart: {
+                    type: "bar",
+                    height: 436,
+                    toolbar: {
+                        show: false
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        horizontal: true,
+                        distributed: true
+                    }
+                },
+                colors: [
+                    "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6610f2", "#e83e8c",
+                    "#fd7e14", "#6c757d", "#343a40", "#ff00ff", "#00ff00", "#00ffff", "#ff5733",
+                    "#800000", "#808000", "#008080", "#000080", "#4B0082", "#FFD700"
+                ],
+                dataLabels: {
+                    enabled: true,
+                    offsetX: 32,
+                    style: {
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        colors: ["#adb5bd"]
+                    }
+                }
+            };
+
+            charCountries = new ApexCharts(document.querySelector("#countries_charts"), options);
+            charCountries.render();
+        }
+
+        function line_chart_basic(line_chart_basic = []) {
+            let type = 'date';
+            if (line_chart_basic[0]['yearWeek']) {
+                type = 'yearWeek';
+            } else if (line_chart_basic[0]['yearMonth']) {
+                type = 'yearMonth';
+            }
+
+            let categories = extractSeries(line_chart_basic, type, "date").map(item => item.date);
+
+            let series = [{
+                    name: "Người dùng mới",
+                    data: extractSeries(line_chart_basic, type, "newUsers").map(item => item.value)
+                },
+                {
+                    name: "Tổng người dùng",
+                    data: extractSeries(line_chart_basic, type, "totalUsers").map(item => item.value)
+                },
+                {
+                    name: "Số phiên duyệt web",
+                    data: extractSeries(line_chart_basic, type, "sessions").map(item => item.value)
+                }
+            ];
+
+            chart.updateOptions({
+                series: series,
+                xaxis: {
+                    categories: categories
+                },
+                chart: {
+                    height: 300
+                }
+            });
+        }
+
+        line_chart_basic(@json($analyticsData));
+        updateCountriesChart(@json($analyticsCountriesSession));
+    </script>
 @endpush

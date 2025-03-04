@@ -26,7 +26,17 @@ class RoleHasAdmins
         ) {
             return $next($request);
         }
-        elseif (
+        // Kiểm tra quyền cho employee
+        // if ( Auth::check() && Auth::user()->hasRole('employee')) {
+        //     // Kiểm tra nếu yêu cầu truy cập vào banners hoặc posts
+        //     if ($request->is('admin/banners/*') || $request->is('admin/posts/*') || $request->is('admin/dashboard')) {
+        //         return $next($request);
+        //     }
+
+        //     // Nếu không phải banners hoặc posts, từ chối quyền truy cập
+        //     return abort(403, 'Bạn không có quyền truy cập vào hệ thống này.');
+        // }
+        if (
             Auth::check() && (
                 Auth::user()->hasRole('admin') || Auth::user()->hasRole('employee')
             ) &&

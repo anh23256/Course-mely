@@ -270,8 +270,30 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Bài học chưa được bắt đầu');
             }
 
-            $lessonProcess->last_time_video = $lastTime;
-            $lessonProcess->save();
+            $videoDuration = $lesson->lessonable->duration;
+            if ($lastTime > $videoDuration) {
+                return $this->respondBadRequest('Thời gian không thể vượt quá tổng thời lượng video');
+            }
+
+            $needsUpdate = false;
+
+            if ($lastTime > $lessonProcess->last_time_video) {
+                $lessonProcess->last_time_video = $lastTime;
+
+                $completionThreshold = 2 / 3;
+                if ($lastTime >= $videoDuration * $completionThreshold) {
+                    $lessonProcess->is_completed = true;
+                    $needsUpdate = true;
+                }
+
+                $lessonProcess->save();
+            }
+
+            if ($needsUpdate) {
+                $chapter = $lesson->chapter;
+                $courseId = $chapter->course_id;
+                $this->updateCourseProgress($courseId, $user->id);
+            }
 
             return $this->respondOk('Lưu tiến trình thời gian thành công');
         } catch (\Exception $e) {
@@ -294,23 +316,28 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Bài học không tồn tại');
             }
 
-            $previousLesson = Lesson::query()
-                ->where('chapter_id', $lesson->chapter_id)
-                ->where('order', '<', $lesson->order)
-                ->orderBy('order', 'desc')
-                ->first();
+            $chapter = $lesson->chapter;
+            $course = $chapter->course;
+            $courseLevel = $course->level;
 
-            if ($previousLesson) {
-                $previousLessonProgress = LessonProgress::query()
-                    ->where('lesson_id', $previousLesson->id)
-                    ->where('user_id', $user->id)
+            if ($courseLevel === 'advanced') {
+                $previousLesson = Lesson::query()
+                    ->where('chapter_id', $lesson->chapter_id)
+                    ->where('order', '<', $lesson->order)
+                    ->orderBy('order', 'desc')
                     ->first();
 
-                if (!$previousLessonProgress || !$previousLessonProgress->is_completed) {
-                    return $this->respondOk('Bạn cần hoàn thành bài học trước trước khi tiếp tục.');
+                if ($previousLesson) {
+                    $previousLessonProgress = LessonProgress::query()
+                        ->where('lesson_id', $previousLesson->id)
+                        ->where('user_id', $user->id)
+                        ->first();
+
+                    if (!$previousLessonProgress || !$previousLessonProgress->is_completed) {
+                        return $this->respondOk('Bạn cần hoàn thành bài học trước trước khi tiếp tục.');
+                    }
                 }
             }
-
 
             $lessonableType = $lesson->lessonable_type;
             $lessonable = $lesson->lessonable;
@@ -418,9 +445,10 @@ class LearningPathController extends Controller
                     break;
 
                 case Coding::class:
-                    $userCodeResult = $request->input('code');
+                    $userCodingInput = $request->input('code');
+                    $userCodeResult = $request->input('result');
 
-                    if (!$userCodeResult) {
+                    if (!$userCodingInput) {
                         return $this->respondError('Vui lòng thực hiện bài kiểm tra.');
                     }
 
@@ -435,8 +463,9 @@ class LearningPathController extends Controller
                     UserCodingSubmission::query()->create([
                         'user_id' => $user->id,
                         'coding_id' => $lessonable->id,
-                        'code' => $userCodeResult,
-                        'result' => 1
+                        'code' => $userCodingInput,
+                        'result' => $userCodeResult,
+                        'is_correct' => $userCodeResult === $expectedResult
                     ]);
 
                     break;
@@ -463,6 +492,150 @@ class LearningPathController extends Controller
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
+    }
+
+    public function getQuizSubmission(string $lessonId, string $submissionQuizId)
+    {
+        try {
+            $user = Auth::user();
+
+            $lesson = Lesson::query()->find($lessonId);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Bài học không tồn tại');
+            }
+
+            $chapter = $lesson->chapter;
+            $course = $chapter->course;
+
+            $course = Course::query()->find($course->id);
+
+            if (!$course) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $userPurchaseCourse = $this->hashPurchasedCourse($user->id, $course->id);
+
+            if (!$userPurchaseCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            }
+
+            $quizSubmission
+                = UserQuizSubmission::query()
+                ->with([
+                    'quiz.questions.answers'
+                ])
+                ->where('id', $submissionQuizId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$quizSubmission) {
+                return $this->respondNotFound('Bạn chưa thực hiện bài kiểm tra');
+            }
+
+            $userAnswers = json_decode($quizSubmission->answers, true);
+            $quiz = $quizSubmission->quiz;
+
+            $questions = $quiz->questions->map(function ($question) use ($userAnswers) {
+                $selectedAnswer = collect($userAnswers)
+                    ->firstWhere('question_id', $question->id);
+
+                return [
+                    'id' => $question->id,
+                    'answers' => $question->answers->map(function ($answer) use ($selectedAnswer) {
+                        return [
+                            'id' => $answer->id,
+                            'is_correct' => $answer->is_correct,
+                            'is_selected' => $selectedAnswer && $selectedAnswer['answer_id'] == $answer->id,
+                        ];
+                    }),
+                ];
+            });
+
+            $response = [
+                'quiz' => [
+                    'id' => $quiz->id,
+                    'title' => $quiz->title,
+                ],
+                'questions' => $questions,
+                'submitted_at' => $quizSubmission->created_at
+            ];
+
+            return $this->respondOk('Thông tin bài kiểm tra', $response);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getCodingSubmission(string $lessonId, string $submissionCodingId)
+    {
+        try {
+            $user = Auth::user();
+
+            $lesson = Lesson::query()->find($lessonId);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Bài học không tồn tại');
+            }
+
+            $chapter = $lesson->chapter;
+            $course = $chapter->course;
+
+            $course = Course::query()->find($course->id);
+
+            if (!$course) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $userPurchaseCourse = $this->hashPurchasedCourse($user->id, $course->id);
+
+            if (!$userPurchaseCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            }
+
+            $codingSubmission = UserCodingSubmission::query()
+                ->with('coding')
+                ->where('user_id', $user->id)
+                ->where('coding_id', $submissionCodingId)
+                ->first();
+
+            if (!$codingSubmission) {
+                return $this->respondNotFound('Bài thực hành chưa thực hiện');
+            }
+
+            $response = [
+                'coding' => [
+                    'id' => $codingSubmission->coding->id,
+                    'title' => $codingSubmission->coding->title,
+                    'language' => $codingSubmission->coding->language,
+                    'sample_code' => $codingSubmission->coding->sample_code,
+                    'result_code' => $codingSubmission->coding->result_code,
+                    'solution_code' => $codingSubmission->coding->solution_code,
+                ],
+                'solution' => [
+                    'code' => $codingSubmission->code,
+                    'output' => $codingSubmission->result,
+                    'is_correct' => $codingSubmission->is_correct,
+                    'submitted_at' => $codingSubmission->created_at,
+                ],
+            ];
+
+            return $this->respondOk('Thông tin bài tập bạn đã nộp', $response);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    private function hashPurchasedCourse($userId, $courseId)
+    {
+        return CourseUser::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->exists();
     }
 
     private function updateCourseProgress($courseId, $userId)

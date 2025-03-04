@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\API\Ratings;
 
+use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRatingRequest extends FormRequest
+class StoreRatingRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +23,7 @@ class StoreRatingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'course_id' => 'required|integer|exists:courses,id',
+            'course_slug' => 'required|string',
             'content' => 'nullable|string|max:2000',
             'rate' => 'required|int|min:0|max:5',
         ];
@@ -30,9 +31,6 @@ class StoreRatingRequest extends FormRequest
     public function messages()
     {
         return [
-            'course.required' =>'Khóa học không được để trống',
-            'course.integer' =>'Khóa học phải là số nguyên',
-            'course.exists' =>'Khóa học không tồn tại',
             'content.max'=>'Nội dung không được quá 2000 kí tự',
             'content.string'=>'Nội dung phải là chuỗi kí tự',
             'rate.required'=>'Đánh giá là bắt buộc',

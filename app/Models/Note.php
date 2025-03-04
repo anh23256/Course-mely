@@ -12,6 +12,12 @@ class Note extends Model
     protected $fillable = [
         'user_id',
         'lesson_id',
-        'time'
+        'time',
+        'content'
     ];
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 }
