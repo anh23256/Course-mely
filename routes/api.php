@@ -24,6 +24,7 @@ use App\Http\Controllers\API\Instructor\RegisterController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
 use App\Http\Controllers\API\Instructor\StatisticController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
+use App\Http\Controllers\API\Instructor\TopInstructorController;
 use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
@@ -77,6 +78,8 @@ Route::prefix('filters')
     ->group(function () {
         Route::get('/', [FilterController::class, 'filter']);
     });
+
+    Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
