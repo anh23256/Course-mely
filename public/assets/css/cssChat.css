@@ -163,8 +163,6 @@
 
 #messagesList {
     max-height: 500px;
-    /* Điều chỉnh chiều cao phù hợp */
-    overflow-y: auto;
 }
 
 #sentFilesList {
