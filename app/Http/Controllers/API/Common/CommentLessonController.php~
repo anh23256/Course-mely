@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Http\Controllers\API\Common;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Lessons\ReplyCommentLessonRequest;
+use App\Http\Requests\API\Lessons\StoreCommentLessonRequest;
+use App\Models\Chapter;
+use App\Models\Comment;
+use App\Models\Lesson;
+use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class CommentLessonController extends Controller
+{
+    use LoggableTrait, ApiResponseTrait;
+
+    public function getCommentLesson(Request $request, $lessonId)
+    {
+        try {
+            $commentLessons = Comment::query()
+                ->with([
+                    'user:id,name,avatar,email',
+                    'replies.user:id,name,email,avatar'
+                ])
+                ->withCount('replies')
+                ->where('commentable_type', Lesson::class)
+                ->where('commentable_id', $lessonId)
+                ->where('parent_id', null)
+                ->get();
+
+            if (!$commentLessons) {
+                return $this->respondNotFound('Không tìm thấy bình luận');
+            }
+
+            $filteredComments = $commentLessons->map(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'email' => $comment->user->email,
+                        'avatar' => $comment->user->avatar,
+                    ],
+                    'replies_count' => $comment->replies_count,
+                    'replies' => $comment->replies->map(function ($reply) {
+                        return [
+                            'id' => $reply->id,
+                            'content' => $reply->content,
+                            'created_at' => $reply->created_at,
+                            'user' => [
+                                'id' => $reply->user->id,
+                                'name' => $reply->user->name,
+                                'email' => $reply->user->email,
+                                'avatar' => $reply->user->avatar,
+                            ]
+                        ];
+                    })
+                ];
+            });
+
+            return $this->respondSuccess('Danh sách bình luận', $filteredComments);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function storeCommentLesson(StoreCommentLessonRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $data = $request->validated();
+
+            $lessons = Lesson::query()->find($data['lesson_id']);
+
+            if (!$lessons) {
+                return $this->respondNotFound('Không tìm thấy lớp học');
+            }
+
+            $comment = Comment::query()->create([
+                'user_id' => $user->id,
+                'content' => $data['content'] ?? '',
+                'commentable_id' => $lessons->id,
+                'commentable_type' => Lesson::class,
+                'parent_id' => null,
+            ]);
+
+            return $this->respondCreated('Bình luận thành công', $comment);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getReplies(Request $request, string $commentId)
+    {
+        try {
+            $parentComment = Comment::query()
+                ->find($commentId);
+
+            if (!$parentComment) {
+                return $this->respondNotFound('Không có bình luận cha');
+            }
+
+            $offset = $request->get('offset', 0);
+            $limit = $request->get('limit', 3);
+
+            $replies = $parentComment->replies()
+                ->latest()
+                ->offset($offset)
+                ->limit($limit)
+                ->get();
+            if (!$replies) {
+                return $this->respondNotFound('Không có bình luận cha');
+            }
+
+            return $this->respondOk('Danh sách phản hồi', $replies);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function reply(ReplyCommentLessonRequest $request, $commentId)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $data = $request->validated();
+
+            $parentComment = Comment::query()->find($commentId);
+
+            if (!$parentComment) {
+                return $this->respondNotFound('Không có bình luận cha');
+            }
+
+            $reply = Comment::query()->create([
+                'user_id' => $user->id,
+                'content' => $data['content'] ?? '',
+                'parent_id' => $parentComment->id,
+                'commentable_id' => $parentComment->commentable_id,
+                'commentable_type' => Lesson::class,
+            ]);
+
+            return $this->respondCreated('Phản hồi bình luận thành công', $reply);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+}

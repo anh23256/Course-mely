@@ -120,7 +120,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
 
-        #============================== ROUTE Certificate =============================
+        #============================== ROUTE CAREERS =============================
+        Route::prefix('careers')->group(function(){
+            Route::post('/', [UserController::class, 'storeCareers']);
+            Route::put('/{careerID}', [UserController::class, 'updateCareers']);
+            Route::delete('/{careerID}', [UserController::class, 'deleteCareers']);
+        });
+
+        #============================== ROUTE CERTIFICATES =============================
         Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
 
         #============================== ROUTE NOTIFICATION =============================
@@ -136,8 +143,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
         Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::put('/lesson/{lessonId}/update-last-time-video', [\App\Http\Controllers\API\Common\LearningPathController::class, 'updateLastTimeVideo']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
     });
+
+    Route::prefix('lessons')
+        ->group(function () {
+            Route::prefix('comments')
+                ->group(function () {
+                    Route::get('/{lesson}/lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentLesson']);
+                    Route::post('/store-lesson-comment', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'storeCommentLesson']);
+                    Route::get('{comment}/replies',[\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
+                    Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class,'reply']);
+                    Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'deleteComment']);
+                    Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
+                    Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
+                });
+        });
 
     #============================== ROUTE WISH LIST =============================
     Route::prefix('wish-lists')->as('wish-lists.')->group(function () {
@@ -159,6 +181,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('learning-path')
         ->group(function () {});
 
+    Route::prefix('support-banks')->group(function () {
+        Route::get('/', [SupportBankController::class, 'index']);
+    });
+
     #============================== ROUTE INSTRUCTOR MANAGE =============================
     Route::prefix('instructor')
         ->middleware('roleHasInstructor')
@@ -169,11 +195,20 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/revenue', [StatisticController::class, 'getTotalRevenueWithStudents']);
                 });
 
+            #============================== ROUTE SUPPORT BANK =================================
+            Route::prefix('support-banks')->group(function () {
+                Route::get('/', [SupportBankController::class, 'index']);
+                Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
+            });
+
             #============================== ROUTE WALLET =============================
             Route::prefix('wallet')
                 ->group(function () {
                     Route::get('/', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWallet']);
-                    Route::post('/withdraw', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withdraw']);
+                    Route::get('/withdraw-requests', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithdrawalRequests']);
+                    Route::get('/withdraw-request/{withdrawalRequest}', [\App\Http\Controllers\API\Instructor\WalletController::class, 'getWithDrawRequest']);
+                    Route::put('/withdraw-request/{withdrawalRequest}/handleConfirm', [\App\Http\Controllers\API\Instructor\WalletController::class, 'handleConfirmWithdrawal']);
+                    Route::post('/withdraw-request', [\App\Http\Controllers\API\Instructor\WalletController::class, 'withDrawRequest']);
                 });
 
             #============================== ROUTE LIVESTREAM =============================
@@ -284,12 +319,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-
-
     #============================== ROUTE COUPON =============================
     Route::prefix('coupons')->as('coupons.')->group(function () {
-       Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
-
+        Route::get('/accept/{coupon_id}', [CouponController::class, 'acceptCoupon'])->name('coupons.accept');
     });
 
 
@@ -350,12 +382,6 @@ Route::prefix('blogs')
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
     });
-
-#============================== ROUTE SUPPORT BANK =================================
-Route::prefix('support-banks')->group(function () {
-    Route::post('/', [SupportBankController::class, 'index']);
-    Route::post('/generate-qr', [SupportBankController::class, 'generateQR']);
-});
 
 #============================== ROUTE QA SYSTEM =================================
 Route::prefix('qa-systems')->group(function () {

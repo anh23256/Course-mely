@@ -37,8 +37,8 @@ Route::post('qr', function () {
         'acqId' => 'required|numeric',
         'amount' => 'required|numeric',
         'addInfo' => 'required|string',
-        'format' => 'required|string',
-        'template' => 'required|string',
+        'format' => 'nullable|string',
+        'template' => 'nullable|string',
     ]);
 
     // Gửi yêu cầu tới API VietQR để tạo mã QR
@@ -47,9 +47,12 @@ Route::post('qr', function () {
     $data = $response->json();
 //dd($data);
 
-    $imageData = base64_decode($data['data']['qrDataURL']);
+    $base64Str = $data['data']['qrDataURL'];
+    $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64Str));
 
-    file_put_contents(storage_path('app/public/qr_code.png'), $imageData);
+    $filePath = storage_path('app/public/qr/qr_code.png');
+    file_put_contents($filePath, $imageData);
+
 
 //    return response()->json([
 //        'message' => 'QR code created successfully',
@@ -58,7 +61,7 @@ Route::post('qr', function () {
 //        'imageData' => $imageData
 //    ]);
 
-    return response()->json(['image_url' => asset('storage/qr_code.png')]);
+    return response()->json(['image_url' => asset('storage/qr/qr_code.png')]);
 
 });
 

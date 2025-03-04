@@ -22,7 +22,7 @@
                         <div class="hstack text-white-50 gap-1">
                             <div class="me-2"><i
                                     class="ri-map-pin-user-line me-1 text-white text-opacity-75 fs-16 align-middle"></i>
-                                {{ $approval->user->profile->address ?? '' }}
+                                {{ $approval->user->profile->address ?? 'Chưa có thông tin' }}
                             </div>
                         </div>
                     </div>
@@ -160,30 +160,30 @@
                                                 <table class="table table-borderless mb-0">
                                                     <tbody>
                                                         <tr>
-                                                            <th class="ps-0" scope="row">Họ tên :</th>
-                                                            <td class="text-muted">{{ $approval->user->name ?? '' }}</td>
+                                                            <th class="ps-0" scope="row">Họ tên:</th>
+                                                            <td class="text-muted">{{ $approval->user->name ?? 'Chưa có thông tin' }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <th class="ps-0" scope="row">SĐT :</th>
+                                                            <th class="ps-0" scope="row">SĐT:</th>
                                                             <td class="text-muted">
-                                                                {{ $approval->user->profile->phone ?? '' }}</td>
+                                                                {{ $approval->user->profile->phone ?? 'Chưa có thông tin' }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <th class="ps-0" scope="row">E-mail :</th>
-                                                            <td class="text-muted">{{ $approval->user->email ?? '' }}
+                                                            <th class="ps-0" scope="row">E-mail:</th>
+                                                            <td class="text-muted">{{ $approval->user->email ?? 'Chưa có thông tin' }}
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <th class="ps-0" scope="row">Exp :</th>
+                                                            <th class="ps-0" scope="row">Exp:</th>
                                                             <td class="text-muted">
-                                                                {{ $approval->user->profile->experience ?? '' }}
+                                                                {{ $approval->user->profile->experience ?? 'Chưa có thông tin' }}
                                                                 năm kinh nghiệm
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <th class="ps-0" scope="row">Địa chỉ :</th>
+                                                            <th class="ps-0" scope="row">Địa chỉ:</th>
                                                             <td class="text-muted">
-                                                                {{ $approval->user->profile->address ?? '' }}
+                                                                {{ $approval->user->profile->address ?? 'Chưa có thông tin' }}
                                                             </td>
                                                         </tr>
                                                         <tr>

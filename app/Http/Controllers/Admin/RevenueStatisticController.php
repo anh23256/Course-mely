@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\Invoice;
-use App\Models\SystemFund;
 use App\Models\User;
 use Cloudinary\Transformation\FillTrait;
 use Illuminate\Http\Request;
@@ -19,8 +17,20 @@ class RevenueStatisticController extends Controller
         $title = 'Thống kê doanh thu';
         $year = now()->year;
 
-        $totalRevenue = SystemFund::query()->sum('total_amount');
-        $totalProfit = SystemFund::query()->sum('retained_amount');
+        $totalAmount = DB::table('system_fund_transactions')
+            ->select(
+                DB::raw('SUM(total_amount) as totalRevenue'),
+                DB::raw('SUM(retained_amount) as totalProfit'),
+            )
+            ->where('type', 'commission_received')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('transactions')
+                    ->whereColumn('transactions.id', 'system_fund_transactions.transaction_id')
+                    ->where('transactions.type', 'invoice')
+                    ->where('transactions.status', 'Giao dịch thành công');
+            })->whereYear('created_at', $year)
+            ->first();
 
         $totalCourse = Course::query()
             ->where('status', 'approved')
@@ -31,14 +41,13 @@ class RevenueStatisticController extends Controller
             })
             ->count();
 
-        $topInstructors = User::query()
+        $queryTopInstructors = User::query()
             ->join('courses', 'users.id', '=', 'courses.user_id')
             ->join('invoices', 'courses.id', '=', 'invoices.course_id')
             ->join('course_users', 'courses.id', '=', 'course_users.course_id')
             ->whereHas('roles', function ($query) {
                 $query->where('name', 'instructor');
             })
-            ->whereYear('invoices.created_at', $year)
             ->select(
                 'users.id',
                 'users.name',
@@ -51,10 +60,9 @@ class RevenueStatisticController extends Controller
             )
             ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar', 'users.created_at')
             ->orderBy('total_revenue', 'desc')
-            ->limit(10)
-            ->paginate(5);
+            ->limit(10);
 
-        $topUsers = User::query()
+        $queryTopUsers = User::query()
             ->join('invoices', 'users.id', '=', 'invoices.user_id')
             ->join('course_users', 'users.id', '=', 'course_users.user_id')
             ->select(
@@ -69,13 +77,11 @@ class RevenueStatisticController extends Controller
             ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar')
             ->having('total_courses_purchased', '>', 0)
             ->orderByDesc('total_spent')
-            ->limit(10)
-            ->paginate(5);
+            ->limit(10);
 
-        $topCourses = Course::query()
+        $queryTopCourses = Course::query()
             ->join('invoices', 'courses.id', '=', 'invoices.course_id')
             ->join('course_users', 'courses.id', '=', 'course_users.course_id')
-            ->whereYear('courses.created_at', '=', $year)
             ->select(
                 'courses.id',
                 'courses.name',
@@ -87,31 +93,59 @@ class RevenueStatisticController extends Controller
             )
             ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'courses.created_at')
             ->orderByDesc('total_revenue')
-            ->limit(10)
-            ->paginate(5);
+            ->limit(10);
 
-        $querySystem_Funds = DB::table('system_funds')
+        $querySystem_Funds = DB::table('system_fund_transactions')
             ->select(
                 DB::raw('MONTH(created_at) as month'),
+                DB::raw('YEAR(created_at) as year'),
                 DB::raw('SUM(total_amount) as total_revenue'),
                 DB::raw('SUM(retained_amount) as total_profit')
             )
-            ->groupBy(DB::raw('MONTH(created_at)'))
-            ->orderBy('month');
+            ->where('type', 'commission_received')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('transactions')
+                    ->whereColumn('transactions.id', 'system_fund_transactions.transaction_id')
+                    ->where('transactions.type', 'invoice')
+                    ->where('transactions.status', 'Giao dịch thành công');
+            })
+            ->groupBy(DB::raw('MONTH(created_at), YEAR(created_at)'))
+            ->orderBy('year')->orderBy('month');
 
-        $querySumRevenueProfit = DB::table('system_funds')
+        $querySumRevenueProfit = DB::table('system_fund_transactions')
             ->select(
                 DB::raw('SUM(total_amount) as total_revenue'),
                 DB::raw('SUM(retained_amount) as total_profit')
-            );
+            )
+            ->where('type', 'commission_received')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('transactions')
+                    ->whereColumn('transactions.id', 'system_fund_transactions.transaction_id')
+                    ->where('transactions.type', 'invoice')
+                    ->where('transactions.status', 'Giao dịch thành công');
+            });
 
-        list($querySystem_Funds, $querySumRevenueProfit) = $this->getFilterDataChart($request, $querySystem_Funds, $querySumRevenueProfit);
+        $queryCourseRatings = DB::table(DB::raw('(SELECT course_id, FLOOR(AVG(rate)) as rating FROM ratings GROUP BY course_id) as subquery'))
+            ->join('courses', 'subquery.course_id', '=', 'courses.id')
+            ->selectRaw('rating, COUNT(course_id) as total_courses')
+            ->groupBy('rating')
+            ->orderBy('rating', 'desc');
+
+        list($queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit) = $this->getFilterDataChart($request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit);
+
+        $topInstructors = $queryTopInstructors->paginate(5);
+
+        $topUsers = $queryTopUsers->paginate(5);
+
+        $topCourses = $queryTopCourses->paginate(5);
+
+        $courseRatings = $queryCourseRatings->get();
 
         $system_Funds =  $querySystem_Funds->get();
 
         $sumRevenueProfit = $querySumRevenueProfit->first();
-
-        // dd($sumRevenueProfit,$system_Funds);
 
         if ($request->ajax()) {
             return response()->json([
@@ -123,13 +157,13 @@ class RevenueStatisticController extends Controller
                 'pagination_links_users' => $topUsers->links()->toHtml(),
                 'apexCharts' => $system_Funds,
                 'sumRevenueProfit' => $sumRevenueProfit,
+                'course_rating' => $courseRatings,
             ]);
         }
 
         return view('revenue-statistics.index', compact([
             'title',
-            'totalRevenue',
-            'totalProfit',
+            'totalAmount',
             'totalCourse',
             'totalInstructor',
             'topInstructors',
@@ -137,21 +171,42 @@ class RevenueStatisticController extends Controller
             'topUsers',
             'system_Funds',
             'sumRevenueProfit',
+            'courseRatings'
         ]));
     }
 
-    private function getFilterDataChart(Request $request, $querySystem_Funds, $querySumRevenueProfit)
+    private function getFilterDataChart(Request $request, $queryTopInstructors, $queryTopUsers, $queryTopCourses,  $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit)
     {
-        $created_at = $request->input('created_at');
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+        $filter = $request->input('filter');
+        $year = now()->year;
 
-        if (!empty($created_at)) {
-            $querySystem_Funds->where('created_at', '>=', $created_at);
-            $querySumRevenueProfit->where('created_at', '>=', $created_at);
-        }else{
-            $querySystem_Funds->where('created_at', '<=', now());
-            $querySumRevenueProfit->where('created_at', '<=', now());
+        if (!empty($startDate) && !empty($endDate) && !empty($filter)) {
+            if ($filter == "totalRevenueCourseMely") {
+                $querySystem_Funds->where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate);
+                $querySumRevenueProfit->where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate);
+            } else if ($filter == "topInstructorCourseMely") {
+                $queryTopInstructors->where('invoices.created_at', '>=', $startDate)->where('invoices.created_at', '<=', $endDate);
+            } else if ($filter == "topCourseBoughtCourseMely") {
+                $queryTopCourses->where('invoices.created_at', '>=', $startDate)->where('invoices.created_at', '<=', $endDate);
+            } else if ($filter == "topRatingCourseMely") {
+                $queryCourseRatings->where('courses.created_at', '>=', $startDate)->where('courses.created_at', '<=', $endDate);
+            } else if ($filter == "topStudentCourseMely") {
+                $queryTopUsers->where('invoices.created_at', '>=', $startDate)->where('invoices.created_at', '<=', $endDate);
+            }
+        } else {
+            $queryTopInstructors->whereYear('invoices.created_at', $year);
+
+            $queryTopUsers->whereYear('invoices.created_at', $year);
+
+            $queryCourseRatings->whereYear('courses.created_at', $year);
+
+            $querySystem_Funds->whereYear('created_at', $year);
+
+            $querySumRevenueProfit->whereYear('created_at', $year);
         }
 
-        return [$querySystem_Funds, $querySumRevenueProfit];
+        return [$queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds, $querySumRevenueProfit];
     }
 }

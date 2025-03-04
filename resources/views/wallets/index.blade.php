@@ -34,19 +34,12 @@
                 </div>
             </div>
             <!--end col-->
-            <div class="col-12 col-lg-auto order-last order-lg-0">
+            <div class="col-12 col-lg-auto order-last order-lg-0 mx-5">
                 <div class="row text text-white-50 text-center">
-                    <div class="col-lg-6 col-4">
+                    <div class="col-lg-12 col-12">
                         <div class="p-2">
-                            <h5 class="text-white mb-1">{{ number_format($wallet->balance ?? 0) }}</h5>
+                            <h5 class="text-white mb-1">{{ number_format($balanceSystem->balance ?? 0) }} VND</h5>
                             <p class="fs-14 mb-0">Số dư ví</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 col-4">
-                        <div class="p-2 w-100">
-                            <span class="badge d-flex justify-content-center fs-14 bg-warning px-3 py-2 w-100">
-                                Rút tiền
-                            </span>
                         </div>
                     </div>
                 </div>
@@ -109,9 +102,9 @@
 
                                                             <div class="row">
                                                                 <div class="col-11">
-                                                                    <h6 class="mb-1 text-success">
-                                                                        {{ $systemFund->type == 'commission_received' ? '+' : '-' }}
-                                                                        {{ number_format($systemFund->retained_amount ?? 0) }}
+                                                                    <h6 class="mb-1 {{ $systemFund->type == 'withdrawal' ? 'text-danger' : 'text-success' }}">
+                                                                        {{ $systemFund->type == 'withdrawal' ? '-' : '+' }}
+                                                                        {{ number_format($systemFund->type == 'commission_received' ? $systemFund->retained_amount ?? 0 : $systemFund->total_amount ?? 0) }}
                                                                         VND
                                                                     </h6>
                                                                     <p class="text-muted mb-0">
@@ -186,7 +179,7 @@
                 },
                 success: function(response) {
                     $("#transaction-container").html(response.systemFunds);
-                    
+
                     if (data.search) {
                         $("#load-more").hide();
                     } else {

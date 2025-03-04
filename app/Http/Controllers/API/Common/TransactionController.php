@@ -11,6 +11,7 @@ use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
 use App\Models\SystemFund;
+use App\Models\SystemFundTransaction;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -475,6 +476,10 @@ class TransactionController extends Controller
         $walletWeb->save();
 
         SystemFund::query()->create([
+            'balance' => $finalAmount * self::adminRate,
+        ]);
+
+        SystemFundTransaction::query()->create([
             'transaction_id' => $transaction->id,
             'course_id' => $course->id,
             'user_id' => $userID,

@@ -5,7 +5,7 @@
         .row.mb-3 {
             border-bottom: 1px solid #f0f0f0;
             padding-bottom: 1%;
-            margin-bottom: 1%px;
+            margin-bottom: 1% px;
         }
 
         .row.mb-3:last-child {
@@ -22,14 +22,14 @@
 @section('content')
     <div class="profile-foreground position-relative mx-n4 mt-n4">
         <div class="profile-wid-bg">
-            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img" />
+            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img"/>
         </div>
     </div>
     <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
         <div class="row g-4">
             <div class="col-auto">
                 <div class="avatar-lg">
-                    <img src="{{ Auth::user()->avatar ?? '' }}" alt="user-img" class="img-thumbnail rounded-circle" />
+                    <img src="{{ Auth::user()->avatar ?? '' }}" alt="user-img" class="img-thumbnail rounded-circle"/>
                 </div>
             </div>
             <!--end col-->
@@ -86,27 +86,32 @@
                                     <div class="card-body">
                                         <h5 class="text-center mb-5">Thông tin giao dịch</h5>
                                         <div class="row justify-content-between">
+
                                             <div class="col-6">
-                                                <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Mã khóa học:</strong></div>
-                                                    <div class="col-md-9">{{ $systemFund->course->code }}</div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Tên khóa học:</strong></div>
-                                                    <div class="col-md-9">{{ $systemFund->course->name }}</div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Giảng viên:</strong></div>
-                                                    <div class="col-md-9">{{ $systemFund->course->user->name }}</div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Đường dẫn khóa học:</strong></div>
-                                                    <div class="col-md-9">{{ $systemFund->course->slug }}</div>
-                                                </div>
+                                                @if($systemFund->type === 'commission_received')
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-3"><strong>Mã khóa học:</strong></div>
+                                                        <div class="col-md-9">{{ $systemFund->course->code }}</div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-3"><strong>Tên khóa học:</strong></div>
+                                                        <div class="col-md-9">{{ $systemFund->course->name }}</div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-3"><strong>Giảng viên:</strong></div>
+                                                        <div
+                                                            class="col-md-9">{{ $systemFund->course->user->name }}</div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-3"><strong>Đường dẫn khóa học:</strong></div>
+                                                        <div class="col-md-9">{{ $systemFund->course->slug }}</div>
+                                                    </div>
+                                                @endif
                                                 <div class="row mb-3">
                                                     <div class="col-md-3"><strong>Tổng tiền:</strong></div>
                                                     <div class="col-md-9">
-                                                        {{ number_format($systemFund->total_amount ?? 0) }} VND</div>
+                                                        {{ number_format($systemFund->total_amount ?? 0) }} VND
+                                                    </div>
                                                 </div>
                                                 @if ($systemFund->type === 'commission_received')
                                                     <div class="row mb-3">
@@ -125,7 +130,7 @@
                                                             </span>
                                                         @else
                                                             <span class="badge bg-warning">
-                                                                Rút tiền
+                                                              Thanh toán tiền
                                                             </span>
                                                         @endif
                                                     </div>
@@ -138,27 +143,43 @@
 
                                             <div class="col-6">
                                                 <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Mã người mua:</strong></div>
+                                                    @if($systemFund->type === 'commission_received')
+                                                        <div class="col-md-3"><strong>Mã người mua:</strong></div>
+                                                    @else
+                                                        <div class="col-md-3"><strong>Mã người giao dịch:</strong></div>
+                                                    @endif
                                                     <div class="col-md-9">{{ $systemFund->user->code }}</div>
                                                 </div>
                                                 <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Người mua:</strong></div>
+                                                    @if($systemFund->type === 'commission_received')
+                                                        <div class="col-md-3"><strong>Tên người mua:</strong></div>
+                                                    @else
+                                                        <div class="col-md-3"><strong>Tên người giao dịch:</strong>
+                                                        </div>
+                                                    @endif
                                                     <div class="col-md-9">{{ $systemFund->user->name }}</div>
                                                 </div>
                                                 <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Email người mua:</strong></div>
+                                                    @if($systemFund->type === 'commission_received')
+                                                        <div class="col-md-3"><strong>Email người mua:</strong>
+                                                        </div>
+                                                    @else
+                                                        <div class="col-md-3"><strong>Email giao dịch:</strong></div>
+                                                    @endif
                                                     <div class="col-md-9">{{ $systemFund->user->email }}</div>
                                                 </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-3"><strong>Số người mua:</strong></div>
-                                                    <div class="col-md-9">
-                                                        {{ $systemFund->course->user->profile->phone ?? 'Chưa có thông tin' }}
+                                                @if($systemFund->type === 'commission_received')
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-3"><strong>Số người mua:</strong></div>
+                                                        <div class="col-md-9">
+                                                            {{ $systemFund->course->user->profile->phone ?? 'Chưa có thông tin' }}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                         <a href="{{ route('admin.wallets.index') }}" type="button"
-                                            class="btn btn-success add-btn">
+                                           class="btn btn-success add-btn">
                                             Quay lại</a>
                                     </div>
                                     <!--end row-->

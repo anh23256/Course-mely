@@ -21,7 +21,12 @@ class WithdrawalRequest extends Model
         'qr_code',
         'status',
         'request_date',
-        'completed_date'
+        'completed_date',
+        'admin_comment',
+        'instructor_confirmation',
+        'instructor_confirmation_date',
+        'instructor_confirmation_note',
+        'is_received'
     ];
 
     public function wallet()

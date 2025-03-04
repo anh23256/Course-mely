@@ -2,16 +2,17 @@
 
 namespace App\Http\Requests\API\SupportBank;
 
+use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreGenerateQrRequest extends FormRequest
+class StoreGenerateQrRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,11 +25,11 @@ class StoreGenerateQrRequest extends FormRequest
         return [
             'accountNo' => 'required|numeric',
             'accountName' => 'required|string',
-            'acqId' => 'required|numeric',
+            'acqId' => 'nullable|numeric',
             'amount' => 'required|numeric',
-            'addInfo' => 'required|string',
-            'format' => 'required|string',
-            'template' => 'required|string',
+            'addInfo' => 'nullable|string',
+            'format' => 'nullable|string',
+            'template' => 'nullable|string',
         ];
     }
 }

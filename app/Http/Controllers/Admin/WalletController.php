@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemFund;
+use App\Models\SystemFundTransaction;
 use App\Models\Wallet;
 use App\Traits\LoggableTrait;
 use Carbon\Carbon;
@@ -16,6 +17,7 @@ use function Termwind\render;
 class WalletController extends Controller
 {
     use LoggableTrait;
+
     public function index(Request $request)
     {
         try {
@@ -24,7 +26,9 @@ class WalletController extends Controller
             $search_full = $request->input('search') ?? '';
             $limitSystemFund = $request->input('page') ?? 10;
 
-            $systemFunds = DB::table('system_funds')
+            $balanceSystem = SystemFund::first();
+
+            $systemFunds = DB::table('system_fund_transactions')
                 ->select(
                     DB::raw('DATE(created_at) as day'),
                     'id',
@@ -45,11 +49,10 @@ class WalletController extends Controller
                 })
                 ->orderBy(DB::raw('DATE(created_at)'), 'DESC')
                 ->orderBy('created_at', 'DESC')
-                ->when(empty($search_full), function($query) use ($limitSystemFund){
+                ->when(empty($search_full), function ($query) use ($limitSystemFund) {
                     $query->limit($limitSystemFund);
                 })
                 ->get();
-
 
 
             if ($request->ajax()) {
@@ -58,12 +61,10 @@ class WalletController extends Controller
                 ], 200);
             }
 
-            $wallet = Wallet::query()->where('user_id', Auth::id())->first();
-
             return view('wallets.index', compact([
                 'systemFunds',
-                'wallet',
                 'title',
+                'balanceSystem'
             ]));
         } catch (\Exception $e) {
             $this->logError($e);
@@ -71,12 +72,13 @@ class WalletController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại!');
         }
     }
+
     public function show(string $id)
     {
         try {
             $title = 'Chi tiết giao dịch';
 
-            $systemFund = SystemFund::query()->where('id', $id)
+            $systemFund = SystemFundTransaction::query()->where('id', $id)
                 ->with(['transaction', 'user', 'course'])->first();
 
             if (!$systemFund) {

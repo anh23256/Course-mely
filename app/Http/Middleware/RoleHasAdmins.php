@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleHasAdmins
@@ -18,7 +19,7 @@ class RoleHasAdmins
     {
         if (
             Auth::check() && (
-                Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')
+                Auth::user()->hasRole('admin') || Auth::user()->hasRole('employee')
             ) &&
             Auth::user()->email_verified_at !== null &&
             Auth::user()->status === 'active'
@@ -27,7 +28,7 @@ class RoleHasAdmins
         }
         elseif (
             Auth::check() && (
-                Auth::user()->hasRole('admin') || Auth::user()->hasRole('super_admin')
+                Auth::user()->hasRole('admin') || Auth::user()->hasRole('employee')
             ) &&
             Auth::user()->email_verified_at == null
         ) {

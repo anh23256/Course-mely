@@ -4,13 +4,18 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\User\ChangePasswordRequest;
+use App\Http\Requests\API\User\StoreCareerRequest;
+use App\Http\Requests\API\User\UpdateCareerRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
+use App\Models\Lesson;
+use App\Models\LessonProgress;
 use App\Models\Profile;
 use App\Models\User;
+use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
@@ -83,40 +88,6 @@ class UserController extends Controller
                         : $profile->certificates,
                     'bio' => $request->bio ? $this->prepareBioData($request->bio, $profile) : $profile->bio,
                 ]);
-            }
-
-            if ($request->has('careers')) {
-                foreach ($request->careers as $careerData) {
-                    if (!empty($careerData['id'])) {
-                        $career = Career::query()->where('id', $careerData['id'])->first();
-
-                        if (!$career) {
-                            $career->update(
-                                [
-                                    'profile_id' => $profile->id,
-                                    'degree' => $careerData['degree'],
-                                    'major' => $careerData['major'],
-                                    'start_date' => $careerData['start_date'],
-                                    'end_date' => $careerData['end_date'],
-                                    'description' => $careerData['description'],
-                                    'institution_name' => $careerData['institution_name'],
-                                ]
-                            );
-                        }
-                    } else {
-                        Career::create(
-                            [
-                                'profile_id' => $profile->id,
-                                'degree' => $careerData['degree'],
-                                'major' => $careerData['major'],
-                                'start_date' => $careerData['start_date'],
-                                'end_date' => $careerData['end_date'],
-                                'description' => $careerData['description'],
-                                'institution_name' => $careerData['institution_name'],
-                            ]
-                        );
-                    }
-                }
             }
 
             DB::commit();
@@ -237,16 +208,17 @@ class UserController extends Controller
             }
 
             $courses = Course::query()
+                ->select([
+                    'id', 'user_id', 'name', 'slug', 'category_id',
+                    'thumbnail', 'level',
+                ])
                 ->whereHas('courseUsers', function ($query) use ($user) {
                     $query->where('user_id', $user->id);
                 })
                 ->with([
-                    'courseUsers',
-                    'category',
-                    'user',
-                    'chapters' => function ($query) {
-                        $query->withCount('lessons');
-                    },
+                    'courseUsers:id,user_id,course_id,progress_percent',
+                    'category:id,name,slug',
+                    'user:id,name,avatar',
                 ])
                 ->withCount([
                     'chapters',
@@ -257,7 +229,67 @@ class UserController extends Controller
                 return $this->respondNotFound('Không có dữ liệu');
             }
 
-            return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, $courses);
+            $result = $courses->map(function ($course) {
+                $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->where('lessonable_type', Video::class);
+                });
+
+                $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $lessonProgress = LessonProgress::query()
+                    ->where('user_id', Auth::id())
+                    ->whereHas('lesson', function ($query) use ($course) {
+                        $lesson = $course->chapters->flatMap(function ($chapter) {
+                            return $chapter->lessons;
+                        });
+
+                        return $lesson->pluck('id')->toArray();
+                    })
+                    ->with('lesson:id,title')
+                    ->latest('updated_at')
+                    ->first();
+
+                if (!$lessonProgress) {
+                    $firstLesson = $course->chapters->first()->lessons->first();
+
+                    $currentLesson = $firstLesson ? [
+                        'id' => $firstLesson->id,
+                        'title' => $firstLesson->title
+                    ] : null;
+                } else {
+                    $currentLesson = [
+                        'id' => $lessonProgress->lesson->id,
+                        'title' => $lessonProgress->lesson->title,
+                    ];
+                }
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'level' => $course->level,
+                    'chapters_count' => $course->chapters_count,
+                    'lessons_count' => $course->lessons_count,
+                    'total_video_duration' => $totalVideoDuration,
+                    'progress_percent' => $course->courseUsers->first()->progress_percent,
+                    'current_lesson' => $currentLesson,
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, $result);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -299,11 +331,18 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             $orders = Invoice::where('user_id', $user->id)
                 ->with('course:id,name')
                 ->select('id', 'course_id', 'created_at',
-                DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->get();
 
             return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
@@ -312,20 +351,32 @@ class UserController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
+
     public function showOrdersBought($id)
     {
         try {
             $user = Auth::user();
-            
+
             $order = Invoice::where('id', $id)
                 ->with([
                     'course' => function ($query) {
                         $query->select('id', 'name', 'user_id')->with('instructor:id,name'); // Đổi instructor_id thành user_id
                     }
-                    ])
+                ])
                 ->where('user_id', $user->id)
-                ->select('id','course_id', 'code', 'coupon_code', 'coupon_discount', 'amount','created_at', 
+                ->select('id', 'course_id', 'code', 'coupon_code', 'coupon_discount', 'amount', 'created_at',
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'code',
+                    'coupon_code',
+                    'coupon_discount',
+                    'amount',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->first();
 
             if (!$order) {
@@ -336,6 +387,98 @@ class UserController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+    }
+    public function storeCareers(StoreCareerRequest $request)
+    {
+        try {
+            if ($request->has('careers')) {
+                $user = Auth::user();
+
+                if(!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+
+                $profile = Profile::query()->firstOrCreate([
+                    'user_id' => $user->id
+                ]);
+
+                foreach ($request->careers as $careerData) {
+                    Career::create(
+                        [
+                            'profile_id' => $profile->id,
+                            'degree' => $careerData['degree'],
+                            'major' => $careerData['major'],
+                            'start_date' => $careerData['start_date'],
+                            'end_date' => $careerData['end_date'],
+                            'description' => $careerData['description'] ?? null,
+                            'institution_name' => $careerData['institution_name'],
+                        ]
+                    );
+                }
+                return $this->respondCreated('Thêm mới sự nghiệp thành công', ['user' => $user->load('profile.careers')]);
+            } else {
+                return $this->respondError('Không có dữ liệu để thêm mới');
+            }
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function updateCareers(UpdateCareerRequest $request, string $id)
+    {
+        try {
+            if ($request->has('careers') && !empty($request->careers) && is_array($request->careers)) {
+
+                $user = Auth::user();
+
+                if(!$user) return $this->respondForbidden('Vui lòng đăng nhập và thử lại');
+
+                $profile = Profile::query()->firstOrCreate([
+                    'user_id' => $user->id
+                ]);
+
+                $careerData = $request->careers;
+
+                $career = Career::query()->where('id', $id)->first();
+
+                if ($career) {
+                    $career->update(
+                        [
+                            'profile_id' => $profile->id,
+                            'degree' => $careerData[0]['degree'],
+                            'major' => $careerData[0]['major'],
+                            'start_date' => $careerData[0]['start_date'],
+                            'end_date' => $careerData[0]['end_date'],
+                            'description' => $careerData[0]['description'] ?? null,
+                            'institution_name' => $careerData[0]['institution_name'],
+                        ]
+                    );
+                } else return $this->respondNotFound('Không tìm thấy thông tin');
+            } 
+
+            return $this->respondOk('Cập nhật thành công',['user' => $user->load('profile.careers')]);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondError('Chưa thể thêm thông tin');
+        }
+    }
+
+    public function deleteCareers(string $id)
+    {
+        try {
+            $career = Career::destroy($id);
+
+            if (!$career) {
+                return $this->respondNotFound('Không tìm thấy thông tin');
+            } else {
+                return $this->respondNoContent();
+            }
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondError('Chưa thể thêm thông tin');
         }
     }
 }

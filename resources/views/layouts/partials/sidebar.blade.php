@@ -135,6 +135,7 @@
                 </ul>
             </div>
 
+
             <a class="nav-link menu-link" href="#sidebarBanner" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarBanner">
                 <i class=" las la-image"></i> <span data-key="t-authentication">Quản lý banners</span>

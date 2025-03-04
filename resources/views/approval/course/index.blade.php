@@ -245,7 +245,7 @@
                                                 <img style="height: 80px" src="{{ $approval->course->thumbnail }}"
                                                      alt="" class="w-100 object-fit-cover">
                                             </td>
-                                            <td>{{ number_format($approval->course->price) }}</td>
+                                            <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí'  }}</td>
                                             <td>
                                                 {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-warning">Hệ thống đã check</span>' !!}
                                             </td>
