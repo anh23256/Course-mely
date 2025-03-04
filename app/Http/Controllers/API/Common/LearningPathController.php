@@ -52,6 +52,7 @@ class LearningPathController extends Controller
 
             $chapters = $course->chapters()
                 ->with('lessons.lessonable')
+                ->where('status', 1)
                 ->orderBy('order', 'asc')
                 ->get();
 

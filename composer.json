@@ -24,6 +24,7 @@
         "openai-php/client": "^0.10.3",
         "predis/predis": "^2.3",
         "pusher/pusher-php-server": "^7.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-analytics": "^5.5",
         "spatie/laravel-permission": "^6.10",
         "van-ons/laraberg": "^2.0",
