@@ -52,6 +52,7 @@ class LearningPathController extends Controller
 
             $chapters = $course->chapters()
                 ->with('lessons.lessonable')
+                ->where('status',1)
                 ->orderBy('order', 'asc')
                 ->get();
 
@@ -558,6 +559,7 @@ class LearningPathController extends Controller
                     'title' => $quiz->title,
                 ],
                 'questions' => $questions,
+                'submitted_at' => $quizSubmission->created_at
             ];
 
             return $this->respondOk('Thông tin bài kiểm tra', $response);
