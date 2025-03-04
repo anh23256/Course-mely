@@ -79,7 +79,7 @@ Route::prefix('filters')
         Route::get('/', [FilterController::class, 'filter']);
     });
 
-    Route::get('/top-instructors', [TopInstructorController::class, 'index']);
+Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
@@ -399,9 +399,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
-    ->group(function () {
-        Route::post('/', [ReactionController::class, 'toggleReaction']);
-    });
+        ->group(function () {
+            Route::post('/', [ReactionController::class, 'toggleReaction']);
+        });
 
     #============================== ROUTE RATING =============================
     Route::prefix('ratings')
@@ -434,6 +434,8 @@ Route::get('/banners', [BannerController::class, 'index']);
 
 #============================== ROUTE CATEGORY =============================
 Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::class, 'index']);
+
+Route::get('/instructor-order-by-count-course', [\App\Http\Controllers\API\Common\CommonController::class, 'instructorOrderByCountCourse']);
 
 #============================== ROUTE POST =============================
 Route::prefix('blogs')
