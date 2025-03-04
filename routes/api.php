@@ -8,6 +8,7 @@ use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\RatingController;
+use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
 use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
@@ -201,6 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
                     Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
+                    Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
@@ -391,6 +393,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}', [CommentController::class, 'destroy']);
             Route::get('/{commentableId}/{commentableType}', [CommentController::class, 'index']);
         });
+
+    #============================== ROUTE REACTION =============================
+    Route::prefix('reactions')
+    ->group(function () {
+        Route::post('/', [ReactionController::class, 'toggleReaction']);
+    });
 
     #============================== ROUTE RATING =============================
     Route::prefix('ratings')

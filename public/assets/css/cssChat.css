@@ -1,0 +1,203 @@
+.file-input {
+    display: none;
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #f0f2f5;
+    /* Màu nền nhạt */
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Nội dung tin nhắn */
+.message-content {
+    flex: 1;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.message-header strong {
+    font-size: 14px;
+    color: #333;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.message p {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* Các nút hành động */
+.message-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.like-btn,
+.thumbs-up-btn {
+    border: none;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.like-btn {
+    color: #e74c3c;
+    /* Màu đỏ cho nút ❤️ */
+}
+
+.thumbs-up-btn {
+    color: #3498db;
+    /* Màu xanh cho nút 👍 */
+}
+
+/* Đảm bảo độ cao tối thiểu cho tin nhắn */
+.sender {
+    min-height: 40px;
+    max-height: 300px;
+    /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
+    overflow: visible !important;
+    /* Hiển thị đầy đủ nội dung */
+}
+
+.sender {
+    /* Gradient cho người gửi */
+    color: black;
+    text-align: left;
+    /* Đưa tin nhắn vào bên phải */
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    max-width: 50%;
+    /* Giới hạn chiều rộng */
+    margin-left: auto;
+    /* Đẩy sang bên phải */
+    word-wrap: break-word;
+    /* Đảm bảo văn bản dài sẽ tự động xuống dòng */
+}
+
+.received {
+    /* Gradient cho người nhận */
+    color: black;
+    text-align: left;
+    /* Đưa tin nhắn vào bên trái */
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    max-width: 50%;
+    /* Giới hạn chiều rộng */
+    margin-right: auto;
+    /* Đẩy sang bên trái */
+}
+
+/* Các nút hành động */
+.message-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.reaction-btn {
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    /* Hiệu ứng khi bấm vào */
+}
+
+/* Các reaction thả ra */
+.reaction-container {
+    position: relative;
+}
+
+.reaction {
+    position: absolute;
+    font-size: 18px;
+    opacity: 1;
+    animation: floatUp 1s ease-in-out forwards;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+#messagesList {
+    max-height: 500px;
+}
+
+#sentFilesList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* 3 ảnh mỗi dòng */
+    gap: 10px;
+    max-width: 500px;
+    margin: auto;
+}
+
+.gallery-item img {
+    width: 100%;
+    max-width: 100px;
+    height: auto;
+    border-radius: 8px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.gallery-item img:hover {
+    transform: scale(1.1);
+}
+
+.load-more {
+    display: block;
+    margin: 20px auto;
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.load-more:hover {
+    background-color: #0056b3;
+}

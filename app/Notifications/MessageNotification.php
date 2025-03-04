@@ -70,7 +70,7 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
         $notificationData = $this->notificationData($notifiable, true);
 
         $existingNotification = $notifiable->notifications()
-            ->where('read_at', '==', null)
+            ->where('read_at', '=', null)
             ->whereJsonContains('data->conversation_id', $this->message->conversation_id)
             ->first();
 
