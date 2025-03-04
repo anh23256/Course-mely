@@ -67,6 +67,46 @@ class StatisticController extends Controller
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
+            $courseRevenue = DB::table('invoices')
+                ->select(
+                    'courses.id',
+                    'courses.name',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.slug',
+                    DB::raw('SUM(invoices.final_amount) as total_revenue'),
+                    DB::raw('COUNT(DISTINCT course_users.id) as total_student'),
+                    DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
+                )
+                ->join('courses', 'invoices.course_id', '=', 'courses.id')
+                ->join('course_users', 'courses.id', '=', 'course_users.course_id')
+                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                ->where([
+                    'courses.user_id' => $user->id,
+                    'invoices.status' => 'Đã thanh toán'
+                ])
+                ->groupBy('courses.slug')
+                ->orderByDesc('total_revenue')
+                ->get();
+
+            return $this->respondOk('Doanh thu khóa học của giảng viên ' . $user->name, [
+                'courseRevenue' => $courseRevenue
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getMonthlyRevenue(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
             $yearNow = now()->year;
 
             $startDate = $request->input('start_date', '');
@@ -100,9 +140,9 @@ class StatisticController extends Controller
 
             $startDate = $startDate->format('Y-m-d 00:00:00');
             $endDate = $endDate->format('Y-m-d 23:59:59');
-            
+
             $monthlyRevenue = DB::table('invoices')
-                ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6,2) as revenue')
+                ->selectRaw('DATE_FORMAT(invoices.created_at, "%Y-%m") as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
                 ->where([
                     'invoices.status' => 'Đã thanh toán',
@@ -110,31 +150,22 @@ class StatisticController extends Controller
                 ])
                 ->whereBetween('invoices.created_at', [$startDate, $endDate])
                 ->groupBy('month')
-                ->pluck('revenue', 'month');
+                ->pluck('revenue', 'month')
+                ->toArray();
 
-            $fullMonthlyRevenue = array_fill(1, 12, null);
-            foreach ($monthlyRevenue as $month => $revenue) {
-                $fullMonthlyRevenue[$month] = $revenue;
+            $allMonths = [];
+            $current = Carbon::parse($startDate)->startOfMonth();
+            $last = Carbon::parse($endDate)->startOfMonth();
+
+            while ($current <= $last) {
+                $allMonths[$current->format('Y-m')] = null;
+                $current->addMonth();
             }
 
-            $courseRevenue = DB::table('invoices')
-                ->select('courses.id', 'courses.name', 'courses.slug', DB::raw('SUM(invoices.final_amount) as total_revenue'))
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'invoices.status' => 'Đã thanh toán'])
-                ->groupBy('courses.id', 'courses.name', 'courses.slug')
-                ->orderByDesc('total_revenue')
-                ->get();
+            $completeMonthlyRevenue = array_replace($allMonths, $monthlyRevenue);
 
-            $newPurchases = DB::table('invoices')
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'invoices.status' => 'Đã thanh toán'])
-                ->whereBetween('invoices.created_at', [now()->startOfMonth(), now()])
-                ->count();
-
-            return $this->respondOk('Doanh thu và học viên mua khóa học của giảng viên ' . $user->name, [
-                'fullMonthlyRevenue' => $fullMonthlyRevenue,
-                'courseRevenue' => $courseRevenue,
-                'newPurchases' => $newPurchases
+            return $this->respondOk('Doanh thu theo tháng của giảng viên ' . $user->name, [
+                'monthlyRevenue' => $completeMonthlyRevenue,
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

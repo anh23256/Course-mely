@@ -202,6 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
                     Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
+                    Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
