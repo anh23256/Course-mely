@@ -167,23 +167,23 @@ class WithDrawalsRequestController extends Controller
 
             $systemFundBalance = SystemFund::query()
                 ->lockForUpdate()
-                ->sum('balance');
+                ->first();
 
-            if (!$systemFundBalance === null || $systemFundBalance <= 0) {
+            if (!$systemFundBalance === null || $systemFundBalance->pending_balance <= 0) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Hệ thống đang bảo trì, vui lý thử lại sau',
                 ]);
             }
 
-            if ($systemFundBalance < $withdrawal->amount) {
+            if ($systemFundBalance->pending_balance < $withdrawal->amount) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Hệ thống đang bảo trì, vui lý thử lại sau',
                 ]);
             }
 
-            $systemFundBalance->decrement('balance', $withdrawal->amount);
+            $systemFundBalance->pending_balance -= $withdrawal->amount;
 
             $transation = Transaction::query()->create([
                 'transaction_code' => 'ORDER' . time(),

@@ -493,8 +493,12 @@ class TransactionController extends Controller
         $walletWeb->balance += $finalAmount * self::adminRate;
         $walletWeb->save();
 
-        SystemFund::query()->create([
-            'balance' => $finalAmount * self::adminRate,
+        SystemFund::query()->updateOrCreate([
+            ['id' => 1],
+            [
+                'balance' => $finalAmount * self::adminRate,
+                'pending_balance' => $finalAmount * self::instructorRate
+            ]
         ]);
 
         SystemFundTransaction::query()->create([

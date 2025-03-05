@@ -459,7 +459,9 @@ class TransactionController extends Controller
     private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
         if ($discount) {
+            $discount->refresh();
             $discount->increment('used_count');
+
             $couponUse = CouponUse::query()->where([
                 'coupon_id' => $discount->id,
                 'user_id' => $userID
@@ -470,6 +472,7 @@ class TransactionController extends Controller
             ]);
         }
 
+        $course->refresh();
         $course->increment('total_student');
 
         $walletInstructor = Wallet::query()
@@ -488,7 +491,6 @@ class TransactionController extends Controller
             ]);
 
         $walletWeb->balance += $finalAmount * self::adminRate;
-
         $walletWeb->save();
 
         SystemFund::query()->create([

@@ -10,6 +10,7 @@ class SystemFund extends Model
     use HasFactory;
 
     protected $fillable = [
-        'balance'
+        'balance',
+        'pending_balance'
     ];
 }
