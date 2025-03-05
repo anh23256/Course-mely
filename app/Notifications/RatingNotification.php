@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
-class RatingNotification extends Notification implements ShouldQueue
+class RatingNotification extends Notification
 {
     use Queueable;
 

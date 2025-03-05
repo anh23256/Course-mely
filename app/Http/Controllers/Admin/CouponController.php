@@ -22,7 +22,7 @@ class CouponController extends Controller
      */
     public function index(Request $request)
     {
-        $queryCoupons = Coupon::query();
+        $queryCoupons = Coupon::query()->with('user');
 
         if ($request->has('query') && $request->input('query')) {
             $search = $request->input('query');
@@ -73,7 +73,7 @@ class CouponController extends Controller
             $data = $request->validated();
             // Gửi thông báo cho người dùng hoặc giảng viên
             $coupon = Coupon::create($data);
-            
+
             $roleUser = ['member', 'instructor'];
 
             $users = User::whereHas('roles', function ($query) use ($roleUser) {

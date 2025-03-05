@@ -154,7 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{lesson}/get-chapter-from-lesson', [LessonController::class, 'getChapterFromLesson']);
         Route::get('/lesson/{lessonId}/get-quiz-submission/{submissionQuizId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getQuizSubmission']);
         Route::get('/lesson/{lessonId}/get-coding-submission/{submissionCodingId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getCodingSubmission']);
-        Route::get('/draft/{slug}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLearningPathDraft']);
+        Route::get('')
     });
 
     Route::prefix('lessons')
@@ -429,7 +429,6 @@ Route::prefix('courses')
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
-        Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);
         Route::get('/{slug}/related', [CommonCourseController::class, 'getRelatedCourses']);
     });
 
