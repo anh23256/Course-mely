@@ -20,6 +20,10 @@ class Profile extends Model
         'qa_systems',
     ];
 
+    protected $casts = [
+        'bio' => 'array',
+    ];
+
     public function user(){
         return $this->hasOne(User::class);
     }

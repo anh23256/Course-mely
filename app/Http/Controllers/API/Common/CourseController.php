@@ -4,12 +4,14 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\User;
 use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Redis\Connections\PredisConnection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 class CourseController
@@ -36,7 +38,7 @@ class CourseController
                 ->where('status', '=', 'approved')
                 ->orderBy('total_student', 'desc')
                 ->limit(10)
-                ->get();;
+                ->get();
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');
@@ -111,7 +113,6 @@ class CourseController
             }
 
             return $this->respondOk('Danh sách khoá học nổi bật', $courses);
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -193,17 +194,17 @@ class CourseController
 
             $course->total_video_duration = $totalVideoDuration;
 
-//            $user = auth('sanctum')->user();
-//            $isCourseOwner = $user && $user->id === $course->user_id;
-//
-//            if (!$isCourseOwner) {
-//                $cacheKey = "course:{$course->id}:views:{$user->id}";
-//
-//                if (!Redis::exists($cacheKey)) {
-//                    $course->increment('views');
-//                    Redis::setex($cacheKey, 3600, true);
-//                }
-//            }
+            //            $user = auth('sanctum')->user();
+            //            $isCourseOwner = $user && $user->id === $course->user_id;
+            //
+            //            if (!$isCourseOwner) {
+            //                $cacheKey = "course:{$course->id}:views:{$user->id}";
+            //
+            //                if (!Redis::exists($cacheKey)) {
+            //                    $course->increment('views');
+            //                    Redis::setex($cacheKey, 3600, true);
+            //                }
+            //            }
 
             $course->increment('views');
 
@@ -212,6 +213,80 @@ class CourseController
             $this->logError($e);
 
             return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getOtherCourses(string $slug)
+    {
+        try {
+            $course = Course::where('slug', $slug)->where([
+                'visibility' => 'public',
+                'status' => 'approved',
+            ])->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Không tìm thấy thông tin khóa học!');
+            }
+
+            $getOtherCourses = DB::table('courses')
+                ->select(
+                    'courses.id',
+                    'courses.name as name_course',
+                    'courses.slug',
+                    'courses.price',
+                    'courses.price_sale',
+                    'users.name as name_instructor',
+                    'users.code as code_instructor',
+                    DB::raw('COUNT(lessons.id) as total_lesson, SUM(videos.duration) as total_duration'),
+                )
+                ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+                ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
+                ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
+                ->join('users', 'users.id', '=', 'courses.user_id')
+                ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
+                ->where([
+                    'lessons.lessonable_type' => Video::class,
+                    'lessons.type' => 'video',
+                    'courses.visibility' => 'public',
+                    'courses.status' => 'approved',
+                ])
+                ->where('courses.price', '>', 0)
+                ->where('courses.id', '<>', $slug)
+                ->groupBy('courses.id', 'courses.name', 'courses.slug')
+                ->orderBy('courses.total_student', 'desc')
+                ->limit(9)
+                ->get();
+
+            $profileIntructor = DB::table('users')
+                ->select(
+                    'users.name',
+                    'users.code',
+                    'profiles.bio',
+                    'profiles.about_me',
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
+                    DB::raw('SUM(courses.total_student) as total_student'),
+                    DB::raw('COUNT(DISTINCT courses.id) as total_courses')
+                )
+                ->leftJoin('profiles', 'profiles.user_id', '=', 'users.id')
+                ->leftJoin('courses', 'courses.user_id', '=', 'users.id')
+                ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
+                ->where([
+                    'courses.visibility' => 'public',
+                    'courses.status' => 'approved',
+                    'courses.user_id' => $course->user_id
+                ])
+                ->groupBy('users.code', 'users.name', 'profiles.bio', 'profiles.about_me')
+                ->first();
+
+            return response()->json([
+                'message' => 'Kiểm tra hoàn thiện khoá học',
+                'getOtherCourse' => $getOtherCourses,
+                'profile_instructor' => $profileIntructor
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
 }
