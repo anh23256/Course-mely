@@ -429,6 +429,7 @@ Route::prefix('courses')
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
+        Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);
         Route::get('/{slug}/related', [CommonCourseController::class, 'getRelatedCourses']);
     });
 

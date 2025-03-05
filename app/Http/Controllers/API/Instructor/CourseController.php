@@ -489,7 +489,6 @@ class CourseController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
     private function calculateProgress(array $completionStatus): float
     {
         $totalSteps = count($completionStatus);

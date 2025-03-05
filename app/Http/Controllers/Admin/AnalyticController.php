@@ -34,14 +34,23 @@ class AnalyticController extends Controller
                 [$groupBy]
             );
 
+            $topBrowsers = Analytics::fetchTopBrowsers(Period::create($start, $end), 4);
+
             $analyticsUserSession = Analytics::get(
                 Period::create($start, $end),
                 ['totalUsers', 'sessions']
             );
 
+            $fetchMostVisitedPages = Analytics::fetchMostVisitedPages(Period::create($start, $end), 5);
+
             $analyticsCountriesSession = Analytics::fetchTopCountries(Period::create($start, $end));
 
-            return view('analytics.index', compact(['analyticsData', 'analyticsUserSession', 'analyticsCountriesSession']));
+            return view('analytics.index', compact([
+                'analyticsData',
+                'analyticsUserSession',
+                'analyticsCountriesSession',
+                'topBrowsers'
+            ]));
         } catch (\Exception $e) {
             $this->logError($e);
 

@@ -13,7 +13,7 @@
 @section('content')
     <div class="container-fluid">
         <div class="chat-wrapper d-lg-flex gap-1 mx-n4 mt-n4 p-1">
-            <div class="chat-leftsidebar">
+            <div class="chat-leftsidebar" style="height: auto !important">
                 <div class="px-4 pt-4 mb-3">
                     <div class="d-flex align-items-start">
                         <div class="flex-grow-1">
@@ -611,7 +611,6 @@
                         }
                     }, 100);
                 });
-
                 console.log("Hàm initIcons đã chạy thành công!");
             });
         }
@@ -836,7 +835,6 @@
                                 $('#imagePreviewContainer')
                                     .hide(); // Ẩn preview ảnh sau khi gửi
 
-
                                 $('#messagesList').append(renderMessage(response));
                                 scrollToBottom();
                             }
@@ -855,6 +853,7 @@
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
                 if (response.status === 'success') {
+                    
                     // Lấy tất cả các tin nhắn
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 

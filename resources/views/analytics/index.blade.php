@@ -201,22 +201,7 @@
             <div class="col-xl-4">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Users by Device</h4>
-                        <div class="flex-shrink-0">
-                            <div class="dropdown card-header-dropdown">
-                                <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <span class="text-muted fs-16"><i
-                                            class="mdi mdi-dots-vertical align-middle"></i></span>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" href="#">Today</a>
-                                    <a class="dropdown-item" href="#">Last Week</a>
-                                    <a class="dropdown-item" href="#">Last Month</a>
-                                    <a class="dropdown-item" href="#">Current Year</a>
-                                </div>
-                            </div>
-                        </div>
+                        <h4 class="card-title mb-0 flex-grow-1">Top 4 trình duyệt sử dụng</h4>
                     </div><!-- end card header -->
                     <div class="card-body">
                         <div id="user_device_pie_charts" data-colors='["--vz-primary", "--vz-warning", "--vz-info"]'
@@ -224,55 +209,7 @@
 
                         <div class="table-responsive mt-3">
                             <table class="table table-borderless table-sm table-centered align-middle table-nowrap mb-0">
-                                <tbody class="border-0">
-                                    <tr>
-                                        <td>
-                                            <h4 class="text-truncate fs-14 fs-medium mb-0"><i
-                                                    class="ri-stop-fill align-middle fs-18 text-primary me-2"></i>Desktop
-                                                Users</h4>
-                                        </td>
-                                        <td>
-                                            <p class="text-muted mb-0"><i data-feather="users"
-                                                    class="me-2 icon-sm"></i>78.56k</p>
-                                        </td>
-                                        <td class="text-end">
-                                            <p class="text-success fw-medium fs-12 mb-0"><i
-                                                    class="ri-arrow-up-s-fill fs-5 align-middle"></i>2.08%
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <h4 class="text-truncate fs-14 fs-medium mb-0"><i
-                                                    class="ri-stop-fill align-middle fs-18 text-warning me-2"></i>Mobile
-                                                Users</h4>
-                                        </td>
-                                        <td>
-                                            <p class="text-muted mb-0"><i data-feather="users"
-                                                    class="me-2 icon-sm"></i>105.02k</p>
-                                        </td>
-                                        <td class="text-end">
-                                            <p class="text-danger fw-medium fs-12 mb-0"><i
-                                                    class="ri-arrow-down-s-fill fs-5 align-middle"></i>10.52%
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <h4 class="text-truncate fs-14 fs-medium mb-0"><i
-                                                    class="ri-stop-fill align-middle fs-18 text-info me-2"></i>Tablet
-                                                Users</h4>
-                                        </td>
-                                        <td>
-                                            <p class="text-muted mb-0"><i data-feather="users"
-                                                    class="me-2 icon-sm"></i>42.89k</p>
-                                        </td>
-                                        <td class="text-end">
-                                            <p class="text-danger fw-medium fs-12 mb-0"><i
-                                                    class="ri-arrow-down-s-fill fs-5 align-middle"></i>7.36%
-                                            </p>
-                                        </td>
-                                    </tr>
+                                <tbody class="border-0" id="list_device">
                                 </tbody>
                             </table>
                         </div>
@@ -283,7 +220,7 @@
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Top Referrals Pages</h4>
+                        <h4 class="card-title mb-0 flex-grow-1">Top 7 page có lượt truy cập nhiều nhất</h4>
                         <div class="flex-shrink-0">
                             <button type="button" class="btn btn-soft-primary btn-sm">
                                 Export Report
@@ -388,7 +325,7 @@
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Top Pages</h4>
+                        <h4 class="card-title mb-0 flex-grow-1">Top 7 page có lượt truy cập nhiều nhất</h4>
                         <div class="flex-shrink-0">
                             <div class="dropdown card-header-dropdown">
                                 <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
@@ -396,12 +333,6 @@
                                     <span class="text-muted fs-16"><i
                                             class="mdi mdi-dots-vertical align-middle"></i></span>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" href="#">Today</a>
-                                    <a class="dropdown-item" href="#">Last Week</a>
-                                    <a class="dropdown-item" href="#">Last Month</a>
-                                    <a class="dropdown-item" href="#">Current Year</a>
-                                </div>
                             </div>
                         </div>
                     </div><!-- end card header -->
@@ -603,7 +534,7 @@
             }
             let countries = [];
             let viewPage = [];
-            countriesData.forEach(item => {             
+            countriesData.forEach(item => {
                 countries.push(item.country);
                 viewPage.push(parseFloat(item.screenPageViews));
             });
@@ -642,6 +573,13 @@
                         fontSize: "12px",
                         fontWeight: 400,
                         colors: ["#adb5bd"]
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return formatNumber(value);
+                        }
                     }
                 }
             };
@@ -685,6 +623,106 @@
             });
         }
 
+        let chartDeviceUsers;
+
+        function updateDeviceUsersChart(data = []) {
+            let chartContainer = document.querySelector("#user_device_pie_charts");
+
+            if (!chartContainer) {
+                console.error("Element #user_device_pie_charts not found!");
+                return;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let browsers = data.map(item => item.browser);
+            let screenPageViews = data.map(item => item.screenPageViews);
+            let colors = ["#4B0082", "#FFD700", "#007bff", "#6c757d", "#343a40", "#ff00ff", "#00ff00", "#00ffff",
+                "#ff5733"
+            ];
+
+            let options = {
+                series: screenPageViews,
+                labels: browsers,
+                chart: {
+                    type: "donut",
+                    height: 219,
+                },
+                plotOptions: {
+                    pie: {
+                        size: 100,
+                        donut: {
+                            size: "76%"
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    show: false
+                },
+                stroke: {
+                    width: 0
+                },
+                colors: colors,
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return formatNumber(value);
+                        }
+                    }
+                }
+            };
+
+            let chart = new ApexCharts(chartContainer, options);
+            chart.render();
+
+            $('#list_device').html('');
+
+            if (data) {
+                $.each(data, function(index, item) {
+                    let iconColor = colors[index % colors.length];
+                    let formattedValue = formatNumber(item.screenPageViews);
+
+                    let row = `
+            <tr>
+                <td>
+                    <h4 class="text-truncate fs-14 fs-medium mb-0">
+                        <i class="ri-stop-fill align-middle fs-18" style="color:${iconColor};"></i>
+                        ${item.browser}
+                    </h4>
+                </td>
+                <td class="text-end">
+                    <p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>${formattedValue}</p>
+                </td>
+            </tr>
+        `;
+
+                    $('#list_device').append(row);
+                });
+
+                if (typeof feather !== "undefined") {
+                    feather.replace();
+                }
+            }else{
+                $('#list_device').append('không có dữ liệu');
+            }
+        }
+
+        function formatNumber(value) {
+            return value.toLocaleString("vi-VN").replace(/\./g,
+                ".") + ' lượt';
+        }
+
+        updateDeviceUsersChart(@json($topBrowsers));
         line_chart_basic(@json($analyticsData));
         updateCountriesChart(@json($analyticsCountriesSession));
     </script>

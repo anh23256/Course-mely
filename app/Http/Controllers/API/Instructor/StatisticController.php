@@ -90,9 +90,7 @@ class StatisticController extends Controller
                 ->orderByDesc('total_revenue')
                 ->get();
 
-            return $this->respondOk('Doanh thu khóa học của giảng viên ' . $user->name, [
-                'courseRevenue' => $courseRevenue
-            ]);
+            return $this->respondOk('Doanh thu khóa học của giảng viên ' . $user->name,  $courseRevenue);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -125,9 +123,8 @@ class StatisticController extends Controller
                 ->toArray();
 
             $allMonths = [];
-            $maxMonth = ($year == $yearNow) ? $monthNow : 12;
 
-            for ($i = 1; $i <= $maxMonth; $i++) {
+            for ($i = 1; $i <= 12; $i++) {
                 $allMonths[$i] = $monthlyRevenue[$i] ?? null;
             }
 
