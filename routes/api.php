@@ -114,6 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE USER =============================
     Route::prefix('users')->group(function () {
+        Route::get('check-profile', [\App\Http\Controllers\API\Common\CommonController::class, 'getCheckProfileUser']);
         Route::get('/profile', [UserController::class, 'showProfile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/change-password', [UserController::class, 'changePassword']);
@@ -261,6 +262,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
+                            Route::post('request-modify-content', [SendRequestController::class, 'requestToModifyContent']);
                         });
 
                     #============================== ROUTE CHAPTER =============================

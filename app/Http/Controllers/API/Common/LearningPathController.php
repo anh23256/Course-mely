@@ -126,6 +126,7 @@ class LearningPathController extends Controller
 
             return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, [
                 'course_name' => $course->name,
+                'course_status' => $course->status,
                 'total_lesson' => $totalLesson,
                 'chapter_lessons' => $response,
             ]);

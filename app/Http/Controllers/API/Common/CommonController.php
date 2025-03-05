@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
 
 class CommonController extends Controller
@@ -51,6 +52,33 @@ class CommonController extends Controller
                 'instructors' => $instructors,
                 'has_more' => $hasMore
             ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getCheckProfileUser(Request $request)
+    {
+        try {
+            $user = \Illuminate\Support\Facades\Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập');
+            }
+
+            $profile = $user->profile;
+
+            $aboutMeExists = !empty($profile->about_me);
+            $phoneExists = !empty($profile->phone);
+            $addressExists = !empty($profile->address);
+
+            if (!$aboutMeExists || !$phoneExists || !$addressExists) {
+                return $this->respondOk('Thiếu thông tin', false);
+            }
+
+            return $this->respondOk('Thông tin đầy đủ', true);
         } catch (\Exception $e) {
             $this->logError($e);
 

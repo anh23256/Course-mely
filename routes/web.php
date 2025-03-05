@@ -61,7 +61,7 @@ Route::prefix('admin')->as('admin.')
     ->group(function () {
         #============================== ROUTE AUTH =============================
         Route::get('dashboard', function () {
-                return view('dashboard');
+            return view('dashboard');
         })->name('dashboard')->middleware('verified');
 
         #============================== ROUTE USER =============================
@@ -271,6 +271,8 @@ Route::prefix('admin')->as('admin.')
                         Route::get('/{course}', [ApprovalCourseController::class, 'show'])->name('show');
                         Route::put('/{course}', [ApprovalCourseController::class, 'approve'])->name('approve');
                         Route::put('/{course}/reject', [ApprovalCourseController::class, 'reject'])->name('reject');
+                        Route::put('/{course}/approve-modify-request', [ApprovalCourseController::class, 'approveModifyRequest'])->name('approve-modify-request');
+                        Route::put('/{course}/reject-modify-request', [ApprovalCourseController::class, 'rejectModifyRequest'])->name('reject-modify-request');
                     });
 
                 Route::prefix('instructors')
