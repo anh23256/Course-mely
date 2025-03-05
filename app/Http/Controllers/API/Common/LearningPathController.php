@@ -52,6 +52,7 @@ class LearningPathController extends Controller
 
             $chapters = $course->chapters()
                 ->with('lessons.lessonable')
+                ->where('status', 1)
                 ->orderBy('order', 'asc')
                 ->get();
 
@@ -125,6 +126,7 @@ class LearningPathController extends Controller
 
             return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, [
                 'course_name' => $course->name,
+                'course_status' => $course->status,
                 'total_lesson' => $totalLesson,
                 'chapter_lessons' => $response,
             ]);
@@ -534,34 +536,16 @@ class LearningPathController extends Controller
             }
 
             $userAnswers = json_decode($quizSubmission->answers, true);
-            $quiz = $quizSubmission->quiz;
-
-            $questions = $quiz->questions->map(function ($question) use ($userAnswers) {
-                $selectedAnswer = collect($userAnswers)
-                    ->firstWhere('question_id', $question->id);
-
+            $formattedAnswers = collect($userAnswers)->map(function ($answer) {
                 return [
-                    'id' => $question->id,
-                    'answers' => $question->answers->map(function ($answer) use ($selectedAnswer) {
-                        return [
-                            'id' => $answer->id,
-                            'is_correct' => $answer->is_correct,
-                            'is_selected' => $selectedAnswer && $selectedAnswer['answer_id'] == $answer->id,
-                        ];
-                    }),
+                    'answer_id' => is_array($answer['answer_id'])
+                        ? $answer['answer_id']
+                        : $answer['answer_id'],
+                    'question_id' => $answer['question_id']
                 ];
-            });
+            })->toArray();
 
-            $response = [
-                'quiz' => [
-                    'id' => $quiz->id,
-                    'title' => $quiz->title,
-                ],
-                'questions' => $questions,
-                'submitted_at' => $quizSubmission->created_at
-            ];
-
-            return $this->respondOk('Thông tin bài kiểm tra', $response);
+            return $this->respondOk('Thông tin bài kiểm tra', $formattedAnswers);
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -606,20 +590,8 @@ class LearningPathController extends Controller
             }
 
             $response = [
-                'coding' => [
-                    'id' => $codingSubmission->coding->id,
-                    'title' => $codingSubmission->coding->title,
-                    'language' => $codingSubmission->coding->language,
-                    'sample_code' => $codingSubmission->coding->sample_code,
-                    'result_code' => $codingSubmission->coding->result_code,
-                    'solution_code' => $codingSubmission->coding->solution_code,
-                ],
-                'solution' => [
-                    'code' => $codingSubmission->code,
-                    'output' => $codingSubmission->result,
-                    'is_correct' => $codingSubmission->is_correct,
-                    'submitted_at' => $codingSubmission->created_at,
-                ],
+                'code' => $codingSubmission->code,
+                'result' => $codingSubmission->result,
             ];
 
             return $this->respondOk('Thông tin bài tập bạn đã nộp', $response);

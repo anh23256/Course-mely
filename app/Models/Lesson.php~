@@ -17,6 +17,7 @@ class Lesson extends Model
         'is_free_preview',
         'order',
         'type',
+        'status',
         'lessonable_type',
         'lessonable_id',
     ];
@@ -44,5 +45,10 @@ class Lesson extends Model
     public function lessonProgress()
     {
         return $this->hasMany(LessonProgress::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
     }
 }

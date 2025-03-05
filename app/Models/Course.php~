@@ -21,6 +21,7 @@ class Course extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_MODIFY_REQUEST = 'modify_request';
 
     protected $fillable = [
         'user_id',
@@ -53,6 +54,10 @@ class Course extends Model
         'requirements' => null,
         'benefits' => null,
         'qa' => null,
+    ];
+
+    protected $casts = [
+        'modification_request' => 'array',
     ];
 
     public function category()
@@ -115,10 +120,5 @@ class Course extends Model
     public function instructor()
     {
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function learners()
-    {
-        return $this->belongsToMany(User::class, 'course_users', 'course_id', 'user_id');
     }
 }

@@ -490,6 +490,8 @@ class CourseController extends Controller
         }
     }
 
+    public function get
+
     private function calculateProgress(array $completionStatus): float
     {
         $totalSteps = count($completionStatus);

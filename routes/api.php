@@ -24,6 +24,7 @@ use App\Http\Controllers\API\Instructor\RegisterController;
 use App\Http\Controllers\API\Instructor\SendRequestController;
 use App\Http\Controllers\API\Instructor\StatisticController;
 use App\Http\Controllers\API\Instructor\SupportBankController;
+use App\Http\Controllers\API\Instructor\TopInstructorController;
 use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
@@ -78,6 +79,8 @@ Route::prefix('filters')
         Route::get('/', [FilterController::class, 'filter']);
     });
 
+Route::get('/top-instructors', [TopInstructorController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
         $user = $request->user();
@@ -111,6 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE USER =============================
     Route::prefix('users')->group(function () {
+        Route::get('check-profile', [\App\Http\Controllers\API\Common\CommonController::class, 'getCheckProfileUser']);
         Route::get('/profile', [UserController::class, 'showProfile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/change-password', [UserController::class, 'changePassword']);
@@ -258,6 +262,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
+                            Route::post('request-modify-content', [SendRequestController::class, 'requestToModifyContent']);
                         });
 
                     #============================== ROUTE CHAPTER =============================
@@ -396,9 +401,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
-    ->group(function () {
-        Route::post('/', [ReactionController::class, 'toggleReaction']);
-    });
+        ->group(function () {
+            Route::post('/', [ReactionController::class, 'toggleReaction']);
+        });
 
     #============================== ROUTE RATING =============================
     Route::prefix('ratings')
@@ -431,6 +436,8 @@ Route::get('/banners', [BannerController::class, 'index']);
 
 #============================== ROUTE CATEGORY =============================
 Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::class, 'index']);
+
+Route::get('/instructor-order-by-count-course', [\App\Http\Controllers\API\Common\CommonController::class, 'instructorOrderByCountCourse']);
 
 #============================== ROUTE POST =============================
 Route::prefix('blogs')

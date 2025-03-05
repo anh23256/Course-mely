@@ -9,12 +9,14 @@ use App\Models\Approvable;
 use App\Models\Course;
 use App\Models\User;
 use App\Notifications\CourseApprovedNotification;
+use App\Notifications\CourseRequestToModifyContentNotification;
 use App\Notifications\CourseSubmittedNotification;
 use App\Services\CourseValidatorService;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -54,6 +56,7 @@ class SendRequestController extends Controller
             switch ($status) {
                 case 'rejected':
                 case 'draft':
+                case 'modify_request':
                     $approvable->status = 'pending';
                     $approvable->request_date = now();
                     $approvable->save();
@@ -107,6 +110,68 @@ class SendRequestController extends Controller
             $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function requestToModifyContent(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng này');
+            }
+
+            $data = $request->validate([
+                'slug' => 'required|string|exists:courses,slug',
+                'reason' => 'required|string|max:500',
+            ]);
+
+            $course = Course::query()->where('slug', $data['slug'])->first();
+
+            if ($course->user_id !== $user->id) {
+                return $this->respondForbidden('Bạn không phải chủ sở hữu khóa học');
+            }
+
+            if ($course->status !== 'approved') {
+                return $this->respondError('Không thể gửi yêu cầu sửa đổi nội dung do khoá học chưa được duyệt');
+            }
+
+            $course->update([
+                'status' => 'modify_request'
+            ]);
+
+            $approvable = Approvable::query()->firstOrNew([
+                'approvable_id' => $course->id,
+                'approvable_type' => Course::class,
+            ]);
+
+            $approvable->fill([
+                'status' => 'pending',
+                'request_date' => now(),
+                'reason' => $data['reason'],
+                'content_modification' => true
+            ]);
+
+            $approvable->save();
+
+            $manager = User::query()
+                ->where('email', 'quaixe121811@gmail.com')
+                ->first();
+
+            $manager->notify(new CourseRequestToModifyContentNotification($course));
+
+            DB::commit();
+
+            return $this->respondOk('Gửi yêu cầu sửa đổi nội dung thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
         }
     }
 
