@@ -25,7 +25,6 @@ class RegisterController extends Controller
 
     const URL_IMAGE_DEFAULT = "https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png";
 
-
     public function register(RegisterInstructorRequest $request)
     {
         if (!Auth::check()) {

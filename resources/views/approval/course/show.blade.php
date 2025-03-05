@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="profile-foreground position-relative mx-n4 mt-n4">
             <div class="profile-wid-bg">
-                <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img" />
+                <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img"/>
             </div>
         </div>
         <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
@@ -13,24 +13,43 @@
                     <div class="avatar-md">
                         <div class="avatar-title bg-white rounded-circle">
                             <img src="{{ $approval->course->thumbnail }}" alt=""
-                                class="rounded-circle img-fluid h-100 object-fit-cover">
+                                 class="rounded-circle img-fluid h-100 object-fit-cover">
                         </div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="p-2">
                         <h3 class="text-white mb-1">
+                            {{--                            @dd($approval)--}}
                             {{ $approval->course->name }}
-                            @if ($approval->status === 'pending')
-                                <span class="badge badge-label bg-warning ">
-                                    <i class="mdi mdi-circle-medium"></i> Chờ phê duyệt
-                                </span>
-                            @elseif($approval->status === 'approved')
-                                <span class="badge badge-label bg-success"><i class="mdi mdi-circle-medium"></i> Đã
-                                    duyệt</span>
+                            @if($approval->content_modification == 1)
+                                <span class="badge badge-label bg-warning">
+            <i class="mdi mdi-circle-medium"></i> Chờ duyệt yêu cầu
+                                 </span>
                             @else
-                                <span class="badge badge-label bg-danger"><i class="mdi mdi-circle-medium"></i>Đã từ
-                                    chối</span>
+                                @switch($approval->status)
+                                    @case('pending')
+                                        <span class="badge badge-label bg-warning">
+                    <i class="mdi mdi-circle-medium"></i> Chờ phê duyệt
+                </span>
+                                        @break
+
+                                    @case('approved')
+                                        <span class="badge badge-label bg-success">
+                    <i class="mdi mdi-circle-medium"></i> Đã duyệt
+                </span>
+                                        @break
+
+                                    @case('modify_request')
+                                        <span class="badge badge-label bg-warning">
+                    <i class="mdi mdi-circle-medium"></i> Chờ chỉnh sửa nội dung
+                </span>
+                                        @break
+                                    @default
+                                        <span class="badge badge-label bg-danger">
+                    <i class="mdi mdi-circle-medium"></i> Đã từ chối
+                </span>
+                                @endswitch
                             @endif
                         </h3>
                         <div class="hstack gap-3 flex-wrap mt-3 text-white">
@@ -52,59 +71,137 @@
                 </div>
 
                 <div class="col-12 col-lg-auto order-last order-lg-0">
-                    @if ($approval->status === 'pending')
+                    @if($approval->content_modification == 1)
                         <div class="d-flex gap-1">
-                            <form action="{{ route('admin.approvals.courses.approve', $approval->id) }}" method="POST"
-                                id="approveForm">
+                            <form
+                                action="{{ route('admin.approvals.courses.approve-modify-request', $approval->id) }}"
+                                method="POST"
+                                id="approveModifyRequestForm">
                                 @csrf
                                 @method('PUT')
-                                <button class="btn btn-primary approve" type="button">Phê duyệt</button>
+                                <button class="btn btn-primary approveModifyRequest" type="button">Duyệt yêu cầu
+                                </button>
                             </form>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                data-bs-target="#rejectModal">
+                                    data-bs-target="#rejectModalModifyRequest">
                                 Từ chối
                             </button>
                         </div>
-                        <div id="rejectModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel"
-                            aria-hidden="true">
+
+                        <div id="rejectModalModifyRequest" class="modal fade" tabindex="-1"
+                             aria-labelledby="myModalLabel"
+                             aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="myModalLabel">Từ chối khoá học</h5>
+                                        <h5 class="modal-title" id="myModalLabel">Từ chối yêu cầu</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
+                                                aria-label="Close"></button>
                                     </div>
-                                    <form id="rejectForm"
-                                        action="{{ route('admin.approvals.courses.reject', $approval->id) }}"
-                                        method="POST">
+                                    <form id="rejectModifyRequestForm"
+                                          action="{{ route('admin.approvals.courses.reject-modify-request', $approval->id) }}"
+                                          method="POST">
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="rejectReason" class="form-label">Lý do từ
                                                     chối</label>
-                                                <textarea placeholder="Nhập lý do từ chối..." class="form-control" id="rejectNote" name="note" rows="3"></textarea>
+                                                <textarea placeholder="Nhập lý do từ chối..." class="form-control"
+                                                          id="rejectNoteModifyRequest" name="note"
+                                                          rows="3"></textarea>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Huỷ
                                             </button>
-                                            <button type="button" class="btn btn-primary" id="submitRejectForm">Xác nhận
+                                            <button type="button" class="btn btn-primary"
+                                                    id="submitRejectModifyRequestForm">Xác nhận
                                             </button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                    @elseif($approval->status === 'rejected')
-                        <button type="button" class="btn btn-danger ">
-                            Khoá học không đủ điều kiện
-                        </button>
                     @else
-                        <button type="button" class="btn btn-success ">
-                            Khoá học đã được phê duyệt
-                        </button>
+                        @switch($approval->status)
+                            @case('pending')
+                                <div class="d-flex gap-1">
+                                    <form action="{{ route('admin.approvals.courses.approve', $approval->id) }}"
+                                          method="POST" id="approveForm">
+                                        @csrf
+                                        @method('PUT')
+                                        <button class="btn btn-primary approve" type="button">Phê duyệt</button>
+                                    </form>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                            data-bs-target="#rejectModal">
+                                        Từ chối
+                                    </button>
+                                </div>
+
+                                <div id="rejectModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel"
+                                     aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="myModalLabel">Từ chối khoá học</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                            </div>
+                                            <form id="rejectForm"
+                                                  action="{{ route('admin.approvals.courses.reject', $approval->id) }}"
+                                                  method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label for="rejectReason" class="form-label">Lý do từ
+                                                            chối</label>
+                                                        <textarea placeholder="Nhập lý do từ chối..."
+                                                                  class="form-control"
+                                                                  id="rejectNote" name="note" rows="3"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                                                        Huỷ
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary" id="submitRejectForm">
+                                                        Xác
+                                                        nhận
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('rejected')
+                                <button type="button" class="btn btn-danger">
+                                    Khoá học không đủ điều kiện
+                                </button>
+                                @break
+
+                            @case('modify_request')
+                                <button type="button" class="btn btn-success">
+                                    Khoá học đã được phê duyệt
+                                </button>
+                                @break
+
+                            @case('approved')
+                                <button type="button" class="btn btn-success">
+                                    Khoá học đã được phê duyệt
+                                </button>
+                                @break
+
+                            @default
+                                <button type="button" class="btn btn-secondary">
+                                    Trạng thái không xác định
+                                </button>
+                        @endswitch
                     @endif
+
                 </div>
             </div>
         </div>
@@ -131,6 +228,14 @@
                                         class="d-none d-md-inline-block">Tiêu chí</span>
                                 </a>
                             </li>
+                            @if($approval->content_modification == 1)
+                                <li class="nav-item">
+                                    <a class="nav-link fs-14" data-bs-toggle="tab" href="#modify-content" role="tab">
+                                        <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span
+                                            class="d-none d-md-inline-block">Lý do yêu cầu</span>
+                                    </a>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -199,9 +304,9 @@
                                                         </button>
                                                     </h2>
                                                     <div id="collapse{{ $index + 1 }}"
-                                                        class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}"
-                                                        aria-labelledby="heading{{ $index + 1 }}"
-                                                        data-bs-parent="#default-accordion-example">
+                                                         class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}"
+                                                         aria-labelledby="heading{{ $index + 1 }}"
+                                                         data-bs-parent="#default-accordion-example">
                                                         <div class="accordion-body">
                                                             {{ $item['answers'] }}
                                                         </div>
@@ -222,9 +327,9 @@
                                 </h5>
                                 <div>
                                     <div style="width: 80px;"
-                                        class="progress animated-progress custom-progress progress-label">
+                                         class="progress animated-progress custom-progress progress-label">
                                         <div class="progress-bar bg-danger" id="progressCourseStyle" role="progressbar"
-                                            style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                                             <div class="label" id="progressCourse">0%</div>
                                         </div>
                                     </div>
@@ -234,30 +339,30 @@
                                 <div class="table-responsive table-card">
                                     <table class="table mb-0">
                                         <tbody>
-                                            <tr>
-                                                <td class="fw-medium">Thời lượng</td>
-                                                <td><span class="badge bg-success-subtle text-success">
+                                        <tr>
+                                            <td class="fw-medium">Thời lượng</td>
+                                            <td><span class="badge bg-success-subtle text-success">
                                                         {{ gmdate('H:i:s', $totalDuration) }}
                                                     </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Chương học</td>
-                                                <td>{{ $approval->approvable->chapters->count() ?? '' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Bài học</td>
-                                                <td> {{ $approval->approvable->chapters->sum(fn($chapter) => $chapter->lessons->count()) ?? '' }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Trình độ</td>
-                                                <td>{{ $approval->course->level ?? '' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Giá</td>
-                                                <td>{{ number_format($approval->course->price ?? 0) ?? '' }}</td>
-                                            </tr>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">Chương học</td>
+                                            <td>{{ $approval->approvable->chapters->count() ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">Bài học</td>
+                                            <td> {{ $approval->approvable->chapters->sum(fn($chapter) => $chapter->lessons->count()) ?? '' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">Trình độ</td>
+                                            <td>{{ $approval->course->level ?? '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">Giá</td>
+                                            <td>{{ number_format($approval->course->price ?? 0) ?? '' }}</td>
+                                        </tr>
                                         </tbody>
                                     </table>
 
@@ -291,9 +396,9 @@
                                                 </button>
                                             </h2>
                                             <div id="collapseChapter{{ $chapterIndex }}"
-                                                class="accordion-collapse collapse {{ $chapterIndex == 0 ? 'show' : '' }}"
-                                                aria-labelledby="headingChapter{{ $chapterIndex }}"
-                                                data-bs-parent="#accordionWithicon">
+                                                 class="accordion-collapse collapse {{ $chapterIndex == 0 ? 'show' : '' }}"
+                                                 aria-labelledby="headingChapter{{ $chapterIndex }}"
+                                                 data-bs-parent="#accordionWithicon">
                                                 <div class="accordion-body">
                                                     <div class="accordion" id="accordionLessons{{ $chapterIndex }}">
                                                         @foreach ($chapter->lessons->sortBy('order') as $lessonIndex => $lesson)
@@ -330,7 +435,8 @@
                                                                         </div>
                                                                     </button>
                                                                 </h2>
-                                                                <div id="collapseLesson{{ $chapterIndex }}{{ $lessonIndex }}"
+                                                                <div
+                                                                    id="collapseLesson{{ $chapterIndex }}{{ $lessonIndex }}"
                                                                     class="accordion-collapse collapse {{ $lessonIndex == 0 ? 'show' : '' }}"
                                                                     aria-labelledby="headingLesson{{ $chapterIndex }}{{ $lessonIndex }}">
                                                                     <div class="accordion-body">
@@ -375,13 +481,14 @@
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="criteriaHeadingOne">
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseOne" aria-expanded="true"
-                                                    aria-controls="criteriaCollapseOne">
+                                                        data-bs-target="#criteriaCollapseOne" aria-expanded="true"
+                                                        aria-controls="criteriaCollapseOne">
                                                     <strong>Tiêu chí 1:</strong> Tổng quan về khóa học
                                                 </button>
                                             </h2>
                                             <div id="criteriaCollapseOne" class="accordion-collapse collapse show"
-                                                aria-labelledby="criteriaHeadingOne" data-bs-parent="#criteriaAccordion">
+                                                 aria-labelledby="criteriaHeadingOne"
+                                                 data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
                                                     <div class="row" id="criteria_course_overview">
                                                     </div>
@@ -393,13 +500,14 @@
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="criteriaHeadingTwo">
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseTwo" aria-expanded="false"
-                                                    aria-controls="criteriaCollapseTwo">
+                                                        data-bs-target="#criteriaCollapseTwo" aria-expanded="false"
+                                                        aria-controls="criteriaCollapseTwo">
                                                     <strong>Tiêu chí 2:</strong> Chương trình giảng dạy
                                                 </button>
                                             </h2>
                                             <div id="criteriaCollapseTwo" class="accordion-collapse collapse"
-                                                aria-labelledby="criteriaHeadingTwo" data-bs-parent="#criteriaAccordion">
+                                                 aria-labelledby="criteriaHeadingTwo"
+                                                 data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
                                                     <div class="row" id="criteria_course_curriculum">
                                                     </div>
@@ -411,14 +519,14 @@
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="criteriaHeadingThree">
                                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseThree" aria-expanded="false"
-                                                    aria-controls="criteriaCollapseThree">
+                                                        data-bs-target="#criteriaCollapseThree" aria-expanded="false"
+                                                        aria-controls="criteriaCollapseThree">
                                                     <strong>Tiêu chí 3:</strong> Mục tiêu khóa học
                                                 </button>
                                             </h2>
                                             <div id="criteriaCollapseThree" class="accordion-collapse collapse"
-                                                aria-labelledby="criteriaHeadingThree"
-                                                data-bs-parent="#criteriaAccordion">
+                                                 aria-labelledby="criteriaHeadingThree"
+                                                 data-bs-parent="#criteriaAccordion">
                                                 <div class="accordion-body">
                                                     <div class="row" id="criteria_course_objectives">
                                                     </div>
@@ -432,6 +540,22 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-pane" id="modify-content" role="tabpanel">
+                <div class="tab-pane" id="modify-content" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Lý do yêu cầu sửa đổi</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ $approval->reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -439,8 +563,8 @@
 @push('page-scripts')
     <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
     <script>
-        $(document).ready(function() {
-            $(".approve").click(function(event) {
+        $(document).ready(function () {
+            $(".approve").click(function (event) {
                 event.preventDefault();
 
                 Swal.fire({
@@ -453,12 +577,30 @@
                     cancelButtonText: "Huỷ"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $("#approveForm").submit();
+                        $("#approveModifyRequestForm").submit();
                     }
                 });
             });
 
-            $('#submitRejectForm').on('click', function() {
+            $(".approveModifyRequest").click(function (event) {
+                event.preventDefault();
+
+                Swal.fire({
+                    title: "Phê duyệt yêu cầu ?",
+                    text: "Bạn có chắc chắn muốn phê duyệt yêu cầu này?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Phê duyệt",
+                    cancelButtonText: "Huỷ"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $("#approveModifyRequestForm").submit();
+                    }
+                });
+            });
+
+            $('#submitRejectForm').on('click', function () {
                 const note = $('#rejectNote').val();
 
                 if (note.trim() === '') {
@@ -476,7 +618,7 @@
                         _method: 'PUT',
                         note,
                     },
-                    success: function(response) {
+                    success: function (response) {
                         Swal.fire({
                             title: 'Thao tác thành công!',
                             text: 'Lý do từ chối đã được ghi nhận.',
@@ -486,7 +628,45 @@
                             location.reload();
                         });
                     },
-                    error: function(error) {
+                    error: function (error) {
+                        Swal.fire({
+                            title: 'Thao tác thất bại!',
+                            text: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
+                            icon: 'error'
+                        });
+                    }
+                });
+            });
+
+            $('#submitRejectModifyRequestForm').on('click', function () {
+                const note = $('#rejectNoteModifyRequest').val();
+
+                if (note.trim() === '') {
+                    Swal.fire({
+                        text: "Vui lòng nhập lý do từ chối.",
+                        icon: 'warning'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: $('#rejectModifyRequestForm').attr('action'),
+                    data: {
+                        _method: 'PUT',
+                        note,
+                    },
+                    success: function (response) {
+                        Swal.fire({
+                            title: 'Thao tác thành công!',
+                            text: 'Lý do từ chối đã được ghi nhận.',
+                            icon: 'success'
+                        }).then(() => {
+                            $('#rejectModalModifyRequest').modal('hide');
+                            location.reload();
+                        });
+                    },
+                    error: function (error) {
                         Swal.fire({
                             title: 'Thao tác thất bại!',
                             text: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
@@ -503,7 +683,7 @@
             $.ajax({
                 type: 'GET',
                 url: "http://127.0.0.1:8000/api/{{ Auth::user()->code }}/{{ $approval->course->slug }}/get-validate-course",
-                beforeSend: function() {
+                beforeSend: function () {
                     $("#criteria_course_overview, #criteria_course_curriculum, #criteria_course_objectives")
                         .html(`
                 <span class="col-md-12 mt-2 text-center">
@@ -512,7 +692,7 @@
                 </span>
             `);
                 },
-                success: function(response) {
+                success: function (response) {
                     console.log(response);
                     if (response.data) {
                         let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;

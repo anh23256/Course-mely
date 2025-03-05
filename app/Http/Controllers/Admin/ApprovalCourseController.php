@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Approvable;
 use App\Models\Course;
+use App\Models\User;
 use App\Models\Video;
+use App\Notifications\CourseModificationNotificationForStudent;
+use App\Notifications\CourseModificationRejectedNotification;
+use App\Notifications\CourseModificationResponseNotification;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Carbon\Carbon;
@@ -108,7 +112,6 @@ class ApprovalCourseController extends Controller
         }
     }
 
-
     public function approve(Request $request, string $id)
     {
         return $this->updateApprovalStatus($id, 'approved', 'Khoá học đã được duyệt');
@@ -147,6 +150,99 @@ class ApprovalCourseController extends Controller
             DB::commit();
 
             return redirect()->back()->with('success', "Khoá học đã được $status");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return redirect()->route('admin.approvals.courses.index')
+                ->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function rejectModifyRequest(Request $request, string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $note = 'Yêu cầu sửa đổi nội dung khóa học bị từ chối';
+            $status = 'modify_request_rejected';
+
+            $approval = Approvable::query()->findOrFail($id);
+            $user = $approval->course->user;
+            $approval->status = 'approved';
+            $approval->content_modification = false;
+            $approval->reason = null;
+            $approval->save();
+
+            $approval->course->update([
+                'status' => 'approved',
+                'modification_request' => false
+            ]);
+
+            $user->notify(new CourseModificationResponseNotification(
+                $approval->course,
+                $status,
+                $note
+            ));
+
+            DB::commit();
+
+            return redirect()->route('admin.approvals.courses.index')->with('success', "Yêu cầu sửa đổi nội dung khóa học được từ chối");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return redirect()->route('admin.approvals.courses.index')
+                ->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function approveModifyRequest(Request $request, string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $note = 'Yêu cầu sửa đổi nội dung khóa học được duyệt';
+            $status = 'modify_request_approved';
+
+            $approval = Approvable::query()->findOrFail($id);
+            $user = $approval->course->user;
+
+            $studentIds = DB::table('course_users')
+                ->where('course_id', $approval->course->id)
+                ->pluck('user_id');
+
+            $students = User::query()->whereIn('id', $studentIds)->get();
+
+            $approval->status = 'modify_request';
+            $approval->note = $note;
+            $approval->content_modification = false;
+            $approval->approver_id = auth()->id();
+            $approval->save();
+
+            $approval->course->update([
+                'status' => 'draft',
+                'modification_request' => true
+            ]);
+
+            $user->notify(new CourseModificationResponseNotification(
+                $approval->course,
+                $status,
+                $note
+            ));
+
+            foreach ($students as $student) {
+                $student->notify(new CourseModificationNotificationForStudent(
+                    $approval->course,
+                    $student
+                ));
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.approvals.courses.index')->with('success', "Yêu cầu sửa đổi nội dung khóa học được đồng ý");
         } catch (\Exception $e) {
             DB::rollBack();
 

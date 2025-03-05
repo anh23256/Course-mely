@@ -254,6 +254,8 @@
                                                     <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
                                                 @elseif($approval->status == 'approved')
                                                     <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
+                                                @elseif($approval->status == 'modify_request')
+                                                    <span class="btn btn-sm btn-soft-warning">Sửa đổi nội dung</span>
                                                 @else
                                                     <span class="btn btn-sm btn-soft-danger">Từ chối</span>
                                                 @endif
