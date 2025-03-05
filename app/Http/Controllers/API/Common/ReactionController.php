@@ -61,4 +61,32 @@ class ReactionController extends Controller
             return $this->respondServerError();
         }
     }
+    public function index($commentId)
+{
+    try {
+        // Tìm comment theo ID
+        $comment = Comment::find($commentId);
+        if (!$comment) {
+            return $this->respondNotFound('Không tìm thấy comment');
+        }
+
+        // Lấy tất cả các phản ứng của comment đó
+        $reactions = Reaction::where([
+            'reactable_id' => $comment->id,
+            'reactable_type' => Comment::class,
+        ])->get();
+
+        // Trả về danh sách các phản ứng
+        return response()->json([
+            'message' => 'Lấy phản ứng thành công',
+            'reactions' => $reactions
+        ]);
+    } catch (\Exception $e) {
+        // Ghi log lỗi nếu có
+        $this->logError($e, ['comment_id' => $commentId]);
+
+        return $this->respondServerError();
+    }
+}
+
 }

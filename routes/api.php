@@ -28,6 +28,7 @@ use App\Http\Controllers\API\Instructor\TopInstructorController;
 use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
+use App\Models\Reaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -403,6 +404,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('reactions')
         ->group(function () {
             Route::post('/', [ReactionController::class, 'toggleReaction']);
+            Route::get('/{commentId}', [ReactionController::class, 'index']);
         });
 
     #============================== ROUTE RATING =============================
