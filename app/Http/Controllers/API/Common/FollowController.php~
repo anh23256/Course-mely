@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers\API\Common;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Follow\StoreFollowRequest;
+use App\Models\Follow;
+use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class FollowController extends Controller
+{
+    use LoggableTrait, ApiResponseTrait;
+
+    public function follow(StoreFollowRequest $request)
+    {
+        try {
+            $followerId = Auth::user();
+
+            if (!$followerId) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $data = $request->validated();
+
+            $isFollowing = Follow::query()
+                ->where('follower_id', $followerId->id)
+                ->where('instructor_id', $data['instructor_id'])
+                ->exists();
+
+            if ($isFollowing) {
+                Follow::query()
+                    ->where('follower_id', $followerId->id)
+                    ->where('instructor_id', $data['instructor_id'])
+                    ->delete();
+
+                return $this->respondOk('Huỷ theo dõi thành công');
+            } else {
+                Follow::query()
+                    ->create([
+                        'follower_id' => $followerId->id,
+                        'instructor_id' => $data['instructor_id']
+                    ]);
+
+                return $this->respondOk('Theo dõi thành cong');
+            }
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+}
