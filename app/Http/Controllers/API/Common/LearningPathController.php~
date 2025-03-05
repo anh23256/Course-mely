@@ -625,7 +625,7 @@ class LearningPathController extends Controller
                 ->first();
 
             if (!$course) {
-                return $this->respondNotFound('Khoá học không tồn tại hoặc đã được duyệt');
+                return $this->respondNotFound('Khoá học không tồn tại');
             }
 
             $chapters = $course->chapters()

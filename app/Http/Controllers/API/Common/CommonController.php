@@ -39,6 +39,7 @@ class CommonController extends Controller
                 ->map(function ($instructor) {
                     return [
                         'id' => $instructor->id,
+                        'code' => $instructor->code,
                         'name' => $instructor->name,
                         'email' => $instructor->email,
                         'avatar' => $instructor->avatar_url,

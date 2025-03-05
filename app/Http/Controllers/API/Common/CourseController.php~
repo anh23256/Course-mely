@@ -400,7 +400,6 @@ class CourseController
                 ->select([
                     'id', 'name', 'slug', 'thumbnail',
                     'level', 'category_id', 'is_free',
-                    'price', 'price_sale',
                     'total_student', 'created_at',
                     'user_id'
                 ])
