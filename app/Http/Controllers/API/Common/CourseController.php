@@ -271,12 +271,33 @@ class CourseController
     {
         try {
             $categories = Category::query()
+                ->select('id', 'name', 'slug', 'parent_id')
                 ->with([
                     'courses' => function ($query) {
-                        $query->where('visibility', '=', 'public')
+                        $query->select(
+                            'courses.name',
+                            'courses.code',
+                            'courses.category_id',
+                            'courses.slug',
+                            'courses.thumbnail',
+                            'courses.price',
+                            'courses.price_sale',
+                            'courses.total_student',
+                            DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
+                            DB::raw('COUNT(DISTINCT ratings.rate) as total_rating'),
+                        )
+                            ->where('visibility', '=', 'public')
+                            ->whereRaw('courses.id IN (
+                                SELECT id FROM (
+                                    SELECT id, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_student DESC) as row_num
+                                    FROM courses
+                                    WHERE visibility = "public" AND status = "approved"
+                                ) as ranked WHERE row_num <= 7
+                            )')
                             ->where('status', '=', 'approved')
                             ->orderBy('total_student', 'desc')
-                            ->limit(5);
+                            ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
+                            ->groupBy('courses.name', 'courses.slug', 'courses.code');
                     },
                 ])
                 ->whereHas('courses', function ($query) {
@@ -284,8 +305,8 @@ class CourseController
                         ->where('status', '=', 'approved');
                 })
                 ->withCount('courses')
-                ->having('courses_count', '>=', 5)
-                ->limit(5)
+                ->orderBy('courses_count', 'desc')
+                ->limit(3)
                 ->get();
 
             if ($categories->isEmpty()) {
@@ -296,7 +317,7 @@ class CourseController
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return $this->respondServerError('Internal Server Error');
+            return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
         }
     }
 
@@ -509,14 +530,17 @@ class CourseController
 
             $getOtherCourses = DB::table('courses')
                 ->select(
-                    'courses.id',
+                    'courses.code',
                     'courses.name as name_course',
                     'courses.slug',
                     'courses.price',
                     'courses.price_sale',
+                    'courses.thumbnail',
                     'users.name as name_instructor',
                     'users.code as code_instructor',
                     DB::raw('COUNT(lessons.id) as total_lesson, SUM(videos.duration) as total_duration'),
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT ratings.rate) as total_rating'),
                 )
                 ->join('chapters', 'chapters.course_id', '=', 'courses.id')
                 ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
@@ -529,9 +553,8 @@ class CourseController
                     'courses.visibility' => 'public',
                     'courses.status' => 'approved',
                 ])
-                ->where('courses.price', '>',)
-                ->where('courses.id', '<>', $slug)
-                ->groupBy('courses.id', 'courses.name', 'courses.slug')
+                ->where('courses.slug', '<>', $slug)
+                ->groupBy('courses.code', 'courses.name', 'courses.slug')
                 ->orderBy('courses.total_student', 'desc')
                 ->limit(9)
                 ->get();
@@ -558,7 +581,7 @@ class CourseController
                 ->first();
 
             return response()->json([
-                'message' => 'Kiểm tra hoàn thiện khoá học',
+                'message' => 'Danh sách khóa học và thông tin giảng viên',
                 'getOtherCourse' => $getOtherCourses,
                 'profile_instructor' => $profileIntructor
             ]);
