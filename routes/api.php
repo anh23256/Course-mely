@@ -329,7 +329,7 @@ Route::middleware('auth:sanctum')->group(function () {
             #============================== ROUTE POST =============================
             Route::prefix('posts')->as('posts.')->group(function () {
                 Route::get('/', [PostController::class, 'index']);
-                Route::get('/{post}', [PostController::class, 'getPostBySlug']);
+                Route::get('/{slug}', [PostController::class, 'getPostBySlug']);
                 Route::post('/', [PostController::class, 'store']);
                 Route::put('/{post}', [PostController::class, 'update']);
             });
@@ -452,6 +452,8 @@ Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByCategory']);
+        Route::get('/tag/{tagId}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByTag']);
     });
 
 #============================== ROUTE QA SYSTEM =================================

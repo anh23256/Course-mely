@@ -65,4 +65,56 @@ class BlogController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+    public function getPostsByCategory($slug)
+    {
+        try {
+            $posts = Post::query()
+                ->with([
+                    'user',
+                    'category',
+                    'tags',
+                ])
+                ->where('status', Post::STATUS_PUBLISHED)
+                ->whereHas('category', function ($query) use ($slug) {
+                    $query->where('slug', $slug);  // Lọc bài viết theo slug của category
+                })
+                ->paginate(4); // Giới hạn số lượng bài viết trên mỗi trang
+
+            if ($posts->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy bài viết nào trong danh mục này');
+            }
+
+            return $this->respondOk('Danh sách bài viết trong danh mục:', $posts);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+    public function getPostsByTag($tagId)
+    {
+        try {
+            $posts = Post::query()
+                ->with([
+                    'user',
+                    'category',
+                    'tags',
+                ])
+                ->where('status', Post::STATUS_PUBLISHED)
+                ->whereHas('tags', function ($query) use ($tagId) {  // Lọc theo thẻ
+                    $query->where('tags.id', $tagId);
+                })
+                ->paginate(4); // Giới hạn số lượng bài viết trên mỗi trang
+
+            if ($posts->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy bài viết nào với thẻ này');
+            }
+
+            return $this->respondOk('Danh sách bài viết với thẻ:', $posts);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
 }
