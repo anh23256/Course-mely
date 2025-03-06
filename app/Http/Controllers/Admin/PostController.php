@@ -97,18 +97,17 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         try {
-
+            
+            $request->validated();
             DB::beginTransaction();
 
             $data = $request->except('thumbnail');
-
+           
             if ($request->hasFile('thumbnail')) {
                 $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['user_id'] = Auth::id();
-
-            $data['category_id'] = $request->input('categories');
 
             $data['published_at'] = $request->input('published_at') ?? now();
 

@@ -74,12 +74,32 @@ class ReactionController extends Controller
         $reactions = Reaction::where([
             'reactable_id' => $comment->id,
             'reactable_type' => Comment::class,
-        ])->get();
+        ])->with('user')->get();
+        $likeCount = $reactions->where('type', 'like')->count();
+        $loveCount = $reactions->where('type', 'love')->count();
+        $hahaCount = $reactions->where('type', 'haha')->count();
+        $wowCount = $reactions->where('type', 'wow')->count();
+        $sadCount = $reactions->where('type', 'sad')->count();
+        $angryCount = $reactions->where('type', 'angry')->count();
 
+        $totalReactions =  $likeCount +  $loveCount +  $hahaCount + $wowCount + $sadCount + $angryCount;
         // Trả về danh sách các phản ứng
         return response()->json([
             'message' => 'Lấy phản ứng thành công',
-            'reactions' => $reactions
+            'reactions' => $reactions->map(function($reaction) {
+                return [
+                    'user_name' => $reaction->user->name, 
+                    'avatar' => $reaction->user->avatar, 
+                    'react_type' => $reaction->type,
+                ];
+            }),
+            'totalReactions' => $totalReactions,
+            'like_count' => $likeCount,
+            'love_count' => $loveCount,
+            'haha_count' => $hahaCount,
+            'sad_count' => $sadCount,
+            'wow_count' => $wowCount,
+            'angry_count' => $angryCount,
         ]);
     } catch (\Exception $e) {
         // Ghi log lỗi nếu có
@@ -88,5 +108,4 @@ class ReactionController extends Controller
         return $this->respondServerError();
     }
 }
-
 }
