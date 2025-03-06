@@ -74,8 +74,8 @@ class FollowController extends Controller
             $total_follower = Follow::where('instructor_id', $instructor->id)
                 ->count();
 
-            $listFollower = Follow::where('instructor_id', $instructor->id)
-                ->with('instructor')->limit(20)->get();
+            $listFollower = DB::table('follows')->select('users.name', 'users.avatar', 'users.status', 'users.code')
+            ->join('users','users.id', '=', 'follows.follower_id')->limit(20)->get();
 
             return response()->json([
                 'message' => "Danh sách người theo dõi giảng viên {$instructor->name}",
