@@ -563,6 +563,7 @@ class CourseController
                 ->select(
                     'users.name',
                     'users.code',
+                    'users.avatar',
                     'profiles.bio',
                     'profiles.about_me',
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
