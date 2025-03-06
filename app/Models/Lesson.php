@@ -50,4 +50,9 @@ class Lesson extends Model
     {
         return $this->hasMany(Note::class);
     }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
 }

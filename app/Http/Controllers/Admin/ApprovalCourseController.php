@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Approvable;
 use App\Models\Course;
+use App\Models\Document;
+use App\Models\Quiz;
 use App\Models\Video;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
@@ -95,12 +97,32 @@ class ApprovalCourseController extends Controller
                 return $lesson->lessonable->duration ?? 0;
             });
 
+            $documents = $approval->approvable->chapters->flatMap(function ($chapter) {
+                return $chapter->lessons;
+            })->filter(function ($lesson) {
+                return $lesson->lessonable_type == Document::class;
+            })->mapToGroups(function ($lesson) {
+                return [$lesson->id => $lesson->lessonable]  ?? null;
+            });
+
+            $quizzes = $approval->approvable->chapters->flatMap(function ($chapter){
+                return $chapter->lessons;
+            })->filter(function ($lesson){
+                return $lesson->lessonable_type == Quiz::class;
+            })->mapToGroups(function ($lesson){
+                
+                return [$lesson->id => $lesson->lessonable->load('questions.answers')] ?? null;
+            });
+
             return view('approval.course.show', compact([
                 'title',
                 'subTitle',
                 'approval',
                 'totalDuration',
+                'documents',
+                'quizzes'
             ]));
+
         } catch (\Exception $e) {
             $this->logError($e);
 

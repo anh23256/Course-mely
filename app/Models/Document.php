@@ -18,6 +18,8 @@ class Document extends Model
 
     public function lessons()
     {
-        return $this->morphOne(Lesson::class, 'lessonable');
-    }
+        return $this->morphMany(Lesson::class, 'lessonable');
+    }   
+
+    
 }

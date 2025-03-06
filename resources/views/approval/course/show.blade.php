@@ -325,7 +325,8 @@
                                                                                 {{ $lesson->title }}
                                                                             </span>
                                                                             @if ($lesson->type === 'video')
-                                                                                <span class="ms-3">10h</span>
+                                                                                <span
+                                                                                    class="ms-3">{{ gmdate('i:s', $lesson->lessonable->duration) }}</span>
                                                                             @endif
                                                                         </div>
                                                                     </button>
@@ -341,9 +342,102 @@
                                                                                 metadata-viewer-user-id="user-id-007"
                                                                                 style="height: 300px; width: 100%;"></mux-player>
                                                                         @endif
+
+                                                                        @if ($lesson->type === 'document' && isset($documents[$lesson->id]))
+                                                                            <ul>
+                                                                                @foreach ($documents[$lesson->id] as $document)
+                                                                                    <li>
+                                                                                        <a href="#"
+                                                                                            data-bs-toggle="modal"
+                                                                                            data-bs-target="#documentModal{{ $document->id }}">
+                                                                                            {{ $document->title }}
+                                                                                        </a>
+
+                                                                                        <!-- Modal -->
+                                                                                        <div class="modal fade"
+                                                                                            id="documentModal{{ $document->id }}"
+                                                                                            tabindex="-1"
+                                                                                            aria-labelledby="documentModalLabel{{ $document->id }}"
+                                                                                            aria-hidden="true">
+                                                                                            <div
+                                                                                                class="modal-dialog modal-lg">
+                                                                                                <div class="modal-content">
+                                                                                                    <div
+                                                                                                        class="modal-header">
+                                                                                                        <h5 class="modal-title"
+                                                                                                            id="documentModalLabel{{ $document->id }}">
+                                                                                                            {{ $document->title }}
+                                                                                                        </h5>
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            class="btn-close"
+                                                                                                            data-bs-dismiss="modal"
+                                                                                                            aria-label="Close"></button>
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="modal-body">
+                                                                                                        @if (Str::endsWith($document->file_path, '.pdf'))
+                                                                                                            <iframe
+                                                                                                                src="{{ asset($document->file_path) }}"
+                                                                                                                width="100%"
+                                                                                                                height="500px"></iframe>
+                                                                                                        @else
+                                                                                                            <p>Không thể xem
+                                                                                                                trước tệp
+                                                                                                                này, <a
+                                                                                                                    href="{{ asset($document->file_path) }}"
+                                                                                                                    target="_blank">Tải
+                                                                                                                    xuống
+                                                                                                                    tại
+                                                                                                                    đây</a>
+                                                                                                            </p>
+                                                                                                        @endif
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </li>
+                                                                                @endforeach
+                                                                            </ul>
+                                                                        @endif
+
+                                                                        @if ($lesson->type === 'quiz' && isset($quizzes[$lesson->id]))
+                                                                            <div class="quiz-section">
+
+
+                                                                                @foreach ($quizzes[$lesson->id] as $quiz)
+                                                                                    @foreach ($quiz->questions as $question)
+                                                                                        <div class="question-container">
+                                                                                            {{ $question->question }}
+                                                                                        </div>
+                                                                                        @if ($question->answers->isNotEmpty())
+                                                                                            @foreach ($question->answers as $answer)
+                                                                                                <div class="form-check">
+                                                                                                    <input
+                                                                                                        class="form-check-input"
+                                                                                                        type="{{ $question->answer_type == 'multiple_choice' ? 'checkbox' : 'radio' }}"
+                                                                                                        name="question_{{ $question->id }}{{ $question->answer_type == 'multiple_choice' ? '[]' : '' }}"
+                                                                                                        id="answer_{{ $answer->id }}"
+                                                                                                        {{ $answer->is_correct ? 'checked' : '' }}
+                                                                                                        disabled>
+                                                                                                    <label
+                                                                                                        class="form-check-label"
+                                                                                                        for="answer_{{ $answer->id }}">
+                                                                                                        {{ $answer->answer }}
+                                                                                                    </label>
+                                                                                                </div>
+                                                                                            @endforeach
+                                                                                        @else
+                                                                                            <p class="no-answer">Chưa có
+                                                                                                đáp án cho câu hỏi này.</p>
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @endif
                                                                         <div
                                                                             style="margin-top: auto; display: flex; justify-content: flex-end;">
-                                                                            <a class="btn btn-primary" href="#">Xem
+                                                                            <a class="btn btn-primary" href="">Xem
                                                                                 bài học</a>
                                                                         </div>
                                                                     </div>
