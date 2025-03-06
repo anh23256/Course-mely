@@ -41,17 +41,22 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Khóa học không tồn tại');
             }
 
-            $userPurchaseCourse = CourseUser::query()
-                ->where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->exists();
+            $isInstructorOfCourse = $course->user_id === $user->id;
 
-            if (!$userPurchaseCourse) {
-                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            if (!$isInstructorOfCourse) {
+                $userPurchaseCourse = CourseUser::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->exists();
+
+                if (!$userPurchaseCourse) {
+                    return $this->respondForbidden('Bạn chưa mua khoá học này');
+                }
             }
 
             $chapters = $course->chapters()
                 ->with('lessons.lessonable')
+                ->where('status', 1)
                 ->orderBy('order', 'asc')
                 ->get();
 
@@ -125,6 +130,7 @@ class LearningPathController extends Controller
 
             return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, [
                 'course_name' => $course->name,
+                'course_status' => $course->status,
                 'total_lesson' => $totalLesson,
                 'chapter_lessons' => $response,
             ]);
@@ -150,13 +156,17 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Khóa học không tồn tại');
             }
 
-            $userPurchaseCourse = CourseUser::query()
-                ->where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->exists();
+            $isInstructorOfCourse = $course->user_id === $user->id;
 
-            if (!$userPurchaseCourse) {
-                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            if (!$isInstructorOfCourse) {
+                $userPurchaseCourse = CourseUser::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->exists();
+
+                if (!$userPurchaseCourse) {
+                    return $this->respondForbidden('Bạn chưa mua khoá học này');
+                }
             }
 
             $lesson = $course->lessons()->where('lessons.id', $lessonId)->first();
@@ -534,34 +544,16 @@ class LearningPathController extends Controller
             }
 
             $userAnswers = json_decode($quizSubmission->answers, true);
-            $quiz = $quizSubmission->quiz;
-
-            $questions = $quiz->questions->map(function ($question) use ($userAnswers) {
-                $selectedAnswer = collect($userAnswers)
-                    ->firstWhere('question_id', $question->id);
-
+            $formattedAnswers = collect($userAnswers)->map(function ($answer) {
                 return [
-                    'id' => $question->id,
-                    'answers' => $question->answers->map(function ($answer) use ($selectedAnswer) {
-                        return [
-                            'id' => $answer->id,
-                            'is_correct' => $answer->is_correct,
-                            'is_selected' => $selectedAnswer && $selectedAnswer['answer_id'] == $answer->id,
-                        ];
-                    }),
+                    'answer_id' => is_array($answer['answer_id'])
+                        ? $answer['answer_id']
+                        : $answer['answer_id'],
+                    'question_id' => $answer['question_id']
                 ];
-            });
+            })->toArray();
 
-            $response = [
-                'quiz' => [
-                    'id' => $quiz->id,
-                    'title' => $quiz->title,
-                ],
-                'questions' => $questions,
-                'submitted_at' => $quizSubmission->created_at
-            ];
-
-            return $this->respondOk('Thông tin bài kiểm tra', $response);
+            return $this->respondOk('Thông tin bài kiểm tra', $formattedAnswers);
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -606,26 +598,124 @@ class LearningPathController extends Controller
             }
 
             $response = [
-                'coding' => [
-                    'id' => $codingSubmission->coding->id,
-                    'title' => $codingSubmission->coding->title,
-                    'language' => $codingSubmission->coding->language,
-                    'sample_code' => $codingSubmission->coding->sample_code,
-                    'result_code' => $codingSubmission->coding->result_code,
-                    'solution_code' => $codingSubmission->coding->solution_code,
-                ],
-                'solution' => [
-                    'code' => $codingSubmission->code,
-                    'output' => $codingSubmission->result,
-                    'is_correct' => $codingSubmission->is_correct,
-                    'submitted_at' => $codingSubmission->created_at,
-                ],
+                'code' => $codingSubmission->code,
+                'result' => $codingSubmission->result,
             ];
 
             return $this->respondOk('Thông tin bài tập bạn đã nộp', $response);
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError();
+        }
+    }
+
+    public function getLearningPathDraft(string $slug)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy câp');
+            }
+
+            $course = Course::query()
+                ->where('slug', $slug)
+                ->where('status', '=' , 'draft')
+                ->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Khoá học không tồn tại hoặc đã được duyệt');
+            }
+
+            $chapters = $course->chapters()
+                ->with('lessons.lessonable')
+                ->where('status', 1)
+                ->orderBy('order', 'asc')
+                ->get();
+
+            $formattedChapters = [];
+
+            foreach ($chapters as $chapter) {
+                $chapterLessons = [];
+                $totalChapterDuration = 0;
+
+                foreach ($chapter->lessons as $lesson) {
+                    $lessonData = [
+                        'title' => $lesson->title,
+                        'updated_at' => $lesson->updated_at,
+                        'type' => $lesson->type,
+                    ];
+
+                    switch ($lesson->type) {
+                        case 'video':
+                            if ($lesson->lessonable_type === Video::class) {
+                                $video = $lesson->lessonable;
+                                $lessonData['mux_playback_id'] = $video->mux_playback_id;
+                                $lessonData['duration'] = $video->duration;
+                                $lessonData['content'] = $lesson->title;
+                                $totalChapterDuration += $video->duration;
+                            }
+                            break;
+
+                        case 'document':
+                            if ($lesson->lessonable_type === Document::class) {
+                                $document = $lesson->lessonable;
+                                $lessonData['content'] = $document->content ?? '';
+                                $lessonData['file_type'] = $document->file_type ?? '';
+                                $lessonData['file_path'] = $document->file_path ?? '';
+                            }
+                            break;
+
+                        case 'quiz':
+                            if ($lesson->lessonable_type === Quiz::class) {
+                                $quiz = $lesson->lessonable;
+                                $questions = Question::where('quiz_id', $quiz->id)->get();
+
+                                $lessonData['questions'] = $questions->map(function ($question) {
+                                    return [
+                                        'answer_type' => $question->answer_type,
+                                        'question' => $question->question,
+                                        'answers' => $question->answers->map(function ($answer) {
+                                            return [
+                                                'answer' => $answer->answer,
+                                                'is_correct' => (bool)$answer->is_correct
+                                            ];
+                                        })
+                                    ];
+                                });
+                            }
+                            break;
+
+                        case 'coding':
+                            if ($lesson->lessonable_type === Coding::class) {
+                                $coding = $lesson->lessonable;
+                                $lessonData['sample_code'] = $coding->sample_code;
+                                $lessonData['hints'] = $coding->hints ;
+                                $lessonData['instruct'] = $coding->instruction;
+                                $lessonData['language'] = $coding->language;
+                            }
+                            break;
+                    }
+
+                    $chapterLessons[] = $lessonData;
+                }
+
+                $formattedChapters[] = [
+                    'title' => $chapter->title,
+                    'total_duration' => $totalChapterDuration,
+                    'total_lessons' => count($chapter->lessons),
+                    'lessons' => $chapterLessons
+                ];
+            }
+
+            return $this->respondOk('Bản nháp của khoá học', [
+                'title' => $course->name,
+                'status' => $course->status,
+                'chapters' => $formattedChapters
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError();
         }
     }

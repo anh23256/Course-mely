@@ -1,0 +1,489 @@
+<?php
+
+namespace App\Http\Controllers\API\Common;
+
+use App\Models\Category;
+use App\Models\Course;
+use App\Models\CourseUser;
+use App\Models\Rating;
+use App\Models\User;
+use App\Models\Video;
+use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
+use Illuminate\Http\Request;
+use Illuminate\Redis\Connections\PredisConnection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+
+class CourseController
+{
+    use LoggableTrait, ApiResponseTrait;
+
+    public function getDiscountedCourses()
+    {
+        try {
+            $courses = Course::query()
+                ->with([
+                    'category:id,name',
+                    'user:id,name,avatar',
+                ])
+                ->withCount([
+                    'chapters',
+                    'lessons'
+                ])
+                ->where('price_sale', '>', 0)
+                ->where('visibility', '=', 'public')
+                ->where('status', '=', 'approved')
+                ->orderBy('total_student', 'desc')
+                ->limit(10)
+                ->get();
+
+            $courseRatings = Rating::whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            $result = $courses->map(function ($course) use ($courseRatings) {
+                $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->where('lessonable_type', Video::class);
+                });
+
+                $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $ratingInfo = $courseRatings->get($course->id);
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'level' => $course->level,
+                    'status' => $course->status,
+                    'is_free' => $course->is_free,
+                    'price' => $course->price,
+                    'price_sale' => $course->price_sale,
+                    'lessons_count' => $course->lessons_count,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
+                    'total_video_duration' => $totalVideoDuration,
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null
+                    ]
+                ];
+            });
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách khoá học đang giảm giá', $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getFreeCourses()
+    {
+        try {
+            $courses = Course::query()
+                ->with([
+                    'category:id,name',
+                    'user:id,name,avatar',
+                ])
+                ->withCount([
+                    'chapters',
+                    'lessons'
+                ])
+                ->where('is_free', '=', 1)
+                ->where('visibility', '=', 'public')
+                ->where('status', '=', 'approved')
+                ->orderBy('total_student', 'desc')
+                ->limit(10)
+                ->get();
+
+            $courseRatings = Rating::whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            $result = $courses->map(function ($course) use ($courseRatings) {
+                $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->where('lessonable_type', Video::class);
+                });
+
+                $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $ratingInfo = $courseRatings->get($course->id);
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'level' => $course->level,
+                    'status' => $course->status,
+                    'is_free' => $course->is_free,
+                    'price' => $course->price,
+                    'price_sale' => $course->price_sale,
+                    'lessons_count' => $course->lessons_count,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
+                    'total_video_duration' => $totalVideoDuration,
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách khoá học miễn phí', $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getPopularCourses()
+    {
+        try {
+            $courses = Course::query()
+                ->with([
+                    'category:id,name',
+                    'user:id,name,avatar',
+                ])
+                ->withCount([
+                    'chapters',
+                    'lessons'
+                ])
+                ->where('is_popular', '=', 1)
+                ->where('visibility', '=', 'public')
+                ->where('status', '=', 'approved')
+                ->orderBy('total_student', 'desc')
+                ->limit(10)
+                ->get();
+
+            $courseRatings = Rating::whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            $result = $courses->map(function ($course) use ($courseRatings) {
+                $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->where('lessonable_type', Video::class);
+                });
+
+                $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $ratingInfo = $courseRatings->get($course->id);
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'level' => $course->level,
+                    'status' => $course->status,
+                    'is_free' => $course->is_free,
+                    'price' => $course->price,
+                    'price_sale' => $course->price_sale,
+                    'lessons_count' => $course->lessons_count,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
+                    'total_video_duration' => $totalVideoDuration,
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách khoá học nổi bật', $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getTopCategoriesWithMostCourses()
+    {
+        try {
+            $categories = Category::query()
+                ->with([
+                    'courses' => function ($query) {
+                        $query->where('visibility', '=', 'public')
+                            ->where('status', '=', 'approved')
+                            ->orderBy('total_student', 'desc')
+                            ->limit(5);
+                    },
+                ])
+                ->whereHas('courses', function ($query) {
+                    $query->where('visibility', '=', 'public')
+                        ->where('status', '=', 'approved');
+                })
+                ->withCount('courses')
+                ->having('courses_count', '>=', 5)
+                ->limit(5)
+                ->get();
+
+            if ($categories->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách danh mục', $categories);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getCourseDetail(Request $request, string $slug)
+    {
+        try {
+            $user = auth('sanctum')->user();
+
+            $course = Course::query()
+                ->with([
+                    'category:id,name,slug',
+                    'user' => function ($query) {
+                        $query->select(['id', 'name', 'avatar', 'created_at'])
+                            ->with(['profile:id,user_id,about_me,bio']);
+                    },
+                    'chapters' => function ($query) {
+                        $query->with([
+                            'lessons',
+                            'lessons.lessonable',
+                        ])->withCount('lessons');
+                    },
+                ])
+                ->withCount([
+                    'chapters',
+                    'lessons'
+                ])
+                ->where('slug', '=', $slug)
+                ->where('visibility', '=', 'public')
+                ->where('status', '=', 'approved')
+                ->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            $course->is_enrolled = false;
+
+            if ($user) {
+                $enrollment = CourseUser::where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->exists();
+
+                $course->is_enrolled = $enrollment;
+
+                $course->is_enrolled = $course->is_enrolled || $user->id === $course->user_id;
+            }
+
+            $course->benefits = is_string($course->benefits) ? json_decode($course->benefits, true) : $course->benefits;
+            $course->requirements = is_string($course->requirements) ? json_decode($course->requirements, true) : $course->requirements;
+            $course->qa = is_string($course->qa) ? json_decode($course->qa, true) : $course->qa;
+
+            $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                return $chapter->lessons->where('lessonable_type', Video::class);
+            });
+
+            $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                return $lesson->lessonable->duration ?? 0;
+            });
+
+            $course->total_video_duration = $totalVideoDuration;
+
+//            $user = auth('sanctum')->user();
+//            $isCourseOwner = $user && $user->id === $course->user_id;
+//
+//            if (!$isCourseOwner) {
+//                $cacheKey = "course:{$course->id}:views:{$user->id}";
+//
+//                if (!Redis::exists($cacheKey)) {
+//                    $course->increment('views');
+//                    Redis::setex($cacheKey, 3600, true);
+//                }
+//            }
+
+            $course->increment('views');
+
+            return $this->respondOk('Chi tiết khoá học: ' . $course->name, $course);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Internal Server Error');
+        }
+    }
+
+    public function getRelatedCourses(string $courseSlug)
+    {
+        try {
+            $currentCourse = Course::query()->where('slug', $courseSlug)
+                ->where('visibility', 'public')
+                ->where('status', 'approved')
+                ->first();
+
+            if (!$currentCourse) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $relatedCourses = Course::query()
+                ->where('category_id', $currentCourse->category_id)
+                ->where('id', '!=', $currentCourse->id)
+                ->where('visibility', 'public')
+                ->where('status', 'approved')
+                ->select([
+                    'id', 'name', 'slug', 'thumbnail',
+                    'level', 'category_id', 'is_free',
+                    'total_student', 'created_at',
+                    'user_id'
+                ])
+                ->with([
+                    'category:id,name',
+                    'user:id,name,avatar',
+                    'chapters.lessons.lessonable'
+                ])
+                ->withCount(['lessons', 'chapters'])
+                ->when($currentCourse->level, function ($query) use ($currentCourse) {
+                    return $query->orderByRaw(
+                        'CASE WHEN level = ? THEN 0 ELSE 1 END',
+                        [$currentCourse->level]
+                    )
+                        ->orderBy('total_student', 'desc');
+                }, function ($query) {
+                    return $query->orderBy('total_student', 'desc');
+                })
+                ->limit(5)
+                ->get();
+
+            $courseRatings = Rating::query()
+                ->whereIn('course_id', $relatedCourses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            $relatedCourses->transform(function ($course) {
+                $totalVideoDuration = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->filter(function ($lesson) {
+                        return $lesson->lessonable_type === Video::class;
+                    });
+                })->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $course->total_video_duration = $totalVideoDuration;
+
+                return $course;
+            });
+
+            $relatedCourses->each(function ($course) use ($courseRatings) {
+                $rating = $courseRatings->get($course->id);
+                $course->ratings_count = $rating ? $rating->ratings_count : 0;
+                $course->average_rating = $rating ? $rating->average_rating : 0;
+
+                unset($course->chapters);
+            });
+
+            return $this->respondOk('Danh sách khóa học liên quan', [
+                'current_course' => [
+                    'id' => $currentCourse->id,
+                    'name' => $currentCourse->name,
+                    'category' => $currentCourse->category->name
+                ],
+                'related_courses' => $relatedCourses->map(function ($course) {
+                    return [
+                        'id' => $course->id,
+                        'name' => $course->name,
+                        'slug' => $course->slug,
+                        'thumbnail' => $course->thumbnail,
+                        'level' => $course->level,
+                        'is_free' => $course->is_free,
+                        'price'=> $course->price,
+                        'price_sale' => $course->price_sale,
+                        'lessons_count' => $course->lessons_count,
+                        'total_student' => $course->total_student,
+                        'total_video_duration' => $course->total_video_duration,
+                        'ratings_count' => $course->ratings_count,
+                        'average_rating' => $course->average_rating,
+                        'category' => $course->category,
+                        'user' => $course->user
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+}

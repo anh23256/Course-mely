@@ -84,13 +84,6 @@
 }
 
 /* Đảm bảo độ cao tối thiểu cho tin nhắn */
-.sender {
-    min-height: 40px;
-    max-height: 300px;
-    /* Nếu nội dung dài, tin nhắn sẽ có thể cuộn */
-    overflow: visible !important;
-    /* Hiển thị đầy đủ nội dung */
-}
 
 .sender {
     /* Gradient cho người gửi */
@@ -177,7 +170,7 @@
 .gallery-item img {
     width: 100%;
     max-width: 100px;
-    height: auto;
+    height: 5em;
     border-radius: 8px;
     transition: transform 0.3s ease-in-out;
 }
@@ -200,4 +193,12 @@
 
 .load-more:hover {
     background-color: #0056b3;
+}
+.members-list {
+    max-height: 400px; /* Chiều cao tối đa của danh sách */
+    overflow-y: auto; /* Tạo thanh cuộn dọc khi nội dung vượt quá chiều cao */
+    border: 1px solid #ccc; /* Đường viền để dễ nhìn */
+    padding: 10px;
+    width: 300px; /* Chiều rộng tùy chỉnh */
+    margin: 20px auto; /* Canh giữa trang */
 }

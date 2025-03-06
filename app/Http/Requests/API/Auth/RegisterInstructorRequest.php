@@ -43,7 +43,7 @@ class RegisterInstructorRequest extends BaseFormRequest
             'major' => 'nullable|string|max:255',
             'certificates' => 'nullable|array',
             'certificates.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:2048',
-            'qa_systems' => 'nullable|array|size:' . $qaSystemCount,
+            'qa_systems' => 'required|array|size:' . $qaSystemCount,
             'qa_systems.*' => 'required',
         ];
 

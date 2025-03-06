@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Wallet\StoreWithDrawalRequest;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
@@ -12,7 +13,9 @@ use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class WalletController extends Controller
 {
@@ -44,7 +47,7 @@ class WalletController extends Controller
         }
     }
 
-    public function withDrawRequest(Request $request)
+    public function withDrawRequest(StoreWithDrawalRequest $request)
     {
         try {
             DB::beginTransaction();
@@ -56,40 +59,61 @@ class WalletController extends Controller
             }
 
             $wallet = Wallet::query()
+                ->lockForUpdate()
                 ->where('user_id', $user->id)
                 ->where('status', 1)
-                ->lockForUpdate()
                 ->first();
 
-            $data = $request->validate([
-                'account_no' => 'nullable|numeric',
-                'account_name' => 'nullable|string',
-                'acq_id' => 'nullable',
-                'amount' => 'nullable|numeric',
-                'add_info' => 'nullable|string',
-                'bank_name' => 'required|string',
-            ]);
+            $data = $request->validated();
 
             if ($data['amount'] > $wallet->balance) {
                 return $this->respondError('Số dư không đủ để thực hiện yêu cầu, vui lòng kiểm tra lại');
             }
 
-            $response = \Illuminate\Support\Facades\Http::post('https://api.vietqr.io/v2/generate', [
-                'accountNo' => $data['account_no'],
-                'accountName' => $data['account_name'],
-                'acqId' => $data['acq_id'],
-                'amount' => $data['amount'],
-                'addInfo' => $data['add_info'] ?? '',
-                'template' => 'pwMusbq',
+            $withdrawalsToday = WithdrawalRequest::query()
+                ->where('wallet_id', $wallet->id)
+                ->where('status', 'Hoàn thành')
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+
+            if ($withdrawalsToday >= 5) {
+                return $this->respondError('Bạn đã vượt quá số lần rút tiền trong ngày');
+            }
+
+            $response = \Illuminate\Support\Facades\Http::withOptions([
+                'timeout' => 45,
+                'connect_timeout' => 30,
+            ])->retry(3, 1000)
+                ->post('https://api.vietqr.io/v2/generate', [
+                    'accountNo' => $data['account_no'],
+                    'accountName' => $data['account_name'],
+                    'acqId' => $data['acq_id'],
+                    'amount' => $data['amount'],
+                    'addInfo' => $data['add_info'] ?? '',
+                    'template' => 'pwMusbq',
+                ]);
+
+            Log::info('VietQR API Response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             if ($response->failed()) {
-                return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
+                return $this->createFallbackWithdrawalRequest($data, $wallet);
             }
 
             $responseBody = $response->json();
 
-            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $responseBody['data']['qrDataURL']));
+            if (!isset($responseBody['data']['qrDataURL'])) {
+                Log::warning('Unexpected VietQR Response', [
+                    'response' => $responseBody
+                ]);
+
+                return $this->createFallbackWithdrawalRequest($data, $wallet);
+            }
+
+            $qrDataURL = $responseBody['data']['qrDataURL'] ?? '';
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrDataURL));
             $filePath = 'qr/' . uniqid() . '.png';
             Storage::disk('public')->put($filePath, $imageData);
 
@@ -128,6 +152,27 @@ class WalletController extends Controller
                 'Có lỗi xảy ra, vui lòng thử lại sau'
             );
         }
+    }
+
+    protected function createFallbackWithdrawalRequest($data, $wallet)
+    {
+        $qrContent = implode('|', [
+            $data['account_no'],
+            $data['account_name'],
+            $data['bank_name'],
+            $data['amount']
+        ]);
+
+        Log::error($wallet);
+
+        $qrCode = QrCode::size(300)->generate($qrContent);
+        $filePath = 'qr/' . uniqid() . '.png';
+
+        Storage::disk('public')->put($filePath, $qrCode);
+
+        return $this->respondError(
+            'Không thể tạo QR từ VietQR. Đã tạo QR dự phòng.',
+        );
     }
 
     public function getWithdrawalRequests(Request $request)

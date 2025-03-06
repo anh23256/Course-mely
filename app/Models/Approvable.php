@@ -17,7 +17,9 @@ class Approvable extends Model
         'note',
         'request_date',
         'approved_at',
-        'rejected_at'
+        'rejected_at',
+        'reason',
+        'content_modification'
     ];
 
     protected $casts = [

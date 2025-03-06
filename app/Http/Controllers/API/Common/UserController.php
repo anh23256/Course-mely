@@ -16,6 +16,7 @@ use App\Models\Invoice;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\Profile;
+use App\Models\Rating;
 use App\Models\User;
 use App\Models\Video;
 use App\Traits\ApiResponseTrait;
@@ -211,7 +212,7 @@ class UserController extends Controller
 
             $courses = Course::query()
                 ->select([
-                    'id', 'user_id', 'name', 'slug', 'category_id',
+                    'id', 'user_id', 'name', 'slug', 'category_id', 'status',
                     'thumbnail', 'level',
                 ])
                 ->whereHas('courseUsers', function ($query) use ($user) {
@@ -231,7 +232,17 @@ class UserController extends Controller
                 return $this->respondNotFound('Không có dữ liệu');
             }
 
-            $result = $courses->map(function ($course) {
+            $courseRatings = Rating::whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            $result = $courses->map(function ($course) use ($courseRatings) {
                 $videoLessons = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->where('lessonable_type', Video::class);
                 });
@@ -240,25 +251,27 @@ class UserController extends Controller
                     return $lesson->lessonable->duration ?? 0;
                 });
 
+                $ratingInfo = $courseRatings->get($course->id);
+
                 $lessonProgress = LessonProgress::query()
                     ->where('user_id', Auth::id())
                     ->whereHas('lesson', function ($query) use ($course) {
-                        $lesson = $course->chapters->flatMap(function ($chapter) {
-                            return $chapter->lessons;
+                        $lessonIds = $course->chapters->flatMap(function ($chapter) {
+                            return $chapter->lessons->pluck('id');
                         });
 
-                        return $lesson->pluck('id')->toArray();
+                        $query->whereIn('id', $lessonIds);
                     })
                     ->with('lesson:id,title')
                     ->latest('updated_at')
                     ->first();
 
                 if (!$lessonProgress) {
-                    $firstLesson = $course->chapters->first()->lessons->first();
+                    $firstChapter = $course->chapters->first();
 
-                    $currentLesson = $firstLesson ? [
-                        'id' => $firstLesson->id,
-                        'title' => $firstLesson->title
+                    $currentLesson = $firstChapter ? [
+                        'id' => $firstChapter->lessons->first()->id,
+                        'title' => $firstChapter->lessons->first()->title
                     ] : null;
                 } else {
                     $currentLesson = [
@@ -273,8 +286,13 @@ class UserController extends Controller
                     'slug' => $course->slug,
                     'thumbnail' => $course->thumbnail,
                     'level' => $course->level,
+                    'status' => $course->status,
                     'chapters_count' => $course->chapters_count,
                     'lessons_count' => $course->lessons_count,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers->first()->progress_percent,
                     'current_lesson' => $currentLesson,

@@ -21,6 +21,7 @@ class Course extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_MODIFY_REQUEST = 'modify_request';
 
     protected $fillable = [
         'user_id',

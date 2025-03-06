@@ -28,6 +28,7 @@ use App\Http\Controllers\API\Instructor\TopInstructorController;
 use App\Http\Controllers\API\Student\CertificateController;
 use App\Http\Controllers\API\Student\NoteController;
 use App\Http\Controllers\API\Verify\VerificationController;
+use App\Models\Reaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -79,7 +80,7 @@ Route::prefix('filters')
         Route::get('/', [FilterController::class, 'filter']);
     });
 
-    Route::get('/top-instructors', [TopInstructorController::class, 'index']);
+Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
@@ -114,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE USER =============================
     Route::prefix('users')->group(function () {
+        Route::get('check-profile', [\App\Http\Controllers\API\Common\CommonController::class, 'getCheckProfileUser']);
         Route::get('/profile', [UserController::class, 'showProfile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/change-password', [UserController::class, 'changePassword']);
@@ -144,7 +146,6 @@ Route::middleware('auth:sanctum')->group(function () {
             });
     });
 
-
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
         Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
@@ -154,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{lesson}/get-chapter-from-lesson', [LessonController::class, 'getChapterFromLesson']);
         Route::get('/lesson/{lessonId}/get-quiz-submission/{submissionQuizId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getQuizSubmission']);
         Route::get('/lesson/{lessonId}/get-coding-submission/{submissionCodingId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getCodingSubmission']);
+        Route::get('/draft/{slug}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLearningPathDraft']);
     });
 
     Route::prefix('lessons')
@@ -261,6 +263,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
+                            Route::post('request-modify-content', [SendRequestController::class, 'requestToModifyContent']);
                         });
 
                     #============================== ROUTE CHAPTER =============================
@@ -322,7 +325,7 @@ Route::middleware('auth:sanctum')->group(function () {
             #============================== ROUTE POST =============================
             Route::prefix('posts')->as('posts.')->group(function () {
                 Route::get('/', [PostController::class, 'index']);
-                Route::get('/{post}', [PostController::class, 'getPostBySlug']);
+                Route::get('/{slug}', [PostController::class, 'getPostBySlug']);
                 Route::post('/', [PostController::class, 'store']);
                 Route::put('/{post}', [PostController::class, 'update']);
             });
@@ -399,9 +402,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
-    ->group(function () {
-        Route::post('/', [ReactionController::class, 'toggleReaction']);
-    });
+        ->group(function () {
+            Route::post('/', [ReactionController::class, 'toggleReaction']);
+            Route::get('/{commentId}', [ReactionController::class, 'index']);
+        });
 
     #============================== ROUTE RATING =============================
     Route::prefix('ratings')
@@ -427,6 +431,8 @@ Route::prefix('courses')
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
+        Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);
+        Route::get('/{slug}/related', [CommonCourseController::class, 'getRelatedCourses']);
     });
 
 #============================== ROUTE BANNER =============================
@@ -435,11 +441,15 @@ Route::get('/banners', [BannerController::class, 'index']);
 #============================== ROUTE CATEGORY =============================
 Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::class, 'index']);
 
+Route::get('/instructor-order-by-count-course', [\App\Http\Controllers\API\Common\CommonController::class, 'instructorOrderByCountCourse']);
+
 #============================== ROUTE POST =============================
 Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByCategory']);
+        Route::get('/tag/{tagId}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByTag']);
     });
 
 #============================== ROUTE QA SYSTEM =================================

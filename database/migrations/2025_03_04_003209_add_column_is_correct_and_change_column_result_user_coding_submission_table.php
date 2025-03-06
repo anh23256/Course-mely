@@ -10,6 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        \Illuminate\Support\Facades\DB::statement('ALTER TABLE user_coding_submissions MODIFY COLUMN result TEXT NULL');
+
         Schema::table('user_coding_submissions', function (Blueprint $table) {
             $table->text('result')->change()->nullable();
 
@@ -24,6 +26,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        \Illuminate\Support\Facades\DB::statement('ALTER TABLE user_coding_submissions MODIFY COLUMN result BOOLEAN');
+
         Schema::table('user_coding_submissions', function (Blueprint $table) {
             $table->boolean('result')->change();
 

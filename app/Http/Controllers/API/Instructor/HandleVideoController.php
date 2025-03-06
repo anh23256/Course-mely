@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Instructor;
+namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Services\VideoUploadService;

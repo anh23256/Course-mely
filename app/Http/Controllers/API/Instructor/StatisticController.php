@@ -90,9 +90,7 @@ class StatisticController extends Controller
                 ->orderByDesc('total_revenue')
                 ->get();
 
-            return $this->respondOk('Doanh thu khóa học của giảng viên ' . $user->name, [
-                'courseRevenue' => $courseRevenue
-            ]);
+            return $this->respondOk('Doanh thu khóa học của giảng viên ' . $user->name,  $courseRevenue);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -108,65 +106,29 @@ class StatisticController extends Controller
             }
 
             $yearNow = now()->year;
+            $monthNow = now()->month;
 
-            $startDate = $request->input('start_date', '');
-            $endDate = $request->input('end_date', now());
-            $now = now();
-            $userCreatedAt = Carbon::parse($user->created_at);
-
-            if (!empty($startDate)) {
-                try {
-                    $startDate = Carbon::parse($startDate);
-                    $endDate = Carbon::parse($endDate);
-                } catch (\Exception $e) {
-                    return $this->respondError('Định dạng ngày không hợp lệ');
-                }
-
-                if ($startDate->greaterThan($endDate)) {
-                    return $this->respondError('Ngày bắt đầu không được lớn hơn ngày kết thúc');
-                }
-
-                if ($startDate->lessThan($userCreatedAt)) {
-                    $startDate = $userCreatedAt;
-                }
-
-                if ($endDate->greaterThan($now)) {
-                    $endDate = $now;
-                }
-            } else {
-                $startDate = Carbon::create($yearNow, 1, 1);
-                $endDate = now();
-            }
-
-            $startDate = $startDate->format('Y-m-d 00:00:00');
-            $endDate = $endDate->format('Y-m-d 23:59:59');
+            $year = $request->input('year', $yearNow);
 
             $monthlyRevenue = DB::table('invoices')
-                ->selectRaw('DATE_FORMAT(invoices.created_at, "%Y-%m") as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
+                ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
                 ->where([
                     'invoices.status' => 'Đã thanh toán',
                     'courses.user_id' => $user->id
                 ])
-                ->whereBetween('invoices.created_at', [$startDate, $endDate])
+                ->whereYear('invoices.created_at', $year)
                 ->groupBy('month')
                 ->pluck('revenue', 'month')
                 ->toArray();
 
             $allMonths = [];
-            $current = Carbon::parse($startDate)->startOfMonth();
-            $last = Carbon::parse($endDate)->startOfMonth();
 
-            while ($current <= $last) {
-                $allMonths[$current->format('Y-m')] = null;
-                $current->addMonth();
+            for ($i = 1; $i <= 12; $i++) {
+                $allMonths[$i] = $monthlyRevenue[$i] ?? null;
             }
 
-            $completeMonthlyRevenue = array_replace($allMonths, $monthlyRevenue);
-
-            return $this->respondOk('Doanh thu theo tháng của giảng viên ' . $user->name, [
-                'monthlyRevenue' => $completeMonthlyRevenue,
-            ]);
+            return $this->respondOk('Doanh thu theo tháng của giảng viên ' . $user->name, $allMonths);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

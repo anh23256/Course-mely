@@ -229,7 +229,7 @@
                                                 </th>
 
                                                 <td class="id">{{ $coupon->id }}</td>
-                                                <td class="id">{{ $coupon->user_id }}</td>
+                                                <td class="id">{{ $coupon->user->name }}</td>
                                                 <td class="customer_name">{{ $coupon->name }}</td>
                                                 <td class="date">{{ $coupon->code }}</td>
                                                 <td class="date">{{ number_format($coupon->discount_value) }}

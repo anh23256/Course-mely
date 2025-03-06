@@ -11,12 +11,10 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('user_coding_submissions', function (Blueprint $table) {
-            if (Schema::hasColumn('user_coding_submissions', 'result')) {
-                $table->renameColumn('result', 'is_correct');
-            }
+            $table->text('result')->change()->nullable();
 
-            if (!Schema::hasColumn('user_coding_submissions', 'result')) {
-                $table->text('result')->nullable()->after('code');
+            if (!Schema::hasColumn('user_coding_submissions', 'is_correct')) {
+                $table->boolean('is_correct')->default(0)->after('code');
             }
         });
     }
@@ -27,12 +25,10 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('user_coding_submissions', function (Blueprint $table) {
-            if (Schema::hasColumn('user_coding_submissions', 'is_correct')) {
-                $table->renameColumn('is_correct', 'result');
-            }
+            $table->boolean('result')->change();
 
-            if (Schema::hasColumn('user_coding_submissions', 'result')) {
-                $table->dropColumn('result');
+            if (Schema::hasColumn('user_coding_submissions', 'is_correct')) {
+                $table->dropColumn('is_correct');
             }
         });
     }
