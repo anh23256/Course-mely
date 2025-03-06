@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Common\CommentController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
+use App\Http\Controllers\API\Common\FollowController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
@@ -82,6 +83,8 @@ Route::prefix('filters')
 
 Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
+Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
         $user = $request->user();
@@ -127,6 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
+        Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {

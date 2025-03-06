@@ -531,7 +531,7 @@ class CourseController
             $getOtherCourses = DB::table('courses')
                 ->select(
                     'courses.code',
-                    'courses.name as name_course',
+                    'courses.name',
                     'courses.slug',
                     'courses.price',
                     'courses.price_sale',
@@ -582,7 +582,7 @@ class CourseController
 
             return response()->json([
                 'message' => 'Danh sách khóa học và thông tin giảng viên',
-                'getOtherCourse' => $getOtherCourses,
+                'get_other_courses' => $getOtherCourses,
                 'profile_instructor' => $profileIntructor
             ]);
         } catch (\Exception $e) {
