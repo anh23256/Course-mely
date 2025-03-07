@@ -31,6 +31,7 @@
                                         <div>
                                             <p class="fw-medium text-muted mb-0">Tổng người dùng duyệt web</p>
                                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
+                                                    id="analytic-session-user"
                                                     data-target="28.05">{{ number_format($analyticsUserSession[0]['totalUsers'] ?? 0) }}
                                                     người</span>
                                             </h2>
@@ -54,7 +55,8 @@
                                         <div>
                                             <p class="fw-medium text-muted mb-0">Số phiên duyệt web</p>
                                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="97.66">{{ number_format($analyticsUserSession[0]['sessions'] ?? 0) }}
+                                                    data-target="97.66"
+                                                    id="session-web">{{ number_format($analyticsUserSession[0]['sessions'] ?? 0) }}
                                                     phiên</span>
                                             </h2>
                                         </div>
@@ -71,7 +73,7 @@
                         </div> <!-- end col-->
                     </div> <!-- end row-->
                     <div>
-                        <div class="card">
+                        <div class="card" style="min-height: 330px">
                             <div class="card-body">
                                 <div id="line_chart_basic" data-colors='["--vz-primary","--vz-success","--vz-danger"]'
                                     class="apex-charts" dir="ltr"></div>
@@ -86,14 +88,10 @@
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Số phiên duyệt web theo đất nước</h4>
+                                <h4 class="card-title mb-0 flex-grow-1">Số lượt xem theo đất nước</h4>
                             </div>
                             <div class="card-body p-0">
-                                <div>
-                                    <div id="countries_charts"
-                                        data-colors='["--vz-info", "--vz-info", "--vz-info", "--vz-info", "--vz-danger", "--vz-info", "--vz-info", "--vz-info", "--vz-info", "--vz-info"]'
-                                        class="apex-charts" dir="ltr"></div>
-                                </div>
+                                <div id="world-map" style="width: 100%; height: 420px;"></div>
                             </div><!-- end card body -->
                         </div><!-- end card -->
                     </div> <!-- end col-->
@@ -106,61 +104,12 @@
             <div class="col-xl-6">
                 <div class="card">
                     <div class="card-header border-0 align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Audiences Metrics</h4>
-                        <div>
-                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                ALL
-                            </button>
-                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                1M
-                            </button>
-                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                6M
-                            </button>
-                            <button type="button" class="btn btn-soft-primary btn-sm">
-                                1Y
-                            </button>
-                        </div>
-                    </div><!-- end card header -->
-                    <div class="card-header p-0 border-0 bg-light-subtle">
-                        <div class="row g-0 text-center">
-                            <div class="col-6 col-sm-4">
-                                <div class="p-3 border border-dashed border-start-0">
-                                    <h5 class="mb-1"><span class="counter-value" data-target="854">0</span>
-                                        <span class="text-success ms-1 fs-12">49%<i
-                                                class="ri-arrow-right-up-line ms-1 align-middle"></i></span>
-                                    </h5>
-                                    <p class="text-muted mb-0">Avg. Session</p>
-                                </div>
-                            </div>
-                            <!--end col-->
-                            <div class="col-6 col-sm-4">
-                                <div class="p-3 border border-dashed border-start-0">
-                                    <h5 class="mb-1"><span class="counter-value" data-target="1278">0</span>
-                                        <span class="text-success ms-1 fs-12">60%<i
-                                                class="ri-arrow-right-up-line ms-1 align-middle"></i></span>
-                                    </h5>
-                                    <p class="text-muted mb-0">Conversion Rate</p>
-                                </div>
-                            </div>
-                            <!--end col-->
-                            <div class="col-6 col-sm-4">
-                                <div class="p-3 border border-dashed border-start-0 border-end-0">
-                                    <h5 class="mb-1"><span class="counter-value" data-target="3">0</span>m
-                                        <span class="counter-value" data-target="40">0</span>sec
-                                        <span class="text-success ms-1 fs-12">37%<i
-                                                class="ri-arrow-right-up-line ms-1 align-middle"></i></span>
-                                    </h5>
-                                    <p class="text-muted mb-0">Avg. Session Duration</p>
-                                </div>
-                            </div>
-                            <!--end col-->
-                        </div>
+                        <h4 class="card-title mb-0 flex-grow-1">Thời gian truy cập</h4>
                     </div><!-- end card header -->
                     <div class="card-body p-0 pb-2">
                         <div>
-                            <div id="audiences_metrics_charts" data-colors='["--vz-success", "--vz-light"]'
-                                class="apex-charts" dir="ltr"></div>
+                            <div id="hourlyTrafficChart" data-colors='["--vz-success", "--vz-light"]' class="apex-charts"
+                                dir="ltr"></div>
                         </div>
                     </div><!-- end card body -->
                 </div><!-- end card -->
@@ -169,28 +118,11 @@
             <div class="col-xl-6">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Audiences Sessions by Country</h4>
-                        <div class="flex-shrink-0">
-                            <div class="dropdown card-header-dropdown">
-                                <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <span class="fw-semibold text-uppercase fs-12">Sort by: </span><span
-                                        class="text-muted">Current Week<i class="mdi mdi-chevron-down ms-1"></i></span>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" href="#">Today</a>
-                                    <a class="dropdown-item" href="#">Last Week</a>
-                                    <a class="dropdown-item" href="#">Last Month</a>
-                                    <a class="dropdown-item" href="#">Current Year</a>
-                                </div>
-                            </div>
-                        </div>
+                        <h4 class="card-title mb-0 flex-grow-1">Thống kê thiết bị sử dụng</h4>
                     </div><!-- end card header -->
                     <div class="card-body p-0">
                         <div>
-                            <div id="audiences-sessions-country-charts" data-colors='["--vz-success", "--vz-info"]'
-                                class="apex-charts" dir="ltr">
-                            </div>
+                            <div id="user_device_chart"></div>
                         </div>
                     </div><!-- end cardbody -->
                 </div><!-- end card -->
@@ -209,7 +141,7 @@
 
                         <div class="table-responsive mt-3">
                             <table class="table table-borderless table-sm table-centered align-middle table-nowrap mb-0">
-                                <tbody class="border-0" id="list_device">
+                                <tbody class="border-0" id="list_browers">
                                 </tbody>
                             </table>
                         </div>
@@ -220,182 +152,41 @@
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Top 7 page có lượt truy cập nhiều nhất</h4>
-                        <div class="flex-shrink-0">
-                            <button type="button" class="btn btn-soft-primary btn-sm">
-                                Export Report
-                            </button>
-                        </div>
+                        <h4 class="card-title mb-0 flex-grow-1">Phân tích tỉ lệ thoát</h4>
                     </div>
 
-                    <div class="card-body">
-
-                        <div class="row align-items-center">
-                            <div class="col-6">
-                                <h6 class="text-muted text-uppercase fw-semibold text-truncate fs-12 mb-3">
-                                    Total Referrals Page</h6>
-                                <h4 class="mb-0">725,800</h4>
-                                <p class="mb-0 mt-2 text-muted"><span class="badge bg-success-subtle text-success mb-0">
-                                        <i class="ri-arrow-up-line align-middle"></i> 15.72 % </span> vs.
-                                    previous month</p>
-                            </div><!-- end col -->
-                            <div class="col-6">
-                                <div class="text-center">
-                                    <img src="../assets/images/illustrator-1.png" class="img-fluid" alt="">
-                                </div>
-                            </div><!-- end col -->
-                        </div><!-- end row -->
-                        <div class="mt-3 pt-2">
-                            <div class="progress progress-lg rounded-pill">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: 25%"
-                                    aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                                <div class="progress-bar bg-info" role="progressbar" style="width: 18%"
-                                    aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"></div>
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 22%"
-                                    aria-valuenow="22" aria-valuemin="0" aria-valuemax="100"></div>
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 16%"
-                                    aria-valuenow="16" aria-valuemin="0" aria-valuemax="100"></div>
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: 19%"
-                                    aria-valuenow="19" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div><!-- end -->
-
-                        <div class="mt-3 pt-2">
-                            <div class="d-flex mb-2">
-                                <div class="flex-grow-1">
-                                    <p class="text-truncate text-muted fs-14 mb-0"><i
-                                            class="mdi mdi-circle align-middle text-primary me-2"></i>www.google.com
-                                    </p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <p class="mb-0">24.58%</p>
-                                </div>
-                            </div><!-- end -->
-                            <div class="d-flex mb-2">
-                                <div class="flex-grow-1">
-                                    <p class="text-truncate text-muted fs-14 mb-0"><i
-                                            class="mdi mdi-circle align-middle text-info me-2"></i>www.youtube.com
-                                    </p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <p class="mb-0">17.51%</p>
-                                </div>
-                            </div><!-- end -->
-                            <div class="d-flex mb-2">
-                                <div class="flex-grow-1">
-                                    <p class="text-truncate text-muted fs-14 mb-0"><i
-                                            class="mdi mdi-circle align-middle text-success me-2"></i>www.meta.com
-                                    </p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <p class="mb-0">23.05%</p>
-                                </div>
-                            </div><!-- end -->
-                            <div class="d-flex mb-2">
-                                <div class="flex-grow-1">
-                                    <p class="text-truncate text-muted fs-14 mb-0"><i
-                                            class="mdi mdi-circle align-middle text-warning me-2"></i>www.medium.com
-                                    </p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <p class="mb-0">12.22%</p>
-                                </div>
-                            </div><!-- end -->
-                            <div class="d-flex">
-                                <div class="flex-grow-1">
-                                    <p class="text-truncate text-muted fs-14 mb-0"><i
-                                            class="mdi mdi-circle align-middle text-danger me-2"></i>Other
-                                    </p>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <p class="mb-0">17.58%</p>
-                                </div>
-                            </div><!-- end -->
-                        </div><!-- end -->
-
-                        <div class="mt-2 text-center">
-                            <a href="javascript:void(0);" class="text-muted text-decoration-underline">Show
-                                All</a>
-                        </div>
-
-                    </div><!-- end card body -->
-                </div><!-- end card -->
-            </div><!-- end col -->
+                    <div id="bounceRateChart"></div>
+                </div>
+            </div>
 
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
                         <h4 class="card-title mb-0 flex-grow-1">Top 7 page có lượt truy cập nhiều nhất</h4>
-                        <div class="flex-shrink-0">
-                            <div class="dropdown card-header-dropdown">
-                                <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <span class="text-muted fs-16"><i
-                                            class="mdi mdi-dots-vertical align-middle"></i></span>
-                                </a>
-                            </div>
-                        </div>
                     </div><!-- end card header -->
                     <div class="card-body">
                         <div class="table-responsive table-card">
                             <table class="table align-middle table-borderless table-centered table-nowrap mb-0">
                                 <thead class="text-muted table-light">
                                     <tr>
-                                        <th scope="col" style="width: 62;">Active Page</th>
-                                        <th scope="col">Active</th>
-                                        <th scope="col">Users</th>
+                                        <th scope="col" class="col-6" style="width: 62;">Tiêu đề trang</th>
+                                        <th scope="col" class="col-3">Người dùng</th>
+                                        <th scope="col" class="col-3">Lượt xem</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/themesbrand/skote-25867</a>
-                                        </td>
-                                        <td>99</td>
-                                        <td>25.3%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/dashonic/chat-24518</a>
-                                        </td>
-                                        <td>86</td>
-                                        <td>22.7%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/skote/timeline-27391</a>
-                                        </td>
-                                        <td>64</td>
-                                        <td>18.7%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/themesbrand/minia-26441</a>
-                                        </td>
-                                        <td>53</td>
-                                        <td>14.2%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/dashon/dashboard-29873</a>
-                                        </td>
-                                        <td>33</td>
-                                        <td>12.6%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/doot/chats-29964</a>
-                                        </td>
-                                        <td>20</td>
-                                        <td>10.9%</td>
-                                    </tr><!-- end -->
-                                    <tr>
-                                        <td>
-                                            <a href="javascript:void(0);">/minton/pages-29739</a>
-                                        </td>
-                                        <td>10</td>
-                                        <td>07.3%</td>
-                                    </tr><!-- end -->
+                                <tbody id="most-visited-page">
+                                    @foreach ($fetchMostVisitedPages as $fetchMostVisitedPage)
+                                        <tr>
+                                            <td class="col-6">
+                                                <a
+                                                    href="#">{{ Str::limit($fetchMostVisitedPage['pageTitle'], 25) }}</a>
+                                            </td>
+                                            <td class="col-3">{{ number_format($fetchMostVisitedPage['activeUsers']) }}
+                                                người</td>
+                                            <td class="col-3">
+                                                {{ number_format($fetchMostVisitedPage['screenPageViews']) }} lượt</td>
+                                        </tr>
+                                    @endforeach
                                 </tbody><!-- end tbody -->
                             </table><!-- end table -->
                         </div><!-- end -->
@@ -414,16 +205,13 @@
     <!-- Vector map-->
     <script src="{{ asset('assets/libs/jsvectormap/js/jsvectormap.min.js') }}"></script>
     <script src="{{ asset('assets/libs/jsvectormap/maps/world-merc.js') }}"></script>
+    <script src="{{ asset('assets/libs/jsvectormap/maps/world.js') }}"></script>
 
-    <!-- Dashboard init -->
-    <script src="{{ asset('assets/js/pages/dashboard-analytics.init.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
     <script src="{{ asset('assets/js/pages/moment.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
 
     <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
-    <!-- Marketplace init -->
-    <script src="{{ asset('assets/js/pages/dashboard-nft.init.js') }}"></script>
 
     <script>
         $(".dateRangePicker").each(function() {
@@ -471,6 +259,56 @@
                 },
                 function(start, end) {
                     updateDateRangeText(start, end);
+                    $.ajax({
+                        url: "{{ route('admin.analytics.index') }}",
+                        type: 'GET',
+                        data: {
+                            startDate: start.format("YYYY-MM-DD"),
+                            endDate: end.format("YYYY-MM-DD")
+                        },
+                        beforeSend: function() {
+                            $('#list_browers').empty();
+                        },
+                        success: function(response) {
+                            let tbody = $("#most-visited-page");
+                            tbody.empty();
+                            if (response.fetchMostVisitedPages.length > 0) {
+                                response.fetchMostVisitedPages.forEach(function(item) {
+                                    let row = `<tr>
+                            <td class="col-6">
+                                <a href="#">${item.pageTitle.length > 25 ? item.pageTitle.substring(0, 25) + "..." : item.pageTitle}</a>
+                            </td>
+                            <td class="col-3">${new Intl.NumberFormat().format(item.activeUsers)} người</td>
+                            <td class="col-3">${new Intl.NumberFormat().format(item.screenPageViews)} lượt</td>
+                        </tr>`;
+                                    tbody.append(row);
+                                });
+                            } else {
+                                tbody.html(`<div style="text-align: center; padding: 20px; color: #999;">
+                            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                        </div>`);
+                            }
+
+                            let analytic_session_user = 0;
+                            let analytic_session = 0;
+                            if (response.analyticsUserSession.length > 0) {
+                                analytic_session_user = response.analyticsUserSession[0].sessions;
+                                analytic_session = response.analyticsUserSession[0].totalUsers;
+                            }
+
+                            $("#session-web").text(new Intl.NumberFormat().format(
+                                analytic_session_user) + " phiên");
+
+                            $('#analytic-session-user').text(new Intl.NumberFormat().format(
+                                analytic_session) + " người");
+
+                            updateDeviceUsersChart(response.userDevices);
+                            updateBounceRateChart(response.analyticsEngagement);
+                            updateBrowerUsersChart(response.topBrowsers);
+                            updateWorldMap(response.analyticsCountriesSession);
+                            line_chart_basic(response.analyticsData);
+                        }
+                    });
                 }
             );
 
@@ -513,129 +351,78 @@
             }));
         }
 
-        let charCountries;
+        let chart;
 
-        function updateCountriesChart(countriesData = []) {
-            let chartContainer = document.querySelector("#countries_charts");
+        function line_chart_basic(data = []) {
+            let chartContainer = document.querySelector("#line_chart_basic");
 
-            if (typeof charCountries !== "undefined" && charCountries) {
-                charCountries.destroy();
-                charCountries = undefined;
+            if (typeof chart !== "undefined" && chart) {
+                chart.destroy();
+                chart = undefined;
             }
 
             chartContainer.innerHTML = "";
 
-            if (!countriesData || countriesData.length === 0) {
-                chartContainer.innerHTML = `
-<div style="text-align: center; padding: 20px; color: #999;">
-    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-</div>`;
+            if (!Array.isArray(data) || data.length === 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
                 return;
             }
-            let countries = [];
-            let viewPage = [];
-            countriesData.forEach(item => {
-                countries.push(item.country);
-                viewPage.push(parseFloat(item.screenPageViews));
-            });
+
+            let type = 'date';
+            if (data[0].yearWeek) {
+                type = 'yearWeek';
+            } else if (data[0].yearMonth) {
+                type = 'yearMonth';
+            }
+
+            let categories = extractSeries(data, type, "date").map(item => item.date);
+            let series = [{
+                    name: "Người dùng mới",
+                    data: extractSeries(data, type, "newUsers").map(item => item.value)
+                },
+                {
+                    name: "Tổng người dùng",
+                    data: extractSeries(data, type, "totalUsers").map(item => item.value)
+                },
+                {
+                    name: "Số phiên duyệt web",
+                    data: extractSeries(data, type, "sessions").map(item => item.value)
+                }
+            ];
 
             let options = {
-                series: [{
-                    name: 'Lượt',
-                    data: viewPage
-                }],
-                xaxis: {
-                    categories: countries
-                },
+                series: series,
                 chart: {
-                    type: "bar",
-                    height: 436,
+                    type: 'line',
+                    height: 300,
                     toolbar: {
                         show: false
                     }
                 },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        horizontal: true,
-                        distributed: true
-                    }
-                },
-                colors: [
-                    "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6610f2", "#e83e8c",
-                    "#fd7e14", "#6c757d", "#343a40", "#ff00ff", "#00ff00", "#00ffff", "#ff5733",
-                    "#800000", "#808000", "#008080", "#000080", "#4B0082", "#FFD700"
-                ],
-                dataLabels: {
-                    enabled: true,
-                    offsetX: 32,
-                    style: {
-                        fontSize: "12px",
-                        fontWeight: 400,
-                        colors: ["#adb5bd"]
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return formatNumber(value);
-                        }
-                    }
+                xaxis: {
+                    categories: categories
                 }
             };
 
-            charCountries = new ApexCharts(document.querySelector("#countries_charts"), options);
-            charCountries.render();
+            chart = new ApexCharts(chartContainer, options);
+            chart.render();
         }
 
-        function line_chart_basic(line_chart_basic = []) {
-            let type = 'date';
-            if (line_chart_basic[0]['yearWeek']) {
-                type = 'yearWeek';
-            } else if (line_chart_basic[0]['yearMonth']) {
-                type = 'yearMonth';
-            }
+        let chartBrowerUsers;
 
-            let categories = extractSeries(line_chart_basic, type, "date").map(item => item.date);
-
-            let series = [{
-                    name: "Người dùng mới",
-                    data: extractSeries(line_chart_basic, type, "newUsers").map(item => item.value)
-                },
-                {
-                    name: "Tổng người dùng",
-                    data: extractSeries(line_chart_basic, type, "totalUsers").map(item => item.value)
-                },
-                {
-                    name: "Số phiên duyệt web",
-                    data: extractSeries(line_chart_basic, type, "sessions").map(item => item.value)
-                }
-            ];
-
-            chart.updateOptions({
-                series: series,
-                xaxis: {
-                    categories: categories
-                },
-                chart: {
-                    height: 300
-                }
-            });
-        }
-
-        let chartDeviceUsers;
-
-        function updateDeviceUsersChart(data = []) {
+        function updateBrowerUsersChart(data = []) {
             let chartContainer = document.querySelector("#user_device_pie_charts");
 
-            if (!chartContainer) {
-                console.error("Element #user_device_pie_charts not found!");
-                return;
+            if (typeof chartBrowerUsers !== "undefined" && chartBrowerUsers) {
+                chartBrowerUsers.destroy();
+                chartBrowerUsers = undefined;
             }
 
             chartContainer.innerHTML = "";
 
-            if (!data || data.length === 0) {
+            if (!data || data.length == 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
             <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
         </div>`;
@@ -682,12 +469,11 @@
                 }
             };
 
-            let chart = new ApexCharts(chartContainer, options);
-            chart.render();
+            chartBrowerUsers = new ApexCharts(chartContainer, options);
+            chartBrowerUsers.render();
 
-            $('#list_device').html('');
-
-            if (data) {
+            $('#list_browers').empty();
+            if (data && data.length > 0) {
                 $.each(data, function(index, item) {
                     let iconColor = colors[index % colors.length];
                     let formattedValue = formatNumber(item.screenPageViews);
@@ -706,15 +492,132 @@
             </tr>
         `;
 
-                    $('#list_device').append(row);
+                    $('#list_browers').append(row);
                 });
 
                 if (typeof feather !== "undefined") {
                     feather.replace();
                 }
-            }else{
-                $('#list_device').append('không có dữ liệu');
             }
+        }
+
+        let chartBounceRate;
+
+        function updateBounceRateChart(data = []) {
+            let chartContainer = document.querySelector("#bounceRateChart");
+
+            if (typeof chartBounceRate !== "undefined" && chartBounceRate) {
+                chartBounceRate.destroy();
+                chartBounceRate = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!Array.isArray(data) || data.length === 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let cleanedData = data.map(item => {
+                let bounceRateValue = parseFloat(item.bounceRate) * 100 || 0;
+                return {
+                    sessionSource: item.sessionSource ? item.sessionSource.replace(/[()]/g, '') : "Unknown",
+                    bounceRate: bounceRateValue.toFixed(2)
+                };
+            });
+
+            let categories = cleanedData.map(item => item.sessionSource);
+            let bounceRates = cleanedData.map(item => parseFloat(item.bounceRate));
+
+            let colors = ["#ff4d4f", "#faad14", "#1890ff", "#52c41a", "#9254de"];
+
+            let options = {
+                series: [{
+                    name: "Tỷ lệ thoát",
+                    data: bounceRates
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 300,
+                    toolbar: {
+                        show: false
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        distributed: true,
+                        borderRadius: 4
+                    }
+                },
+                colors: colors,
+                xaxis: {
+                    categories: categories
+                }
+            };
+
+            chartBounceRate = new ApexCharts(chartContainer, options);
+            chartBounceRate.render();
+        }
+
+        let worldMap;
+
+        const countryNameToCode = @json(config('analytics.code_country'));
+
+        function updateWorldMap(data = []) {
+            let chartContainer = document.querySelector("#world-map");
+
+            if (worldMap) {
+                worldMap.destroy();
+                worldMap = null;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!Array.isArray(data) || data.length == 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let formattedData = {};
+            data.forEach(item => {
+                let countryCode = countryNameToCode[item.country];
+                if (countryCode) {
+                    formattedData[countryCode] = parseInt(item.screenPageViews).toLocaleString("vi-VN").replace(
+                        /\./g, ".");
+                }
+            });
+
+            worldMap = new jsVectorMap({
+                selector: "#world-map",
+                map: "world",
+                backgroundColor: "transparent",
+                regionStyle: {
+                    initial: {
+                        fill: "#e4e4e4"
+                    },
+                    hover: {
+                        fill: "#007bff"
+                    }
+                },
+                zoomButtons: false,
+                series: {
+                    regions: [{
+                        values: formattedData,
+                        scale: ["#C8EEFF", "#0071A4"],
+                        normalizeFunction: "polynomial"
+                    }]
+                },
+                onRegionTooltipShow(tooltip, code) {
+                    if (formattedData[code]) {
+                        tooltip.text(`${tooltip.text()} - ${formattedData[code]} lượt xem`);
+                    }
+                }
+            });
         }
 
         function formatNumber(value) {
@@ -722,8 +625,185 @@
                 ".") + ' lượt';
         }
 
-        updateDeviceUsersChart(@json($topBrowsers));
+        let chartDeviceUsers;
+
+        function updateDeviceUsersChart(data = []) {
+            let chartContainer = document.querySelector("#user_device_chart");
+
+            if (typeof chartDeviceUsers !== "undefined" && chartDeviceUsers) {
+                chartDeviceUsers.destroy();
+                chartDeviceUsers = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let deviceNames = data.map(item => item.deviceCategory);
+            let sessionCounts = data.map(item => item.sessions);
+            let colors = [
+                "#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#FFD700", "#8A2BE2", "#00CED1", "#FF4500", "#2E8B57",
+                "#C71585"
+            ];
+
+
+            let options = {
+                series: sessionCounts,
+                labels: deviceNames,
+                chart: {
+                    type: "radialBar",
+                    height: 380
+                },
+                legend: {
+                    show: true,
+                    position: 'bottom',
+                    markers: {
+                        width: 10,
+                        height: 10,
+                        radius: 3
+                    }
+                },
+                plotOptions: {
+                    radialBar: {
+                        dataLabels: {
+                            name: {
+                                fontSize: "14px"
+                            },
+                            value: {
+                                fontSize: "16px",
+                                formatter: (val) => formatNumber(val)
+                            }
+                        }
+                    }
+                },
+                colors: colors,
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return formatNumber(value);
+                        }
+                    }
+                }
+            };
+
+            chartDeviceUsers = new ApexCharts(chartContainer, options);
+            chartDeviceUsers.render();
+        }
+
+        let chartHourTraffic;
+
+        function updateHourlyTrafficChart(data = []) {
+            let chartContainer = document.querySelector("#hourlyTrafficChart");
+            let transformedData = [];
+
+            let days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+            if (typeof chartHourTraffic !== "undefined" && chartHourTraffic) {
+                chartHourTraffic.destroy();
+                chartHourTraffic = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let uniqueDays = [...new Set(data.map(item => item.dayOfWeek))];
+
+            uniqueDays.forEach(dayIndex => {
+                let dayName = days[dayIndex];
+
+                let dayData = data
+                    .filter(item => item.dayOfWeek == dayIndex)
+                    .map(item => ({
+                        x: `${item.hour}:00`,
+                        y: Number(item.sessions)
+                    }));
+
+                transformedData.push({
+                    name: dayName,
+                    data: dayData
+                });
+            });
+
+            let options = {
+                chart: {
+                    type: 'heatmap',
+                    height: 350,
+                    toolbar: {
+                        show: false
+                    }
+                },
+                series: transformedData,
+                colors: ["#008FFB"],
+                xaxis: {
+                    title: {
+                        text: "Giờ trong ngày"
+                    },
+                    labels: {
+                        rotate: -45,
+                        style: {
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                }
+            };
+            chartHourTraffic = new ApexCharts(document.querySelector("#hourlyTrafficChart"), options);
+            chartHourTraffic.render();
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat().format(value);
+        }
+
+        let sampleData = [{
+                deviceCategory: "Desktop",
+                sessions: 500
+            },
+            {
+                deviceCategory: "Mobile",
+                sessions: 300
+            },
+            {
+                deviceCategory: "Tablet",
+                sessions: 200
+            },
+            {
+                deviceCategory: "Smart TV",
+                sessions: 150
+            },
+            {
+                deviceCategory: "Game Console",
+                sessions: 90
+            },
+            {
+                deviceCategory: "Wearable",
+                sessions: 70
+            },
+            {
+                deviceCategory: "Other",
+                sessions: 30
+            }
+        ];
+
+        updateHourlyTrafficChart(@json($analyticsHourlyTraffic));
+        updateDeviceUsersChart(sampleData);
+        // updateDeviceUsersChart(@json($userDevices));
+        updateBounceRateChart(@json($analyticsEngagement));
+        updateBrowerUsersChart(@json($topBrowsers));
         line_chart_basic(@json($analyticsData));
-        updateCountriesChart(@json($analyticsCountriesSession));
+        updateWorldMap(@json($analyticsCountriesSession));
     </script>
 @endpush
