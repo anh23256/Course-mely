@@ -106,9 +106,9 @@ class StatisticController extends Controller
             }
 
             $yearNow = now()->year;
-            $monthNow = now()->month;
 
             $year = $request->input('year', $yearNow);
+            if($year > $yearNow) $year = $yearNow;
 
             $monthlyRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
@@ -185,6 +185,7 @@ class StatisticController extends Controller
 
             $yearNow = now()->year;
             $year = $request->input('year', $yearNow);
+            if($year > $yearNow) $year = $yearNow;
 
             $monthlyPurchases = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, COUNT(invoices.id) as total_purchases')
