@@ -130,7 +130,7 @@
                         </div>
                         <div class="card-body">
                             <div class="col-md-12 mb-2">
-                                <select class="select2-categories form-control" name="categories"
+                                <select class="select2-categories form-control" name="category_id"
                                     data-placeholder="Chọn danh mục">
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"

@@ -69,7 +69,7 @@
                         <div class="mb-3">
                             <label class="form-label">Ngày xuất bản:</label>
                             <p class="text-muted">
-                                {{ $post->published_at ? $post->published_at->format('Y/m/d H:i') : 'Chưa xuất bản' }}</p>
+                                {{ $post->published_at ? \Carbon\Carbon::parse($post->published_at)->format('Y/m/d H:i') : 'Chưa xuất bản' }}</p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Danh mục:</label>
@@ -91,7 +91,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">View:</label>
-                            <p class="text-muted">{{ $post->view }} lượt xem</p>
+                            <p class="text-muted">{{ $post->views }} lượt xem</p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Ngày tạo bài:</label>
