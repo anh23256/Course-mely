@@ -11,7 +11,7 @@ use App\Models\Tag;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
-
+use Illuminate\Support\Facades\Log;
 
 class BlogController extends Controller
 {
@@ -57,7 +57,12 @@ class BlogController extends Controller
             if (!$post) {
                 return $this->respondNotFound('Không tìm thấy bài viết');
             }
-
+            $recentPosts = session()->get('recent_posts', []);
+            Log::info("Recent posts in session: " . json_encode($recentPosts));  // Log để kiểm tra session
+            if (!in_array($slug, $recentPosts)) {
+                session()->push('recent_posts', $slug); // Lưu lại vào session
+                Log::info('Recent posts after update: ' . json_encode(session()->get('recent_posts')));
+            }
             return $this->respondOk('Thông tin bài viết: ' . $post->title, $post);
         } catch (\Exception $e) {
             $this->logError($e);
@@ -65,7 +70,7 @@ class BlogController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-    public function getPostsByCategory($slug)
+    public function getBlogsByCategory($slug)
     {
         try {
             $posts = Post::query()
@@ -91,7 +96,7 @@ class BlogController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-    public function getPostsByTag($tagId)
+    public function getBlogsByTag($slug)
     {
         try {
             $posts = Post::query()
@@ -101,8 +106,8 @@ class BlogController extends Controller
                     'tags',
                 ])
                 ->where('status', Post::STATUS_PUBLISHED)
-                ->whereHas('tags', function ($query) use ($tagId) {  // Lọc theo thẻ
-                    $query->where('tags.id', $tagId);
+                ->whereHas('tags', function ($query) use ($slug) {  // Lọc theo thẻ
+                    $query->where('tags.slug', $slug);
                 })
                 ->paginate(4); // Giới hạn số lượng bài viết trên mỗi trang
 
@@ -114,6 +119,26 @@ class BlogController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+    public function recentViews()
+    {
+        try {
+            $recentPosts = session()->get('recent_posts', []);
+            Log::info('Recent posts in session (recentViews): ' . json_encode($recentPosts));
+            if (empty($recentPosts)) {
+                return $this->respondNotFound('Không tìm thấy bài viết nào đã xem');
+            }
+
+            $posts = Post::with(['user', 'category', 'tags'])
+                ->whereIn('slug', $recentPosts)
+                ->orderByRaw('FIELD(slug, ' . implode(',', array_map(fn($slug) => "'$slug'", $recentPosts)) . ')')
+                ->paginate(4); // Phân trang
+
+            return $this->respondOk('Danh sách bài viết đã xem:', $posts);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
