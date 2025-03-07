@@ -40,7 +40,6 @@ class LiveChatMessageSent implements ShouldBroadcast
         ];
     }
 
-
     public function broadcastOn()
     {
         return new Channel('live-session.' . $this->liveSessionId);
