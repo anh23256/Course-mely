@@ -18,10 +18,6 @@ class Message extends Model
         'meta_data',
     ];
 
-    protected $casts = [
-        'meta_data' => 'array'
-    ];
-
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');

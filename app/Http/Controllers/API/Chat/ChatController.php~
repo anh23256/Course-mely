@@ -379,6 +379,8 @@ class ChatController extends Controller
             $userId = Auth::id();
             $conversation = Conversation::query()->findOrFail($conversationId);
 
+            Log::info($userId);
+
             if (!$conversation->users->contains($userId)) {
                 return $this->respondError('Bạn không thuộc cuộc trò chuyện này');
             }
@@ -419,8 +421,10 @@ class ChatController extends Controller
                 'content' => 'nullable|string|max:255',
                 'type' => 'required|in:text,image,file,video,audio',
                 'parent_id' => 'nullable|exists:messages,id',
-                'file' => 'nullable|file|max:10240',
+                'files.*' => 'nullable|file|max:10240',
             ]);
+
+            Log::error($data->all());
 
             DB::beginTransaction();
 
@@ -450,21 +454,28 @@ class ChatController extends Controller
                 'meta_data' => $metaData,
             ]);
 
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $filePath = $this->uploadToLocal($file, self::FOLDER_NAME);
+            if ($request->hasFile('files')) {
+                $mediaIds = [];
+                $filePaths = [];
 
-                $media = Media::create([
-                    'file_path' => $filePath,
-                    'file_type' => $file->getClientMimeType(),
-                    'file_size' => $file->getSize(),
-                    'message_id' => $message->id,
-                ]);
+                foreach ($request->file('files') as $file) {
+                    $filePath = $this->uploadToLocal($file, self::FOLDER_NAME);
+
+                    $media = Media::query()->create([
+                        'file_path' => $filePath,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                        'message_id' => $message->id,
+                    ]);
+
+                    $mediaIds[] = $media->id;
+                    $filePaths[] = $media->file_path;
+                }
 
                 $message->update([
                     'meta_data' => [
-                        'media_id' => $media->id,
-                        'file_path' => $media->file_path
+                        'media_ids' => $mediaIds,
+                        'file_paths' => $filePaths
                     ]
                 ]);
             }

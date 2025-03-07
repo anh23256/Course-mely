@@ -384,6 +384,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat/{id}/{memberId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
+                    Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
 
             Route::prefix('direct')
