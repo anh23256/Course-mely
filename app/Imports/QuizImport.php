@@ -4,13 +4,16 @@ namespace App\Imports;
 
 use App\Models\Quiz;
 use App\Traits\LoggableTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class QuizImport implements ToModel, WithHeadingRow
 {
-    use LoggableTrait;
+    use LoggableTrait, UploadToLocalTrait;
+
+    const FOLDER_QUIZ = 'quiz';
 
     protected $quizId;
 
@@ -33,6 +36,11 @@ class QuizImport implements ToModel, WithHeadingRow
                 throw new \Exception('Không tìm thấy bài ôn tập với ID: ' . $this->quizId);
             }
 
+            $imagePath = null;
+            if (!empty($row['image'])) {
+                $imagePath = $this->handleImageImport($row['image']);
+            }
+
             $answers = array_values(array_filter([
                 $row['answer1'] ?? null,
                 $row['answer2'] ?? null,
@@ -47,7 +55,7 @@ class QuizImport implements ToModel, WithHeadingRow
             $questionModel = $quiz->questions()->updateOrCreate(
                 ['question' => $row['question']],
                 [
-                    'image' => $row['image'] ?? null,
+                    'image' => $imagePath ?? null,
                     'answer_type' => $row['answer_type'],
                     'description' => $row['description'] ?? null,
                 ]
@@ -92,4 +100,52 @@ class QuizImport implements ToModel, WithHeadingRow
             return null;
         }
     }
+
+    private function handleImageImport($imagePath)
+    {
+        if (empty($imagePath)) {
+            return null;
+        }
+
+        try {
+            if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+                $imageContents = file_get_contents($imagePath);
+                $tempFile = tmpfile();
+                fwrite($tempFile, $imageContents);
+                $tempFilePath = stream_get_meta_data($tempFile)['uri'];
+
+                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                    $tempFilePath,
+                    basename($imagePath),
+                    mime_content_type($tempFilePath),
+                    null,
+                    true
+                );
+
+                $result = $this->uploadToLocal($uploadedFile, self::FOLDER_QUIZ);
+                fclose($tempFile);
+                return $result;
+            }
+
+            $fullPath = storage_path('app/imports/' . trim($imagePath, '/'));
+            if (!file_exists($fullPath)) {
+                throw new \Exception("File không tồn tại: {$fullPath}");
+            }
+
+            $uploadedFile = new \Illuminate\Http\UploadedFile(
+                $fullPath,
+                basename($imagePath),
+                mime_content_type($fullPath),
+                null,
+                true
+            );
+
+            return $this->uploadToLocal($uploadedFile, self::FOLDER_QUIZ);
+
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return null;
+        }
+    }
+
 }

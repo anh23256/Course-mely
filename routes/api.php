@@ -3,10 +3,12 @@
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
+use App\Http\Controllers\API\Common\BlogController;
 use App\Http\Controllers\API\Common\CommentController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
+use App\Http\Controllers\API\Common\FollowController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
@@ -82,6 +84,8 @@ Route::prefix('filters')
 
 Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
+Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
         $user = $request->user();
@@ -127,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
+        Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
@@ -208,6 +213,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
                     Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
                     Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
+                    Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
@@ -298,6 +304,7 @@ Route::middleware('auth:sanctum')->group(function () {
                                     Route::get('download-quiz-form', [\App\Http\Controllers\API\Instructor\QuizController::class, 'downloadQuizForm']);
                                     Route::get('{quiz}/show-quiz', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuiz']);
                                     Route::get('{question}/show-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuestion']);
+                                    Route::put('{question}/update-quiz-content', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateContentQuiz']);
                                     Route::post('{quiz}/store-quiz-question-multiple', [\App\Http\Controllers\API\Instructor\QuizController::class, 'storeQuestionMultiple']);
                                     Route::post('{quiz}/store-quiz-question-single', [\App\Http\Controllers\API\Instructor\QuizController::class, 'storeQuestionSingle']);
                                     Route::post('{quiz}/import-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'importQuiz']);
@@ -379,6 +386,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat/{id}/{memberId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
+                    Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
 
             Route::prefix('direct')
@@ -448,8 +456,9 @@ Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
-        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByCategory']);
-        Route::get('/tag/{tagId}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByTag']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
+        Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
+        Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
 
 #============================== ROUTE QA SYSTEM =================================

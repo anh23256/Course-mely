@@ -531,7 +531,7 @@ class CourseController
             $getOtherCourses = DB::table('courses')
                 ->select(
                     'courses.code',
-                    'courses.name as name_course',
+                    'courses.name',
                     'courses.slug',
                     'courses.price',
                     'courses.price_sale',
@@ -563,6 +563,7 @@ class CourseController
                 ->select(
                     'users.name',
                     'users.code',
+                    'users.avatar',
                     'profiles.bio',
                     'profiles.about_me',
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
@@ -582,7 +583,7 @@ class CourseController
 
             return response()->json([
                 'message' => 'Danh sách khóa học và thông tin giảng viên',
-                'getOtherCourse' => $getOtherCourses,
+                'get_other_courses' => $getOtherCourses,
                 'profile_instructor' => $profileIntructor
             ]);
         } catch (\Exception $e) {
