@@ -250,7 +250,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+//                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
                     #============================== ROUTE COURSE =============================
