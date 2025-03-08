@@ -30,4 +30,10 @@ class Comment extends Model
     {
         return $this->morphMany(Reaction::class, 'reactionable');
     }
+    public function commentable()
+    {
+        return $this->morphTo();
+    }
+
+    
 }
