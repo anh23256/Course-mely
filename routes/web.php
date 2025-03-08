@@ -289,6 +289,7 @@ Route::prefix('admin')->as('admin.')
         Route::prefix('invoices')->as('invoices.')->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
+            Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');
         });
 
 

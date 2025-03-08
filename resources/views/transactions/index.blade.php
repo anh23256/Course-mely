@@ -224,11 +224,11 @@
                                             <td>{{ $transaction->user->email ?? 'Không có thông tin' }}</td>
                                             <td>{{ number_format($transaction->amount) ?? 0 }} VND</td>
                                             <td>
-                                                @if ($transaction->type === 'invoice')
+                                                @if ($transaction->type == 'invoice')
                                                     <span class="badge bg-success w-50">
                                                             Mua bán
                                                         </span>
-                                                @elseif($transaction->type === 'withdrawal')
+                                                @elseif($transaction->type == 'withdrawal')
                                                     <span class="badge bg-info w-50">
                                                             Rút tiền
                                                         </span>
