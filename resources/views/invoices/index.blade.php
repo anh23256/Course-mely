@@ -162,7 +162,7 @@
                                         @foreach ($invoices as $invoice)
                                             <tr>
                                                 <td>{{ $loop->index + 1 }}</td>
-                                                <td>{{ $invoice->code }}</td>
+                                                <td>{{ $invoice->code ?? '' }}</td>
                                                 <td><span
                                                         class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
                                                 </td>
@@ -183,7 +183,7 @@
                                                 <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
                                                 </td>
                                                 <td>
-                                                    <a href="">
+                                                    <a href="{{ route('admin.invoices.show', $invoice->code ?? '') }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">
                                                             <span class="ri-eye-line"></span>
                                                         </button>
