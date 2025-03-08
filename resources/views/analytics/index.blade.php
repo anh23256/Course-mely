@@ -19,7 +19,18 @@
                 </div>
             </div>
         </div>
-
+        <div class="row mb-3 pb-1">
+            <div class="col-12">
+                <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+                    <div class="flex-grow-1">
+                        <h4 class="fs-16 mb-1" id="greeting">Xin chào, {{ Auth::user()->name ?? '' }}!</h4>
+                        <p class="text-muted mb-0">
+                            Chúc bạn một ngày tốt lành!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-xxl-7">
                 <div class="d-flex flex-column">
@@ -214,6 +225,21 @@
     <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
 
     <script>
+        var currentHour = new Date().getHours();
+        var greetingText = "Xin chào, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
+
+        if (currentHour >= 5 && currentHour < 12) {
+            greetingText = "Chào buổi sáng, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
+        } else if (currentHour >= 12 && currentHour < 18) {
+            greetingText = "Chào buổi chiều, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
+        } else if (currentHour >= 18 && currentHour < 22) {
+            greetingText = "Chào buổi tối, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
+        } else {
+            greetingText = "Chúc ngủ ngon, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
+        }
+
+        $("#greeting").text(greetingText);
+
         $(".dateRangePicker").each(function() {
             let button = $(this);
 
