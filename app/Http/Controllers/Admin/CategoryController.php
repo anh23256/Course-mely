@@ -73,9 +73,6 @@ class CategoryController extends Controller
 
             if ($data['parent_id']) {
                 $parentCategory = Category::query()->find($data['parent_id']);
-                if ($parentCategory && $parentCategory->hasGrandchildren()) {
-                    return redirect()->back()->withErrors(['parent_id' => 'Bạn không thể chọn cấp con thứ 3.']);
-                }
             }
 
             $data['status'] ??= 0;
