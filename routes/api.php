@@ -87,15 +87,7 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/broadcasting/auth', function (Request $request) {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        return \Illuminate\Support\Facades\Broadcast::auth($request);
-    });
+    Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
@@ -104,9 +96,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
     });
-
     Route::prefix('instructor')->as('instructor.')->group(function () {
         Route::post('register', [RegisterController::class, 'register']);
+        Route::post('check-handle-role', [RegisterController::class, 'checkHandleRole']);
     });
 
     Route::get('user', function (Request $request) {

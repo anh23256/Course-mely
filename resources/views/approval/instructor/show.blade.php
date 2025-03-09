@@ -399,12 +399,13 @@
                                                                     <div class="d-flex align-items-center">
                                                                         <div class="avatar-sm">
                                                                             @if ($fileExtension === 'pdf')
-                                                                                <iframe src="{{ $certificate }}"
-                                                                                        width="100%"
-                                                                                        height="400px"></iframe>
+                                                                                <iframe
+                                                                                    src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
+                                                                                    width="100%"
+                                                                                    height="400px"></iframe>
                                                                             @else
                                                                                 <img class="w-100"
-                                                                                     src="{{ $certificate }}"
+                                                                                     src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
                                                                                      alt="File Image">
                                                                             @endif
                                                                         </div>
