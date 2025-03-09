@@ -74,6 +74,12 @@
                                         class="d-none d-md-inline-block">Chứng chỉ</span>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link fs-14" data-bs-toggle="tab" href="#test-case" role="tab">
+                                    <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span
+                                        class="d-none d-md-inline-block">Tiêu chí</span>
+                                </a>
+                            </li>
                         </ul>
                         <div class="flex-shrink-0">
                             @if ($approval->status === 'pending')
@@ -147,8 +153,8 @@
                                                 <div class="progress-bar bg-danger" role="progressbar"
                                                     style="width: {{ $score }}%"
                                                     aria-valuenow="{{ $score }}" aria-valuemin="0"
-                                                    aria-valuemax="100">
-                                                    <div class="label">{{ $score }}%</div>
+                                                    aria-valuemax="100" id="progressInstructorStyle">
+                                                    <div class="label" id="progressInstructor">{{ $score }}%</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -161,16 +167,19 @@
                                                     <tbody>
                                                         <tr>
                                                             <th class="ps-0" scope="row">Họ tên:</th>
-                                                            <td class="text-muted">{{ $approval->user->name ?? 'Chưa có thông tin' }}</td>
+                                                            <td class="text-muted">
+                                                                {{ $approval->user->name ?? 'Chưa có thông tin' }}</td>
                                                         </tr>
                                                         <tr>
                                                             <th class="ps-0" scope="row">SĐT:</th>
                                                             <td class="text-muted">
-                                                                {{ $approval->user->profile->phone ?? 'Chưa có thông tin' }}</td>
+                                                                {{ $approval->user->profile->phone ?? 'Chưa có thông tin' }}
+                                                            </td>
                                                         </tr>
                                                         <tr>
                                                             <th class="ps-0" scope="row">E-mail:</th>
-                                                            <td class="text-muted">{{ $approval->user->email ?? 'Chưa có thông tin' }}
+                                                            <td class="text-muted">
+                                                                {{ $approval->user->email ?? 'Chưa có thông tin' }}
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -375,7 +384,9 @@
                                                                 $approval->user->profile->certificates ?? '[]',
                                                                 true,
                                                             );
-                                                            $certificates = is_array($certificates) ? $certificates : [];
+                                                            $certificates = is_array($certificates)
+                                                                ? $certificates
+                                                                : [];
                                                         @endphp
                                                         @if (!empty($certificates))
                                                             @foreach ($certificates as $certificate)
@@ -453,6 +464,36 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="test-case" role="tabpanel">
+                            <div class="tab-pane" id="test-case" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Danh sách tiêu chí kiểm duyệt giảng viên</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="accordion" id="criteriaAccordionInstructor">
+                                                    
+                                                    <div class="accordion-item">
+                                                        
+                                                        <div id="criteriaCollapseOne"
+                                                            class="accordion-collapse collapse show"
+                                                            aria-labelledby="criteriaHeadingOne"
+                                                            data-bs-parent="#criteriaAccordion">
+                                                            <div class="accordion-body">
+                                                                <div class="row" id="criteria_instructor">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -520,5 +561,56 @@
                 });
             });
         });
+
+        function getCriteriaApprovalInstructor() {
+            $.ajax({
+                type: 'GET',
+                url: "http://127.0.0.1:8000/api/{{ Auth::user()->code }}/get-validate-instructor",
+                beforeSend: function () {
+                    $("#criteria_instructor")
+                        .html(`
+                <span class="col-md-12 mt-2 text-center">
+                    <i class='bx bx-loader bx-spin' style="color: gray; font-size: 20px;"></i>
+                    Đang tải...
+                </span>
+            `);
+                },
+                success: function (response) {
+                    console.log(response);
+                    if (response.data) {
+                        let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;
+                        $('#progressInstructor').html(progress + '%');
+                        $('#progressInstructorStyle').css('width', progress + '%');
+                        $('#progressInstructorStyle').attr('aria-valuenow', progress);
+
+                        function renderCriteria(containerId, criteria) {
+                            let container = $(containerId);
+                            container.empty();
+
+                            if (!criteria.status) {
+                                criteria.errors.forEach(error => {
+                                    container.append(`
+                                <span class="col-md-6 mt-2">
+                                    <i class='bx bx-x-circle' style="color: red;"></i> ${error}
+                                </span>
+                            `);
+                                });
+                            }
+                            criteria.pass.forEach(pas => {
+                                container.append(`
+                            <span class="col-md-6 mt-2">
+                                <i class='bx bx-check-circle' style="color: green;"></i> ${pas}
+                            </span>
+                        `);
+                            });
+                        }
+
+                        let completion = response.data.completionStatus;
+                        renderCriteria("#criteria_instructor", completion.instructor);
+                        
+                    }
+                }
+            });
+        }
     </script>
 @endpush

@@ -57,6 +57,8 @@ Route::get('buyCourse', function () {
 Route::get('forgot-password', function () {
     return view('emails.auth.forgot-password');
 });
+
+
 Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {

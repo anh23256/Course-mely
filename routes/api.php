@@ -86,6 +86,8 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
+Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', function (Request $request) {
         $user = $request->user();
@@ -196,8 +198,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -428,7 +429,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
     });
-
 });
 
 #============================== ROUTE COURSE =============================
