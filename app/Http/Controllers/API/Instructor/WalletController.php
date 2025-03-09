@@ -198,7 +198,7 @@ class WalletController extends Controller
                 $query->whereDate('created_at', '<=', $request->input('toDate'));
             }
 
-            $withdrawalRequests = $query->get();
+            $withdrawalRequests = $query->latest('created_at')->get();
 
             if ($withdrawalRequests->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy dữ liệu');

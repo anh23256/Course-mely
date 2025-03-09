@@ -88,15 +88,7 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/broadcasting/auth', function (Request $request) {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        return \Illuminate\Support\Facades\Broadcast::auth($request);
-    });
+    Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
@@ -105,9 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
     });
-
     Route::prefix('instructor')->as('instructor.')->group(function () {
         Route::post('register', [RegisterController::class, 'register']);
+        Route::post('check-handle-role', [RegisterController::class, 'checkHandleRole']);
     });
 
     Route::get('user', function (Request $request) {
@@ -133,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
+
+        Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
+        Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
+        Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
@@ -253,7 +250,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+//                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
                     #============================== ROUTE COURSE =============================

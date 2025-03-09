@@ -21,15 +21,20 @@ class UpdateQuestionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'question' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'answer_type' => 'sometimes|in:single_choice,multiple_choice',
             'options' => 'sometimes|array|min:2|max:5',
             'options.*.answer' => 'required_with:options|string',
             'options.*.is_correct' => 'required_with:options|boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
+
+        if ($this->hasFile('image')) {
+            $rules['image'] = 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048';
+        }
+
+        return $rules;
     }
 
     protected function prepareForValidation()

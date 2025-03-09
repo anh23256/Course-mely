@@ -49,7 +49,8 @@ class CourseController extends Controller
                     'price',
                     'price_sale',
                     'total_student',
-                    'status'
+                    'status',
+                    'is_free',
                 ])
                 ->with([
                     'category:id,name,slug,parent_id',
