@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
+use App\Http\Controllers\API\Common\BlogController;
 use App\Http\Controllers\API\Common\CommentController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
@@ -212,6 +213,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
                     Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
                     Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
+                    Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
@@ -455,8 +457,9 @@ Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
-        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByCategory']);
-        Route::get('/tag/{tagId}', [\App\Http\Controllers\API\Common\BlogController::class, 'getPostsByTag']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
+        Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
+        Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
 
 #============================== ROUTE QA SYSTEM =================================

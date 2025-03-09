@@ -228,7 +228,6 @@ class PostController extends Controller
             }
 
             $data['is_hot'] = $request->input('is_hot') ?? 0;
-            $data['category_id'] = $request->input('categories');
             $data['published_at'] = $request->input('published_at') ?? now();
 
             do {

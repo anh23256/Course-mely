@@ -120,7 +120,7 @@
                                 {{ number_format($transaction->amount ?? 0) }} VND</div>
                         </div>
                         <div class="col-4 mb-4 d-flex">
-                            <div class="col-md-4"><strong>Loại giao dịch:</strong></div>
+                            <div class="col-md-4"><strong>Trạng thái:</strong></div>
                             <div class="col-md-8">
                                 @if ($transaction->status === 'Giao dịch thành công')
                                     <span class="badge bg-success">

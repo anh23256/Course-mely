@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ApprovalCourseController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
@@ -139,6 +140,15 @@ Route::prefix('admin')->as('admin.')
                 ->can('category.update');
             Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy')
                 ->can('category.delete');
+        });
+
+        #============================== ROUTE COMMENTS =============================
+        Route::prefix('comments')->as('comments.')->group(function () {
+            Route::get('/', [CommentController::class, 'index'])->name('index');
+            Route::get('/{id}', [CommentController::class, 'show'])->name('show');
+            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy');
+            Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
+            
         });
 
         #============================== ROUTE BANNER =============================
@@ -289,6 +299,7 @@ Route::prefix('admin')->as('admin.')
         Route::prefix('invoices')->as('invoices.')->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
+            Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');
         });
 
 

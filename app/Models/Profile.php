@@ -24,7 +24,8 @@ class Profile extends Model
         'bio' => 'array',
     ];
 
-    public function user(){
+    public function user()
+    {
         return $this->hasOne(User::class);
     }
 

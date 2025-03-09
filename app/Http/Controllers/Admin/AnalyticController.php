@@ -41,15 +41,51 @@ class AnalyticController extends Controller
                 ['totalUsers', 'sessions']
             );
 
-            $fetchMostVisitedPages = Analytics::fetchMostVisitedPages(Period::create($start, $end), 5);
+            $fetchMostVisitedPages = Analytics::fetchVisitorsAndPageViewsByDate(Period::create($start, $end), 7)
+                ->sortByDesc('activeUsers');
 
             $analyticsCountriesSession = Analytics::fetchTopCountries(Period::create($start, $end));
+
+            $userDevices = Analytics::get(
+                Period::create($start, $end),
+                ['sessions'],
+                ['deviceCategory']
+            );
+
+            $analyticsEngagement = Analytics::get(
+                Period::create($start, $end),
+                ['bounceRate'],
+                ['sessionSource']
+            );
+
+            $analyticsHourlyTraffic = Analytics::get(
+                Period::create(Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()),
+                ['sessions'],
+                ['dayOfWeek', 'hour'],
+                7
+            );
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'analyticsData' => $analyticsData,
+                    'analyticsUserSession' => $analyticsUserSession,
+                    'analyticsCountriesSession' => $analyticsCountriesSession,
+                    'topBrowsers' => $topBrowsers,
+                    'fetchMostVisitedPages' => $fetchMostVisitedPages,
+                    'analyticsEngagement' => $analyticsEngagement,
+                    'userDevices' => $userDevices,
+                ]);
+            }
 
             return view('analytics.index', compact([
                 'analyticsData',
                 'analyticsUserSession',
                 'analyticsCountriesSession',
-                'topBrowsers'
+                'topBrowsers',
+                'fetchMostVisitedPages',
+                'analyticsEngagement',
+                'userDevices',
+                'analyticsHourlyTraffic'
             ]));
         } catch (\Exception $e) {
             $this->logError($e);

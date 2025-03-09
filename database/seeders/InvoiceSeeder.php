@@ -29,7 +29,7 @@ class InvoiceSeeder extends Seeder
                 'course_id' => fake()->randomElement($courses),
                 'amount' => fake()->randomFloat(2, 10000, 10000000),
                 'final_amount' => fake()->randomFloat(2, 10000, 10000000),
-                'status' => fake()->randomElement(['completed', 'pending', 'failed']),
+                'status' => fake()->randomElement(['Đã thanh toán', 'Chưa thanh toán', 'Chờ thanh toán']),
                 'created_at' => $created_at,
                 'updated_at' => fake()->dateTimeBetween($created_at, now(), env('APP_TIMEZONE'))
             ]);
