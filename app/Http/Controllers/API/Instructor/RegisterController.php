@@ -153,18 +153,6 @@ class RegisterController extends Controller
             $pass[] = "Giảng viên có địa chỉ.";
         }
 
-        if (!$profile || empty($profile->experience)) {
-            $errors[] = "Giảng viên phải có thông tin kinh nghiệm.";
-        } else {
-            $pass[] = "Giảng viên có kinh nghiệm.";
-        }
-
-        if (!$profile || empty(json_decode($profile->bio, true))) {
-            $errors[] = "Giảng viên phải có phần mô tả cá nhân.";
-        } else {
-            $pass[] = "Giảng viên có mô tả cá nhân.";
-        }
-
         if (!$profile || empty($profile->certificates) || count(json_decode($profile->certificates, true)) < 1) {
             $errors[] = "Giảng viên phải có ít nhất một chứng chỉ.";
         } else {
