@@ -84,6 +84,7 @@ class StatisticController extends Controller
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
                 )
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
+                ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
                 ->join('categories','categories.id', '=','courses.category_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
                 ->where([
