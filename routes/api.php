@@ -125,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/certificates', [UserController::class, 'getCertificate']);
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
+        Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
+        Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
+        Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
+
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
             Route::post('/', [UserController::class, 'storeCareers']);
