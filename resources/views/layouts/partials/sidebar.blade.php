@@ -200,9 +200,20 @@
                 </ul>
             </div>
 
-            <a class="nav-link menu-link" href="#sidebarComment">
+            <a class="nav-link menu-link" href="#sidebarComment" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarComment">
                 <i class="las la-comment"></i> <span data-key="t-authentication">Quản lý bình luận</span>
             </a>
+            <div class="collapse menu-dropdown" id="sidebarComment">
+                <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.comments.index') }}" class="nav-link" data-key="t-chat">
+                            Danh sách Bình luận </a>
+                    </li>
+
+
+                </ul>
+            </div>
 
             <a class="nav-link menu-link" href="#sidebarCourse" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarCourse">
