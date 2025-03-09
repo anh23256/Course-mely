@@ -781,7 +781,7 @@
                     }))
                 }],
                 chart: {
-                    type: "treemap",
+                    type: "radar",
                     height: 400,
                     toolbar: {
                         show: false
