@@ -479,3 +479,4 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
+Route::get('get-validate-instructor/{instructorCode}', [RegisterController::class, 'validateInstructor']);

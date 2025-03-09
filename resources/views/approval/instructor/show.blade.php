@@ -565,7 +565,7 @@
         function getCriteriaApprovalInstructor() {
             $.ajax({
                 type: 'GET',
-                url: "http://127.0.0.1:8000/api/{{ Auth::user()->code }}/get-validate-instructor",
+                url: "http://127.0.0.1:8000/api/get-validate-instructor/" + "{{ $approval->user->code }}",
                 beforeSend: function () {
                     $("#criteria_instructor")
                         .html(`
@@ -605,12 +605,12 @@
                             });
                         }
 
-                        let completion = response.data.completionStatus;
-                        renderCriteria("#criteria_instructor", completion.instructor);
-                        
+                        let completion = response.data;
+                        renderCriteria("#criteria_instructor", completion);
                     }
                 }
             });
         }
+        getCriteriaApprovalInstructor();
     </script>
 @endpush

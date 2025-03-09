@@ -111,16 +111,20 @@ class RegisterController extends Controller
         })->toArray();
     }
 
-    public function validateInstructor()
+    public function validateInstructor(string $instructorCode)
     {
         try {
-            $user = Auth::user();
+            $instructor = User::where('code', $instructorCode)
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'instructor');
+                })
+                ->where('status', '!=', 'blocked')->first();
 
-            if (!$user) {
+            if (!$instructor) {
                 return $this->respondNotFound('Vui lòng đăng nhập và thử lại');
             }
 
-            $checkApproval = $this->checkInstructorApproval($user);
+            $checkApproval = $this->checkInstructorApproval($instructor);
 
             return $this->respondOk('Kiểm tra thông tin giảng viên', $checkApproval);
         } catch (\Exception $e) {
