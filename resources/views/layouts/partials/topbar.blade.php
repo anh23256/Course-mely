@@ -289,9 +289,9 @@
         moment.locale('vi');
 
         $(document).ready(function() {
-            Echo.connector.pusher.connection.bind('connected', function() {
-                console.log('Pusher đã kết nối thành công');
-            });
+            // Echo.connector.pusher.connection.bind('connected', function() {
+            //     console.log('Pusher đã kết nối thành công');
+            // });
 
             function triggerBellAnimation() {
                 const $bellIcon = $('#page-header-notifications-dropdown i');
