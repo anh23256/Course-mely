@@ -74,13 +74,17 @@ class StatisticController extends Controller
                     'courses.price',
                     'courses.price_sale',
                     'courses.slug',
+                    'courses.thumbnail',
+                    'courses.total_student',
+                    'categories.name as name_category',
+                    'categories.slug as slug_category',
+                    'categories.icon as icon_category',
                     DB::raw('SUM(invoices.final_amount) as total_revenue'),
-                    DB::raw('COUNT(DISTINCT course_users.id) as total_student'),
                     DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
                 )
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->join('course_users', 'courses.id', '=', 'course_users.course_id')
+                ->join('categories','categories.id', '=','courses.category_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
                 ->where([
                     'courses.user_id' => $user->id,
