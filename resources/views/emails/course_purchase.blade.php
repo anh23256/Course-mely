@@ -47,7 +47,7 @@
                     </th>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;">{{ $transaction->id }}</td>
+                    <td style="padding: 8px;">{{ $invoice->code }}</td>
                     <td style="padding: 8px;">
                         {{ \Illuminate\Support\Carbon::parse($transaction->created_at)->locale('vi')->translatedFormat('d F Y') }}
                     </td>
@@ -74,7 +74,7 @@
                 <tr>
                     <td colspan="2" style="padding: 8px; text-align: end;">Giảm giá</td>
                     <th style="padding: 8px;">
-                        {{ number_format($invoice->amount - $invoice->final_amount, 0, ',', '.') }}
+                        {{ number_format($invoice->coupon_discount, 0, ',', '.') }}
                         VND
                     </th>
                 </tr>
