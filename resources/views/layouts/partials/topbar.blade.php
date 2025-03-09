@@ -1,14 +1,14 @@
 @vite('resources/js/app.js')
 
 @push('page-css')
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
 @endpush
 
 <div class="layout-width">
     <div class="navbar-header">
         <div class="d-flex">
             <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
-                id="topnav-hamburger-icon">
+                    id="topnav-hamburger-icon">
                 <span class="hamburger-icon">
                     <span></span>
                     <span></span>
@@ -20,10 +20,10 @@
             <form class="app-search d-none d-md-block">
                 <div class="position-relative">
                     <input type="text" class="form-control" placeholder="Search..." autocomplete="off"
-                        id="search-options" value="">
+                           id="search-options" value="">
                     <span class="mdi mdi-magnify search-widget-icon"></span>
                     <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none"
-                        id="search-close-options"></span>
+                          id="search-close-options"></span>
                 </div>
                 <div class="dropdown-menu dropdown-menu-lg" id="search-dropdown">
                     <div data-simplebar style="max-height: 320px;">
@@ -71,7 +71,7 @@
                             <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
                                 <div class="d-flex">
                                     <img src="{{ asset('assets/images/users/avatar-2.jpg') }}"
-                                        class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                                         class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                     <div class="flex-grow-1">
                                         <h6 class="m-0">Angela Bernier</h6>
                                         <span class="fs-11 mb-0 text-muted">Manager</span>
@@ -82,7 +82,7 @@
                             <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
                                 <div class="d-flex">
                                     <img src="{{ asset('assets/images/users/avatar-3.jpg') }}"
-                                        class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                                         class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                     <div class="flex-grow-1">
                                         <h6 class="m-0">David Grasso</h6>
                                         <span class="fs-11 mb-0 text-muted">Web Designer</span>
@@ -93,7 +93,7 @@
                             <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
                                 <div class="d-flex">
                                     <img src="{{ asset('assets/images/users/avatar-5.jpg') }}"
-                                        class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                                         class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                     <div class="flex-grow-1">
                                         <h6 class="m-0">Mike Bunch</h6>
                                         <span class="fs-11 mb-0 text-muted">React Developer</span>
@@ -115,17 +115,17 @@
 
             <div class="dropdown d-md-none topbar-head-dropdown header-item">
                 <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
-                    id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
+                        id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
                     <i class="bx bx-search fs-22"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
-                    aria-labelledby="page-header-search-dropdown">
+                     aria-labelledby="page-header-search-dropdown">
                     <form class="p-3">
                         <div class="form-group m-0">
                             <div class="input-group">
                                 <input type="text" class="form-control" placeholder="Search ..."
-                                    aria-label="Recipient's username">
+                                       aria-label="Recipient's username">
                                 <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
                             </div>
                         </div>
@@ -135,28 +135,28 @@
 
             <div class="ms-1 header-item d-none d-sm-flex">
                 <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
-                    data-toggle="fullscreen">
+                        data-toggle="fullscreen">
                     <i class='bx bx-fullscreen fs-22'></i>
                 </button>
             </div>
 
             <div class="ms-1 header-item d-none d-sm-flex">
                 <button type="button"
-                    class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
+                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
                     <i class='bx bx-moon fs-22'></i>
                 </button>
             </div>
 
             <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
                 <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
-                    id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                    aria-haspopup="true" aria-expanded="false">
+                        id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                        aria-haspopup="true" aria-expanded="false">
                     <i class='bx bx-bell fs-22'></i>
                     <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger"
-                        id="unread-notification-count"></span>
+                          id="unread-notification-count"></span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
-                    aria-labelledby="page-header-notifications-dropdown">
+                     aria-labelledby="page-header-notifications-dropdown">
 
                     <div class="dropdown-head bg-primary bg-pattern rounded-top">
                         <div class="p-3">
@@ -166,7 +166,7 @@
                                 </div>
                                 <div class="col-auto dropdown-tabs">
                                     <span id="unread-notification-count"
-                                        class="badge bg-light-subtle text-body fs-13"></span>
+                                          class="badge bg-light-subtle text-body fs-13"></span>
                                 </div>
                             </div>
                         </div>
@@ -176,19 +176,19 @@
                                 id="notificationItemsTab" role="tablist">
                                 <li class="nav-item waves-effect waves-light">
                                     <a class="nav-link active" data-bs-toggle="tab" href="#all-noti-tab"
-                                        role="tab" aria-selected="true">
+                                       role="tab" aria-selected="true">
                                         Thông báo
                                     </a>
                                 </li>
                                 <li class="nav-item waves-effect waves-light">
                                     <a class="nav-link" data-bs-toggle="tab" href="#alerts-tab" role="tab"
-                                        aria-selected="false">
+                                       aria-selected="false">
                                         Kiểm duyệt
                                     </a>
                                 </li>
                                 <li class="nav-item waves-effect waves-light">
                                     <a class="nav-link" data-bs-toggle="tab" href="#messages-tab" role="tab"
-                                        aria-selected="false">
+                                       aria-selected="false">
                                         Tin nhắn
                                     </a>
                                 </li>
@@ -204,16 +204,16 @@
                         </div>
 
                         <div class="tab-pane fade py-2 ps-2" id="alerts-tab" role="tabpanel"
-                            aria-labelledby="alerts-tab">
+                             aria-labelledby="alerts-tab">
                             <div data-simplebar style="max-height: 300px; overflow-y: auto;" class="pe-2"
-                                id="approvals-notifications-container">
+                                 id="approvals-notifications-container">
                             </div>
                         </div>
 
                         <div class="tab-pane fade py-2 ps-2" id="messages-tab" role="tabpanel"
-                            aria-labelledby="messages-tab">
+                             aria-labelledby="messages-tab">
                             <div data-simplebar style="max-height: 300px;" class="pe-2"
-                                id="messages-notifications-container">
+                                 id="messages-notifications-container">
                             </div>
                         </div>
 
@@ -223,7 +223,7 @@
                                 <div id="select-content" class="text-body fw-semibold px-1">0</div>
                                 Result
                                 <button type="button" class="btn btn-link link-danger p-0 ms-3"
-                                    data-bs-toggle="modal" data-bs-target="#removeNotificationModal">Remove
+                                        data-bs-toggle="modal" data-bs-target="#removeNotificationModal">Remove
                                 </button>
                             </div>
                         </div>
@@ -233,10 +233,10 @@
 
             <div class="dropdown ms-sm-3 header-item topbar-user">
                 <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
+                        aria-haspopup="true" aria-expanded="false">
                     <span class="d-flex align-items-center">
                         <img class="rounded-circle header-profile-user" src="{{ Auth::user()->avatar ?? '' }}"
-                            alt="Header Avatar" crossorigin="anonymous">
+                             alt="Header Avatar" crossorigin="anonymous">
                         <span class="text-start ms-xl-2">
                             <span
                                 class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::user()->name ?? '' }}</span>
@@ -248,19 +248,13 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
                     <!-- item-->
-                    <h6 class="dropdown-header">Welcome {{ Auth::user()->name ?? '' }}!</h6>
+                    <h6 class="dropdown-header">Xin chào {{ Auth::user()->name ?? '' }}!</h6>
                     <a class="dropdown-item" href="{{ route('admin.roles.show', Auth::user()->id ?? '') }}"><i
                             class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                             class="align-middle">Profile</span></a>
                     <a class="dropdown-item" href="apps-chat.html"><i
                             class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i>
                         <span class="align-middle">Messages</span></a>
-                    <a class="dropdown-item" href="apps-tasks-kanban.html"><i
-                            class="mdi mdi-calendar-check-outline text-muted fs-16 align-middle me-1"></i>
-                        <span class="align-middle">Taskboard</span></a>
-                    <a class="dropdown-item" href="pages-faqs.html"><i
-                            class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span
-                            class="align-middle">Help</span></a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{{ route('admin.wallets.index') }}"><i
                             class="mdi mdi-wallet text-muted fs-16 align-middle me-1"></i> <span
@@ -270,12 +264,10 @@
                             class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
                             class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
                             class="align-middle">Settings</span></a>
-                    <a class="dropdown-item" href="auth-lockscreen-basic.html"><i
-                            class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span
-                            class="align-middle">Lock screen</span></a>
                     <a class="dropdown-item" href="{{ route('admin.logout') }}"><i
-                            class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle"
-                            data-key="t-logout">Logout</span></a>
+                            class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
+                        <span class="align-middle" data-key="t-logout">Đăng xuất</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -288,10 +280,30 @@
     <script>
         moment.locale('vi');
 
-        $(document).ready(function() {
-            // Echo.connector.pusher.connection.bind('connected', function() {
-            //     console.log('Pusher đã kết nối thành công');
-            // });
+        $(document).ready(function () {
+            $('.dropdown-item[href="{{ route('admin.logout') }}"]').on('click', function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Xác nhận đăng xuất',
+                    text: 'Bạn có chắc chắn muốn đăng xuất?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đăng xuất',
+                    cancelButtonText: 'Hủy',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('admin.logout') }}";
+                    }
+                });
+            });
+
+
+            Echo.connector.pusher.connection.bind('connected', function () {
+                console.log('Pusher đã kết nối thành công');
+            });
 
             function triggerBellAnimation() {
                 const $bellIcon = $('#page-header-notifications-dropdown i');
@@ -317,7 +329,7 @@
                     ...(data && Object.keys(data).length > 0 ? {
                         data: data
                     } : {}),
-                    success: function(response) {
+                    success: function (response) {
                         if (response?.data) {
                             const {
                                 notifications,
@@ -330,7 +342,7 @@
                             $('#notification-data').empty();
                             $('#approvals-notifications-container').empty();
 
-                            $.each(notifications, function(_, notification) {
+                            $.each(notifications, function (_, notification) {
                                 renderNotification(notification, false);
                             });
 
@@ -347,7 +359,7 @@
                                 $('#approvals-notifications-container').append(`
                                         <div class="col-12 col-md-12">
                                             <div class="d-flex mt-4 justify-content-center">
-                                                <a class="text-primary text-decoration-underline" 
+                                                <a class="text-primary text-decoration-underline"
                                                     data-notification-type="register_course-register_instructor" id="load-more">
                                                     Xem thêm
                                                 </a>
@@ -364,7 +376,7 @@
                             }
                         }
                     },
-                    error: function(error) {
+                    error: function (error) {
                         console.error('Có lỗi xảy ra khi tải thông báo:', error);
                     }
                 });
@@ -465,7 +477,7 @@
                 }
             }
 
-            $(document).on('click', '.notification-check', function(e) {
+            $(document).on('click', '.notification-check', function (e) {
                 e.preventDefault();
                 const notificationId = $(this).data('notification-id');
                 const isChecked = $(this).data('ischecked');
@@ -473,7 +485,7 @@
                 const readed = "{{ now() }}";
                 const urlRedirect = $(`.stretched-link-${notificationId}`).attr('href');
 
-                if(urlRedirect == "#"){
+                if (urlRedirect == "#") {
                     return;
                 }
 
@@ -493,10 +505,10 @@
                     url: url,
                     type: 'PUT',
                     data: data,
-                    success: function(response) {
+                    success: function (response) {
                         window.location.href = urlRedirect;
                     },
-                    error: function(error) {
+                    error: function (error) {
                         console.error('Có lỗi xảy ra khi cập nhật trạng thái đọc:', error);
                     }
                 });
@@ -517,7 +529,7 @@
                 }
             };
 
-            $(document).on('click', '#load-more', function() {
+            $(document).on('click', '#load-more', function () {
                 const notificationType = $(this).data('notification-type');
 
                 if (notificationType === "user_buy_course") {

@@ -98,10 +98,10 @@ class WithDrawalsRequestController extends Controller
                 ->with(['wallet.user'])
                 ->find($data['withdrawal_id']);
 
-            if ($withdrawal->status === 'Hoàn thành') {
+            if ($withdrawal->status === 'Hoàn thành' || $withdrawal->status === 'Đã xử lý') {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Yêu cầu đã được xử lý, không thể thay đổi',
+                    'message' => 'Yêu cầu đã được xử lý, hoặc đang xử lý. Vui lòng thử lại sau.',
                 ]);
             }
 
@@ -183,7 +183,7 @@ class WithDrawalsRequestController extends Controller
                 ]);
             }
 
-            $systemFundBalance->pending_balance -= $withdrawal->amount;
+            $systemFundBalance->decrement('pending_balance', $withdrawal->amount);
 
             $transation = Transaction::query()->create([
                 'transaction_code' => 'ORDER' . time(),

@@ -73,7 +73,7 @@ class InstructorApprovalNotification extends Notification implements ShouldBroad
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('instructor.' . $this->user->id);
+        $channel = new PrivateChannel('member.' . $this->user->id);
         return $channel;
     }
 }

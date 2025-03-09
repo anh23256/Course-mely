@@ -46,7 +46,7 @@ class CommentController extends Controller
                 'user_name' => $reply->user->name,
                 'content' => $reply->content,
                 'created_at' => $reply->created_at->format('d/m/Y H:i:s'),
-                'reaction_count' => $reply->reactions_count, 
+                'reaction_count' => $reply->reactions_count,
             ];
         });
 
@@ -56,11 +56,10 @@ class CommentController extends Controller
     private function filter($request, $query)
     {
         $filters = [
-            
             'user_name_comment' => null,
             'start_date' => ['queryWhere' => '>='],
-            
         ];
+
         $query = $this->filterTrait($filters, $request, $query);
 
         return $query;

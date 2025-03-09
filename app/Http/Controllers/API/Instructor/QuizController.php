@@ -294,7 +294,7 @@ class QuizController extends Controller
     public function updateQuestion(UpdateQuestionRequest $request, $questionId)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
 
             $question = Question::query()->find($questionId);
 
