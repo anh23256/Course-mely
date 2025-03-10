@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="profile-foreground position-relative mx-n4 mt-n4">
             <div class="profile-wid-bg">
-                <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img" />
+                <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img"/>
             </div>
         </div>
         <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
@@ -79,44 +79,47 @@
                             @if ($approval->status === 'pending')
                                 <div class="d-flex gap-2">
                                     <form action="{{ route('admin.approvals.instructors.approve', $approval->id) }}"
-                                        method="POST" id="approveForm">
+                                          method="POST" id="approveForm">
                                         @csrf
                                         @method('PUT')
                                         <button class="btn btn-primary approve " type="button">Phê duyệt</button>
                                     </form>
                                     <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#rejectModal">
+                                            data-bs-target="#rejectModal">
                                         Từ chối
                                     </button>
 
-                                    <div id="rejectModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel"
-                                        aria-hidden="true">
+                                    <div id="rejectModal" class="modal fade" tabindex="-1"
+                                         aria-labelledby="myModalLabel"
+                                         aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title" id="myModalLabel">Từ chối người hướng
                                                         dẫn</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
+                                                            aria-label="Close"></button>
                                                 </div>
                                                 <form id="rejectForm"
-                                                    action="{{ route('admin.approvals.instructors.reject', $approval->id) }}"
-                                                    method="POST">
+                                                      action="{{ route('admin.approvals.instructors.reject', $approval->id) }}"
+                                                      method="POST">
                                                     @csrf
                                                     @method('PUT')
                                                     <div class="modal-body">
                                                         <div class="mb-3">
                                                             <label for="rejectReason" class="form-label">Lý do từ
                                                                 chối</label>
-                                                            <textarea placeholder="Nhập lý do từ chối..." class="form-control" id="rejectNote" name="note" rows="3"></textarea>
+                                                            <textarea placeholder="Nhập lý do từ chối..."
+                                                                      class="form-control" id="rejectNote" name="note"
+                                                                      rows="3"></textarea>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-light"
-                                                            data-bs-dismiss="modal">Huỷ
+                                                                data-bs-dismiss="modal">Huỷ
                                                         </button>
                                                         <button type="button" class="btn btn-primary"
-                                                            id="submitRejectForm">Xác nhận
+                                                                id="submitRejectForm">Xác nhận
                                                         </button>
                                                     </div>
                                                 </form>
@@ -145,9 +148,9 @@
                                             <h5 class="card-title mb-5">Mức độ hoàn thiện hồ sơ</h5>
                                             <div class="progress animated-progress custom-progress progress-label">
                                                 <div class="progress-bar bg-danger" role="progressbar"
-                                                    style="width: {{ $score }}%"
-                                                    aria-valuenow="{{ $score }}" aria-valuemin="0"
-                                                    aria-valuemax="100">
+                                                     style="width: {{ $score }}%"
+                                                     aria-valuenow="{{ $score }}" aria-valuemin="0"
+                                                     aria-valuemax="100">
                                                     <div class="label">{{ $score }}%</div>
                                                 </div>
                                             </div>
@@ -159,39 +162,39 @@
                                             <div class="table-responsive">
                                                 <table class="table table-borderless mb-0">
                                                     <tbody>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">Họ tên:</th>
-                                                            <td class="text-muted">{{ $approval->user->name ?? 'Chưa có thông tin' }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">SĐT:</th>
-                                                            <td class="text-muted">
-                                                                {{ $approval->user->profile->phone ?? 'Chưa có thông tin' }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">E-mail:</th>
-                                                            <td class="text-muted">{{ $approval->user->email ?? 'Chưa có thông tin' }}
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">Exp:</th>
-                                                            <td class="text-muted">
-                                                                {{ $approval->user->profile->experience ?? 'Chưa có thông tin' }}
-                                                                năm kinh nghiệm
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">Địa chỉ:</th>
-                                                            <td class="text-muted">
-                                                                {{ $approval->user->profile->address ?? 'Chưa có thông tin' }}
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">Ngày tạo</th>
-                                                            <td class="text-muted">
-                                                                {{ $approval->created_at->format('d/m/Y') }}
-                                                            </td>
-                                                        </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">Họ tên:</th>
+                                                        <td class="text-muted">{{ $approval->user->name ?? 'Chưa có thông tin' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">SĐT:</th>
+                                                        <td class="text-muted">
+                                                            {{ $approval->user->profile->phone ?? 'Chưa có thông tin' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">E-mail:</th>
+                                                        <td class="text-muted">{{ $approval->user->email ?? 'Chưa có thông tin' }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">Exp:</th>
+                                                        <td class="text-muted">
+                                                            {{ $approval->user->profile->experience ?? 'Chưa có thông tin' }}
+                                                            năm kinh nghiệm
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">Địa chỉ:</th>
+                                                        <td class="text-muted">
+                                                            {{ $approval->user->profile->address ?? 'Chưa có thông tin' }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0" scope="row">Ngày tạo</th>
+                                                        <td class="text-muted">
+                                                            {{ $approval->created_at->format('d/m/Y') }}
+                                                        </td>
+                                                    </tr>
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -202,7 +205,7 @@
                                             <h5 class="card-title mb-4">Mạng xã hội</h5>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @php
-                                                    $socials = json_decode($approval->user->profile->bio ?? '[]', true);
+                                                    $socials = $approval->user->profile->bio ?? '';
                                                     $socials = is_array($socials) ? $socials : [];
                                                     $icon = [
                                                         'facebook' => 'ri-facebook-fill',
@@ -220,7 +223,7 @@
                                                         @if (array_key_exists($key, $icon) && $url)
                                                             <div>
                                                                 <a href="{{ $url }}" class="avatar-xs d-block"
-                                                                    target="_blank">
+                                                                   target="_blank">
                                                                     <span
                                                                         class="avatar-title rounded-circle fs-16 bg-body text-body">
                                                                         <i class="{{ $icon[$key] }}"></i>
@@ -231,7 +234,8 @@
                                                     @endforeach
                                                 @else
                                                     <div class="avatar-xs">
-                                                        <span class="avatar-title rounded-circle fs-16 bg-body text-body">
+                                                        <span
+                                                            class="avatar-title rounded-circle fs-16 bg-body text-body">
                                                             <i class="ri-global-fill"></i>
                                                         </span>
                                                     </div>
@@ -258,19 +262,19 @@
                                             <h5 class="card-title mb-4">Kỹ năng</h5>
                                             <div class="d-flex flex-wrap gap-2 fs-15">
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">Photoshop</a>
+                                                   class="badge bg-primary-subtle text-primary">Photoshop</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">illustrator</a>
+                                                   class="badge bg-primary-subtle text-primary">illustrator</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">HTML</a>
+                                                   class="badge bg-primary-subtle text-primary">HTML</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">CSS</a>
+                                                   class="badge bg-primary-subtle text-primary">CSS</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">Javascript</a>
+                                                   class="badge bg-primary-subtle text-primary">Javascript</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">Php</a>
+                                                   class="badge bg-primary-subtle text-primary">Php</a>
                                                 <a href="javascript:void(0);"
-                                                    class="badge bg-primary-subtle text-primary">Python</a>
+                                                   class="badge bg-primary-subtle text-primary">Python</a>
                                             </div>
                                         </div><!-- end card body -->
                                     </div><!-- end card -->
@@ -293,28 +297,30 @@
                                                 <div class="accordion-item mb-3">
                                                     <h2 class="accordion-header" id="heading{{ $index }}">
                                                         <button class="accordion-button" type="button"
-                                                            data-bs-toggle="collapse"
-                                                            data-bs-target="#collapse{{ $index }}"
-                                                            aria-expanded="false"
-                                                            aria-controls="collapse{{ $index }}">
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#collapse{{ $index }}"
+                                                                aria-expanded="false"
+                                                                aria-controls="collapse{{ $index }}">
                                                             {{ $qaSystem['question'] }}
                                                         </button>
                                                     </h2>
                                                     <div id="collapse{{ $index }}"
-                                                        class="accordion-collapse collapse"
-                                                        aria-labelledby="heading{{ $index }}"
-                                                        data-bs-parent="#default-accordion-example">
+                                                         class="accordion-collapse collapse"
+                                                         aria-labelledby="heading{{ $index }}"
+                                                         data-bs-parent="#default-accordion-example">
                                                         <div class="accordion-body">
                                                             @if (count($qaSystem['selected_options']) > 1)
                                                                 @foreach ($qaSystem['options'] as $optionIndex => $option)
                                                                     <div class="form-check  mb-3">
                                                                         <input type="checkbox"
-                                                                            name="option[{{ $loop->parent->index }}][]"
-                                                                            value="{{ $optionIndex }}"
-                                                                            @if (in_array($optionIndex, $qaSystem['selected_options'])) checked @endif
-                                                                            @if (!in_array($optionIndex, $qaSystem['selected_options'])) disabled @endif
-                                                                            id="checkbox-{{ $loop->parent->index }}-{{ $loop->index }}"
-                                                                            class="form-check-input">
+                                                                               name="option[{{ $loop->parent->index }}][]"
+                                                                               value="{{ $optionIndex }}"
+                                                                               @if (in_array($optionIndex, $qaSystem['selected_options'])) checked
+                                                                               @endif
+                                                                               @if (!in_array($optionIndex, $qaSystem['selected_options'])) disabled
+                                                                               @endif
+                                                                               id="checkbox-{{ $loop->parent->index }}-{{ $loop->index }}"
+                                                                               class="form-check-input">
                                                                         <label
                                                                             for="checkbox-{{ $loop->parent->index }}-{{ $loop->index }}"
                                                                             class="form-check-label">{{ $option }}</label>
@@ -324,12 +330,14 @@
                                                                 @foreach ($qaSystem['options'] as $optionIndex => $option)
                                                                     <div class="form-check mb-3">
                                                                         <input type="radio"
-                                                                            name="option[{{ $loop->parent->index }}]"
-                                                                            value="{{ $optionIndex }}"
-                                                                            @if (in_array($optionIndex, $qaSystem['selected_options'])) checked @endif
-                                                                            @if (!in_array($optionIndex, $qaSystem['selected_options'])) disabled @endif
-                                                                            id="radio-{{ $loop->parent->index }}-{{ $loop->index }}"
-                                                                            class="form-check-input">
+                                                                               name="option[{{ $loop->parent->index }}]"
+                                                                               value="{{ $optionIndex }}"
+                                                                               @if (in_array($optionIndex, $qaSystem['selected_options'])) checked
+                                                                               @endif
+                                                                               @if (!in_array($optionIndex, $qaSystem['selected_options'])) disabled
+                                                                               @endif
+                                                                               id="radio-{{ $loop->parent->index }}-{{ $loop->index }}"
+                                                                               class="form-check-input">
                                                                         <label
                                                                             for="radio-{{ $loop->parent->index }}-{{ $loop->index }}"
                                                                             class="form-check-label">{{ $option }}</label>
@@ -360,91 +368,92 @@
                                             <div class="table-responsive">
                                                 <table class="table table-borderless align-middle mb-0">
                                                     <thead class="table-light">
-                                                        <tr>
-                                                            <td>#</td>
-                                                            <th scope="col">File Name</th>
-                                                            <th scope="col">Type</th>
-                                                            <th scope="col">Size</th>
-                                                            <th scope="col">Upload Date</th>
-                                                            <th scope="col">Action</th>
-                                                        </tr>
+                                                    <tr>
+                                                        <td>#</td>
+                                                        <th scope="col">File Name</th>
+                                                        <th scope="col">Type</th>
+                                                        <th scope="col">Size</th>
+                                                        <th scope="col">Upload Date</th>
+                                                        <th scope="col">Action</th>
+                                                    </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @php
-                                                            $certificates = json_decode(
-                                                                $approval->user->profile->certificates ?? '[]',
-                                                                true,
-                                                            );
-                                                            $certificates = is_array($certificates) ? $certificates : [];
-                                                        @endphp
-                                                        @if (!empty($certificates))
-                                                            @foreach ($certificates as $certificate)
-                                                                @php
-                                                                    $fileExtension = pathinfo(
-                                                                        $certificate,
-                                                                        PATHINFO_EXTENSION,
-                                                                    );
-                                                                @endphp
-                                                                <tr>
-                                                                    <td>{{ $loop->iteration }}</td>
-                                                                    <td>
-                                                                        <div class="d-flex align-items-center">
-                                                                            <div class="avatar-sm">
-                                                                                @if ($fileExtension === 'pdf')
-                                                                                    <iframe src="{{ $certificate }}"
-                                                                                        width="100%"
-                                                                                        height="400px"></iframe>
-                                                                                @else
-                                                                                    <img class="w-100"
-                                                                                        src="{{ $certificate }}"
-                                                                                        alt="File Image">
-                                                                                @endif
-                                                                            </div>
+                                                    @php
+                                                        $certificates = json_decode(
+                                                            $approval->user->profile->certificates ?? '[]',
+                                                            true,
+                                                        );
+                                                        $certificates = is_array($certificates) ? $certificates : [];
+                                                    @endphp
+                                                    @if (!empty($certificates))
+                                                        @foreach ($certificates as $certificate)
+                                                            @php
+                                                                $fileExtension = pathinfo(
+                                                                    $certificate,
+                                                                    PATHINFO_EXTENSION,
+                                                                );
+                                                            @endphp
+                                                            <tr>
+                                                                <td>{{ $loop->iteration }}</td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm">
+                                                                            @if ($fileExtension === 'pdf')
+                                                                                <iframe
+                                                                                    src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
+                                                                                    width="100%"
+                                                                                    height="400px"></iframe>
+                                                                            @else
+                                                                                <img class="w-100"
+                                                                                     src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
+                                                                                     alt="File Image">
+                                                                            @endif
                                                                         </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        @if ($fileExtension === 'pdf')
-                                                                            PDF File
-                                                                        @else
-                                                                            Image File
-                                                                        @endif
-                                                                    </td>
-                                                                    <td>4.57 MB</td>
-                                                                    <td>12 Dec 2021</td>
-                                                                    <td>
-                                                                        <div class="dropdown">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="btn btn-light btn-icon"
-                                                                                id="dropdownMenuLink15"
-                                                                                data-bs-toggle="dropdown"
-                                                                                aria-expanded="true">
-                                                                                <i class="ri-equalizer-fill"></i>
-                                                                            </a>
-                                                                            <ul class="dropdown-menu dropdown-menu-end"
-                                                                                aria-labelledby="dropdownMenuLink15">
-                                                                                <li>
-                                                                                    <a class="dropdown-item"
-                                                                                        href="javascript:void(0);">
-                                                                                        <i
-                                                                                            class="ri-eye-fill me-2 align-middle text-muted"></i>
-                                                                                        View
-                                                                                    </a>
-                                                                                </li>
-                                                                                <li>
-                                                                                    <a class="dropdown-item"
-                                                                                        href="{{ $certificate }}"
-                                                                                        download>
-                                                                                        <i
-                                                                                            class="ri-download-2-fill me-2 align-middle text-muted"></i>
-                                                                                        Download
-                                                                                    </a>
-                                                                                </li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        @endif
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    @if ($fileExtension === 'pdf')
+                                                                        PDF File
+                                                                    @else
+                                                                        Image File
+                                                                    @endif
+                                                                </td>
+                                                                <td>4.57 MB</td>
+                                                                <td>12 Dec 2021</td>
+                                                                <td>
+                                                                    <div class="dropdown">
+                                                                        <a href="javascript:void(0);"
+                                                                           class="btn btn-light btn-icon"
+                                                                           id="dropdownMenuLink15"
+                                                                           data-bs-toggle="dropdown"
+                                                                           aria-expanded="true">
+                                                                            <i class="ri-equalizer-fill"></i>
+                                                                        </a>
+                                                                        <ul class="dropdown-menu dropdown-menu-end"
+                                                                            aria-labelledby="dropdownMenuLink15">
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                   href="javascript:void(0);">
+                                                                                    <i
+                                                                                        class="ri-eye-fill me-2 align-middle text-muted"></i>
+                                                                                    View
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item"
+                                                                                   href="{{ $certificate }}"
+                                                                                   download>
+                                                                                    <i
+                                                                                        class="ri-download-2-fill me-2 align-middle text-muted"></i>
+                                                                                    Download
+                                                                                </a>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    @endif
                                                     </tbody>
                                                 </table>
                                             </div>

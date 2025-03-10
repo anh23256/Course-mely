@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'pusher'),
+    'default' => env('BROADCAST_DRIVER', 'reverb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,6 +29,20 @@ return [
     */
 
     'connections' => [
+        'reverb' => [
+            'driver' => 'reverb',
+            'key' => env('REVERB_APP_KEY'),
+            'secret' => env('REVERB_APP_SECRET'),
+            'app_id' => env('REVERB_APP_ID'),
+            'options' => [
+                'host' => env('REVERB_HOST'),
+                'port' => env('REVERB_PORT', 8080),  // Port mà bạn muốn kết nối
+                'scheme' => env('REVERB_SCHEME', 'http'),  // Dùng http nếu không có SSL
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',  // Không dùng TLS nếu không có HTTPS
+            ],
+            'client_options' => [
+            ],
+        ],
 
         'pusher' => [
             'driver' => 'pusher',

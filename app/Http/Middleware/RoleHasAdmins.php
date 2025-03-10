@@ -44,6 +44,7 @@ class RoleHasAdmins
         ) {
             return redirect('email');
         }
+
         return abort(403, 'Bạn không có quyền truy cập vào hệ thống.');
     }
 }

@@ -2,16 +2,20 @@
 
 namespace App\Notifications\Client;
 
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
-class MessageNotification extends Notification implements ShouldQueue, ShouldBroadcast
+class MessageNotification extends Notification implements ShouldBroadcast
 {
-    use Queueable;
+    use Queueable, Dispatchable, InteractsWithSockets, SerializesModels;
 
     private $message;
     private $conversation;
@@ -22,7 +26,7 @@ class MessageNotification extends Notification implements ShouldQueue, ShouldBro
     public function __construct($message, $conversation)
     {
         $this->message = $message;
-        $this->conversation = $message->conversation;
+        $this->conversation = $conversation;
     }
 
     /**
@@ -65,11 +69,21 @@ class MessageNotification extends Notification implements ShouldQueue, ShouldBro
 
     public function toDatabase($notifiable)
     {
+        Log::info('toBroadcast called');
         return $this->notificationData($notifiable);
     }
 
     public function toBroadcast($notifiable)
     {
+        Log::info('broadcastOn called with conversation id: ' . $this->conversation->id);
+
         return new BroadcastMessage($this->notificationData($notifiable));
+    }
+
+    public function broadcastOn(): array
+    {
+        return [
+            new \Illuminate\Broadcasting\PrivateChannel("conversation.{$this->conversation->id}")
+        ];
     }
 }

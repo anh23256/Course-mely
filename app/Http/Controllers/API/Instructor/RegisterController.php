@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Auth\RegisterInstructorRequest;
+use App\Jobs\AutoApproveInstructorJob;
+use App\Jobs\ProcessInstructorRegistrationJob;
 use App\Models\Approvable;
 use App\Models\Career;
 use App\Models\Profile;
@@ -12,18 +14,19 @@ use App\Notifications\RegisterInstructorNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait, ApiResponseTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
 
     const FOLDER_CERTIFICATES = 'certificates';
-
-    const URL_IMAGE_DEFAULT = "https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png";
 
     public function register(RegisterInstructorRequest $request)
     {
@@ -32,64 +35,54 @@ class RegisterController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-
             $user = Auth::user();
+
+            if (Approvable::where('approvable_id', $user->id)
+                ->where('approvable_type', User::class)
+                ->exists()) {
+                return $this->respondOk('Yêu cầu kiểm duyệt đã được gửi');
+            }
 
             $uploadedCertificates = $this->uploadCertificates($request->file('certificates'));
 
             $qaSystemsData = $this->prepareQaSystemsData($request->qa_systems);
 
-            $profile = $this->createProfile($user->id, $request->only(['phone', 'address', 'experience']), $uploadedCertificates, $qaSystemsData);
+            $requestData = [
+                'qa_systems' => $qaSystemsData,
+                'certificates' => $uploadedCertificates,
+            ];
 
-            $approvable = Approvable::where('approvable_id', $user->id)
-                ->where('approvable_type', User::class)
-                ->first();
+            ProcessInstructorRegistrationJob::dispatch($user, $requestData);
 
-            if (!$approvable) {
-                $approvable = new Approvable();
-                $approvable->approvable_id = $user->id;
-                $approvable->approvable_type = User::class;
-                $approvable->status = 'pending';
-                $approvable->request_date = now();
-                $approvable->save();
-            } else {
-                return $this->respondOk('Yêu cầu kiểm duyệt đã được gửi');
-            }
-
-            $managers = User::query()->role([
-                'admin',
-            ])->get();
-
-            foreach ($managers as $manager) {
-                $manager->notify(new RegisterInstructorNotification($user->load('approvables')));
-            }
-
-            DB::commit();
-
-            return $this->respondCreated('Gửi yêu cầu đăng ký thành công', $user->load('profile'));
+            return $this->respondCreated('Gửi yêu cầu đăng ký thành công', $user);
         } catch (\Exception $e) {
-            DB::rollBack();
-
             $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
 
-    private function createProfile(int $userId, array $data, array $certificates, array $qaSystemsData)
+    public function checkHandleRole(Request $request)
     {
-        return Profile::query()->create(array_merge($data, [
-            'user_id' => $userId,
-            'certificates' => json_encode($certificates),
-            'qa_systems' => json_encode($qaSystemsData),
-        ]));
+        try {
+            $user = Auth::user();
+
+            $role = $user->roles->first();
+
+            return $this->respondOk('Vai trò của người dùng', $role);
+
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
     }
+
 
     private function uploadCertificates($certificates)
     {
         if ($certificates) {
-            return $this->uploadImageMultiple($certificates, self::FOLDER_CERTIFICATES);
+            return $this->uploadMultiple($certificates, self::FOLDER_CERTIFICATES);
         }
         return [];
     }
@@ -103,5 +96,17 @@ class RegisterController extends Controller
                 'options' => $qaSystem['options'],
             ];
         })->toArray();
+    }
+
+    private function calculateProgress(array $errors, array $pass)
+    {
+        try {
+            $countErrors = count($errors);
+            $countPass = count($pass);
+
+            return empty($errors) ? 100 : $countPass / ($countErrors + $countPass);
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
     }
 }

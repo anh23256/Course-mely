@@ -10,8 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('withdrawal_requests', function (Blueprint $table) {
-            $table->text('admin_comment')->nullable()->after('status');
+        Schema::table('profiles', function (Blueprint $table) {
+            $table->json('banking_info')->nullable()->after('qa_systems');
         });
     }
 
@@ -20,8 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('withdrawal_requests', function (Blueprint $table) {
-            //
+        Schema::table('profiles', function (Blueprint $table) {
+            $table->dropColumn('banking_info');
         });
     }
 };

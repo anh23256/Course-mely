@@ -39,11 +39,24 @@ class ChatController extends Controller
             $user = Auth::user();
 
             $conversations = Conversation::query()
+                ->with('users:id,name,avatar')
                 ->where('owner_id', $user->id)
                 ->where('type', 'group')
                 ->whereNull('conversationable_id')
                 ->whereNull('conversationable_type')
-                ->get();
+                ->withCount('users')
+                ->get()
+                ->map(function ($conversation) {
+                    $data = $conversation->toArray();
+                    $data['conversation_id'] = $data['id'];
+                    $data['online_users'] = $conversation->users
+                        ->filter(function ($user) use ($conversation) {
+                            return $this->isUserOnlineInConversation($user->id, $conversation->id);
+                        })
+                        ->count();
+                    unset($data['id']);
+                    return $data;
+                });
 
             if (empty($conversations)) {
                 return $this->respondNotFound('Người dùng chưa có nhóm nào');
@@ -53,6 +66,42 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError();
+        }
+    }
+
+    public function apiGetStudentGroups()
+    {
+        try {
+            $user = Auth::user();
+
+            $conversations = Conversation::query()
+                ->whereHas('users', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->where('type', 'group')
+                ->withCount('users')
+                ->with(['users:id,name,avatar'])
+                ->get()
+                ->map(function ($conversation) {
+                    $data = $conversation->toArray();
+                    $data['conversation_id'] = $data['id'];
+                    $data['online_users'] = $conversation->users
+                        ->filter(function ($user) use ($conversation) {
+                            return $this->isUserOnlineInConversation($user->id, $conversation->id);
+                        })
+                        ->count();
+                    unset($data['id']);
+                    return $data;
+                });
+
+            if ($conversations->isEmpty()) {
+                return $this->respondNotFound('Bạn chưa tham gia nhóm chat nào');
+            }
+
+            return $this->respondOk('Danh sách nhóm chat của bạn', $conversations);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError();
         }
     }
@@ -324,8 +373,7 @@ class ChatController extends Controller
         }
     }
 
-    public function apiGetMessage(Request $request, $conversationId
-    )
+    public function apiGetMessage(Request $request, $conversationId)
     {
         try {
             $userId = Auth::id();
@@ -335,17 +383,27 @@ class ChatController extends Controller
                 return $this->respondError('Bạn không thuộc cuộc trò chuyện này');
             }
 
-            $limit = $request->query('limit', 20);
-            $page = $request->query('page', 1);
+            $limit = $request->query('limit', 1000);
+            $lastMessageId = $request->query('last_message_id');
 
-            $messages = Message::query()
+            $query = Message::query()
                 ->where('conversation_id', $conversationId)
-                ->with('sender:id,name,avatar')
-                ->orderBy('created_at', 'desc')
-                ->paginate($limit, ['*'], 'page', $page);
+                ->with([
+                    'sender:id,name,avatar'
+                ])
+                ->orderBy('created_at', 'asc')
+                ->limit($limit);
 
+            if ($lastMessageId) {
+                $query->where('id', '<', $lastMessageId);
+            }
 
-            return $this->respondOk('Danh sách tin nhắn', $messages);
+            $messages = $query->get();
+
+            return $this->respondOk('Danh sách tin nhắn', [
+                'messages' => $messages,
+                'has_more' => $messages->count() === $limit
+            ]);
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -358,9 +416,9 @@ class ChatController extends Controller
         try {
             $data = $request->validate([
                 'conversation_id' => 'required|exists:conversations,id',
-                'content' => 'required_without:file|string|max:255',
+                'content' => 'nullable|string|max:255',
                 'type' => 'required|in:text,image,file,video,audio',
-//                'parent_id' => 'nullable|exists:messages,id',
+                'parent_id' => 'nullable|exists:messages,id',
                 'file' => 'nullable|file|max:10240',
             ]);
 
@@ -387,9 +445,9 @@ class ChatController extends Controller
                 'conversation_id' => $conversation->id,
                 'sender_id' => Auth::id(),
 //                'parent_id' => $data['parent_id'] ?? null,
-                'content' => $data['content'],
+                'content' => $data['content'] ?? null,
                 'type' => $data['type'],
-                'meta_data' => json_encode($metaData) ?? null,
+                'meta_data' => $metaData,
             ]);
 
             if ($request->hasFile('file')) {
@@ -403,7 +461,12 @@ class ChatController extends Controller
                     'message_id' => $message->id,
                 ]);
 
-                $message->update(['meta_data' => json_encode(['media_id' => $media->id])]);
+                $message->update([
+                    'meta_data' => [
+                        'media_id' => $media->id,
+                        'file_path' => $media->file_path
+                    ]
+                ]);
             }
 
             $recipient = $conversation->users->filter(function ($user) {
@@ -414,11 +477,11 @@ class ChatController extends Controller
                 return $this->respondError('Không có người nhận trong cuộc trò chuyện này');
             }
 
-            if ($this->isUserOnlineInConversation($recipient->id, $conversation->id)) {
-                broadcast(new MessageNotification($message, $conversation))->toOthers();
-            } else {
-                $recipient->notify(new MessageNotification($message, $conversation));
-            }
+//            if ($this->isUserOnlineInConversation($recipient->id, $conversation->id)) {
+            broadcast(new \App\Events\MessageSentEvent($message, $conversation))->toOthers();
+//            } else {
+//                $recipient->notify(new MessageNotification($message, $conversation));
+//            }
 
             DB::commit();
 
@@ -478,9 +541,16 @@ class ChatController extends Controller
             }
 
             $users = $conversations->flatMap(function ($conversation) use ($userId) {
-                return $conversation->users->filter(function ($user) use ($userId) {
-                    return $user->id !== $userId;
-                });
+                return $conversation->users->map(function ($user) use ($conversation, $userId) {
+                    if ($user->id !== $userId) {
+                        // Thêm conversation_id và ẩn id gốc của conversation
+                        $data = $user->toArray();
+                        $data['conversation_id'] = $conversation->id;
+                        $data['is_online'] = $this->isUserOnlineInConversation($user->id, $conversation->id);
+                        unset($data['pivot']);
+                        return $data;
+                    }
+                })->filter();
             });
 
             if ($users->isEmpty()) {
@@ -493,6 +563,64 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError();
+        }
+    }
+
+    public function apiGetMyInstructors()
+    {
+        try {
+            $studentId = Auth::id();
+
+            $purchasedCourseIds = CourseUser::query()
+                ->where('user_id', $studentId)
+                ->pluck('course_id')
+                ->toArray();
+
+            $instructors = User::query()
+                ->whereIn('id', function ($query) use ($purchasedCourseIds) {
+                    $query->select('user_id')
+                        ->from('courses')
+                        ->whereIn('id', $purchasedCourseIds);
+                })
+                ->where('role', 'instructor')
+                ->select([
+                    'id',
+                    'name',
+                    'email',
+                    'avatar',
+                    'phone',
+                ])
+                ->with(['courses' => function ($query) use ($purchasedCourseIds) {
+                    $query->whereIn('id', $purchasedCourseIds)
+                        ->select(['id', 'user_id', 'name', 'thumbnail']);
+                }])
+                ->get();
+
+            if ($instructors->isEmpty()) {
+                return $this->respondNotFound('Bạn chưa có giảng viên nào');
+            }
+
+            $formattedInstructors = $instructors->map(function ($instructor) {
+                return [
+                    'id' => $instructor->id,
+                    'name' => $instructor->name,
+                    'email' => $instructor->email,
+                    'avatar' => $instructor->avatar,
+                    'phone' => $instructor->phone,
+                    'courses' => $instructor->courses->map(function ($course) {
+                        return [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                            'thumbnail' => $course->thumbnail
+                        ];
+                    })
+                ];
+            });
+
+            return $this->respondOk('Danh sách giảng viên của bạn', $formattedInstructors);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError();
         }
     }
@@ -558,9 +686,14 @@ class ChatController extends Controller
 
     private function isUserOnlineInConversation(string $userId, string $conversationId)
     {
-        $cacheKey = "conversation:$conversationId:online_users";
+        $key = "user_online:{$conversationId}:{$userId}";
+        return Cache::has($key);
+    }
 
-        return Cache::has("$cacheKey:$userId");
+    private function setUserOnline($userId, $conversationId)
+    {
+        $key = "user_online:{$conversationId}:{$userId}";
+        Cache::put($key, true, now()->addMinutes(2));
     }
 
     private function getOwnedGroupChat(string $id)
@@ -580,7 +713,7 @@ class ChatController extends Controller
             ->find($id);
 
         if (empty($conversation)) {
-            return $this->respondNotFound('Không tìm thấy nhóm');
+            throw new \Exception('Không tìm thấy nhóm');
         }
 
         return $conversation;

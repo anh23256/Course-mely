@@ -17,6 +17,11 @@ class Message extends Model
         'type',
         'meta_data',
     ];
+
+    protected $casts = [
+        'meta_data' => 'array'
+    ];
+
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
@@ -31,6 +36,7 @@ class Message extends Model
     {
         return $this->belongsTo(Conversation::class, 'conversation_id');
     }
+
     public function media()
     {
         return $this->hasMany(Media::class, 'message_id');

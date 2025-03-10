@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
@@ -87,15 +88,7 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/broadcasting/auth', function (Request $request) {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        return \Illuminate\Support\Facades\Broadcast::auth($request);
-    });
+    Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
@@ -104,9 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
     });
-
     Route::prefix('instructor')->as('instructor.')->group(function () {
         Route::post('register', [RegisterController::class, 'register']);
+        Route::post('check-handle-role', [RegisterController::class, 'checkHandleRole']);
     });
 
     Route::get('user', function (Request $request) {
@@ -132,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
+
+        Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
+        Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
+        Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
@@ -213,6 +211,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-course-overview', [StatisticController::class, 'getCourseOverview']);
                     Route::get('/get-course-revenue', [StatisticController::class, 'getCourseRevenue']);
                     Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
+                    Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
 
@@ -251,7 +250,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+//                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
                     #============================== ROUTE COURSE =============================
@@ -385,6 +385,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat/{id}/{memberId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
+                    Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
 
             Route::prefix('direct')
@@ -477,3 +478,4 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
+Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);

@@ -45,7 +45,28 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+    public function show(string $code)
+    {
+        try {
+            $title = 'Hóa đơn thanh toán';
+            $subTitle = 'Hóa đơn thanh toán';
 
+            $invoice = Invoice::query()
+                ->with([
+                    'course',
+                    'user'
+                ])
+                ->latest('id')
+                ->where(['status' => 'Đã thanh toán', 'code' => $code])->firstOrFail();
+
+            return view('invoices.show', compact(['title', 'subTitle', 'invoice']));
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Không tìm thấy thông tin hóa đơn');
+        }
+    }
     private function filterSearch(Request $request, $queryInvoice)
     {
         try {

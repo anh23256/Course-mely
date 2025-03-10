@@ -15,7 +15,9 @@ class CourseSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::query()->limit(10)->pluck('id')->toArray();
+        $users = User::query()->limit(10)->whereHas('roles', function($query){
+            $query->where('name', 'instructor');
+        })->pluck('id')->toArray();
         $idInstructor = User::query()->where('email', 'instructor@gmail.com')->pluck('id')->toArray();
         
         $arrayUser = array_merge($users, $idInstructor);
@@ -35,7 +37,7 @@ class CourseSeeder extends Seeder
                 'price_sale' => fake()->randomFloat(2, 5000, 400000),
                 'level' => fake()->randomElement(['beginner', 'intermediate', 'advanced']),
                 'total_student' => random_int(0, 100),
-                'status' => fake()->randomElement(['draft', 'pending', 'approved', 'rejected']),
+                'status' => fake()->randomElement(['approved', 'rejected']),
                 'accepted' => fake()->dateTimeBetween('-1 year', 'now'),
                 'thumbnail' => fake()->imageUrl(),
                 'intro' => fake()->title(),
