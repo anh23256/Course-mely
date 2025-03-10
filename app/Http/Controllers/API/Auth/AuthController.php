@@ -132,21 +132,16 @@ class AuthController extends Controller
             $verificationUrl = route('verification.verify', ['id' => $user->id, 'hash' => sha1($user->email)]);
 
             Mail::to($user->email)->send(new VerifyEmail($verificationUrl));
+
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Tạo tài khoản thành công, vui lòng đăng nhập',
-            ], Response::HTTP_CREATED);
+            return $this->respondSuccess('Tạo tài khoản thành công');
         } catch (\Exception $e) {
             DB::rollBack();
 
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
         }
     }
 
@@ -218,26 +213,20 @@ class AuthController extends Controller
 
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
         }
     }
 
     public function logout()
     {
         try {
-            // Auth::user()->currentAccessToken()->delete();
+            Auth::user()->currentAccessToken()->delete();
 
             return $this->respondOk('Đăng xuất thành công');
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
         }
     }
 }

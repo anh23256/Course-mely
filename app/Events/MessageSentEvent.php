@@ -39,8 +39,9 @@ class MessageSentEvent implements ShouldBroadcast
     public function broadcastWith()
     {
         $sender = $this->message->sender;
+        $parent = $this->message->parent;
 
-        return [
+        $broadcastData = [
             'message_id' => $this->message->id,
             'conversation_id' => $this->conversation->id,
             'content' => $this->message->content,
@@ -53,6 +54,20 @@ class MessageSentEvent implements ShouldBroadcast
             ],
             'sent_at' => $this->message->created_at->toDateTimeString(),
         ];
+
+        if ($parent) {
+            $broadcastData['parent'] = [
+                'id' => $parent->id,
+                'content' => $parent->content,
+                'sender' => [
+                    'id' => $parent->sender->id,
+                    'name' => $parent->sender->name,
+                    'avatar' => $parent->sender->avatar ?? null,
+                ],
+            ];
+        }
+
+        return $broadcastData;
     }
 
 }
