@@ -470,21 +470,18 @@
                                                                                     <label for="groupMembers"
                                                                                         class="font-weight-bold">Chọn thành
                                                                                         viên</label>
-                                                                                    @foreach ($data['channelsWithAdminsNotInGroup'] as $channelData)
-                                                                                        <select tabindex="-1"
-                                                                                            id="addMembers"
-                                                                                            name="members[]"
-                                                                                            multiple="multiple">
+                                                                                    <select tabindex="-1" id="addMembers"
+                                                                                        name="members[]"
+                                                                                        multiple="multiple">
 
-                                                                                            @foreach ($channelData['adminsNotInGroup'] as $member)
-                                                                                                <option
-                                                                                                    value="{{ $member->id }}"
-                                                                                                    class="select-member-option">
-                                                                                                    {{ $member->name }}
-                                                                                                </option>
-                                                                                            @endforeach
-                                                                                        </select>
-                                                                                    @endforeach
+                                                                                        @foreach ($data['admins'] as $member)
+                                                                                            <option
+                                                                                                value="{{ $member->id }}"
+                                                                                                class="select-member-option">
+                                                                                                {{ $member->name }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
                                                                                 </div>
 
                                                                         </div>
