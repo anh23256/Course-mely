@@ -8,7 +8,7 @@
 @endphp
 @section('content')
     <div class="row">
-        <div class="col-12">
+        <div class="col-lg-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 ps-2">Quản lí banner</h4>
 
@@ -59,11 +59,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Content</label>
-                                    <input type="text" name="content" class="form-control" value="{{ old('content') }}">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Order</label>
-                                    <input type="int" name="order" class="form-control" value="{{ old('order') }}">
+                                    <textarea name="content" class="form-control" value="{{ old('content') }}"></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>

@@ -159,7 +159,8 @@ Route::prefix('admin')->as('admin.')
                 ->can('banners.create');
             Route::post('/', [BannerController::class, 'store'])->name('store')
                 ->can('banners.create');
-
+            Route::post('/update-order', [BannerController::class, 'updateOrder'])->name('updateOrder')
+                ->can('banner.update');
             Route::get('/{id}', [BannerController::class, 'show'])->name('show');
             Route::get('/edit/{banner}', [BannerController::class, 'edit'])->name('edit');
             Route::put('/{banner}', [BannerController::class, 'update'])->name('update')

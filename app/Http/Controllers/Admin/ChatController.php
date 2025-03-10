@@ -142,20 +142,9 @@ class ChatController extends Controller
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
         })->get();
-        $channelsWithAdminsNotInGroup = $channels->map(function ($channel) use ($admins) {
-            // Lọc các admin chưa tham gia vào kênh
-            $memberNotInGroup = $admins->filter(function ($admin) use ($channel) {
-                return !$channel->users->contains('id', $admin->id);
-            });
-            return [
-                'channel' => $channel,
-                'adminsNotInGroup' => $memberNotInGroup
-            ];
-        });
         return [
             'admins' => $admins,
             'channels' => $channels,
-            'channelsWithAdminsNotInGroup' => $channelsWithAdminsNotInGroup
         ];
     }
     public function getGroupInfo(Request $request)
