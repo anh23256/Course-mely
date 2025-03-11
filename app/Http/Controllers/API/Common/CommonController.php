@@ -10,6 +10,8 @@ use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class CommonController extends Controller
 {
