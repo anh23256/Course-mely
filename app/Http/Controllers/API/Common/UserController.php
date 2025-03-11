@@ -24,6 +24,7 @@ use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
 use FontLib\Table\Type\post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait ,UploadToLocalTrait;
 
     const FOLDER_USER = 'users';
     const FOLDER_CERTIFICATE = 'certificates';
@@ -113,7 +114,7 @@ class UserController extends Controller
     private function uploadCertificates($certificates)
     {
         if ($certificates) {
-            return $this->uploadImageMultiple($certificates, self::FOLDER_CERTIFICATE);
+            return $this->uploadMultiple($certificates, self::FOLDER_CERTIFICATE);
         }
         return [];
     }
