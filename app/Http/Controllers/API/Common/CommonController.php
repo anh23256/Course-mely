@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
-use App\Models\Follow;
+use App\Models\Course;
+use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class CommonController extends Controller
 {
@@ -89,7 +88,6 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
-    
     public function instructorInfo(string $code)
     {
         try {

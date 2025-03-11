@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\API\Auth;
+namespace App\Http\Requests\API\Posts;
 
 use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ForgotPassWordRequest extends BaseFormRequest
+class StoreCommentBlogRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,16 +23,18 @@ class ForgotPassWordRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required','email','exists:users,email'],
+            'content' => 'required|max:2000',
+            'post_id' => 'required|exists:posts,id',
         ];
     }
 
     public function messages()
     {
         return [
-            'email.required' => 'Email không được để trống',
-            'email.email'    => 'Email không hợp lệ, vui lòng nhập lại',
-            'email.exists'   => 'Email không tồn tại hoặc email chưa được kích hoạt'
+            'content.required'  => 'Vui lòng nhập nội dung bình luận',
+            'content.max' => 'Bình luận ko được vượt quá 2000 ký tự',
+            'post_id.required' => 'Vui lòng thêm bài học',
+            'post_id.exists' => 'Bài học không hợp lệ'
         ];
     }
 }

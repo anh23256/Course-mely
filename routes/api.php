@@ -50,7 +50,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->as('auth.')->group(function () {
     Route::post('sign-up', [AuthController::class, 'signUp']);
     Route::post('sign-in', [AuthController::class, 'signIn']);
-    Route::post('verify-email', [AuthController::class, 'verifyEmail']);
+    Route::get('verify/{token}', [AuthController::class, 'verify']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 
@@ -397,16 +397,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/get-message/{conversationId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetMessage']);
             Route::post('/send-message', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiSendMessage']);
         });
-
-    #============================== ROUTE COMMENT =============================
-    Route::prefix('comments')
-        ->group(function () {
-            Route::post('/', [CommentController::class, 'store']);
-            Route::put('/{id}', [CommentController::class, 'update']);
-            Route::delete('/{id}', [CommentController::class, 'destroy']);
-            Route::get('/{commentableId}/{commentableType}', [CommentController::class, 'index']);
-        });
-
+        
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
         ->group(function () {
@@ -458,6 +449,17 @@ Route::prefix('blogs')
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
+    Route::prefix('blogs')
+    ->group(function () {
+        Route::prefix('comments')
+            ->group(function () {
+                Route::get('/{blog}/blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlog']);
+                Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog']);
+                Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
+                Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply']);
+                Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment']);
+            });
+    });
 
 #============================== ROUTE QA SYSTEM =================================
 Route::prefix('qa-systems')->group(function () {
@@ -477,5 +479,4 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
-
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
