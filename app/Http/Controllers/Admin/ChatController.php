@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\GroupMessageSent;
+use App\Events\PrivateMessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Chats\StoreGroupChatRequest;
 use App\Http\Requests\Admin\Chats\StoreSendMessageRequest;
@@ -39,6 +40,52 @@ class ChatController extends Controller
             ]
         );
     }
+    public function createPrivateChat(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id'
+            ]);
+
+            $user1 = auth()->id();
+            $user2 = $validated['user_id'];
+
+            // Kiểm tra xem cuộc trò chuyện 1-1 đã tồn tại chưa
+            $conversation = Conversation::where('type', 'direct')
+                ->whereHas('users', function ($q) use ($user1) {
+                    $q->where('user_id', $user1);
+                })
+                ->whereHas('users', function ($q) use ($user2) {
+                    $q->where('user_id', $user2);
+                })
+                ->first();
+
+            if (!$conversation) {
+                // Nếu chưa có, tạo cuộc trò chuyện 1-1
+                $conversation = Conversation::create([
+                    'name' => null, // Không cần tên nhóm trong chat 1-1
+                    'owner_id' => null, // Không cần owner trong chat 1-1
+                    'type' => 'direct',
+                    'status' => '1',
+                ]);
+
+                $conversation->users()->attach([$user1, $user2]);
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'conversation' => $conversation
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->logError($e, $request->all());
+            return response()->json(['status' => 'error', 'message' => 'Không thể tạo cuộc trò chuyện']);
+        }
+    }
+
     public function createGroupChat(StoreGroupChatRequest $request)
     {
         try {
@@ -92,6 +139,17 @@ class ChatController extends Controller
         try {
             DB::beginTransaction();
             $validated = $request->validated();
+
+            $conversation = Conversation::findOrFail($validated['conversation_id']);
+
+            // Xác định người nhận: lấy tất cả người trong cuộc trò chuyện, trừ sender_id
+            $received = $conversation->users()
+                ->where('user_id', '<>', auth()->id()) // Lấy người khác (không phải sender)
+                ->first(); // Vì chat 1-1 chỉ có 1 người còn lại
+
+            if (!$received) {
+                return response()->json(['status' => 'error', 'message' => 'Không tìm thấy người nhận']);
+            }
             $message = Message::create([
                 'conversation_id' => $validated['conversation_id'],
                 'sender_id' => auth()->id(),
@@ -118,7 +176,12 @@ class ChatController extends Controller
             $message->load(['sender', 'media']);
 
             DB::commit();
-            broadcast(new GroupMessageSent($message))->toOthers();
+                // Kiểm tra loại hội thoại (chat nhóm hay chat 1-1)
+            if ($message->conversation->type === 'direct') {
+                broadcast(new PrivateMessageSent($message))->toOthers();
+            } else {
+                broadcast(new GroupMessageSent($message))->toOthers();
+            }
 
             $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
                 ->where('user_id', '<>', auth()->id())->pluck('user_id');
@@ -151,20 +214,21 @@ class ChatController extends Controller
         try {
             $groupId = $request->id;
             $group = Conversation::findOrFail($groupId);
-            $name = $group->name;
-            $memberCount = $group->users()->count() . ' thành viên';
-            $member = $group->users()->select('user_id', 'name', 'avatar')->get();
-            $leader = User::find($group->owner_id);
-            $channelId = $group->id;
+                $name = $group->name;
+                $memberCount = $group->users()->count() . ' thành viên';
+                $member = $group->users()->select('user_id', 'name', 'avatar')->get();
+                $leader = User::find($group->owner_id);
+                $channelId = $group->id;
+
             // Trả về thông tin nhóm
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'name' => $name,  // Tên nhóm
-                    'memberCount' => $memberCount, // Số thành viên
-                    'member' => $member,
+                    'memberCount' => $memberCount ?? null, // Số thành viên
+                    'member' => $member ?? null,
                     'group' => $group,
-                    'leader' => $leader,
+                    'leader' => $leader ?? null,
                     'avatar' => $avatar ?? url('assets/images/users/multi-user.jpg'),
                     'channelId' => $channelId,
                 ]
@@ -178,7 +242,43 @@ class ChatController extends Controller
             ]);
         }
     }
+    public function getUserInfo(Request $request)
+    {
+        try {
+            $groupId = $request->id;
+            $conversation = Conversation::findOrFail($groupId);
+            $currentUserId = auth()->id();
+            $otherUser = $conversation->users->where('id', '<>', $currentUserId)->first();
 
+            if (!$otherUser) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Không tìm thấy người còn lại trong cuộc trò chuyện.'
+                ]);
+            }
+            $name = $otherUser->name;
+            $avatar = $otherUser->avatar ?? url('assets/images/users/user-dummy-img.jpg');
+            $memberCount = null; // Không cần hiển thị số thành viên
+            // Trả về thông tin nhóm
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                'nameUser' => $name,
+                'direct' => $conversation,
+                'avatarUser' => $avatar,
+                'channelId' => $conversation->id,
+                'memberCount' => $memberCount 
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không thể lấy thông tin nhóm'
+            ]);
+        }
+    }
     public function getGroupMessages($conversationId)
     {
         $messages = Message::where('conversation_id', $conversationId)
