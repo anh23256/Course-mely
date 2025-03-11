@@ -296,6 +296,7 @@
                             $('#list_browers').empty();
                         },
                         success: function(response) {
+                            console.log(response);
                             let tbody = $("#most-visited-page");
                             tbody.empty();
                             if (response.fetchMostVisitedPages.length > 0) {

@@ -10,6 +10,8 @@ use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class CommonController extends Controller
 {
@@ -82,6 +84,96 @@ class CommonController extends Controller
             }
 
             return $this->respondOk('Thông tin đầy đủ', true);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+    public function instructorInfo(string $code)
+    {
+        try {
+            $user = User::where('code', $code)
+                ->where('status', '!=', 'blocked')
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'instructor');
+                })->first();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy giảng viên');
+            }
+
+            $info_instructor = DB::table('users')
+                ->select(
+                    'users.name',
+                    'users.avatar',
+                    'profiles.bio',
+                    'users.code',
+                    'users.email',
+                    'profiles.address',
+                    'profiles.phone',
+                    'profiles.about_me',
+                    'users.created_at',
+                    'users.updated_at',
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(courses.id) as total_courses, COUNT(follows.id) as total_followers')
+                )
+                ->where('users.code', $code)
+                ->where('users.status', '!=', 'blocked')
+                ->join('profiles', 'users.id', '=', 'profiles.user_id')
+                ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
+                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                ->leftJoin('follows', 'follows.instructor_id', '=', 'users.id')
+                ->groupBy(
+                    'users.id',
+                    'users.name',
+                    'users.avatar',
+                    'profiles.bio',
+                    'users.code',
+                    'users.email',
+                    'profiles.address',
+                    'profiles.phone',
+                    'profiles.about_me',
+                    'users.created_at',
+                    'users.updated_at'
+                )
+                ->first();
+
+            $courses_instructor = DB::table('courses')
+                ->selectRaw(
+                    'courses.id, 
+                    courses.name, 
+                    courses.slug, 
+                    courses.thumbnail, 
+                    courses.price, 
+                    courses.price_sale,
+                    courses.total_student,
+                    ROUND(AVG(ratings.rate), 1) as avg_rating,
+                    COUNT(DISTINCT lessons.id) as lessons_count'
+                )
+                ->where([
+                    'courses.status' => 'approved',
+                    'courses.visibility' => 'public',
+                    'courses.user_id' => $user->id
+                ])
+                ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+                ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
+                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                ->groupBy(
+                    'courses.id',
+                    'courses.name',
+                    'courses.slug',
+                    'courses.thumbnail',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.total_student'
+                )
+                ->paginate(1);
+
+            return response()->json([
+                'message' => 'Thông tin giảng viên',
+                'instructor' => $info_instructor,
+                'courses' => $courses_instructor
+            ], Response::HTTP_OK);
         } catch (\Exception $e) {
             $this->logError($e);
 

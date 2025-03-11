@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
 use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
@@ -478,3 +479,5 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
+
+Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);

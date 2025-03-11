@@ -11,6 +11,8 @@ use App\Traits\LoggableTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+use function PHPUnit\Framework\returnSelf;
+
 class FollowController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
@@ -19,6 +21,7 @@ class FollowController extends Controller
     {
         try {
             $follower = Auth::user();
+
             if (!$follower) {
                 return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
             }
@@ -32,6 +35,8 @@ class FollowController extends Controller
             if (!$instructor) {
                 return $this->respondNotFound('Không tìm thấy giảng viên.');
             }
+
+            if($follower->code == $code) return $this->respondError('Không thể theo dõi chính mình');
 
             $isFollowing = Follow::where([
                 'follower_id' => $follower->id,
