@@ -89,6 +89,7 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+    
     public function instructorInfo(string $code)
     {
         try {

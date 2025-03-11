@@ -212,7 +212,7 @@
 /* Hiển thị tab theo hàng ngang, mỗi tab chiếm 50% */
 .nav-tabs .nav-item,
 .nav-pills .nav-item {
-    width: 50%;
+    width: 100%;
     text-align: center;
 }
 
