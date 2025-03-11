@@ -385,20 +385,18 @@
                                                                                     <label for="groupMembers"
                                                                                         class="font-weight-bold">Chọn thành
                                                                                         viên</label>
-                                                                                        @foreach ($data['channelsWithAdminsNotInGroup'] as $channelData)
                                                                                     <select tabindex="-1" id="addMembers"
                                                                                         name="members[]"
                                                                                         multiple="multiple">
-                                                                                        
-                                                                                        @foreach ($channelData['adminsNotInGroup'] as $member)
+
+                                                                                        @foreach ($data['admins'] as $member)
                                                                                             <option
                                                                                                 value="{{ $member->id }}"
                                                                                                 class="select-member-option">
                                                                                                 {{ $member->name }}
                                                                                             </option>
-                                                                                        @endforeach  
+                                                                                        @endforeach
                                                                                     </select>
-                                                                                    @endforeach
                                                                                 </div>
 
                                                                         </div>
@@ -853,7 +851,7 @@
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
                 if (response.status === 'success') {
-                    
+
                     // Lấy tất cả các tin nhắn
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
