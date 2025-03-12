@@ -257,17 +257,19 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('courses')
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
+                            Route::get('/trash', [CourseController::class, 'trash']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
                             Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);
                             Route::post('/', [CourseController::class, 'store']);
                             Route::put('/{course}/courseOverView', [CourseController::class, 'updateCourseOverView']);
                             Route::put('/{course}/courseObjective', [CourseController::class, 'updateCourseObjectives']);
-                            Route::delete('/{course}', [CourseController::class, 'deleteCourse']);
                             Route::get('/{slug}/chapters', [CourseController::class, 'getChapters']);
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
                             Route::post('request-modify-content', [SendRequestController::class, 'requestToModifyContent']);
+                            Route::delete('/move-to-trash', [CourseController::class, 'moveToTrash']);
+                            Route::post('/restore', [CourseController::class, 'restore']);
                         });
 
                     #============================== ROUTE CHAPTER =============================
