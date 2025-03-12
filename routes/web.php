@@ -374,12 +374,13 @@ Route::prefix('admin')->as('admin.')
             ->as('chats.')
             ->group(function () {
                 Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
+                Route::post('/private', [ChatController::class, 'createPrivateChat'])->name('createOnetoOne');
                 Route::post('/chat-realtime', [ChatController::class, 'createGroupChat'])->name('create');
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
+                Route::get('/get-user-info', [ChatController::class, 'getUserInfo'])->name('getUserInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
-                // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::get('/group/{groupId}/get-existing-members', [ChatController::class, 'getExistingMembers']);
             });
