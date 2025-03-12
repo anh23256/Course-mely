@@ -154,9 +154,9 @@
                                             <th>Hành động</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="list form-check-all">
+                                    <tbody id="sortableBanners" class="list form-check-all">
                                         @foreach ($banners as $banner)
-                                            <tr>
+                                            <tr data-id="{{ $banner->id }}">
                                                 <th scope="row">
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="chk_child"
@@ -174,7 +174,7 @@
                                                     @endif
 
                                                 </td>
-                                                <td class="date">{{ $banner->order }}</td>
+                                                <td class="order">{{ $banner->order }}</td>
                                                 @if ($banner->status)
                                                     <td class="status"><span class="badge bg-success-subtle text-success">
                                                             Hoạt động
@@ -199,7 +199,7 @@
                                                         <div class="edit">
                                                             <a href="{{ route('admin.banners.show', $banner->id) }}">
                                                                 <button class="btn btn-sm btn-info edit-item-btn">
-                                                                    <span class="ri-folder-user-line"></span>
+                                                                    <span class="ri-eye-line"></span>
                                                                 </button>
                                                             </a>
                                                         </div>
@@ -257,4 +257,66 @@
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+    <script>
+        // Khởi tạo SortableJS cho tbody
+        var el = document.getElementById('sortableBanners');
+        var sortable = new Sortable(el, {
+            handle: 'td', // Cho phép kéo thả từ toàn bộ dòng (có thể thay đổi nếu chỉ muốn kéo ở một cột nhất định)
+            animation: 150, // Thêm hiệu ứng khi kéo thả
+            onEnd: function(evt) {
+            var rows = el.querySelectorAll('tr');
+            var orderData = [];
+
+            // Cập nhật thứ tự trong DOM ngay lập tức sau khi kéo thả
+            rows.forEach((row, index) => {
+                // Cập nhật lại cột thứ tự trong bảng
+                row.querySelector('.order').textContent = index; // Thứ tự mới
+                var id = row.getAttribute('data-id');
+                orderData.push({
+                    id: id,
+                    order: index // Cập nhật thứ tự mới cho banner
+                });
+            });
+                // Gửi dữ liệu order lên server qua AJAX
+                fetch("{{ route('admin.banners.updateOrder') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ orderData: orderData })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                    // Hiển thị thông báo Toast khi cập nhật thành công
+                    Toastify({
+                        text: "Thứ tự đã được cập nhật!",
+                        backgroundColor: "green",
+                        duration: 3000, // Thời gian hiển thị thông báo (3 giây)
+                        close: true
+                    }).showToast();
+                } else {
+                    // Hiển thị thông báo Toast khi có lỗi
+                    Toastify({
+                        text: "Đã có lỗi xảy ra khi cập nhật thứ tự.",
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
+                })
+                .catch((error) => {
+                    console.error('Lỗi:', error);
+                    Toastify({
+                    text: "Có lỗi xảy ra khi gửi yêu cầu.",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                });
+            }
+        });
+    </script>
+    
 @endpush

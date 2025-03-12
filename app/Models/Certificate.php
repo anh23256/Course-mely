@@ -18,4 +18,9 @@ class Certificate extends Model
         'file_path',
         'status'
     ];
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
 }

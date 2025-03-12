@@ -66,9 +66,40 @@
                                 </div>
                             </div>
                         </div>
-
-
-
+                        <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade"
+                            id="addChatPrivateModal" role="dialog" tabindex="-1">
+                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
+                                <div class="modal-content rounded-3 shadow-lg">
+                                    <div class="modal-header bg-primary text-white rounded-top p-3">
+                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
+                                            Thêm trò chuyện
+                                        </h5>
+                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
+                                            type="button">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body p-4 bg-light rounded-bottom">
+                                        <form id="createPrivateChatForm">
+                                            @csrf
+                                            <div class="form-group mb-3">
+                                                <label for="groupMembers" class="font-weight-bold">Nhập người muốn trò
+                                                    chuyện</label>
+                                                <select tabindex="-1" id="received" name="user_id">
+                                                    @foreach ($data['admins'] as $admin)
+                                                        <option value="{{ $admin->id }}">
+                                                            {{ $admin->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary w-100 py-2" type="submit">
+                                                Thêm
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
                                 title="Add Contact">
@@ -112,7 +143,8 @@
                                         title="New Message">
 
                                         <!-- Button trigger modal -->
-                                        <button type="button" class="btn btn-soft-success btn-sm shadow-none">
+                                        <button type="button" class="btn btn-soft-success btn-sm shadow-none"
+                                            data-toggle="modal" data-target="#addChatPrivateModal">
                                             <i class="ri-add-line align-bottom"></i>
                                         </button>
                                     </div>
@@ -122,6 +154,37 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list usersList">
+                                    @foreach ($data['channels'] as $channel)
+                                        @if ($channel->type == 'direct')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user private-button"
+                                                    data-private-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    @php
+                                                                        $otherUser = $channel->users
+                                                                            ->where('id', '<>', auth()->id())
+                                                                            ->first();
+                                                                    @endphp
+                                                                    <img src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
+                                                                        alt="" width="30px">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $otherUser->name ?? 'Người dùng không xác định' }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
                                 </ul>
                             </div>
 
@@ -143,28 +206,32 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list mb-0 conversationList">
+
                                     @foreach ($data['channels'] as $channel)
-                                        <li class="">
-                                            <a href="#" class="unread-msg-user group-button"
-                                                data-channel-id="{{ $channel->id }}">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                        <div class="avatar-xxs">
-                                                            <div class="avatar-title bg-light rounded-circle text-body">
-                                                                #
+                                        @if ($channel->type == 'group')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-group-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    #
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->name }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-truncate mb-0">
-                                                            {{ $channel->name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </li>
+                                                </a>
+                                            </li>
+                                        @endif
                                     @endforeach
-
                                 </ul>
                             </div>
                             <!-- End chat-message-list -->
@@ -204,16 +271,17 @@
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
 
-                                                            <img id="imageUser" src=""
-                                                                class="rounded-circle avatar-xs" alt="">
+                                                            <img src=""
+                                                                class="rounded-circle avatar-xs imageUser avatar"
+                                                                alt="">
                                                             <span class="user-status"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
                                                             <h5 class="text-truncate mb-0 fs-16">
-                                                                <a class="text-reset username name"></a>
+                                                                <a class="text-reset name nameUser"></a>
                                                             </h5>
                                                             <p class="text-truncate text-muted fs-14 mb-0 userStatus">
-                                                                <small class="memberCount"></small>
+                                                                <small id="memberCount"></small>
                                                             </p>
                                                             <!-- Modal chi tiết nhóm -->
                                                             <div class="offcanvas offcanvas-end border-0" tabindex="-1"
@@ -274,13 +342,12 @@
                                                                         <!--end col-->
                                                                     </div>
                                                                     <div class="p-3 text-center">
-                                                                        <img src="{{ asset('assets/images/users/multi-user.jpg') }}"
-                                                                            alt=""
-                                                                            class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                                                                        <img src="" alt=""
+                                                                            class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img imageUser avatar">
                                                                         <div class="mt-3">
                                                                             <h5 class="fs-16 mb-1"><a
                                                                                     href="javascript:void(0);"
-                                                                                    class="link-primary username name"></a>
+                                                                                    class="link-primary nameUser name"></a>
                                                                             </h5>
                                                                             <p class="text-muted"><i
                                                                                     class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online
@@ -339,29 +406,116 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b
-                                                                                class="memberCount"></b>)</h5>
-                                                                        <ul class="list-group member-list"
-                                                                            id="membersList">
+                                                                    <ul class="nav nav-tabs" id="myTab"
+                                                                        role="tablist">
+                                                                        <div class="row w-100" id="addClass">
+                                                                            <li class="nav-item col-6" id="OnetoOne"
+                                                                                role="presentation">
+                                                                                <button class="nav-link active"
+                                                                                    id="members-tab" data-bs-toggle="tab"
+                                                                                    data-bs-target="#members"
+                                                                                    type="button" role="tab"
+                                                                                    aria-controls="members"
+                                                                                    aria-selected="true">
+                                                                                    Danh sách thành viên
+                                                                                </button>
+                                                                            </li>
+                                                                            <li class="nav-item col-6" id="filetofile"
+                                                                                role="presentation">
+                                                                                <button class="nav-link" id="files-tab"
+                                                                                    data-bs-toggle="tab"
+                                                                                    data-bs-target="#files" type="button"
+                                                                                    role="tab" aria-controls="files"
+                                                                                    aria-selected="false">
+                                                                                    File đã gửi
+                                                                                </button>
+                                                                            </li>
+                                                                        </div>
+                                                                    </ul>
 
-                                                                        </ul>
-                                                                    </div>
-                                                                    <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">File đã gửi</h5>
+                                                                    <!-- Nội dung tabs chính -->
+                                                                    <div class="tab-content" id="myTabContent">
+                                                                        <!-- Danh sách thành viên -->
+                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3"
+                                                                            id="members" role="tabpanel"
+                                                                            aria-labelledby="members-tab">
+                                                                            <ul class="list-group member-list"
+                                                                                id="membersList"></ul>
+                                                                        </div>
 
-                                                                        <div class="vstack gap-2">
-                                                                            <div class="border rounded border-dashed p-2"
-                                                                                id="sentFilesList">
+                                                                        <!-- File đã gửi -->
+                                                                        <div class="tab-pane fade border-top border-top-dashed p-3"
+                                                                            id="files" role="tabpanel"
+                                                                            aria-labelledby="files-tab">
+                                                                            <!-- Tabs con -->
+                                                                            <ul class="nav nav-pills mb-3" id="fileSubTab"
+                                                                                role="tablist">
+                                                                                <div class="row w-100">
+                                                                                    <li class="nav-item col-6"
+                                                                                        role="presentation">
+                                                                                        <button class="nav-link active"
+                                                                                            id="media-tab"
+                                                                                            data-bs-toggle="tab"
+                                                                                            data-bs-target="#media"
+                                                                                            type="button" role="tab"
+                                                                                            aria-controls="media"
+                                                                                            aria-selected="true">
+                                                                                            Ảnh & Video
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    <li class="nav-item col-6"
+                                                                                        role="presentation">
+                                                                                        <button class="nav-link"
+                                                                                            id="documents-tab"
+                                                                                            data-bs-toggle="tab"
+                                                                                            data-bs-target="#documents"
+                                                                                            type="button" role="tab"
+                                                                                            aria-controls="documents"
+                                                                                            aria-selected="false">
+                                                                                            File
+                                                                                        </button>
+                                                                                    </li>
+                                                                                </div>
+                                                                            </ul>
 
-                                                                            </div>
-                                                                            <div class="text-center mt-2">
-                                                                                <button id="loadMore" type="button"
-                                                                                    class="btn btn-danger">Load more <i
-                                                                                        class="ri-arrow-right-fill align-bottom ms-1"></i></button>
+                                                                            <!-- Nội dung tabs con -->
+                                                                            <div class="tab-content"
+                                                                                id="fileSubTabContent">
+                                                                                <!-- Ảnh & Video -->
+                                                                                <div class="tab-pane fade show active"
+                                                                                    id="media" role="tabpanel"
+                                                                                    aria-labelledby="media-tab">
+                                                                                    <div class="border rounded border-dashed p-2"
+                                                                                        id="mediaFilesList"></div>
+                                                                                    <div class="text-center mt-2">
+                                                                                        <button id="loadMoreMedia"
+                                                                                            type="button"
+                                                                                            class="btn btn-danger">
+                                                                                            Load more <i
+                                                                                                class="ri-arrow-right-fill align-bottom ms-1"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <!-- File -->
+                                                                                <div class="tab-pane fade" id="documents"
+                                                                                    role="tabpanel"
+                                                                                    aria-labelledby="documents-tab">
+                                                                                    <div class="border rounded border-dashed p-2"
+                                                                                        id="documentFilesList"></div>
+                                                                                    <div class="text-center mt-2">
+                                                                                        <button id="loadMoreDocuments"
+                                                                                            type="button"
+                                                                                            class="btn btn-danger">
+                                                                                            Load more <i
+                                                                                                class="ri-arrow-right-fill align-bottom ms-1"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
+
                                                                 </div>
                                                                 <!--end offcanvas-body-->
                                                             </div>
@@ -385,20 +539,18 @@
                                                                                     <label for="groupMembers"
                                                                                         class="font-weight-bold">Chọn thành
                                                                                         viên</label>
-                                                                                        @foreach ($data['channelsWithAdminsNotInGroup'] as $channelData)
                                                                                     <select tabindex="-1" id="addMembers"
                                                                                         name="members[]"
                                                                                         multiple="multiple">
-                                                                                        
-                                                                                        @foreach ($channelData['adminsNotInGroup'] as $member)
+
+                                                                                        @foreach ($data['admins'] as $member)
                                                                                             <option
                                                                                                 value="{{ $member->id }}"
                                                                                                 class="select-member-option">
                                                                                                 {{ $member->name }}
                                                                                             </option>
-                                                                                        @endforeach  
+                                                                                        @endforeach
                                                                                     </select>
-                                                                                    @endforeach
                                                                                 </div>
 
                                                                         </div>
@@ -515,7 +667,7 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" name="fileinput" id="fileInput"
+                                                    <input type="file" name="input_file" id="fileInput"
                                                         style="display: none;">
                                                 </div>
                                             </div>
@@ -528,7 +680,6 @@
                                             <input type="text" class="form-control chat-input bg-light border-light"
                                                 id="messageInput" placeholder="Type your message..." autocomplete="off">
                                             <input type="hidden" id="parentMessageId">
-                                            <!-- Nếu có tính năng trả lời tin nhắn -->
                                         </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links ms-2">
@@ -620,29 +771,50 @@
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
-            document.getElementById("fileInput").addEventListener("change", function() {
+
+            $("#fileInput").change(function() {
                 let file = this.files[0];
-                let messageInput = document.getElementById("messageInput");
-                let previewContainer = document.getElementById("previewContainer");
-                let imagePreview = document.getElementById("imagePreview");
+                console.log(file);
 
-                if (file) {
-                    // messageInput.value = file.name;
+                let previewContainer = $("#previewContainer");
 
-                    // Kiểm tra xem tệp có phải ảnh không
-                    if (file.type.startsWith("image/")) {
-                        let reader = new FileReader();
-                        reader.onload = function(e) {
-                            imagePreview.src = e.target.result;
-                            previewContainer.style.display = "block"; // Hiển thị khu vực ảnh
-                        };
-                        reader.readAsDataURL(file);
+                if (!file) return;
+
+                let fileType = file.type;
+                let fileExt = file.name.split('.').pop().toLowerCase();
+                let reader = new FileReader();
+
+                reader.onload = function(e) {
+                    let previewHtml = '';
+
+                    if (fileType.startsWith("image/")) {
+                        previewHtml = `<img src="${e.target.result}" class="thumbnail" 
+                                style="max-width:150px; border-radius: 8px;">`;
+                    } else if (fileType.startsWith("video/")) {
+                        previewHtml = `<video class="thumbnail" controls style="max-width:150px; border-radius: 8px;">
+                                <source src="${e.target.result}" type="${fileType}">
+                              </video>`;
+                    } else if (fileType === "application/pdf") {
+                        previewHtml = `<embed src="${e.target.result}" class="thumbnail" 
+                                style="width:100px; height:100px; border-radius: 8px;">`;
                     } else {
-                        previewContainer.style.display = "none"; // Ẩn nếu không phải ảnh
+                        let fileThumbnail = getFileThumbnail(fileExt);
+                        previewHtml = `<div class="file-thumbnail">
+                                <img src="${fileThumbnail}" style="width:50px; height:50px;"> 
+                                <p>${file.name}</p>
+                              </div>`;
                     }
-                }
+
+                    previewContainer.html(previewHtml).show();
+                };
+
+                reader.readAsDataURL(file);
             });
         });
+
+        function getFileThumbnail(ext) {
+            return `/assets/images/icons/${ext}.png`;
+        }
 
         function removeImage() {
             document.getElementById("imagePreview").src = "";
@@ -656,11 +828,96 @@
                 placeholder: "Chọn thành viên thêm vào nhóm",
                 allowClear: true,
                 dropdownParent: $('#addGroupModal'),
+                // dropdownParent: $('#addChatPrivateModal'),
+            });
+        });
+        $(document).ready(function() {
+            $('#received').select2({
+                placeholder: "Chọn thành viên thêm vào nhóm",
+                allowClear: true,
+                dropdownParent: $('#addChatPrivateModal'),
             });
         });
     </script>
     <script>
+        // Tạo chat đơn
         var currentConversationId = null;
+        $(document).ready(function() {
+            $('#createPrivateChatForm').submit(function(event) {
+                event.preventDefault();
+
+                var formData = $(this).serialize(); // Lấy dữ liệu từ form
+                $.ajax({
+                    url: "{{ route('admin.chats.createOnetoOne') }}",
+                    method: "POST",
+                    data: formData,
+                    success: function(response) {
+                        if (response.status == 'success') {
+                            // Cập nhật lại dữ liệu nhóm và admin trên giao diện
+                            $('#usersList').html(response.data.channels);
+                            alert(response.message); // Hiển thị thông báo thành công
+                            window.location.href = "{{ route('admin.chats.index') }}";
+                        } else {
+                            alert(response.message); // Hiển thị thông báo lỗi
+                        }
+                    },
+                    error: function() {
+                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                    }
+                });
+            });
+
+            $('.usersList a').click(function(event) {
+                event.preventDefault(); // Ngừng hành động mặc định của liên kết
+
+                var channelId = $(this).data('private-id'); // Lấy ID của nhóm chat
+
+                // Gửi yêu cầu AJAX để lấy thông tin nhóm
+                $.ajax({
+                    url: "{{ route('admin.chats.getUserInfo') }}", // Endpoint API để lấy thông tin nhóm
+                    method: 'GET',
+                    data: {
+                        id: channelId
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        if (response) {
+
+                            // Cập nhật tên nhóm và số thành viên
+                            $('.nameUser').text(response.data.nameUser);
+                            $('.imageUser').attr('src', response.data.avatarUser);
+                            $('#memberCount').empty();
+                            $('#membersList').empty();
+                            $('#OnetoOne').hide();
+                            $('#filetofile').removeClass('col-6');
+                            $('#filetofile').addClass('col-12');
+                            // $('#imageUser').attr('src', response.data.avatar);
+                            // $('.getID').attr('data-conversation-id', response.data.channelId);
+                            loadMessages(response.data.direct.channelId);
+                            loadSentFiles(response.data.direct.channelId);
+                        } else {
+                            alert('Không thể lấy thông tin nhóm');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
+                    }
+                });
+            });
+            // Khi người dùng chọn một nhóm
+            $('.private-button').click(function() {
+                currentConversationId = $(this).data('private-id'); // Lấy ID nhóm đã chọn
+                console.log('Đã chọn nhóm với ID:', currentConversationId);
+                window.Echo.private('conversation.' + currentConversationId)
+                    .listen('PrivateMessageSent', function(event) {
+                        $('#messagesList').append(renderMessage(event));
+                        scrollToBottom();
+                        // alert('Đã nhận tin nhắn mới');
+                    });
+            });
+        });
+
+        // tạo chat nhóm
         $(document).ready(function() {
             $('#createGroupChatForm').submit(function(event) {
                 event.preventDefault();
@@ -689,7 +946,7 @@
             $('.conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
-                var channelId = $(this).data('channel-id'); // Lấy ID của nhóm chat
+                var channelId = $(this).data('group-id'); // Lấy ID của nhóm chat
 
                 // Gửi yêu cầu AJAX để lấy thông tin nhóm
                 $.ajax({
@@ -704,10 +961,12 @@
 
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
-                            $('.memberCount').text(response.data.memberCount);
-                            $('#nameUser').text(response.data.direct);
-                            $('#imageUser').attr('src', response.data.avatar);
+                            $('#memberCount').text(response.data.memberCount);
+                            $('.avatar').attr('src', response.data.avatar);
                             $('.getID').attr('data-conversation-id', response.data.channelId);
+                            $('#OnetoOne').show();
+                            $('#filetofile').removeClass('col-12');
+                            $('#filetofile').addClass('col-6');
                             loadMessages(response.data.group.id);
                             loadSentFiles(response.data.group.id);
                             let membersHtml = '';
@@ -745,7 +1004,7 @@
             });
             // Khi người dùng chọn một nhóm
             $('.group-button').click(function() {
-                currentConversationId = $(this).data('channel-id'); // Lấy ID nhóm đã chọn
+                currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
                 console.log('Đã chọn nhóm với ID:', currentConversationId);
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
@@ -813,13 +1072,13 @@
                 formData.append('type', type);
                 // Kiểm tra nếu có ảnh được chọn
                 let fileInput = $('#fileInput')[0].files[0];
+
                 if (fileInput) {
-                    formData.append('fileinput', fileInput);
-                    type = 'image'; // Đổi type thành image nếu có file ảnh
-                    formData.set('type', type);
+                    formData.append('input_file', fileInput);
                 }
+
                 if (currentConversationId && content || fileInput) {
-                    // Gửi tin nhắn vào nhóm hiện tại
+
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
                         method: 'POST',
@@ -832,9 +1091,8 @@
                             if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
                                 $('#fileInput').val(''); // Reset input file
-                                $('#imagePreviewContainer')
-                                    .hide(); // Ẩn preview ảnh sau khi gửi
-
+                                $('#previewContainer')
+                                    .hide(); // Ẩn preview ảnh sau khi gửi 
                                 $('#messagesList').append(renderMessage(response));
                                 scrollToBottom();
                             }
@@ -853,35 +1111,75 @@
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
                 if (response.status === 'success') {
-                    
+
                     // Lấy tất cả các tin nhắn
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
                     const messagesHtml = response.messages.map(message => {
-                        // console.log(response);
 
                         // Kiểm tra ID người gửi và người nhận
                         const messageClass = message.sender.id == userId ? 'sender' :
-                            'received'; // Xác định lớp tin nhắn   
+                            'received';
                         const time = formatTime(message.created_at);
                         let messageContent = '';
                         try {
-                            // Kiểm tra nếu có `media` và lấy ảnh đầu tiên
                             if (message.media && message.media.length > 0) {
-                                let mediaFile = message.media[0].file_path; // Lấy đường dẫn ảnh
-                                messageContent = `
-                                    <p>${message.content}</p>
-                                    <img src="/storage/${mediaFile}" alt="Hình ảnh" 
-                                    style=max-width:350px; border-radius: 8px;">
-                                    `;
+                                let mediaFile = message.media[0].file_path;
+                                let fileType = message.media[0].file_type;
+                                let fileExt = mediaFile.split('.').pop().toLowerCase();
+                                let mediaPreview = '';
+                                let fileSize = formatFileSize(message.media[0].file_size);
+                                let fileIcon = getFileThumbnail(fileExt);
+                                console.log(message.media[0].file_size);
+
+                                if (fileType.startsWith('image')) {
+                                    mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;position:relative">
+                                         <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                            <i class='bx bx-download'></i>
+                                        </a> 
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                                    </div>`;
+                                } else if (fileType.startsWith('video')) {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <video controls style="max-width:100%; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                 
+                                    </div>`;
+                                } else if (fileType === 'application/pdf') {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                                            <i class='bx bx-download'></i>
+                                        </a>                                    
+                                    </div>`;
+                                } else {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                            <div class="col-9">
+                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                <p class="text-muted">${fileSize}</p>
+                                            </div>
+                                            <div class="col-2 d-flex align-items-center justify-content-center">
+                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                    <i class='fs-4 bx bx-download'></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                }
+
+                                messageContent = `<p>${message.content}</p> ${mediaPreview}`;
                             } else {
-                                messageContent =
-                                    `<p>${message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                                messageContent = `<p>${message.content}</p>`;
                             }
                         } catch (error) {
-                            console.error("Lỗi lấy ảnh:", error);
-                            messageContent =
-                                `<p>${message.content}</p>`; // Nếu lỗi, fallback về content
+                            console.error("Lỗi lấy file:", error);
+                            messageContent = `<p>${message.content}</p>`;
                         }
                         return `
                             <div class=" message ${messageClass} style="padding-top: 10px">
@@ -917,23 +1215,67 @@
 
                     if (response.files.length === 0) {
                         $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        $('#documentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        $('#mediaFilesList').html('<p>Chưa có file nào được gửi</p>')
                         return;
                     }
                     let visibleImages = 6; // Số ảnh hiển thị ban đầu
                     let allFiles = response.files; // Lưu toàn bộ danh sách ảnh
                     function renderImages() {
                         $('#sentFilesList').html(''); // Xóa nội dung cũ
+                        $('#documentFilesList').html('');
+                        $('#mediaFilesList').html('')
                         let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
-
+                        const mediaHtml = [];
+                        const documentHtml = [];
                         const filesHtml = filesToShow.map(file => {
-                            return `
-                        <div class="gallery-item">
-                            <img src="/storage/${file.file_path}" alt="File đã gửi">
-                        </div>
-                    `;
+                            console.log(file);
+                            let mediaFile = file.file_path;
+                            let fileType = file.file_type;
+                            let fileExt = mediaFile.split('.').pop().toLowerCase();
+                            let mediaPreview = '';
+                            let fileSize = formatFileSize(file.file_size);
+                            let fileIcon = getFileThumbnail(fileExt);
+
+                            if (fileType.startsWith('image')) {
+                                mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; display: flex; align-items: center; justify-content: center; position:relative;">
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                            <i class='bx bx-download'></i>
+                                        </a> 
+                                    </div>`;
+                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                            } else if (fileType.startsWith('video')) {
+                                mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; height: 200px;">
+                                        <video controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                
+                                    </div>`;
+                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                            } else {
+                                let filePreview = `
+                                                <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                                    <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                                    <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                                        <div class="col-9">
+                                                            <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                            <p class="text-muted">${fileSize} KB</p>
+                                                        </div>
+                                                        <div class="col-2 d-flex align-items-center justify-content-center">
+                                                            <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                                <i class='fs-4 bx bx-download'></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>`;
+                                documentHtml.push(`<div class="gallery-item">${filePreview}</div>`);
+                            }
                         }).join('');
 
-                        $('#sentFilesList').append(filesHtml);
+                        $('#mediaFilesList').append(mediaHtml.join(''));
+                        $('#documentFilesList').append(documentHtml.join(''));
 
                         if (visibleImages >= allFiles.length) {
                             $('#loadMore').hide(); // Ẩn nút khi không còn ảnh để load
@@ -1005,30 +1347,65 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
         function renderMessage(response) {
-
             const messageClass = response.message.sender.id == userId ?
                 'sender' : 'received';
             const time = formatTime(response.message.created_at);
             let messageContent = '';
 
             try {
-                if (response.message.media && response.message.media
-                    .length > 0) {
-                    let mediaFile = response.message.media[0]
-                        .file_path; // Lấy đường dẫn ảnh
-                    messageContent = `
-                <p>${response.message.content}</p>
-                <img src="/storage/${mediaFile}" alt="Hình ảnh" 
-                style="max-width:350px; border-radius: 8px;">
-            `;
+                if (response.message.media && response.message.media.length > 0) {
+                    let mediaFile = response.message.media[0].file_path;
+                    let fileType = response.message.media[0].file_type;
+                    let fileExt = mediaFile.split('.').pop().toLowerCase();
+                    let mediaPreview = '';
+                    let fileSize = formatFileSize(response.message.media[0].file_size);
+                    let fileIcon = getFileThumbnail(fileExt);
+
+                    if (fileType.startsWith('image')) {
+                        mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                                    </div>`;
+                    } else if (fileType.startsWith('video')) {
+                        mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <video controls style="max-width:100%; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                
+                                    </div>`;
+                    } else if (fileType === 'application/pdf') {
+                        mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                                            <i class='bx bx-download'></i>
+                                        </a>                                    
+                                    </div>`;
+                    } else {
+                        mediaPreview = `
+                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                            <div class="col-9">
+                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                <p class="text-muted">${fileSize} KB</p>
+                                            </div>
+                                            <div class="col-2 d-flex align-items-center justify-content-center">
+                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                    <i class='fs-4 bx bx-download'></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                    }
+
+                    messageContent = `<p>${response.message.content}</p> ${mediaPreview}`;
                 } else {
-                    messageContent =
-                        `<p>${response.message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                    messageContent = `<p>${response.message.content}</p>`;
                 }
             } catch (error) {
-                console.error("Lỗi lấy ảnh:", error);
-                messageContent =
-                    `<p>${response.message.content}</p>`; // Nếu lỗi, fallback về content
+                console.error("Lỗi lấy file:", error);
+                messageContent = `<p>${response.message.content}</p>`;
             }
 
             let messageHtml = `
@@ -1046,6 +1423,14 @@
         </div>
     `;
             return messageHtml;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + " B";
+            const sizes = ["KB", "MB", "GB", "TB"];
+            let i = Math.floor(Math.log(bytes) / Math.log(1024));
+            let size = (bytes / Math.pow(1024, i)).toFixed(2);
+            return `${size} ${sizes[i - 1]}`;
         }
     </script>
 @endpush

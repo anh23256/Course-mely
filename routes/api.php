@@ -4,7 +4,7 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
-use App\Http\Controllers\API\Common\CommentController;
+use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
@@ -49,7 +49,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->as('auth.')->group(function () {
     Route::post('sign-up', [AuthController::class, 'signUp']);
     Route::post('sign-in', [AuthController::class, 'signIn']);
-    Route::post('verify-email', [AuthController::class, 'verifyEmail']);
+    Route::get('verify/{token}', [AuthController::class, 'verify']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 
@@ -89,15 +89,7 @@ Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'get
 Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/broadcasting/auth', function (Request $request) {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        return \Illuminate\Support\Facades\Broadcast::auth($request);
-    });
+    Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
@@ -106,9 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
     });
-
     Route::prefix('instructor')->as('instructor.')->group(function () {
         Route::post('register', [RegisterController::class, 'register']);
+        Route::post('check-handle-role', [RegisterController::class, 'checkHandleRole']);
     });
 
     Route::get('user', function (Request $request) {
@@ -118,6 +110,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('livestreams')->group(function () {
         Route::post('/{livestream}/send-message', [LivestreamController::class, 'sendMessage']);
     });
+
+    Route::get('/instructors/{code}/follow-status', [FollowController::class, 'checkUserFollower']);
 
     #============================== ROUTE USER =============================
     Route::prefix('users')->group(function () {
@@ -134,6 +128,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
+
+        Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
+        Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
+        Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================
         Route::prefix('careers')->group(function () {
@@ -253,24 +252,27 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            //                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
                     #============================== ROUTE COURSE =============================
                     Route::prefix('courses')
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
+                            Route::get('/trash', [CourseController::class, 'trash']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
                             Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);
                             Route::post('/', [CourseController::class, 'store']);
                             Route::put('/{course}/courseOverView', [CourseController::class, 'updateCourseOverView']);
                             Route::put('/{course}/courseObjective', [CourseController::class, 'updateCourseObjectives']);
-                            Route::delete('/{course}', [CourseController::class, 'deleteCourse']);
                             Route::get('/{slug}/chapters', [CourseController::class, 'getChapters']);
                             Route::get('/{slug}/validate-course', [CourseController::class, 'validateCourse']);
                             Route::get('/{slug}/check-course-complete', [CourseController::class, 'checkCourseComplete']);
                             Route::post('{slug}/submit-course', [SendRequestController::class, 'submitCourse']);
                             Route::post('request-modify-content', [SendRequestController::class, 'requestToModifyContent']);
+                            Route::delete('/move-to-trash', [CourseController::class, 'moveToTrash']);
+                            Route::post('/restore', [CourseController::class, 'restore']);
                         });
 
                     #============================== ROUTE CHAPTER =============================
@@ -400,15 +402,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/send-message', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiSendMessage']);
         });
 
-    #============================== ROUTE COMMENT =============================
-    Route::prefix('comments')
-        ->group(function () {
-            Route::post('/', [CommentController::class, 'store']);
-            Route::put('/{id}', [CommentController::class, 'update']);
-            Route::delete('/{id}', [CommentController::class, 'destroy']);
-            Route::get('/{commentableId}/{commentableType}', [CommentController::class, 'index']);
-        });
-
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
         ->group(function () {
@@ -456,9 +449,19 @@ Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
-        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
+    });
+Route::prefix('blogs')
+    ->group(function () {
+        Route::prefix('comments')
+            ->group(function () {
+                Route::get('/{blog}/blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlog']);
+                Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog'])->middleware('auth:sanctum');
+                Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
+                Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
+                Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
+            });
     });
 
 #============================== ROUTE QA SYSTEM =================================
@@ -479,4 +482,7 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
-Route::get('get-validate-instructor/{instructorCode}', [RegisterController::class, 'validateInstructor']);
+
+
+Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
+

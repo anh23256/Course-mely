@@ -28,12 +28,10 @@ class Comment extends Model
 
     public function reactions()
     {
-        return $this->morphMany(Reaction::class, 'reactionable');
+        return $this->morphMany(Reaction::class, 'reactable');
     }
     public function commentable()
     {
         return $this->morphTo();
     }
-
-    
 }

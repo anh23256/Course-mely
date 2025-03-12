@@ -17,7 +17,8 @@ class Invoice extends Model
         'coupon_discount',
         'amount',
         'final_amount',
-        'status'
+        'status',
+        'payment_method'
     ];
 
     protected $attributes = [

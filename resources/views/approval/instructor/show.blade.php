@@ -153,8 +153,8 @@
                                                 <div class="progress-bar bg-danger" role="progressbar"
                                                     style="width: {{ $score }}%"
                                                     aria-valuenow="{{ $score }}" aria-valuemin="0"
-                                                    aria-valuemax="100" id="progressInstructorStyle">
-                                                    <div class="label" id="progressInstructor">{{ $score }}%</div>
+                                                    aria-valuemax="100">
+                                                    <div class="label">{{ $score }}%</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -165,6 +165,7 @@
                                             <div class="table-responsive">
                                                 <table class="table table-borderless mb-0">
                                                     <tbody>
+
                                                         <tr>
                                                             <th class="ps-0" scope="row">Họ tên:</th>
                                                             <td class="text-muted">
@@ -201,6 +202,7 @@
                                                                 {{ $approval->created_at->format('d/m/Y') }}
                                                             </td>
                                                         </tr>
+                                                        >>>>>>> 488bb52fc65ffeb36068a5dd8b64eb353c74a9dc
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -211,7 +213,7 @@
                                             <h5 class="card-title mb-4">Mạng xã hội</h5>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @php
-                                                    $socials = json_decode($approval->user->profile->bio ?? '[]', true);
+                                                    $socials = $approval->user->profile->bio ?? '';
                                                     $socials = is_array($socials) ? $socials : [];
                                                     $icon = [
                                                         'facebook' => 'ri-facebook-fill',
@@ -379,7 +381,7 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @php
+                                                        <<<<<<< HEAD @php
                                                             $certificates = json_decode(
                                                                 $approval->user->profile->certificates ?? '[]',
                                                                 true,
@@ -387,8 +389,7 @@
                                                             $certificates = is_array($certificates)
                                                                 ? $certificates
                                                                 : [];
-                                                        @endphp
-                                                        @if (!empty($certificates))
+                                                        @endphp @if (!empty($certificates))
                                                             @foreach ($certificates as $certificate)
                                                                 @php
                                                                     $fileExtension = pathinfo(
@@ -410,6 +411,43 @@
                                                                                         src="{{ $certificate }}"
                                                                                         alt="File Image">
                                                                                 @endif
+                                                                            </div>
+                                                                            =======
+                                                                            @php
+                                                                                $certificates = json_decode(
+                                                                                    $approval->user->profile
+                                                                                        ->certificates ?? '[]',
+                                                                                    true,
+                                                                                );
+                                                                                $certificates = is_array($certificates)
+                                                                                    ? $certificates
+                                                                                    : [];
+                                                                            @endphp
+                                                                            @if (!empty($certificates))
+                                                                                @foreach ($certificates as $certificate)
+                                                                                    @php
+                                                                                        $fileExtension = pathinfo(
+                                                                                            $certificate,
+                                                                                            PATHINFO_EXTENSION,
+                                                                                        );
+                                                                                    @endphp
+                                                                <tr>
+                                                                    <td>{{ $loop->iteration }}</td>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="avatar-sm">
+                                                                                @if ($fileExtension === 'pdf')
+                                                                                    <iframe
+                                                                                        src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
+                                                                                        width="100%"
+                                                                                        height="400px"></iframe>
+                                                                                @else
+                                                                                    <img class="w-100"
+                                                                                        src="{{ \Illuminate\Support\Facades\Storage::url($certificate) }}"
+                                                                                        alt="File Image">
+                                                                                @endif
+                                                                                >>>>>>>
+                                                                                488bb52fc65ffeb36068a5dd8b64eb353c74a9dc
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -455,7 +493,7 @@
                                                                     </td>
                                                                 </tr>
                                                             @endforeach
-                                                        @endif
+                                                            @endif
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -474,9 +512,9 @@
                                             </div>
                                             <div class="card-body">
                                                 <div class="accordion" id="criteriaAccordionInstructor">
-                                                    
+
                                                     <div class="accordion-item">
-                                                        
+
                                                         <div id="criteriaCollapseOne"
                                                             class="accordion-collapse collapse show"
                                                             aria-labelledby="criteriaHeadingOne"
@@ -566,7 +604,7 @@
             $.ajax({
                 type: 'GET',
                 url: "http://127.0.0.1:8000/api/get-validate-instructor/" + "{{ $approval->user->code }}",
-                beforeSend: function () {
+                beforeSend: function() {
                     $("#criteria_instructor")
                         .html(`
                 <span class="col-md-12 mt-2 text-center">
@@ -575,7 +613,7 @@
                 </span>
             `);
                 },
-                success: function (response) {
+                success: function(response) {
                     console.log(response);
                     if (response.data) {
                         let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;

@@ -35,9 +35,9 @@ class WithDrawalsRequestController extends Controller
             $queryWithdrawals = WithdrawalRequest::query()->latest('id');
             $countWithdrawals = WithdrawalRequest::query()->selectRaw(
                 'count(id) as total_withdrawals,
-                sum(status = "completed") as completed_withdrawals,
-                sum(status = "pending") as pending_withdrawals,
-                sum(status = "failed") as failed_withdrawals'
+                sum(status = "Hoàn thành") as completed_withdrawals,
+                sum(status = "Đang xử lý") as pending_withdrawals,
+                sum(status = "Từ chối") as failed_withdrawals'
             )->first();
 
             if ($request->hasAny(['status', 'request_date', 'completed_date', 'bank_name', 'amount_min', 'amount_max', 'account_number', 'account_holder']))
@@ -98,10 +98,10 @@ class WithDrawalsRequestController extends Controller
                 ->with(['wallet.user'])
                 ->find($data['withdrawal_id']);
 
-            if ($withdrawal->status === 'Hoàn thành') {
+            if ($withdrawal->status === 'Hoàn thành' || $withdrawal->status === 'Đã xử lý') {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Yêu cầu đã được xử lý, không thể thay đổi',
+                    'message' => 'Yêu cầu đã được xử lý, hoặc đang xử lý. Vui lòng thử lại sau.',
                 ]);
             }
 
@@ -183,7 +183,7 @@ class WithDrawalsRequestController extends Controller
                 ]);
             }
 
-            $systemFundBalance->pending_balance -= $withdrawal->amount;
+            $systemFundBalance->decrement('pending_balance', $withdrawal->amount);
 
             $transation = Transaction::query()->create([
                 'transaction_code' => 'ORDER' . time(),

@@ -194,11 +194,68 @@
 .load-more:hover {
     background-color: #0056b3;
 }
+
 .members-list {
-    max-height: 400px; /* Chiều cao tối đa của danh sách */
-    overflow-y: auto; /* Tạo thanh cuộn dọc khi nội dung vượt quá chiều cao */
-    border: 1px solid #ccc; /* Đường viền để dễ nhìn */
+    max-height: 400px;
+    /* Chiều cao tối đa của danh sách */
+    overflow-y: auto;
+    /* Tạo thanh cuộn dọc khi nội dung vượt quá chiều cao */
+    border: 1px solid #ccc;
+    /* Đường viền để dễ nhìn */
     padding: 10px;
-    width: 300px; /* Chiều rộng tùy chỉnh */
-    margin: 20px auto; /* Canh giữa trang */
+    width: 300px;
+    /* Chiều rộng tùy chỉnh */
+    margin: 20px auto;
+    /* Canh giữa trang */
+}
+
+/* Hiển thị tab theo hàng ngang, mỗi tab chiếm 50% */
+.nav-tabs .nav-item,
+.nav-pills .nav-item {
+    width: 100%;
+    text-align: center;
+}
+
+/* Đảm bảo nút tab chiếm toàn bộ vùng */
+.nav-tabs .nav-link,
+.nav-pills .nav-link {
+    width: 100%;
+    display: block;
+    padding: 12px;
+    font-weight: bold;
+    border: 1px solid transparent;
+    border-radius: 0;
+}
+
+/* Khi tab active hoặc hover */
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link:hover,
+.nav-pills .nav-link.active,
+.nav-pills .nav-link:hover {
+    background-color: #dc3545;
+    /* Bootstrap Danger */
+    color: white;
+    border-color: #dc3545;
+}
+.download-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    padding: 5px 10px;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.download-btn:hover {
+    background: rgba(0, 0, 0, 0.7); /* Đổi màu nền thành đen nhẹ khi hover */
+    color: white; /* Đổi màu icon thành trắng */
+}
+
+.download-btn i {
+    font-size: 18px;
 }

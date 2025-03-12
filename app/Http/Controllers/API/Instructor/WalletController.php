@@ -198,7 +198,7 @@ class WalletController extends Controller
                 $query->whereDate('created_at', '<=', $request->input('toDate'));
             }
 
-            $withdrawalRequests = $query->get();
+            $withdrawalRequests = $query->latest('created_at')->get();
 
             if ($withdrawalRequests->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy dữ liệu');
@@ -262,6 +262,10 @@ class WalletController extends Controller
 
             if (!$withdrawalRequest) {
                 return $this->respondNotFound('Không tìm thấy giao dịch');
+            }
+
+            if ($withdrawalRequest->status === 'Hoàn thành') {
+                return $this->respondError('Yêu cầu đã được xử lý, không thể xác nhận lại');
             }
 
             $status = $data['is_received'] == 1 ? 'Chờ xác nhận lại' : 'Hoàn thành';

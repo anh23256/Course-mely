@@ -2,27 +2,20 @@
 @push('page-css')
     <!-- plugin css -->
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        #couponCode {
+            text-transform: uppercase;
+        }
+
+        #couponCode::placeholder {
+            text-transform: none;
+        }
+    </style>
 @endpush
 @php
     $title = 'Thêm mới coupon';
 @endphp
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 ps-2">{{ $title ?? '' }}</h4>
-
-                <div class="page-title-right pe-3">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active"><a
-                                href="{{ route('admin.coupons.index') }}">{{ $title }}</a></li>
-                    </ol>
-                </div>
-
-            </div>
-        </div>
-    </div>
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12">
@@ -63,8 +56,9 @@
                                 <div class="d-flex">
                                     <div class="mb-3 col-6 pe-3">
                                         <label class="form-label">Mã giảm giá</label>
-                                        <input type="text" name="code" class="form-control"
+                                        <input type="text" name="code" class="form-control" id="couponCode"
                                             value="{{ old('code') }}" placeholder="Nhập mã giảm giá">
+                                        <div id="suggestCode" class="mt-2" style="display: none;"></div>
                                         @error('code')
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
@@ -127,8 +121,9 @@
                                         <div class="text-danger mt-3">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <button type="submit" class="btn btn-primary waves-effect waves-light">Thêm
-                                    mới</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-1"></i> Lưu mã giảm giá
+                                </button>
                                 <button type="reset" class="btn btn-info waves-effect waves-light"
                                     onclick="resetFilters()">Reset
                                 </button>
@@ -167,13 +162,50 @@
                 if (discountType === "fixed") {
                     $(".discount-fields").show();
                     $("#discount_max_value_field").hide();
-                } else if (discountType === "percentage"){
+                } else if (discountType === "percentage") {
                     $("#discount_max_value_field").show();
-                    $(".discount-fields").show(); 
+                    $(".discount-fields").show();
                 } else {
                     $(".discount-fields").hide();
                     $("#discount_max_value_field").hide();
                 }
+            });
+
+            $('#suggestCode').hide();
+
+            $(document).on('change', '#couponCode', function() {
+                let data = $(this).val();
+
+                $.ajax({
+                    url: "{{ route('admin.coupons.suggestCode') }}",
+                    type: 'GET',
+                    data: {
+                        code: data
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response && response.length > 0) {
+                            let suggestionsHtml =
+                                '<div class="suggestion-container mt-2">Gợi ý: ';
+                            response.forEach(function(code) {
+                                suggestionsHtml += `<span class="suggestion-item p-2 text-primary" 
+                                            style="font-size: 0.8em !important; cursor: pointer;">
+                                            ${code}
+                                        </span>`;
+                            });
+                            suggestionsHtml += '</div>';
+
+                            $('#suggestCode').html(suggestionsHtml).show();
+                        } else {
+                            $('#suggestCode').hide();
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '.suggestion-item', function() {
+                $('#couponCode').val($(this).text().trim());
+                $('#suggestCode').hide();
             });
         });
     </script>

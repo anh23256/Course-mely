@@ -21,16 +21,20 @@ class ReactionController extends Controller
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
+
             $data = $request->validated();
             $comment = Comment::find($data['comment_id']);
+
             if (!$comment) {
                 return $this->respondNotFound('Không tìm thấy comment');
             }
+
             $reaction = Reaction::where([
                 'user_id' => $user->id,
                 'reactable_id' => $comment->id,
                 'reactable_type' => Comment::class,
             ])->first();
+
             if ($reaction) {
 
                 if ($reaction->type == $data['type']) {
@@ -40,11 +44,12 @@ class ReactionController extends Controller
                 } else {
                     // Nếu phản ứng khác với trước, cập nhật loại phản ứng
                     $reaction->update([
-                        'type' => $data['type'],  
+                        'type' => $data['type'],
                     ]);
                     return response()->json(['message' => 'Cập nhật thành công', 'reaction' => $reaction]);
                 }
             }
+
             $newReaction = Reaction::create(
                 [
                     'user_id' => $user->id,
@@ -53,7 +58,7 @@ class ReactionController extends Controller
                     'type' => $request->type,
                 ],
             );
-    
+
             return $this->respondSuccess('Thả reaction thành công');
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
@@ -88,8 +93,8 @@ class ReactionController extends Controller
             'message' => 'Lấy phản ứng thành công',
             'reactions' => $reactions->map(function($reaction) {
                 return [
-                    'user_name' => $reaction->user->name, 
-                    'avatar' => $reaction->user->avatar, 
+                    'user_name' => $reaction->user->name,
+                    'avatar' => $reaction->user->avatar,
                     'react_type' => $reaction->type,
                 ];
             }),

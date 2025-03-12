@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\User\ChangePasswordRequest;
+use App\Http\Requests\API\User\StoreBankingInfoRequest;
 use App\Http\Requests\API\User\StoreCareerRequest;
+use App\Http\Requests\API\User\UpdateBankingInfoRequest;
 use App\Http\Requests\API\User\UpdateCareerRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
@@ -22,6 +24,8 @@ use App\Models\Video;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
+use FontLib\Table\Type\post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +33,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait ,UploadToLocalTrait;
 
     const FOLDER_USER = 'users';
     const FOLDER_CERTIFICATE = 'certificates';
@@ -110,7 +114,7 @@ class UserController extends Controller
     private function uploadCertificates($certificates)
     {
         if ($certificates) {
-            return $this->uploadImageMultiple($certificates, self::FOLDER_CERTIFICATE);
+            return $this->uploadMultiple($certificates, self::FOLDER_CERTIFICATE);
         }
         return [];
     }
@@ -184,16 +188,6 @@ class UserController extends Controller
             });
 
             return $this->respondOk('Mật khẩu của ' . $user->name . ' đã được thay đổi thành công. Vui lòng đăng nhập lại!');
-        } catch (\Exception $e) {
-            $this->logError($e, $request->all());
-
-            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
-        }
-    }
-
-    public function getMyCourseBought(Request $request)
-    {
-        try {
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -601,6 +595,179 @@ class UserController extends Controller
             return $this->respondOk('Danh sách chứng chỉ', $certificate);
         } catch (\Exception $e) {
             $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getBankingInfos()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $profile = Profile::query()->where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondNotFound('Không tìm thấy thống tin người dùng');
+            }
+
+            $bankingInfos = $profile->banking_info ?? [];
+
+            return $this->respondOk('Lấy danh sách thông tin ngân hàng thành công', $bankingInfos);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function addBankingInfo(StoreBankingInfoRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $profile = Profile::query()->where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondNotFound('Không tìm thấy thống tin người dùng');
+            }
+
+            $bankingInfos = $profile->banking_info ?? [];
+
+            if (count($bankingInfos) >= 3) {
+                return $this->respondError('Chỉ được phép thêm tối đa 3 tài khoản');
+            }
+
+            $data = $request->validated();
+
+            $isDuplicate = collect($bankingInfos)->contains(function ($item) use ($data) {
+                return $item['account_no'] === $data['account_no'];
+            });
+
+            if ($isDuplicate) {
+                return $this->respondError('Số tài khoản đã tồn tại');
+            }
+
+            $newBankingInfo = [
+                'id' => uniqid(),
+                'account_no' => $data['account_no'],
+                'account_name' => $data['account_name'],
+                'acq_id' => $data['acq_id'],
+                'bank_name' => $data['bank_name']
+            ];
+
+            $bankingInfos[] = $newBankingInfo;
+
+            $profile->update([
+                'banking_info' => $bankingInfos
+            ]);
+
+            return $this->respondCreated('Thêm thông tin ngân hàng thành công',
+                $bankingInfos
+            );
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function updateBankingInfo(UpdateBankingInfoRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $profile = Profile::query()->where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondNotFound('Không tìm thấy hồ sơ');
+            }
+
+            $bankingInfos = $profile->banking_info ?? [];
+            $data = $request->validated();
+
+            $updatedBankingInfos = collect($bankingInfos)->map(function ($item) use ($data) {
+                if ($item['id'] === $data['id']) {
+                    return [
+                        'id' => $data['id'],
+                        'account_no' => $data['account_no'],
+                        'account_name' => $data['account_name'],
+                        'acq_id' => $data['acq_id'],
+                        'bank_name' => $data['bank_name']
+                    ];
+                }
+                return $item;
+            })->all();
+
+            $duplicateAccounts = collect($updatedBankingInfos)
+                ->filter(function ($item) use ($data) {
+                    return $item['account_no'] === $data['account_no'] &&
+                        $item['id'] !== $data['id'];
+                });
+
+            if ($duplicateAccounts->isNotEmpty()) {
+                return $this->respondError('Số tài khoản đã tồn tại');
+            }
+
+            $profile->update([
+                'banking_info' => $updatedBankingInfos
+            ]);
+
+            return $this->respondOk('Cập nhật thông tin ngân hàng thành công', $updatedBankingInfos);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function removeBankingInfo(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $profile = Profile::query()->where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondNotFound('Không tìm thấy hồ sơ');
+            }
+
+            $bankingInfos = $profile->banking_info ?? [];
+            $bankingInfoId = $request->input('id');
+
+            $updatedBankingInfos = collect($bankingInfos)
+                ->reject(function ($item) use ($bankingInfoId) {
+                    return $item['id'] === $bankingInfoId;
+                })
+                ->values()
+                ->all();
+
+            $profile->update([
+                'banking_info' => $updatedBankingInfos
+            ]);
+
+            return $this->respondOk('Xóa thông tin ngân hàng thành công', [
+                'banking_info' => $updatedBankingInfos
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
 
             return $this->respondServerError();
         }

@@ -305,7 +305,7 @@
                                                         aria-labelledby="heading{{ $index + 1 }}"
                                                         data-bs-parent="#default-accordion-example">
                                                         <div class="accordion-body">
-                                                            {{ $item['answers'] }}
+                                                            {{ $item['answers'] ?? '' }}
                                                         </div>
                                                     </div>
                                                 </div>

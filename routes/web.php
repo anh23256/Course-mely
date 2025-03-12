@@ -161,7 +161,8 @@ Route::prefix('admin')->as('admin.')
                 ->can('banners.create');
             Route::post('/', [BannerController::class, 'store'])->name('store')
                 ->can('banners.create');
-
+            Route::post('/update-order', [BannerController::class, 'updateOrder'])->name('updateOrder')
+                ->can('banner.update');
             Route::get('/{id}', [BannerController::class, 'show'])->name('show');
             Route::get('/edit/{banner}', [BannerController::class, 'edit'])->name('edit');
             Route::put('/{banner}', [BannerController::class, 'update'])->name('update')
@@ -202,6 +203,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
+            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');
@@ -375,12 +377,13 @@ Route::prefix('admin')->as('admin.')
             ->as('chats.')
             ->group(function () {
                 Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
+                Route::post('/private', [ChatController::class, 'createPrivateChat'])->name('createOnetoOne');
                 Route::post('/chat-realtime', [ChatController::class, 'createGroupChat'])->name('create');
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
+                Route::get('/get-user-info', [ChatController::class, 'getUserInfo'])->name('getUserInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
-                // Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::get('/group/{groupId}/get-existing-members', [ChatController::class, 'getExistingMembers']);
             });
