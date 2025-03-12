@@ -356,7 +356,7 @@ class CourseController
             $course->is_enrolled = false;
 
             if ($user) {
-                $enrollment = CourseUser::where('user_id', $user->id)
+                $enrollment = CourseUser::query()->where('user_id', $user->id)
                     ->where('course_id', $course->id)
                     ->exists();
 
@@ -369,15 +369,33 @@ class CourseController
             $course->requirements = is_string($course->requirements) ? json_decode($course->requirements, true) : $course->requirements;
             $course->qa = is_string($course->qa) ? json_decode($course->qa, true) : $course->qa;
 
-            $videoLessons = $course->chapters->flatMap(function ($chapter) {
-                return $chapter->lessons->where('lessonable_type', Video::class);
-            });
+            $totalVideoDuration = 0;
+            $course->chapters = $course->chapters->map(function ($chapter) use (&$totalVideoDuration) {
+                $chapterVideoDuration = 0;
 
-            $totalVideoDuration = $videoLessons->sum(function ($lesson) {
-                return $lesson->lessonable->duration ?? 0;
+                foreach ($chapter->lessons as $lesson) {
+                    if ($lesson->lessonable_type === Video::class && isset($lesson->lessonable->duration)) {
+                        $duration = $lesson->lessonable->duration;
+                        $chapterVideoDuration += $duration;
+                        $totalVideoDuration += $duration;
+                    }
+                }
+
+                $chapter->total_video_duration = $chapterVideoDuration;
+                return $chapter;
             });
 
             $course->total_video_duration = $totalVideoDuration;
+
+            $courseRating = Rating::query()->where('course_id', $course->id)
+                ->select(
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as avg_rating')
+                )
+                ->first();
+
+            $course->ratings_count = $courseRating ? $courseRating->ratings_count : 0;
+            $course->avg_rating = $courseRating ? $courseRating->avg_rating : 0;
 
             //            $user = auth('sanctum')->user();
             //            $isCourseOwner = $user && $user->id === $course->user_id;
@@ -536,6 +554,7 @@ class CourseController
                     'courses.price',
                     'courses.price_sale',
                     'courses.thumbnail',
+                    'courses.is_free',
                     'users.name as name_instructor',
                     'users.code as code_instructor',
                     DB::raw('COUNT(lessons.id) as total_lesson, SUM(videos.duration) as total_duration'),
