@@ -109,6 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{livestream}/send-message', [LivestreamController::class, 'sendMessage']);
     });
 
+    Route::get('/instructors/{code}/follow-status', [FollowController::class, 'checkUserFollower']);
+
     #============================== ROUTE USER =============================
     Route::prefix('users')->group(function () {
         Route::get('check-profile', [\App\Http\Controllers\API\Common\CommonController::class, 'getCheckProfileUser']);
@@ -193,8 +195,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -249,7 +250,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-//                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
+                            //                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
                             Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
@@ -419,7 +420,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
     });
-
 });
 
 #============================== ROUTE COURSE =============================
@@ -455,10 +455,10 @@ Route::prefix('blogs')
         Route::prefix('comments')
             ->group(function () {
                 Route::get('/{blog}/blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlog']);
-                Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog']);
+                Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog'])->middleware('auth:sanctum');
                 Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
-                Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply']);
-                Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment']);
+                Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
+                Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
             });
     });
 

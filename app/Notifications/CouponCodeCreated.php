@@ -14,12 +14,11 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
     use Queueable;
 
     protected $coupon;
-    protected $user;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($coupon,$user)
+    public function __construct($coupon)
     {
         $this->coupon = $coupon;
     }
@@ -46,8 +45,8 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
     public function notificationData()
     {
         return [
-            'message' => 'Bạn vừa nhận được một mã từ nhân viên' . $this->coupon->user_id. ' Nhấn để nhận mã',
-            'name' =>$this->coupon->user_id,
+            'message' => "Bạn có mã giảm giá mới: {$this->coupon->code} - Giảm ". number_format(($this->coupon->discount_type == 'percentage' ? $this->coupon->discount_max_value : $this->coupon->discount_value)) . ' VND',
+            'name' => $this->coupon->user_id,
             'url' => $this->getUrl(),
         ];
     }

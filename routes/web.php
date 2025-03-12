@@ -201,6 +201,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
+            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');

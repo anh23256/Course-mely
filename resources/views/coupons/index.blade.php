@@ -294,11 +294,11 @@
                                                 </td>
                                                 @if ($coupon->status)
                                                     <td class="status"><span class="badge bg-success text-uppercase">
-                                                            Active
+                                                            Hoạt động
                                                         </span></td>
                                                 @else
                                                     <td class="status"><span class="badge bg-danger text-uppercase">
-                                                            InActive
+                                                            Không hoạt động
                                                         </span></td>
                                                 @endif
 
@@ -317,7 +317,7 @@
                                                         <div class="edit">
                                                             <a href="{{ route('admin.coupons.show', $coupon->id) }}">
                                                                 <button class="btn btn-sm btn-info edit-item-btn">
-                                                                    <span class="ri-folder-user-line"></span>
+                                                                    <span class="ri-eye-line"></span>
                                                                 </button>
                                                             </a>
                                                         </div>

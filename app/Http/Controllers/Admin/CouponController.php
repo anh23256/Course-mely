@@ -12,6 +12,8 @@ use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class CouponController extends Controller
 {
@@ -71,7 +73,10 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
-            // Gửi thông báo cho người dùng hoặc giảng viên
+
+            $data['max_usage'] = empty($data['max_usage']) ? NULL : $data['max_usage'];
+            $data['discount_max_value'] = empty($data['discount_max_value']) ? 0 : $data['discount_max_value'];
+
             $coupon = Coupon::create($data);
 
             $roleUser = ['member', 'instructor'];
@@ -79,11 +84,9 @@ class CouponController extends Controller
             $users = User::whereHas('roles', function ($query) use ($roleUser) {
                 $query->whereIn('name', $roleUser);
             })->get();
-            // $user = User::where('email', 'ducmely@gmail.com')->first();
-            // $user->notify(new CouponCodeCreated($coupon));
-            foreach ($users as $user) {
-                $user->notify(new CouponCodeCreated($coupon));
-            }
+
+            Notification::send($users, new CouponCodeCreated($coupon));
+
             DB::commit();
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
@@ -173,5 +176,29 @@ class CouponController extends Controller
         $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
+    }
+    public function suggestionCounpoun(Request $request){
+        try {
+            $suggestCounpons = [];
+
+            $counpon = $request->input('code', 'SALE');
+
+            if(Coupon::where('code', $counpon)->exists()){
+                for ($i=1; $i <= 3; $i++) { 
+                    do {
+                        $counponCode = '';
+                        $counponCode = Str::upper($counpon.substr(str_replace('-', '', Str::uuid()), 0, 6));
+                    } while (Coupon::where('code', $counponCode)->exists());
+    
+                    $suggestCounpons[] = $counponCode;
+                }
+    
+                return response()->json($suggestCounpons);
+            }
+
+            return;
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
     }
 }
