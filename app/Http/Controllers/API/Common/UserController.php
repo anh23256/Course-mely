@@ -195,16 +195,6 @@ class UserController extends Controller
         }
     }
 
-    public function getMyCourseBought(Request $request)
-    {
-        try {
-        } catch (\Exception $e) {
-            $this->logError($e, $request->all());
-
-            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
-        }
-    }
-
     public function getUserCourses(Request $request)
     {
         try {

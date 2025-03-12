@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Courses\DeleteCourseMultipleRequest;
+use App\Http\Requests\API\Courses\RestoreCourseMultipleRequest;
 use App\Http\Requests\API\Courses\StoreCourseRequest;
 use App\Http\Requests\API\Courses\UpdateContentCourse;
 use App\Http\Requests\API\Courses\UpdateCourseObjectives;
@@ -51,6 +53,7 @@ class CourseController extends Controller
                     'total_student',
                     'status',
                     'is_free',
+                    'created_at'
                 ])
                 ->with([
                     'category:id,name,slug,parent_id',
@@ -359,27 +362,130 @@ class CourseController extends Controller
         }
     }
 
-    public function deleteCourse(string $slug)
+    public function trash(Request $request)
     {
         try {
-            $course = Course::query()
-                ->where('slug', $slug)
-                ->first();
+            $query = $request->input('q');
 
-            if (!$course) {
-                return $this->respondNotFound('Không tìm thấy khoá học');
+            $trashedCourses = Course::query()->onlyTrashed()
+                ->where('user_id', Auth::id())
+                ->select([
+                    'id',
+                    'category_id',
+                    'name',
+                    'slug',
+                    'thumbnail',
+                    'intro',
+                    'price',
+                    'price_sale',
+                    'total_student',
+                    'status',
+                    'is_free',
+                    'created_at',
+                    'deleted_at'
+                ])
+                ->with([
+                    'category:id,name'
+                ])
+                ->search($query)
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+
+            if ($trashedCourses->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy khóa học nào trong thùng rác');
             }
 
-            if ($course->chapters()->count() > 0) {
-                return $this->respondError('Khoá học đang chứa chương học, không thể xóa');
+            return $this->respondOk(
+                'Danh sách khóa học trong thùng rác của: ' . Auth::user()->name,
+                $trashedCourses
+            );
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function moveToTrash(DeleteCourseMultipleRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
             }
 
-            $course->delete();
+            $data = $request->validated();
 
-            return $this->respondOk('Xóa khoá học thành công');
+            $successCount = 0;
+            $errorMessages = [];
+
+            foreach ($data['ids'] as $courseId) {
+                $course = Course::query()->find($courseId);
+
+                if (!$course) {
+                    $errorMessages[] = "Không tìm thấy khoá học với ID {$courseId}";
+                    continue;
+                }
+
+                if ($course->user_id !== $user->id) {
+                    $errorMessages[] = "Bạn không phải là người tạo khóa học: {$course->name}";
+                    continue;
+                }
+
+                if ($course->chapters()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
+                    continue;
+                }
+
+                if ($course->courseUsers()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
+                    continue;
+                }
+
+                $course->delete();
+                $successCount++;
+            }
+
+            if ($successCount > 0) {
+                return $this->respondOk("Đã chuyển {$successCount} khóa học vào thùng rác");
+            } else {
+                return $this->respondOk('Không có khóa học nào được chuyển vào thùng rác', $errorMessages);
+            }
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function restore(RestoreCourseMultipleRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $data = $request->validated();
+            $ids = $data['ids'];
+
+            $coursesToRestore = Course::query()->withTrashed()
+                ->whereIn('id', $ids)
+                ->where('user_id', Auth::id())
+                ->get();
+
+            if ($coursesToRestore->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy khóa học nào để khôi phục');
+            }
+
+            foreach ($coursesToRestore as $course) {
+                $course->restore();
+            }
+
+            return $this->respondOk("Đã khôi phục " . count($coursesToRestore) . " khóa học thành công");
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
@@ -490,6 +596,7 @@ class CourseController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
     private function calculateProgress(array $completionStatus): float
     {
         $totalSteps = count($completionStatus);
@@ -723,7 +830,7 @@ class CourseController extends Controller
                 break;
             case Quiz::class:
                 $validate = $this->validateQuiz($lesson, $chapter);
-                $errors = array_merge($errors,  $validate["error"]);
+                $errors = array_merge($errors, $validate["error"]);
                 $pass = array_merge($pass, $validate["pass"]);
                 break;
             case Coding::class:

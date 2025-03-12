@@ -66,7 +66,40 @@
                                 </div>
                             </div>
                         </div>
-
+                        <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade"
+                            id="addChatPrivateModal" role="dialog" tabindex="-1">
+                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
+                                <div class="modal-content rounded-3 shadow-lg">
+                                    <div class="modal-header bg-primary text-white rounded-top p-3">
+                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
+                                            Thêm trò chuyện
+                                        </h5>
+                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
+                                            type="button">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body p-4 bg-light rounded-bottom">
+                                        <form id="createPrivateChatForm">
+                                            @csrf
+                                            <div class="form-group mb-3">
+                                                <label for="groupMembers" class="font-weight-bold">Nhập người muốn trò
+                                                    chuyện</label>
+                                                <select tabindex="-1" id="received" name="user_id">
+                                                    @foreach ($data['admins'] as $admin)
+                                                        <option value="{{ $admin->id }}">
+                                                            {{ $admin->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary w-100 py-2" type="submit">
+                                                Thêm
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
                                 title="Add Contact">
@@ -110,7 +143,8 @@
                                         title="New Message">
 
                                         <!-- Button trigger modal -->
-                                        <button type="button" class="btn btn-soft-success btn-sm shadow-none">
+                                        <button type="button" class="btn btn-soft-success btn-sm shadow-none"
+                                            data-toggle="modal" data-target="#addChatPrivateModal">
                                             <i class="ri-add-line align-bottom"></i>
                                         </button>
                                     </div>
@@ -120,6 +154,37 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list usersList">
+                                    @foreach ($data['channels'] as $channel)
+                                        @if ($channel->type == 'direct')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user private-button"
+                                                    data-private-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    @php
+                                                                        $otherUser = $channel->users
+                                                                            ->where('id', '<>', auth()->id())
+                                                                            ->first();
+                                                                    @endphp
+                                                                    <img src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
+                                                                        alt="" width="30px">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $otherUser->name ?? 'Người dùng không xác định' }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
                                 </ul>
                             </div>
 
@@ -141,28 +206,32 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list mb-0 conversationList">
+
                                     @foreach ($data['channels'] as $channel)
-                                        <li class="">
-                                            <a href="#" class="unread-msg-user group-button"
-                                                data-channel-id="{{ $channel->id }}">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                        <div class="avatar-xxs">
-                                                            <div class="avatar-title bg-light rounded-circle text-body">
-                                                                #
+                                        @if ($channel->type == 'group')
+                                            <li class="">
+                                                <a href="#" class="unread-msg-user group-button"
+                                                    data-group-id="{{ $channel->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                                <div
+                                                                    class="avatar-title bg-light rounded-circle text-body">
+                                                                    #
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div class="flex-grow-1 overflow-hidden">
+                                                            <p class="text-truncate mb-0">
+                                                                {{ $channel->name }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-truncate mb-0">
-                                                            {{ $channel->name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </li>
+                                                </a>
+                                            </li>
+                                        @endif
                                     @endforeach
-
                                 </ul>
                             </div>
                             <!-- End chat-message-list -->
@@ -202,16 +271,17 @@
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
 
-                                                            <img id="imageUser" src=""
-                                                                class="rounded-circle avatar-xs" alt="">
+                                                            <img src=""
+                                                                class="rounded-circle avatar-xs imageUser avatar"
+                                                                alt="">
                                                             <span class="user-status"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
                                                             <h5 class="text-truncate mb-0 fs-16">
-                                                                <a class="text-reset username name"></a>
+                                                                <a class="text-reset name nameUser"></a>
                                                             </h5>
                                                             <p class="text-truncate text-muted fs-14 mb-0 userStatus">
-                                                                <small class="memberCount"></small>
+                                                                <small id="memberCount"></small>
                                                             </p>
                                                             <!-- Modal chi tiết nhóm -->
                                                             <div class="offcanvas offcanvas-end border-0" tabindex="-1"
@@ -272,13 +342,12 @@
                                                                         <!--end col-->
                                                                     </div>
                                                                     <div class="p-3 text-center">
-                                                                        <img src="{{ asset('assets/images/users/multi-user.jpg') }}"
-                                                                            alt=""
-                                                                            class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                                                                        <img src="" alt=""
+                                                                            class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img imageUser avatar">
                                                                         <div class="mt-3">
                                                                             <h5 class="fs-16 mb-1"><a
                                                                                     href="javascript:void(0);"
-                                                                                    class="link-primary username name"></a>
+                                                                                    class="link-primary nameUser name"></a>
                                                                             </h5>
                                                                             <p class="text-muted"><i
                                                                                     class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online
@@ -339,8 +408,8 @@
                                                                     </div>
                                                                     <ul class="nav nav-tabs" id="myTab"
                                                                         role="tablist">
-                                                                        <div class="row w-100">
-                                                                            <li class="nav-item col-6"
+                                                                        <div class="row w-100" id="addClass">
+                                                                            <li class="nav-item col-6" id="OnetoOne"
                                                                                 role="presentation">
                                                                                 <button class="nav-link active"
                                                                                     id="members-tab" data-bs-toggle="tab"
@@ -351,7 +420,7 @@
                                                                                     Danh sách thành viên
                                                                                 </button>
                                                                             </li>
-                                                                            <li class="nav-item col-6"
+                                                                            <li class="nav-item col-6" id="filetofile"
                                                                                 role="presentation">
                                                                                 <button class="nav-link" id="files-tab"
                                                                                     data-bs-toggle="tab"
@@ -759,11 +828,96 @@
                 placeholder: "Chọn thành viên thêm vào nhóm",
                 allowClear: true,
                 dropdownParent: $('#addGroupModal'),
+                // dropdownParent: $('#addChatPrivateModal'),
+            });
+        });
+        $(document).ready(function() {
+            $('#received').select2({
+                placeholder: "Chọn thành viên thêm vào nhóm",
+                allowClear: true,
+                dropdownParent: $('#addChatPrivateModal'),
             });
         });
     </script>
     <script>
+        // Tạo chat đơn
         var currentConversationId = null;
+        $(document).ready(function() {
+            $('#createPrivateChatForm').submit(function(event) {
+                event.preventDefault();
+
+                var formData = $(this).serialize(); // Lấy dữ liệu từ form
+                $.ajax({
+                    url: "{{ route('admin.chats.createOnetoOne') }}",
+                    method: "POST",
+                    data: formData,
+                    success: function(response) {
+                        if (response.status == 'success') {
+                            // Cập nhật lại dữ liệu nhóm và admin trên giao diện
+                            $('#usersList').html(response.data.channels);
+                            alert(response.message); // Hiển thị thông báo thành công
+                            window.location.href = "{{ route('admin.chats.index') }}";
+                        } else {
+                            alert(response.message); // Hiển thị thông báo lỗi
+                        }
+                    },
+                    error: function() {
+                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                    }
+                });
+            });
+
+            $('.usersList a').click(function(event) {
+                event.preventDefault(); // Ngừng hành động mặc định của liên kết
+
+                var channelId = $(this).data('private-id'); // Lấy ID của nhóm chat
+
+                // Gửi yêu cầu AJAX để lấy thông tin nhóm
+                $.ajax({
+                    url: "{{ route('admin.chats.getUserInfo') }}", // Endpoint API để lấy thông tin nhóm
+                    method: 'GET',
+                    data: {
+                        id: channelId
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        if (response) {
+
+                            // Cập nhật tên nhóm và số thành viên
+                            $('.nameUser').text(response.data.nameUser);
+                            $('.imageUser').attr('src', response.data.avatarUser);
+                            $('#memberCount').empty();
+                            $('#membersList').empty();
+                            $('#OnetoOne').hide();
+                            $('#filetofile').removeClass('col-6');
+                            $('#filetofile').addClass('col-12');
+                            // $('#imageUser').attr('src', response.data.avatar);
+                            // $('.getID').attr('data-conversation-id', response.data.channelId);
+                            loadMessages(response.data.direct.channelId);
+                            loadSentFiles(response.data.direct.channelId);
+                        } else {
+                            alert('Không thể lấy thông tin nhóm');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
+                    }
+                });
+            });
+            // Khi người dùng chọn một nhóm
+            $('.private-button').click(function() {
+                currentConversationId = $(this).data('private-id'); // Lấy ID nhóm đã chọn
+                console.log('Đã chọn nhóm với ID:', currentConversationId);
+                window.Echo.private('conversation.' + currentConversationId)
+                    .listen('PrivateMessageSent', function(event) {
+                        $('#messagesList').append(renderMessage(event));
+                        scrollToBottom();
+                        // alert('Đã nhận tin nhắn mới');
+                    });
+            });
+        });
+
+        // tạo chat nhóm
         $(document).ready(function() {
             $('#createGroupChatForm').submit(function(event) {
                 event.preventDefault();
@@ -792,7 +946,7 @@
             $('.conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
-                var channelId = $(this).data('channel-id'); // Lấy ID của nhóm chat
+                var channelId = $(this).data('group-id'); // Lấy ID của nhóm chat
 
                 // Gửi yêu cầu AJAX để lấy thông tin nhóm
                 $.ajax({
@@ -807,10 +961,12 @@
 
                             // Cập nhật tên nhóm và số thành viên
                             $('.name').text(response.data.name);
-                            $('.memberCount').text(response.data.memberCount);
-                            $('#nameUser').text(response.data.direct);
-                            $('#imageUser').attr('src', response.data.avatar);
+                            $('#memberCount').text(response.data.memberCount);
+                            $('.avatar').attr('src', response.data.avatar);
                             $('.getID').attr('data-conversation-id', response.data.channelId);
+                            $('#OnetoOne').show();
+                            $('#filetofile').removeClass('col-12');
+                            $('#filetofile').addClass('col-6');
                             loadMessages(response.data.group.id);
                             loadSentFiles(response.data.group.id);
                             let membersHtml = '';
@@ -848,7 +1004,7 @@
             });
             // Khi người dùng chọn một nhóm
             $('.group-button').click(function() {
-                currentConversationId = $(this).data('channel-id'); // Lấy ID nhóm đã chọn
+                currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
                 console.log('Đã chọn nhóm với ID:', currentConversationId);
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
@@ -935,9 +1091,8 @@
                             if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
                                 $('#fileInput').val(''); // Reset input file
-                                $('#imagePreviewContainer')
-                                    .hide(); // Ẩn preview ảnh sau khi gửi
-
+                                $('#previewContainer')
+                                    .hide(); // Ẩn preview ảnh sau khi gửi 
                                 $('#messagesList').append(renderMessage(response));
                                 scrollToBottom();
                             }
@@ -979,7 +1134,10 @@
 
                                 if (fileType.startsWith('image')) {
                                     mediaPreview = `
-                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;position:relative">
+                                         <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                            <i class='bx bx-download'></i>
+                                        </a> 
                                         <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
                                     </div>`;
                                 } else if (fileType.startsWith('video')) {
@@ -1057,12 +1215,16 @@
 
                     if (response.files.length === 0) {
                         $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        $('#documentFilesList').html('<p>Chưa có file nào được gửi</p>');
+                        $('#mediaFilesList').html('<p>Chưa có file nào được gửi</p>')
                         return;
                     }
                     let visibleImages = 6; // Số ảnh hiển thị ban đầu
                     let allFiles = response.files; // Lưu toàn bộ danh sách ảnh
                     function renderImages() {
                         $('#sentFilesList').html(''); // Xóa nội dung cũ
+                        $('#documentFilesList').html('');
+                        $('#mediaFilesList').html('')
                         let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
                         const mediaHtml = [];
                         const documentHtml = [];
@@ -1077,8 +1239,11 @@
 
                             if (fileType.startsWith('image')) {
                                 mediaPreview = `
-                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; display: flex; align-items: center; justify-content: center; position:relative;">
                                         <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                            <i class='bx bx-download'></i>
+                                        </a> 
                                     </div>`;
                                 mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
                             } else if (fileType.startsWith('video')) {
