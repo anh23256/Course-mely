@@ -110,11 +110,15 @@
                                         <span class="text-danger mt-2">{{ $message }}</span>
                                         @enderror
                                     </div>
-                                    <div class="mt-3">
-                                        <button type="submit" class="btn btn-primary">Thêm mới</button>
-                                        <button type="reset" class="btn btn-secondary">Nhập lại</button>
-                                        <a href="{{ route('admin.qa-systems.index') }}" class="btn btn-dark">
-                                            Danh sách
+                                    <div class="mt-4 action-buttons">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-1"></i> Lưu câu hỏi
+                                        </button>
+                                        <button type="reset" class="btn btn-light">
+                                            <i class="ri-refresh-line me-1"></i> Nhập lại
+                                        </button>
+                                        <a href="{{ route('admin.qa-systems.index') }}" class="btn btn-secondary">
+                                            <i class="ri-arrow-left-line me-1"></i> Quay lại
                                         </a>
                                     </div>
                                 </div>

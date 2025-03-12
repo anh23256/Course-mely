@@ -437,6 +437,11 @@ class CourseController extends Controller
                     continue;
                 }
 
+                if ($course->courseUsers()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
+                    continue;
+                }
+
                 $course->delete();
                 $successCount++;
             }

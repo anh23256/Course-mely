@@ -3,14 +3,15 @@
 @section('content')
     <div class="profile-foreground position-relative mx-n4 mt-n4">
         <div class="profile-wid-bg">
-            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img" />
+            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img"/>
         </div>
     </div>
     <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
         <div class="row g-4">
             <div class="col-auto">
                 <div class="avatar-lg">
-                    <img src="{{ Auth::user()->avatar ?? '' }}" alt="user-img" class="img-thumbnail rounded-circle" />
+                    <img src="{{ Auth::user()->avatar ?? asset('assets/images/default-avatar.png') }}" alt="user-img"
+                         class="img-thumbnail rounded-circle"/>
                 </div>
             </div>
             <!--end col-->
@@ -57,15 +58,98 @@
                         <div class="row">
                             <div>
                                 <div class="card">
-                                    <div class="card-body">
-                                        <div class="search-box ms-2">
-                                            <input type="text" name="search_full" id="searchFull"
-                                                class="form-control search" placeholder="Tìm kiếm theo ngày và mô tả..."
-                                                data-search value="{{ request()->input('search_full') ?? '' }}">
-                                            <button id="search-full" class="ri-search-line search-icon m-0 p-0 border-0"
-                                                style="background: none;"></button>
+                                    <div class="card-header bg-light py-3">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h5 class="mb-0">Lịch sử giao dịch</h5>
+                                            <div class="search-box position-relative">
+                                                <input type="text" name="search_full" id="searchFull"
+                                                       class="form-control search rounded-pill border-0 shadow-sm px-4 py-2"
+                                                       placeholder="Tìm kiếm theo ngày và mô tả..."
+                                                       value="{{ request()->input('search_full') ?? '' }}">
+                                                <i class="ri-search-line position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <div class="card-body border-bottom pb-0">
+                                        <div class="row g-3">
+                                            <div class="col-sm-6 col-md-3">
+                                                <div class="card bg-success bg-opacity-10 border-0">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <div
+                                                                    class="avatar-sm rounded bg-success bg-opacity-25 p-2">
+                                                                    <i class="ri-arrow-up-circle-line fs-3 text-success"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                                <h5 class="mb-1">{{ number_format($totalIncome ?? 0) }}
+                                                                    VND</h5>
+                                                                <p class="mb-0 text-muted fs-12">Tổng thu</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-md-3">
+                                                <div class="card bg-danger bg-opacity-10 border-0">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <div
+                                                                    class="avatar-sm rounded bg-danger bg-opacity-25 p-2">
+                                                                    <i class="ri-arrow-down-circle-line fs-3 text-danger"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                                <h5 class="mb-1">{{ number_format($totalExpense ?? 0) }}
+                                                                    VND</h5>
+                                                                <p class="mb-0 text-muted fs-12">Tổng chi</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-md-3">
+                                                <div class="card bg-info bg-opacity-10 border-0">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <div
+                                                                    class="avatar-sm rounded bg-info bg-opacity-25 p-2">
+                                                                    <i class="ri-exchange-line fs-3 text-info"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                                <h5 class="mb-1">{{ $totalTransactions ?? 0 }}</h5>
+                                                                <p class="mb-0 text-muted fs-12">Tổng giao dịch</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-md-3">
+                                                <div class="card bg-primary bg-opacity-10 border-0">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <div
+                                                                    class="avatar-sm rounded bg-primary bg-opacity-25 p-2">
+                                                                    <i class="ri-calendar-line fs-3 text-primary"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                                <h5 class="mb-1">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</h5>
+                                                                <p class="mb-0 text-muted fs-12">Ngày hiện tại</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="card-body" id="transaction-container">
                                         @php
                                             $currentDay = null;
@@ -112,9 +196,9 @@
                                                                     </p>
                                                                 </div>
                                                                 <div class="col-1 text-center">
-                                                                    <a
-                                                                        href="{{ route('admin.wallets.show', $systemFund->id) }}">
-                                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                                    <a href="{{ route('admin.wallets.show', $systemFund->id) }}">
+                                                                        <button
+                                                                            class="btn btn-sm btn-info edit-item-btn">
                                                                             <span class="ri-eye-line"></span>
                                                                         </button>
                                                                     </a>
@@ -128,8 +212,9 @@
 
                                         <div class="col-12 col-md-12">
                                             <div class="d-flex mt-4 justify-content-center">
-                                                <span class="text-primary text-decoration-underline" id="load-more">Xem
-                                                    thêm</span>
+                                                <button id="load-more" class="btn btn-sm btn-primary px-4 rounded-pill">
+                                                    <i class="ri-refresh-line me-1"></i> Xem thêm
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -150,21 +235,28 @@
 
 @push('page-scripts')
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             let limitPage = 10;
 
-            $(document).on('click', '#load-more', function() {
+            $(document).on('click', '#load-more', function () {
                 limitPage += 10;
+                $(this).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang tải...');
 
                 handleAjax({
                     page: limitPage
                 });
             });
 
-            $(document).on('change', '#searchFull', function() {
-                handleAjax({
-                    search: $(this).val()
-                })
+            let searchTimeout;
+            $(document).on('input', '#searchFull', function () {
+                clearTimeout(searchTimeout);
+                const searchValue = $(this).val();
+
+                searchTimeout = setTimeout(function () {
+                    handleAjax({
+                        search: searchValue
+                    });
+                }, 500);
             });
         });
 
@@ -174,18 +266,23 @@
                 type: "GET",
                 data: data,
                 dataType: "json",
-                beforeSend: function() {
-                    $("#load-more").text("Đang tải...");
-                },
-                success: function(response) {
-                    $("#transaction-container").html(response.systemFunds);
-
-                    if (data.search) {
-                        $("#load-more").hide();
-                    } else {
-                        $("#load-more").show();
+                beforeSend: function () {
+                    if (!data.search) {
+                        $("#load-more").html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang tải...');
                     }
                 },
+                success: function (response) {
+                    $("#transaction-container").html(response.systemFunds);
+
+                    if (data.search && data.search.length > 0) {
+                        $("#load-more").hide();
+                    } else {
+                        $("#load-more").show().html('<i class="ri-refresh-line me-1"></i> Xem thêm');
+                    }
+                },
+                error: function () {
+                    $("#load-more").html('<i class="ri-refresh-line me-1"></i> Thử lại');
+                }
             });
         }
     </script>

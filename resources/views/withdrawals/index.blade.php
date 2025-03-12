@@ -1,6 +1,103 @@
 @extends('layouts.app')
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        #imagePreview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1050;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #previewImage {
+            max-width: 90%;
+            max-height: 90%;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .img-preview {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .img-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .stats-card {
+            transition: all 0.3s;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            height: 200px;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stats-card .card-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #495057;
+        }
+
+        .stats-card .card-text {
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .stats-card .card-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stats-card.total-card {
+            background: linear-gradient(135deg, #5b73e8, #44c4fa);
+        }
+
+        .stats-card.pending-card {
+            background: linear-gradient(135deg, #ffb822, #ffd980);
+        }
+
+        .stats-card.success-card {
+            background: linear-gradient(135deg, #34c38f, #84d9b9);
+        }
+
+        .stats-card.failed-card {
+            background: linear-gradient(135deg, #f46a6a, #f7a7a7);
+        }
+
+        .stats-card.total-card .card-title,
+        .stats-card.pending-card .card-title,
+        .stats-card.success-card .card-title,
+        .stats-card.failed-card .card-title,
+        .stats-card.total-card .card-text,
+        .stats-card.pending-card .card-text,
+        .stats-card.success-card .card-text,
+        .stats-card.failed-card .card-text,
+        .stats-card.total-card .card-icon,
+        .stats-card.pending-card .card-icon,
+        .stats-card.success-card .card-icon,
+        .stats-card.failed-card .card-icon {
+            color: white;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -25,36 +122,40 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Tổng số yêu cầu rút tiền</h5>
-                        <p class="card-text fs-4">{{ $countWithdrawals->total_withdrawals ?? 0 }}</p>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card total-card">
+                    <div class="card-body text-center">
+                        <i class="ri-money-dollar-circle-line card-icon"></i>
+                        <h5 class="card-title">Tổng số yêu cầu</h5>
+                        <p class="card-text display-6">{{ number_format($countWithdrawals->total_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền đang chờ duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $countWithdrawals->completed_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card pending-card">
+                    <div class="card-body text-center">
+                        <i class="ri-time-line card-icon"></i>
+                        <h5 class="card-title">Đang chờ duyệt</h5>
+                        <p class="card-text display-6">{{ number_format($countWithdrawals->pending_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thành công</h5>
-                        <p class="card-text fs-4 text-warning">{{ $countWithdrawals->pending_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card success-card">
+                    <div class="card-body text-center">
+                        <i class="ri-check-double-line card-icon"></i>
+                        <h5 class="card-title">Thành công</h5>
+                        <p class="card-text display-6">{{ number_format($countWithdrawals->completed_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thất bại</h5>
-                        <p class="card-text fs-4 text-danger">{{ $countWithdrawals->failed_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card failed-card">
+                    <div class="card-body text-center">
+                        <i class="ri-close-circle-line card-icon"></i>
+                        <h5 class="card-title">Thất bại</h5>
+                        <p class="card-text display-6">{{ number_format($countWithdrawals->failed_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
@@ -235,10 +336,9 @@
                                                 </td>
                                                 <td>{{ number_format($withdrawal->amount ?? 0) }} VND</td>
                                                 <td>
-                                                    <img id="thumbnail-{{ $withdrawal->id }}"
-                                                        class="img-thumbnail img-preview" width="50" height="50"
-                                                        src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
-                                                        alt="QR Code {{ $withdrawal->id }}" style="cursor: pointer;" />
+                                                    <img id="thumbnail-{{ $withdrawal->id }}" class="img-thumbnail img-preview" width="50" height="50"
+                                                         src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
+                                                         alt="QR Code {{ $withdrawal->id }}" />
                                                 </td>
                                                 <td>
                                                     @if ($withdrawal->status === 'Hoàn thành')

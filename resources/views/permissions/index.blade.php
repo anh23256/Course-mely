@@ -26,40 +26,51 @@
 
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">{{ $subTitle ?? '' }}</h4>
+                <div class="card permission-card">
+                    <div class="card-header d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-add-line me-1"></i> Thêm quyền mới
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newPermissionForm" aria-expanded="false">
+                            <i class="ri-arrow-down-s-line"></i>
+                        </button>
                     </div>
-                    <div class="card-body">
-                        <form action="{{ route('admin.permissions.store') }}" method="POST" class="row g-3">
-                            @csrf
-                            <div class="col-md-12">
-                                <label class="form-label">Tên quyền</label>
-                                <input type="text" name="name" class="form-control mb-2"
-                                    placeholder="Nhập tên quyền..." value="{{ old('name') }}">
+                    <div class="collapse show" id="newPermissionForm">
+                        <div class="card-body">
+                            <form action="{{ route('admin.permissions.store') }}" method="POST" class="row g-3">
+                                @csrf
+                                <div class="col-md-6">
+                                    <label class="form-label">Tên quyền</label>
+                                    <input type="text" name="name" class="form-control mb-2"
+                                           placeholder="Nhập tên quyền..." value="{{ old('name') }}">
 
-                                @if ($errors->has('name'))
-                                    <span class="text-danger">{{ $errors->first('name') }}</span>
-                                @endif
-
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="inputEmail4" class="form-label">Mô tả</label>
-                                <input type="text" class="form-control mb-2" placeholder="Nhập mô tả..."
-                                    value="{{ old('description') }}" name="description">
-
-                                @if ($errors->has('description'))
-                                    <span class="text-danger">{{ $errors->first('description') }}</span>
-                                @endif
-                            </div>
-                            <div class="col-12">
-                                <div class="">
-                                    <button type="submit" class="btn btn-primary">Thêm mới</button>
-                                    <button type="reset" class="btn btn-secondary ms-2">Nhập lại</button>
+                                    @if ($errors->has('name'))
+                                        <span class="text-danger">{{ $errors->first('name') }}</span>
+                                    @endif
                                 </div>
-                            </div>
-                        </form>
+
+                                <div class="col-md-6">
+                                    <label for="inputEmail4" class="form-label">Mô tả</label>
+                                    <input type="text" class="form-control mb-2" placeholder="Nhập mô tả..."
+                                           value="{{ old('description') }}" name="description">
+
+                                    @if ($errors->has('description'))
+                                        <span class="text-danger">{{ $errors->first('description') }}</span>
+                                    @endif
+                                </div>
+
+                                <div class="col-12 d-flex justify-content-end">
+                                    <div class="">
+                                        <button type="reset" class="btn btn-light me-2">
+                                            <i class="ri-refresh-line me-1"></i> Nhập lại
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-1"></i> Thêm mới
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

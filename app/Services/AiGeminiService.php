@@ -25,8 +25,6 @@ class AiGeminiService
 
             return $result->text();
         } catch (\Exception $e) {
-            $this->logError($e, $title);
-
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lagi sau');
         }
     }
