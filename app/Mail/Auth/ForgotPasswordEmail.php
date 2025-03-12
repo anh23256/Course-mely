@@ -12,13 +12,17 @@ use Illuminate\Queue\SerializesModels;
 class ForgotPasswordEmail extends Mailable
 {
     use Queueable, SerializesModels;
+
     public string $verificationUrl;
+    public string $user;
+
     /**
      * Create a new message instance.
      */
-    public function __construct(string $verificationUrl)
+    public function __construct(string $verificationUrl, $user)
     {
         $this->verificationUrl = $verificationUrl;
+        $this->user = $user;
     }
 
     /**
@@ -38,7 +42,10 @@ class ForgotPasswordEmail extends Mailable
     {
         return new Content(
             view: 'emails.auth.forgot-password',
-            with: ['verificationUrl' => $this->verificationUrl],
+            with: [
+                'verificationUrl' => $this->verificationUrl,
+                'user' => $this->user
+            ],
         );
     }
 

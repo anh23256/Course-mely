@@ -264,6 +264,10 @@ class WalletController extends Controller
                 return $this->respondNotFound('Không tìm thấy giao dịch');
             }
 
+            if ($withdrawalRequest->status === 'Hoàn thành') {
+                return $this->respondError('Yêu cầu đã được xử lý, không thể xác nhận lại');
+            }
+
             $status = $data['is_received'] == 1 ? 'Chờ xác nhận lại' : 'Hoàn thành';
 
             $withdrawalRequest->update([

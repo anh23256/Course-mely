@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
-use App\Models\Follow;
+use App\Models\Course;
+use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
