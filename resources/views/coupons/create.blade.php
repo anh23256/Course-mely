@@ -79,9 +79,9 @@
                                 <div class="d-flex">
                                     <div class="mb-3 col-3 pe-3">
                                         <label class="form-label">Số lượng sử dụng</label>
-                                        <input type="int" name="used_count" class="form-control"
-                                            value="{{ old('used_count') }}" placeholder="Nhập số lượng sử dụng">
-                                        @error('used_count')
+                                        <input type="int" name="max_usage" class="form-control"
+                                            value="{{ old('max_usage') }}" placeholder="Nhập số lượng sử dụng">
+                                        @error('max_usage')
                                             <div class="text-danger mt-3">{{ $message }}</div>
                                         @enderror
                                     </div>

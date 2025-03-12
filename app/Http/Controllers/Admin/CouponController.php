@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\CouponCodeCreated;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -74,18 +75,9 @@ class CouponController extends Controller
             DB::beginTransaction();
             $data = $request->validated();
 
-            $data['max_usage'] = empty($data['max_usage']) ? NULL : $data['max_usage'];
-            $data['discount_max_value'] = empty($data['discount_max_value']) ? 0 : $data['discount_max_value'];
+            $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
 
             $coupon = Coupon::create($data);
-
-            $roleUser = ['member', 'instructor'];
-
-            $users = User::whereHas('roles', function ($query) use ($roleUser) {
-                $query->whereIn('name', $roleUser);
-            })->get();
-
-            Notification::send($users, new CouponCodeCreated($coupon));
 
             DB::commit();
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
@@ -113,10 +105,10 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $coupon = Coupon::findOrFail($id);
-            $coupon->update($request->validated());
-            $user = User::where('email', 'ducmely@gmail.com')->first();
-            $admin = User::where('email', 'quaixe121811@gmail.com')->first();
-            $user->notify(new CouponCodeCreated($coupon,$admin));
+            $data = $request->validated();
+            $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
+            $coupon->update($data);
+
             DB::commit();
             return redirect()->route('admin.coupons.edit', $coupon->id)->with('success', 'Cập nhật thành công');
         } catch (\Exception $e) {
@@ -177,22 +169,23 @@ class CouponController extends Controller
 
         return $query;
     }
-    public function suggestionCounpoun(Request $request){
+    public function suggestionCounpoun(Request $request)
+    {
         try {
             $suggestCounpons = [];
 
             $counpon = $request->input('code', 'SALE');
 
-            if(Coupon::where('code', $counpon)->exists()){
-                for ($i=1; $i <= 3; $i++) { 
+            if (Coupon::where('code', $counpon)->exists()) {
+                for ($i = 1; $i <= 3; $i++) {
                     do {
                         $counponCode = '';
-                        $counponCode = Str::upper($counpon.substr(str_replace('-', '', Str::uuid()), 0, 6));
+                        $counponCode = Str::upper($counpon . substr(str_replace('-', '', Str::uuid()), 0, 6));
                     } while (Coupon::where('code', $counponCode)->exists());
-    
+
                     $suggestCounpons[] = $counponCode;
                 }
-    
+
                 return response()->json($suggestCounpons);
             }
 

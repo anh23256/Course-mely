@@ -482,3 +482,4 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
 
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
+Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
