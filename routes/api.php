@@ -4,7 +4,6 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
-use App\Http\Controllers\API\Common\CommentController;
 use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
@@ -397,7 +396,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/get-message/{conversationId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetMessage']);
             Route::post('/send-message', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiSendMessage']);
         });
-        
+
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
         ->group(function () {
@@ -449,7 +448,7 @@ Route::prefix('blogs')
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
-    Route::prefix('blogs')
+Route::prefix('blogs')
     ->group(function () {
         Route::prefix('comments')
             ->group(function () {

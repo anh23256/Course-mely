@@ -18,7 +18,7 @@ class FilterController extends Controller
     {
         try {
             $query = Course::query();
-            
+
             $sortBy = $request->sort_by ?? '';
 
             if ($request->has('categories') && !empty($request->categories) && is_array($request->categories)) {
@@ -93,9 +93,11 @@ class FilterController extends Controller
                     'courses.is_free',
                     'courses.level',
                     'courses.total_student',
+                    'courses.status',
                     DB::raw('(SELECT ROUND(AVG(ratings.rate), 1) FROM ratings WHERE ratings.course_id = courses.id) as total_rating'),
                     DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as total_lessons')
                 ])
+                ->where('status', 'approved')
                 ->whereIn('courses.id', $courseIds)->with('user:id,name');
 
             switch ($sortBy) {
