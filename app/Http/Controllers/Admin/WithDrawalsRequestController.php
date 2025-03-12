@@ -35,9 +35,9 @@ class WithDrawalsRequestController extends Controller
             $queryWithdrawals = WithdrawalRequest::query()->latest('id');
             $countWithdrawals = WithdrawalRequest::query()->selectRaw(
                 'count(id) as total_withdrawals,
-                sum(status = "completed") as completed_withdrawals,
-                sum(status = "pending") as pending_withdrawals,
-                sum(status = "failed") as failed_withdrawals'
+                sum(status = "Hoàn thành") as completed_withdrawals,
+                sum(status = "Đang xử lý") as pending_withdrawals,
+                sum(status = "Từ chối") as failed_withdrawals'
             )->first();
 
             if ($request->hasAny(['status', 'request_date', 'completed_date', 'bank_name', 'amount_min', 'amount_max', 'account_number', 'account_holder']))

@@ -127,8 +127,9 @@
                                         <div class="text-danger mt-3">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <button type="submit" class="btn btn-primary waves-effect waves-light">Thêm
-                                    mới</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-1"></i> Lưu mã giảm giá
+                                </button>
                                 <button type="reset" class="btn btn-info waves-effect waves-light"
                                     onclick="resetFilters()">Reset
                                 </button>
@@ -169,7 +170,7 @@
                     $("#discount_max_value_field").hide();
                 } else if (discountType === "percentage"){
                     $("#discount_max_value_field").show();
-                    $(".discount-fields").show(); 
+                    $(".discount-fields").show();
                 } else {
                     $(".discount-fields").hide();
                     $("#discount_max_value_field").hide();
