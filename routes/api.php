@@ -86,6 +86,8 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
+Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
@@ -481,4 +483,6 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
 
+
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
+

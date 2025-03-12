@@ -130,7 +130,7 @@
                                                 <td class="id">{{ $comment->total_reactions }}</td>
 
                                                 <td>
-                                                    <button class="btn btn-sm btn-danger"
+                                                    <button class="btn btn-sm btn-primary"
                                                         onclick="loadReplies({{ $comment->id }}, '{{ addslashes($comment->content) }}')"
                                                         data-bs-toggle="modal" data-bs-target="#replyModal"> Xem bình luận
                                                     </button>
