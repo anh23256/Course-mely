@@ -233,4 +233,5 @@ class ApprovalInstructorController extends Controller
 
         return $query;
     }
+
 }
