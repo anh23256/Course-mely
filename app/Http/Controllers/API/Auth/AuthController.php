@@ -255,4 +255,34 @@ class AuthController extends Controller
             return $this->respondServerError();
         }
     }
+
+    public function getUserWithToken()
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy người dùng');
+            }
+
+            $role = $user->roles->first()->name;
+
+            $response = [
+                'user' => [
+                    'id' => $user->id,
+                    'code' => $user->code,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ],
+                'role' => $role
+            ];
+
+            return $this->respondOk('Thông tin người dùng: ' . $user->name, $response);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
 }

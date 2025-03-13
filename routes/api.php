@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
+        Route::get('get-user-with-token', [AuthController::class, 'getUserWithToken']);
         Route::post('logout', [AuthController::class, 'logout']);
     });
     Route::prefix('instructor')->as('instructor.')->group(function () {
