@@ -24,6 +24,10 @@ class UpdateBankingInfoRequest extends BaseFormRequest
     {
         return [
             'id' => 'required|string',
+            'name' => 'required|string',
+            'bin' => 'required|numeric',
+            'short_name' => 'nullable|string',
+            'logo' => 'nullable|string',
             'account_no' => 'required|numeric',
             'account_name' => [
                 'required',
@@ -40,8 +44,7 @@ class UpdateBankingInfoRequest extends BaseFormRequest
                     }
                 }
             ],
-            'acq_id' => 'required',
-            'bank_name' => 'required|string',
+            'is_default' => 'nullable|boolean',
         ];
     }
 
@@ -75,16 +78,18 @@ class UpdateBankingInfoRequest extends BaseFormRequest
         return [
             'id.required' => 'ID ngân hàng không được để trống',
 
+            'name.required' => 'Tên ngân hàng không được để trống',
+            'name.string' => 'Tên ngân hàng phải là chuỗi ký tự',
+
+            'bin.required' => 'Mã ngân hàng không được để trống',
+
             'account_no.required' => 'Số tài khoản không được để trống',
             'account_no.numeric' => 'Số tài khoản phải là số',
 
             'account_name.required' => 'Tên tài khoản không được để trống',
             'account_name.string' => 'Tên tài khoản phải là chuỗi ký tự',
 
-            'acq_id.required' => 'Mã ngân hàng không được để trống',
-
-            'bank_name.required' => 'Tên ngân hàng không được để trống',
-            'bank_name.string' => 'Tên ngân hàng phải là chuỗi ký tự',
+            'is_default.boolean' => 'Trạng thái mặc định phải là giá trị boolean',
         ];
     }
 }

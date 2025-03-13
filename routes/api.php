@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
         Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
         Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::put('/set-default', [UserController::class, 'setDefaultBankingInfo']);
         Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================
