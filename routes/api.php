@@ -486,3 +486,5 @@ Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getV
 
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
 
+Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
+

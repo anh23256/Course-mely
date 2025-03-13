@@ -130,6 +130,7 @@ class CourseController extends Controller
         try {
 
             return Excel::download(new CoursesExport, 'Courses.xlsx');
+            
         } catch (\Exception $e) {
 
             $this->logError($e);
