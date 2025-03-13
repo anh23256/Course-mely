@@ -32,7 +32,7 @@ class UpdateCouponRequest extends FormRequest
             'discount_max_value' => 'nullable|numeric|min:0',
             'start_date' => 'required|date',
             'expire_date' => 'required|date|after:start_date',
-            'max_usage' => 'required|integer',
+            'max_usage' => 'nullable|integer',
             'status' => 'boolean',
         ];
     }

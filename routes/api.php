@@ -96,6 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
+        Route::get('get-user-with-token', [AuthController::class, 'getUserWithToken']);
         Route::post('logout', [AuthController::class, 'logout']);
     });
     Route::prefix('instructor')->as('instructor.')->group(function () {
@@ -485,6 +486,7 @@ Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getV
 
 
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
+Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
