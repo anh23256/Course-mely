@@ -93,7 +93,7 @@ class GoogleController extends Controller
 
             $this->logError($e, $request->all());
 
-            return redirect()->away('http://localhost:3000/notfound');
+            return redirect()->away('http://localhost:3000/not-found');
         }
     }
 }
