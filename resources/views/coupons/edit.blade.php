@@ -58,8 +58,9 @@
                                 <div class="d-flex">
                                     <div class="mb-3 col-6 pe-3">
                                         <label class="form-label">Mã giảm giá</label>
-                                        <input type="text" name="code" class="form-control"
+                                        <input type="text" name="code" class="form-control" id="couponCode"
                                             value="{{ $coupon->code }}" placeholder="Nhập mã giảm giá">
+                                        <div id="suggestCode" class="mt-2" style="display: none;"></div>
                                     </div>
                                     <div class="mb-3 col-6 ">
                                         <label class="form-label">Loại giảm giá</label>
@@ -76,8 +77,8 @@
                                 <div class="d-flex">
                                     <div class="mb-3 col-3 pe-3">
                                         <label class="form-label">Số lượng sử dụng</label>
-                                        <input type="int" name="used_count" class="form-control"
-                                            value="{{ $coupon->used_count }}" placeholder="Nhập số lượng sử dụng">
+                                        <input type="int" name="max_usage" class="form-control"
+                                            value="{{ $coupon->max_usage }}" placeholder="Nhập số lượng sử dụng">
                                     </div>
                                     <div class="mb-3 col-3 pe-3">
                                         <label class="form-label">Trạng thái</label>
@@ -163,6 +164,43 @@
                     // Nếu loại giảm giá là fixed, đảm bảo giá trị input discount_max_value là 0
                     $("#discount_max_value_field input").val(0);
                 }
+            });
+
+            $('#suggestCode').hide();
+
+            $(document).on('change', '#couponCode', function() {
+                let data = $(this).val();
+
+                $.ajax({
+                    url: "{{ route('admin.coupons.suggestCode') }}",
+                    type: 'GET',
+                    data: {
+                        code: data
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response && response.length > 0) {
+                            let suggestionsHtml =
+                                '<div class="suggestion-container mt-2">Gợi ý: ';
+                            response.forEach(function(code) {
+                                suggestionsHtml += `<span class="suggestion-item p-2 text-primary" 
+                                style="font-size: 0.8em !important; cursor: pointer;">
+                                ${code}
+                            </span>`;
+                            });
+                            suggestionsHtml += '</div>';
+
+                            $('#suggestCode').html(suggestionsHtml).show();
+                        } else {
+                            $('#suggestCode').hide();
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '.suggestion-item', function() {
+                $('#couponCode').val($(this).text().trim());
+                $('#suggestCode').hide();
             });
         });
     </script>

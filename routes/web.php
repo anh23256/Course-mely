@@ -57,6 +57,8 @@ Route::get('buyCourse', function () {
 Route::get('forgot-password', function () {
     return view('emails.auth.forgot-password');
 });
+
+
 Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {
@@ -201,6 +203,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
+            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');

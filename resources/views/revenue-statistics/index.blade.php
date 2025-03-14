@@ -243,7 +243,7 @@
                                                                     </h5>
                                                                     <span class="text-muted">
                                                                         Tham gia
-                                                                        {{ $topInstructor->created_at->format('d/m/Y') ?? '' }}
+                                                                        {{ \Carbon\Carbon::parse($topInstructor->created_at)->format('d/m/Y') ?? '' }}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -319,7 +319,7 @@
                                                                             class="text-reset">{{ \Illuminate\Support\Str::limit($topCourse->name, 20) }}</a>
                                                                     </h5>
                                                                     <span class="text-muted">
-                                                                        {{ $topCourse->created_at->format('d/m/Y') }}
+                                                                        {{ \Carbon\Carbon::parse($topCourse->created_at)->format('d/m/Y') }}
                                                                     </span>
                                                                 </div>
                                                             </div>

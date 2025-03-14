@@ -389,6 +389,7 @@ class ChatController extends Controller
             $query = Message::query()
                 ->where('conversation_id', $conversationId)
                 ->with([
+                    'parent.sender:id,name,avatar',
                     'sender:id,name,avatar'
                 ])
                 ->orderBy('created_at', 'asc')
@@ -444,7 +445,7 @@ class ChatController extends Controller
             $message = Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => Auth::id(),
-//                'parent_id' => $data['parent_id'] ?? null,
+                'parent_id' => $data['parent_id'] ?? null,
                 'content' => $data['content'] ?? null,
                 'type' => $data['type'],
                 'meta_data' => $metaData,

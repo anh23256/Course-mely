@@ -41,13 +41,13 @@ class RevenueStatisticController extends Controller
             })
             ->count();
 
-        $queryTopInstructors = User::query()
+        $queryTopInstructors = DB::table('users')
             ->join('courses', 'users.id', '=', 'courses.user_id')
             ->join('invoices', 'courses.id', '=', 'invoices.course_id')
             ->join('course_users', 'courses.id', '=', 'course_users.course_id')
-            ->whereHas('roles', function ($query) {
-                $query->where('name', 'instructor');
-            })
+            ->join('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
+            ->join('roles','roles.id','=','model_has_roles.role_id')
+            ->where(['model_has_roles.model_type' => User::class, 'roles.name' => 'instructor'])
             ->select(
                 'users.id',
                 'users.name',
@@ -62,7 +62,7 @@ class RevenueStatisticController extends Controller
             ->orderBy('total_revenue', 'desc')
             ->limit(10);
 
-        $queryTopUsers = User::query()
+        $queryTopUsers = DB::table('users')
             ->join('invoices', 'users.id', '=', 'invoices.user_id')
             ->join('course_users', 'users.id', '=', 'course_users.user_id')
             ->select(
@@ -79,7 +79,7 @@ class RevenueStatisticController extends Controller
             ->orderByDesc('total_spent')
             ->limit(10);
 
-        $queryTopCourses = Course::query()
+        $queryTopCourses = DB::table('courses')
             ->join('invoices', 'courses.id', '=', 'invoices.course_id')
             ->join('course_users', 'courses.id', '=', 'course_users.course_id')
             ->select(

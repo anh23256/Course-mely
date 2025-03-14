@@ -1,6 +1,14 @@
 @extends('layouts.app')
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .course-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -167,26 +175,23 @@
                                                         class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
                                                 </td>
                                                 <td>
-                                                    <img style="width: 70px; " src="{{ $invoice->course->thumbnail }}"
-                                                        class="object-fit-cover rounded me-2" alt="">
-                                                    <span>
-                                                        {{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}
-                                                    </span>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ $invoice->course->thumbnail }}" class="course-thumbnail me-3" alt="">
+                                                        <span class="fw-medium">{{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}</span>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     {{ $invoice->course->instructor->name ?? '' }}
                                                 </td>
                                                 <td>{{ number_format($invoice->final_amount ?? 0) }} VND</td>
                                                 <td>
-                                                    <span class="badge bg-primary">Hoàn thành</span>
+                                                    <span class="badge rounded-pill bg-success badge-status">Hoàn thành</span>
                                                 </td>
                                                 <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('admin.invoices.show', $invoice->code ?? '') }}">
-                                                        <button class="btn btn-sm btn-info edit-item-btn">
-                                                            <span class="ri-eye-line"></span>
-                                                        </button>
+                                                    <a href="{{ route('admin.invoices.show', $invoice->code ?? '') }}" class="btn btn-sm btn-soft-info rounded-circle" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                                        <i class="ri-eye-line"></i>
                                                     </a>
                                                 </td>
                                             </tr>

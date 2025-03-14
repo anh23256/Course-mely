@@ -30,6 +30,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function signup(){
         try {
             $title = 'Đăng kí tài khoản quản trị';
@@ -42,6 +43,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function forgotPassword(){
         try {
             $title = 'Quên mật khẩu';
@@ -54,6 +56,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function handleLogin(Request $request)
     {
         try {

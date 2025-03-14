@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
@@ -31,10 +32,6 @@ class GoogleController extends Controller
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            Log::info('Google Callback:', $request->all());
-            Log::info('Google User:', (array) $googleUser);
-            $user = null;
-
             DB::beginTransaction();
 
             $socialAccount = SocialAccount::query()
@@ -47,23 +44,42 @@ class GoogleController extends Controller
             if ($socialAccount) {
                 $user = $socialAccount->user;
             } else {
-                $user = User::query()
-                    ->create([
-                        'name' => $googleUser->getName(),
-                        'email' => $googleUser->getEmail(),
+                $existingUser = User::query()->where('email', $googleUser->getEmail())->first();
+
+                if ($existingUser) {
+                    $user = $existingUser;
+
+                    if (empty($user->avatar) && $googleUser->getAvatar()) {
+                        $user->update(['avatar' => $googleUser->getAvatar()]);
+                    }
+
+                    SocialAccount::query()->create([
+                        'user_id' => $user->id,
+                        'provider' => SocialAccount::PROVIDER_GOOGLE,
+                        'provider_id' => $googleUser->getId(),
                         'avatar' => $googleUser->getAvatar(),
-                        'password' => '',
-                        'email_verified_at' => now(),
                     ]);
 
-                $user->assignRole('member');
+                } else {
+                    $user = User::query()
+                        ->create([
+                            'code' => Str::upper(Str::random(8)),
+                            'name' => $googleUser->getName(),
+                            'email' => $googleUser->getEmail(),
+                            'avatar' => $googleUser->getAvatar(),
+                            'password' => '',
+                            'email_verified_at' => now(),
+                        ]);
 
-                SocialAccount::query()->create([
-                    'user_id' => $user->id,
-                    'provider' => SocialAccount::PROVIDER_GOOGLE,
-                    'provider_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                ]);
+                    $user->assignRole('member');
+
+                    SocialAccount::query()->create([
+                        'user_id' => $user->id,
+                        'provider' => SocialAccount::PROVIDER_GOOGLE,
+                        'provider_id' => $googleUser->getId(),
+                        'avatar' => $googleUser->getAvatar(),
+                    ]);
+                }
             }
 
             DB::commit();
@@ -71,18 +87,13 @@ class GoogleController extends Controller
             Auth::login($user);
             $token = $user->createToken('API Token')->plainTextToken;
 
-//            $frontendUrl = 'http://localhost:3000/google/callback';
-//
-//            return redirect()->away(
-//                $frontendUrl . "?token=" . urlencode($token) . "&user_id=" . $user->id
-//            );
-            return redirect()->away("http://localhost:3000/google/callback?token=" . urlencode($token) . "&user_id=" . $user->id);
+            return redirect()->away("http://localhost:3000/google/callback?token=" . $token);
         } catch (\Exception $e) {
             DB::rollBack();
 
             $this->logError($e, $request->all());
 
-            return redirect()->away('http://localhost:3000/notfound');
+            return redirect()->away('http://localhost:3000/not-found');
         }
     }
 }

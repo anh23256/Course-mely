@@ -37,9 +37,9 @@ class RatingController extends Controller
             }
 
             $completed = CourseUser::where([
-                    'user_id' => $userId,
-                    'course_id' => $course->id
-                ])->value('progress_percent') === 100;
+                'user_id' => $userId,
+                'course_id' => $course->id
+            ])->value('progress_percent') === 100;
 
             if (!$completed) {
                 return $this->respondError('Bạn phải hoa thành khoá học mới được đánh giá');
@@ -114,6 +114,63 @@ class RatingController extends Controller
 
             return $this->respondOk('Thao tác thành công', $alreadyRated);
         } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getLastRatings()
+    {
+        try {
+
+            $ratings = Rating::with('user:id,name,avatar')
+                ->whereHas('user', fn($q) => $q->where('status', 'active'))
+                ->latest()
+                ->limit(6)
+                ->get(['id', 'content', 'user_id']);
+
+            if (!$ratings) {
+                return $this->respondNotFound('Không có đánh giá nào');
+            }
+
+            return $this->respondOk('Danh sách đánh giá', $ratings);
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getCourseReviews($slug)
+    {
+        try {
+
+            $course = Course::where('slug', $slug)->firstOrFail();
+
+            $ratings = Rating::where('course_id', $course->id)
+                ->whereHas('user', fn($q) => $q->where('status', 'active'))
+                ->with('user:id,name,avatar')
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'content', 'user_id']);
+
+            if (!$ratings) {
+                return $this->respondNotFound('Không có đánh giá nào');
+            }
+
+            $totalRatings = $ratings->count();
+            $averageRating = $totalRatings > 0 ? round($ratings->avg('rate'), 1) : 0;
+
+            return $this->respondOk('Danh sách đánh giá', [
+                'ratings' => $ratings,
+                'total_ratings' => $totalRatings,
+                'average_rating' => $averageRating
+            ]);
+            
+        } catch (\Exception $e) {
+
             $this->logError($e);
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

@@ -23,6 +23,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -34,83 +35,106 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPassWordRequest $request)
     {
-        // Kiểm tra email hợp lệ
-        $request->validated();
+        try {
+            $request->validated();
 
+            $user = User::where('email', $request->email)->first();
 
-        $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return $this->respondNotFound('Email không tồn tai');
+            }
 
-        if (!$user) {
-            return response()->json(['message' => 'Email không tồn tại'], 404);
+            if ($user->email_verified_at == null) {
+                return $this->respondNotFound('Tài khoản chưa xác thực, vui lòng kiểm tra email');
+            }
+
+            $token = Str::random(60);
+
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                [
+                    'token' => $token,
+                    'created_at' => now()
+                ]
+            );
+
+            $verificationUrl = config('app.fe_url') . '/reset/' . $token;
+
+            Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl, $user));
+
+            return $this->respondOk('Gửi yêu cầu thành công, vui lòng kiểm tra email');
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
         }
-
-        // Tạo token reset ngẫu nhiên
-        $token = Str::random(60);
-
-        // Tạo URL đặt lại mật khẩu (không dùng bảng password_resets)
-        $verificationUrl = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-
-        // Gửi email
-        Mail::to($user->email)->send(new ForgotPasswordEmail($verificationUrl));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Email đặt lại mật khẩu đã được gửi!',
-        ]);
     }
 
     public function resetPassword(ResetPasswordRequest $request)
     {
         try {
-            //code...
-            $data = $request->only('email', 'password', 'password_confirmation', 'token');
+            DB::beginTransaction();
 
-            $status = Password::reset(
-                $data,
-                function ($user, $password) {
-                    $user->forceFill([
-                        'password' => Hash::make($password),
-                    ])->save();
+            $data = $request->validated();
 
-                    $user->token()->delete(); // Hủy token API cũ nếu dùng Sanctum
-                }
-            );
+            $tokenRecord = DB::table('password_reset_tokens')
+                ->where('token', $data['token'])
+                ->first();
 
-            if ($status === Password::PASSWORD_RESET) {
-                return response()->json([
-                    'success' => true,
-                    'message' => __($status),
-                ], 200);
+            if (Carbon::parse($tokenRecord->created_at)->addMinutes(30)->isPast()) {
+                return $this->respondNotFound('Liên kết đã hết hạn hoặc không tồn tại, vui lòng thử lại');
             }
-        } catch (\Exception $e) {
-            $this->logError($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Mật khẩu không được thay đổi thành công',
-            ], 400);
+            $user = User::query()->where('email', $tokenRecord->email)->first();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy người dùng');
+            }
+
+            $user->update([
+                'password' => Hash::make($data['password'])
+            ]);
+
+            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+
+            DB::commit();
+
+            return $this->respondOk('Thay đổi mật khẩu thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
         }
     }
 
-    public function verifyEmail(VerifyEmailRequest $verifyEmailRequest)
+    public function verify(string $token)
     {
         try {
-            //code...
-            $user = User::where('email', $verifyEmailRequest->email)->first();
+            $user = User::query()
+                ->where('verification_token', $token)
+                ->where('email_verified_at', null)
+                ->where('created_at', '>', now()->subMinutes(30))
+                ->first();
 
-            if ($user || Hash::check($verifyEmailRequest->password, $user->password)) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Mật khẩu chính xác.',
-                ], 200);
+            if (!$user) {
+                return redirect()->away(config('app.fe_url') . '/verify?status=error');
             }
+
+            if ($user->email_verified_at !== null) {
+                return $this->respondError('Tài khoản đã được xác thực');
+            }
+
+            $user->email_verified_at = now();
+            $user->verification_token = null;
+            $user->save();
+
+            return redirect()->away(config('app.fe_url') . '/verify?status=success');
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Mật khẩu không chính xác.',
-            ], 400);
+            return redirect()->away(config('app.fe_url') . '/verify?status=fail');
         }
     }
 
@@ -122,31 +146,28 @@ class AuthController extends Controller
             $data = $request->only(['name', 'email', 'password', 'repassword']);
             $data['avatar'] = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
 
+            $data['verification_token'] = Str::random(60);
+
             do {
-                $data['code'] = str_replace('-', '', Str::uuid()->toString());
+                $data['code'] = Str::upper(Str::random(8));
             } while (User::query()->where('code', $data['code'])->exists());
 
             $user = User::query()->create($data);
 
             $user->assignRole("member");
-            $verificationUrl = route('verification.verify', ['id' => $user->id, 'hash' => sha1($user->email)]);
+            $verificationUrl = config('app.url') . '/api/auth/verify/' . $user->verification_token;
 
             Mail::to($user->email)->send(new VerifyEmail($verificationUrl));
+
             DB::commit();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Tạo tài khoản thành công, vui lòng đăng nhập',
-            ], Response::HTTP_CREATED);
+            return $this->respondSuccess('Đăng ký thành công, vui lòng kiểm tra email để xác nhận tài khoản');
         } catch (\Exception $e) {
             DB::rollBack();
 
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
         }
     }
 
@@ -218,26 +239,50 @@ class AuthController extends Controller
 
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
         }
     }
 
     public function logout()
     {
         try {
-            // Auth::user()->currentAccessToken()->delete();
+            Auth::user()->currentAccessToken()->delete();
 
             return $this->respondOk('Đăng xuất thành công');
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->respondServerError();
+        }
+    }
+
+    public function getUserWithToken()
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy người dùng');
+            }
+
+            $role = $user->roles->first()->name;
+
+            $response = [
+                'user' => [
+                    'id' => $user->id,
+                    'code' => $user->code,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ],
+                'role' => $role
+            ];
+
+            return $this->respondOk('Thông tin người dùng: ' . $user->name, $response);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
         }
     }
 }

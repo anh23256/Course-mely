@@ -2,6 +2,67 @@
 @section('title', $title)
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+    <style>
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            height: 100%;
+            border-left: 4px solid transparent;
+        }
+
+        .stats-card.total {
+            border-left-color: #6c757d;
+        }
+
+        .stats-card.purchase {
+            border-left-color: #198754;
+        }
+
+        .stats-card.withdraw {
+            border-left-color: #ffc107;
+        }
+
+        .stats-card .stats-icon {
+            font-size: 2rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .stats-card .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .stats-card .card-text {
+            font-weight: 700;
+        }
+
+        .transaction-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .transaction-table td {
+            vertical-align: middle;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -26,28 +87,40 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-4">
-                <div class="card text-center h-75">
+        <div class="row mb-4">
+            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                <div class="card stats-card total">
                     <div class="card-body">
+                        <div class="stats-icon">
+                            <i class="ri-exchange-dollar-line"></i>
+                        </div>
                         <h5 class="card-title">Tổng số giao dịch</h5>
-                        <p class="card-text fs-4">{{ $countTransactions->total_transactions ?? 0 }}</p>
+                        <p class="card-text fs-2 mb-0">{{ number_format($countTransactions->total_transactions ?? 0) }}</p>
+                        <small class="text-muted">Tất cả các giao dịch trong hệ thống</small>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4">
-                <div class="card text-center h-75">
+            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                <div class="card stats-card purchase">
                     <div class="card-body">
+                        <div class="stats-icon">
+                            <i class="ri-shopping-cart-line"></i>
+                        </div>
                         <h5 class="card-title">Số giao dịch mua khóa học</h5>
-                        <p class="card-text fs-4 text-success">{{ $countTransactions->invoice_transactions ?? 0 }}</p>
+                        <p class="card-text fs-2 mb-0 text-success">{{ number_format($countTransactions->invoice_transactions ?? 0) }}</p>
+                        <small class="text-muted">Tổng giao dịch mua khóa học thành công</small>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4">
-                <div class="card text-center h-75">
+            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                <div class="card stats-card withdraw">
                     <div class="card-body">
+                        <div class="stats-icon">
+                            <i class="ri-wallet-3-line"></i>
+                        </div>
                         <h5 class="card-title">Số giao dịch rút tiền</h5>
-                        <p class="card-text fs-4 text-warning">{{ $countTransactions->withdrawal_transactions ?? 0 }}</p>
+                        <p class="card-text fs-2 mb-0 text-warning">{{ number_format($countTransactions->withdrawal_transactions ?? 0) }}</p>
+                        <small class="text-muted">Tổng giao dịch rút tiền từ hệ thống</small>
                     </div>
                 </div>
             </div>

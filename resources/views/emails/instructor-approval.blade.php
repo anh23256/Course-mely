@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khóa Học Đang Chờ Duyệt - CourseMeLy</title>
+    <title>Yêu Cầu Phê Duyệt Người Hướng Dẫn - CourseMeLy</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body
@@ -31,65 +31,20 @@
 
                 <tr>
                     <td align="center" style="padding:40px 40px 20px;">
-                        <h2 style="color:#333; margin:0; font-size:24px; font-weight:600;">Khóa học đã được chấp
-                            nhận!</h2>
+                        <h2 style="color:#333; margin:0; font-size:24px; font-weight:600;">Xin
+                            chào {{$notifiable->name ?? 'Quản trị viên'}},</h2>
                         <p style="color:#666; font-size:16px; line-height:1.6; margin-top:15px;">
-                            Chúng tôi rất vui mừng thông báo rằng khóa học <strong
-                                style="color:#E27447;">{{ $course->name }}</strong> của bạn đã được chấp nhận và hiện
-                            đang trong quá trình xét duyệt cuối cùng.
+                            Một yêu cầu phê duyệt người hướng dẫn mới vừa được gửi đến <strong
+                                style="color:#E27447;">CourseMeLy</strong>! Vui lòng xem xét thông tin chi tiết về
+                            giảng viên này để đưa ra quyết định phê duyệt.
                         </p>
                     </td>
                 </tr>
 
                 <tr>
                     <td style="padding:0 40px 30px;">
-                        <div style="background-color:#fff8f5; border-radius:10px; padding:25px; margin-bottom:20px;">
-                            <h3 style="color:#E27447; margin:0 0 15px; font-size:18px;">Thông tin khóa học:</h3>
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td width="30%" style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0; color:#666; font-weight:600;">Tên khóa học:</p>
-                                    </td>
-                                    <td style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0; color:#333;">{{ $course->name }}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="30%" style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0; color:#666; font-weight:600;">Ngày gửi:</p>
-                                    </td>
-                                    <td style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0; color:#333;">{{ $course->created_at ? $course->created_at->format('d-m-Y H:i') : '' }}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="30%" style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0; color:#666; font-weight:600;">Trạng thái:</p>
-                                    </td>
-                                    <td style="padding:10px 0; border-bottom:1px solid #f0e0db;">
-                                        <p style="margin:0;"><span
-                                                style="color:#E27447; font-weight:600; background-color:#ffeee8; padding:5px 10px; border-radius:20px; font-size:14px;">Đang chờ duyệt</span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="padding:0 40px 30px;">
-                        <div style="background-color:#fff8f5; border-radius:10px; padding:25px; margin-bottom:20px;">
-                            <h3 style="color:#E27447; margin:0 0 15px; font-size:18px;">Mô tả khóa học:</h3>
-                            <p style="margin:0; color:#444; line-height:1.6; font-size:15px;">{{ $course->description }}</p>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="padding:0 40px 30px;">
                         <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
-                            <span style="color:#E27447;">✨</span> Các bước tiếp theo:
+                            <span style="color:#E27447;">🧑‍🏫</span> Thông tin người hướng dẫn:
                         </p>
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>
@@ -99,13 +54,12 @@
                                             <td width="40" valign="top">
                                                 <div
                                                     style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                    1
+                                                    👤
                                                 </div>
                                             </td>
                                             <td style="padding-left:15px;">
-                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Đội
-                                                    ngũ chuyên gia của chúng tôi sẽ đánh giá nội dung khóa học của
-                                                    bạn</p>
+                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Tên:
+                                                    <strong>{{$user->name}}</strong></p>
                                             </td>
                                         </tr>
                                     </table>
@@ -121,12 +75,12 @@
                                             <td width="40" valign="top">
                                                 <div
                                                     style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                    2
+                                                    ✉️
                                                 </div>
                                             </td>
                                             <td style="padding-left:15px;">
-                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Bạn sẽ
-                                                    nhận được thông báo khi khóa học được duyệt hoặc cần chỉnh sửa</p>
+                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Email:
+                                                    <strong>{{$user->email}}</strong></p>
                                             </td>
                                         </tr>
                                     </table>
@@ -142,13 +96,12 @@
                                             <td width="40" valign="top">
                                                 <div
                                                     style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                    3
+                                                    📆
                                                 </div>
                                             </td>
                                             <td style="padding-left:15px;">
-                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Sau
-                                                    khi được duyệt, khóa học của bạn sẽ được đưa lên nền tảng
-                                                    CourseMeLy</p>
+                                                <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Ngày
+                                                    yêu cầu: <strong>{{now()->format('d/m/Y H:i')}}</strong></p>
                                             </td>
                                         </tr>
                                     </table>
@@ -161,22 +114,39 @@
                 <tr>
                     <td align="center" style="padding:10px 40px 40px;">
                         <div style="background-color:#fff8f5; border-radius:10px; padding:25px; text-align:center;">
-                            <p style="font-size:16px; color:#555; margin-bottom:20px;">Kiểm tra trạng thái khóa học của
-                                bạn:</p>
-                            <a href="#"
+                            <p style="font-size:16px; color:#555; margin-bottom:20px;">Vui lòng xem xét yêu cầu này và
+                                tiến hành phê duyệt hoặc từ chối:</p>
+                            <a href="{{$url ?? '#'}}"
                                style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:15px 35px; font-size:16px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(226,116,71,0.3); transition: all 0.3s;">
-                                🔍 XEM TRẠNG THÁI
+                                👉 XEM CHI TIẾT YÊU CẦU
                             </a>
+                            <p style="font-size:14px; color:#999; margin-top:25px; font-style:italic;">
+                                Yêu cầu đang chờ xử lý. Vui lòng phản hồi trong vòng 48 giờ.
+                            </p>
                         </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:0 40px 30px;">
+                        <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
+                            <span style="color:#E27447;">⚡</span> Các bước xét duyệt:
+                        </p>
+                        <ol style="color:#555; font-size:15px; line-height:1.6; margin:0; padding-left:25px;">
+                            <li style="margin-bottom:10px;">Xem xét thông tin cá nhân và hồ sơ chuyên môn</li>
+                            <li style="margin-bottom:10px;">Kiểm tra các tài liệu, chứng chỉ đã tải lên</li>
+                            <li style="margin-bottom:10px;">Đánh giá mục tiêu giảng dạy và lĩnh vực chuyên môn</li>
+                            <li>Đưa ra quyết định phê duyệt hoặc từ chối kèm lý do</li>
+                        </ol>
                     </td>
                 </tr>
 
                 <tr>
                     <td align="center" style="padding:0 40px 20px;">
                         <p style="font-size:14px; color:#777; border-top:1px solid #eee; padding-top:20px;">
-                            Nếu bạn có bất kỳ câu hỏi nào, vui lòng <a href="#"
-                                                                       style="color:#E27447; text-decoration:none;">liên
-                                hệ với đội ngũ hỗ trợ</a> của chúng tôi.
+                            Email này được gửi tự động từ hệ thống. Nếu bạn cần hỗ trợ, hãy <a href="#"
+                                                                                               style="color:#E27447; text-decoration:none;">liên
+                                hệ với đội ngũ kỹ thuật</a>.
                         </p>
                     </td>
                 </tr>

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
-use App\Models\Follow;
+use App\Models\Course;
+use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
@@ -137,6 +138,29 @@ class CommonController extends Controller
                 )
                 ->first();
 
+            return response()->json([
+                'message' => 'Thông tin giảng viên',
+                'instructor' => $info_instructor
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+    public function getCourseInstructor(string $code)
+    {
+        try {
+            $user = User::where('code', $code)
+                ->where('status', '!=', 'blocked')
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'instructor');
+                })->first();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy giảng viên');
+            }
+
             $courses_instructor = DB::table('courses')
                 ->selectRaw(
                     'courses.id, 
@@ -166,11 +190,10 @@ class CommonController extends Controller
                     'courses.price_sale',
                     'courses.total_student'
                 )
-                ->paginate(1);
+                ->paginate(9);
 
             return response()->json([
                 'message' => 'Thông tin giảng viên',
-                'instructor' => $info_instructor,
                 'courses' => $courses_instructor
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

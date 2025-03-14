@@ -93,7 +93,7 @@
                                     <div class="edit">
                                         <a href="{{ route('admin.coupons.show', $coupon->id) }}">
                                             <button class="btn btn-sm btn-info edit-item-btn">
-                                                <span class="ri-folder-user-line"></span>
+                                                <span class="ri-eye-line"></span>
                                             </button>
                                         </a>
                                     </div>

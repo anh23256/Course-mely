@@ -11,6 +11,8 @@ use App\Traits\LoggableTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+use function PHPUnit\Framework\returnSelf;
+
 class FollowController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
@@ -19,6 +21,7 @@ class FollowController extends Controller
     {
         try {
             $follower = Auth::user();
+
             if (!$follower) {
                 return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
             }
@@ -32,6 +35,8 @@ class FollowController extends Controller
             if (!$instructor) {
                 return $this->respondNotFound('Không tìm thấy giảng viên.');
             }
+
+            if ($follower->code == $code) return $this->respondError('Không thể theo dõi chính mình');
 
             $isFollowing = Follow::where([
                 'follower_id' => $follower->id,
@@ -75,7 +80,7 @@ class FollowController extends Controller
                 ->count();
 
             $listFollower = DB::table('follows')->select('users.name', 'users.avatar', 'users.status', 'users.code')
-            ->join('users','users.id', '=', 'follows.follower_id')->limit(20)->get();
+                ->join('users', 'users.id', '=', 'follows.follower_id')->limit(20)->get();
 
             return response()->json([
                 'message' => "Danh sách người theo dõi giảng viên {$instructor->name}",
@@ -85,6 +90,34 @@ class FollowController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Lấy danh sách người theo dõi giảng viên không thành công');
+        }
+    }
+
+    public function checkUserFollower(string $code)
+    {
+        try {
+            $user = Auth::user();
+            $checkFollow = false;
+
+            if (!$user) {
+                return response()->json(['followed' => $checkFollow]);
+            }
+
+            $instructor = User::where('code', $code)
+                ->where('status', '!=', 'blocked')
+                ->whereHas('roles', fn($query) => $query->where('name', 'instructor'))
+                ->select('id')
+                ->first();
+
+            $checkFollow = $instructor
+                ? Follow::where(['follower_id' => $user->id, 'instructor_id' => $instructor->id])->exists()
+                : false;
+
+            return response()->json(['followed' => $checkFollow]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            
+            return $this->respondServerError('');
         }
     }
 }
