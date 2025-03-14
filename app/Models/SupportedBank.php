@@ -16,5 +16,6 @@ class SupportedBank extends Model
         'bin',
         'short_name',
         'logo',
+        'logo_rounded'
     ];
 }
