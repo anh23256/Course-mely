@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin\Auth;
 
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -19,7 +21,6 @@ class AuthController extends Controller
             }
 
             $title = 'Đăng nhập hệ thống quản trị';
-
             return view('auth.login', compact([
                 'title'
             ]));
@@ -63,6 +64,8 @@ class AuthController extends Controller
                 $user =  Auth::user();
 
                 if ($user->hasRole('admin') || $user->hasRole('employee')) {
+                    broadcast(new UserStatusChanged($user, 'online'));
+                    Log::info('User logged in', ['user' => $user]);
                     return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công');
                 } else {
                     Auth::logout();
@@ -79,13 +82,14 @@ class AuthController extends Controller
         }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         try {
+            $user = $request->user();
+            Log::info('User logged out', ['user' => $user]);
             Auth::logout();
-
+            broadcast(new UserStatusChanged($user, 'offline'));
             session()->flush();
-
             return redirect()->route('admin.login');
         } catch (\Exception $e) {
             $this->logError($e);
