@@ -385,6 +385,8 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
-                Route::get('/group/{groupId}/get-existing-members', [ChatController::class, 'getExistingMembers']);
+                Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
+                Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
+
             });
     });

@@ -634,4 +634,24 @@
 
     <!-- Dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard-analytics.init.js') }}"></script>
+    <script>
+        const userId = "{{ auth()->id() }}";
+              $(document).ready(function() {
+            console.log('Đã chọn user với ID:------------------------', userId);
+
+            window.Echo.channel('App.Models.User.' + userId)
+                .listen('UserStatusChanged', (event) => {
+                    console.log('Chạy event: ',event);
+                    // Tìm phần tử với class 'user-status' và cập nhật trạng thái
+                    const statusElement = document.querySelector('.status');
+
+                    if (event.status === 'online') {
+                        // Cập nhật trạng thái online
+                        statusElement.innerHTML = '<span class="text-success">Online</span>';
+                    } else if (event.status === 'offline') {
+                        // Cập nhật trạng thái offline
+                        statusElement.innerHTML = '<span class="text-danger">Offline</span>';
+                    }
+                });   });
+    </script>
 @endpush
