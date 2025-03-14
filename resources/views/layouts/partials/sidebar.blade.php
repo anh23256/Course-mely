@@ -253,7 +253,7 @@
                 <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
             </a>
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
-                <i class="ri-question-line"></i> <span data-key="t-authentication">Chat</span>
+                <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>
         </li>
 
