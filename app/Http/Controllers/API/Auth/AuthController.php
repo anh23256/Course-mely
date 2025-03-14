@@ -149,7 +149,8 @@ class AuthController extends Controller
             $data['verification_token'] = Str::random(60);
 
             do {
-                $data['code'] = Str::upper(Str::random(8));
+                $uuid = str_replace('-', '', Str::uuid()->toString());
+                $data['code'] = substr($uuid, 0, 10);
             } while (User::query()->where('code', $data['code'])->exists());
 
             $user = User::query()->create($data);

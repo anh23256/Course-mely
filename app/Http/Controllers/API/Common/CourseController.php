@@ -74,6 +74,7 @@ class CourseController
                     'is_free' => $course->is_free,
                     'price' => $course->price,
                     'price_sale' => $course->price_sale,
+                    'total_student' => $course->total_student,
                     'lessons_count' => $course->lessons_count,
                     'ratings' => [
                         'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
@@ -159,6 +160,7 @@ class CourseController
                     'is_free' => $course->is_free,
                     'price' => $course->price,
                     'price_sale' => $course->price_sale,
+                    'total_student' => $course->total_student,
                     'lessons_count' => $course->lessons_count,
                     'ratings' => [
                         'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
