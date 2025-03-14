@@ -41,9 +41,10 @@ class InstructorApprovalNotification extends Notification implements ShouldBroad
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Yêu cầu phê duyệt người hướng dẫn')
-            ->line('Người hướng dẫn "' . $this->user->name . '" đã được kiểm duyệt.')
-            ->line('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!');
+            ->subject('Phản hồi yêu cầu kiểm duyệt người hướng dẫn')
+            ->view('emails.instructor-approval-response', [
+                'user' => $this->user
+            ]);
     }
 
     private function notificationData()

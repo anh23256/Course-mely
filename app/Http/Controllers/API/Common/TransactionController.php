@@ -144,7 +144,7 @@ class TransactionController extends Controller
         }
     }
 
-    public function createVNPayPayment(Request $request)
+    public function createPayment(Request $request)
     {
         try {
             $user = Auth::user();
@@ -160,12 +160,9 @@ class TransactionController extends Controller
                 'payment_method' => 'required|string',
             ]);
 
-            $hasBoughtCourse = CourseUser::query()
-                ->where('user_id', $user->id)
-                ->where('course_id', $validated['course_id'])
-                ->exists();
+            $courseId = $validated['course_id'];
 
-            if ($hasBoughtCourse) {
+            if (CourseUser::query()->where('user_id', $user->id)->where('course_id', $courseId)->exists()) {
                 return $this->respondError('Bạn đã sở hữu khoá học này rồi');
             }
 
@@ -178,62 +175,12 @@ class TransactionController extends Controller
             $finalAmount = $validated['amount'];
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
-            $amountVNPay = number_format($finalAmount, 0, '', '');
 
-            $vnp_TmnCode = config('vnpay.tmn_code');
-            $vnp_HashSecret = config('vnpay.hash_secret');
-            $vnp_Url = config('vnpay.url');
-            $vnp_ReturnUrl = config('vnpay.return_url');
-
-            $vnp_TxnRef = 'ORDER' . time();
-            $vnp_OrderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $validated['course_id'] .
-                '-' . $originalAmount . '-' . $discountAmount . '-' . $finalAmount;
-
-            if (!empty($couponCode)) {
-                $vnp_OrderInfo .= '-' . $couponCode;
-            }
-
-            $vnp_Locale = 'vn';
-            $vnp_IpAddr = request()->ip();
-
-            $inputData = [
-                "vnp_Version" => "2.1.0",
-                "vnp_Command" => "pay",
-                "vnp_TmnCode" => $vnp_TmnCode,
-                "vnp_Amount" => $amountVNPay * 100,
-                "vnp_CreateDate" => now()->format('YmdHis'),
-                "vnp_CurrCode" => "VND",
-                "vnp_IpAddr" => $vnp_IpAddr,
-                "vnp_Locale" => $vnp_Locale,
-                "vnp_OrderInfo" => $vnp_OrderInfo,
-                "vnp_OrderType" => "billpayment",
-                "vnp_ReturnUrl" => $vnp_ReturnUrl,
-                "vnp_TxnRef" => $vnp_TxnRef,
-            ];
-
-            ksort($inputData);
-            $query = "";
-            $i = 0;
-            $hashdata = "";
-
-            foreach ($inputData as $key => $value) {
-                if ($i == 1) {
-                    $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-                } else {
-                    $hashdata .= urlencode($key) . "=" . urlencode($value);
-                    $i = 1;
-                }
-                $query .= urlencode($key) . "=" . urlencode($value) . '&';
-            }
-
-            $vnp_Url = $vnp_Url . "?" . $query;
-            if (isset($vnp_HashSecret)) {
-                $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-                $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-            }
-
-
-            return $this->respondOk('Tạo link thanh toán thành công', $vnp_Url);
+            return match ($validated['payment_method']) {
+                'momo' => $this->createMoMoPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode),
+                'vnpay' => $this->createVnPayPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode),
+                default => $this->respondError('Phương thức thanh toán không hợp lệ')
+            };
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -241,7 +188,63 @@ class TransactionController extends Controller
         }
     }
 
-    public function vnpayCallback(Request $request)
+    protected function createVnPayPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null)
+    {
+        $amountVNPay = number_format($finalAmount, 0, '', '');
+
+        $vnp_TmnCode = config('vnpay.tmn_code');
+        $vnp_HashSecret = config('vnpay.hash_secret');
+        $vnp_Url = config('vnpay.url');
+        $vnp_ReturnUrl = config('vnpay.return_url');
+
+        $vnp_TxnRef = 'ORDER' . time();
+        $vnp_OrderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $courseId .
+            '-' . $originalAmount . '-' . $discountAmount . '-' . $finalAmount;
+
+        if (!empty($couponCode)) {
+            $vnp_OrderInfo .= '-' . $couponCode;
+        }
+
+        $inputData = [
+            "vnp_Version" => "2.1.0",
+            "vnp_Command" => "pay",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $amountVNPay * 100,
+            "vnp_CreateDate" => now()->format('YmdHis'),
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => request()->ip(),
+            "vnp_Locale" => "vn",
+            "vnp_OrderInfo" => $vnp_OrderInfo,
+            "vnp_OrderType" => "billpayment",
+            "vnp_ReturnUrl" => $vnp_ReturnUrl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+        ];
+
+        ksort($inputData);
+        $query = "";
+        $hashdata = "";
+        $i = 0;
+
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
+
+        $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
+
+        return $this->respondOk('Tạo link thanh toán thành công', $vnp_Url);
+    }
+
+    protected function vnpayCallback(Request $request)
     {
         try {
             $vnp_HashSecret = config('vnpay.hash_secret');
@@ -318,7 +321,7 @@ class TransactionController extends Controller
                 'coupon_discount' => $discountAmount,
                 'final_amount' => $finalAmount,
                 'status' => 'Đã thanh toán',
-                'code' => Str::random(10),
+                'code' => Str::upper(Str::random(10)),
                 'payment_method' => 'vnpay'
             ]);
 
@@ -332,6 +335,174 @@ class TransactionController extends Controller
                 'transaction_code' => $inputData['vnp_TxnRef'],
                 'user_id' => $userId,
                 'amount' => $inputData['vnp_Amount'] / 100,
+                'transactionable_id' => $invoice->id,
+                'transactionable_type' => Invoice::class,
+                'status' => 'Giao dịch thành công',
+                'type' => 'invoice',
+            ]);
+
+            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
+
+            DB::commit();
+
+            return redirect()->away($frontendUrl . "?status=success");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return redirect()->away($frontendUrl . "?status=error");
+        }
+    }
+
+    protected function createMoMoPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null)
+    {
+        try {
+            $endpoint = config('momo.endpoint');
+            $partnerCode = config('momo.partner_code');
+            $accessKey = config('momo.access_key');
+            $secretKey = config('momo.secret_key');
+            $returnUrl = config('momo.return_url');
+            $ipnUrl = config('momo.notify_url', $returnUrl);
+            $requestType = "payWithATM";
+            $extraData = "";
+
+            $orderId = 'ORDER' . time();
+            $requestId = time() . "_" . uniqid();
+
+            $orderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $courseId .
+                '-' . $originalAmount . '-' . $discountAmount . '-' . $finalAmount;
+
+            if (!empty($couponCode)) {
+                $orderInfo .= '-' . $couponCode;
+            }
+
+            $finalAmount = (float)$finalAmount;
+
+            $rawHash =
+                "accessKey=" . $accessKey .
+                "&amount=" . $finalAmount .
+                "&extraData=" . $extraData .
+                "&ipnUrl=" . $ipnUrl .
+                "&orderId=" . $orderId .
+                "&orderInfo=" . $orderInfo .
+                "&partnerCode=" . $partnerCode .
+                "&redirectUrl=" . $returnUrl .
+                "&requestId=" . $requestId .
+                "&requestType=" . $requestType;
+
+            $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+            $data = [
+                'partnerCode' => $partnerCode,
+                'requestId' => $requestId,
+                'amount' => $finalAmount,
+                'orderId' => $orderId,
+                'orderInfo' => $orderInfo,
+                'redirectUrl' => $returnUrl,
+                'ipnUrl' => $ipnUrl,
+                'extraData' => $extraData,
+                'requestType' => $requestType,
+                'signature' => $signature,
+            ];
+
+            $result = $this->execPostRequest($endpoint, json_encode($data));
+            $jsonResult = json_decode($result, true);
+
+            if (isset($jsonResult['payUrl'])) {
+                return $this->respondOk('Tạo link thanh toán MoMo thành công', $jsonResult['payUrl']);
+            } else {
+                return $this->respondServerError('Ngân hàng tạm thời bảo trì: ' . ($jsonResult['message'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra khi tạo thanh toán MoMo: ' . $e->getMessage());
+        }
+    }
+
+    protected function momoCallback(Request $request)
+    {
+        try {
+            $inputData = $request->all();
+            $frontendUrl = config('app.fe_url') . "/payment";
+            if (!isset($inputData['signature'])) {
+                return redirect()->away($frontendUrl . "?status=error");
+            }
+
+            if ($inputData['resultCode'] != '0') {
+                Log::info(2);
+                return redirect()->away($frontendUrl . "?status=failed");
+            }
+
+            DB::beginTransaction();
+
+            if (!isset($inputData['orderInfo'])) {
+                Log::info(3);
+                return redirect()->away($frontendUrl . "?status=error");
+            }
+
+            $orderParts = explode('-Thanh-toan-khoa-hoc-', $inputData['orderInfo']);
+            if (count($orderParts) != 2) {
+                Log::info(4);
+                return redirect()->away($frontendUrl . "?status=error");
+            }
+
+            $userId = filter_var(trim($orderParts[0], '"'), FILTER_VALIDATE_INT);
+
+            $remainingParts = explode('-', $orderParts[1]);
+            if (count($remainingParts) < 4) {
+                Log::info(5);
+                return redirect()->away($frontendUrl . "?status=error");
+            }
+
+            $courseId = filter_var(trim($remainingParts[0], '"'), FILTER_VALIDATE_INT);
+            $originalAmount = filter_var(trim($remainingParts[1], '"'), FILTER_VALIDATE_FLOAT);
+            $discountAmount = filter_var(trim($remainingParts[2], '"'), FILTER_VALIDATE_FLOAT);
+            $finalAmount = filter_var(trim($remainingParts[3], '"'), FILTER_VALIDATE_FLOAT);
+            $couponCode = count($remainingParts) > 4 ? trim($remainingParts[4], '"') : null;
+
+            $user = User::query()->find($userId);
+            $course = Course::query()->find($courseId);
+
+            if (!$user) {
+                Log::info(6);
+                return redirect()->away($frontendUrl . "/not-found");
+            }
+
+            if (!$course) {
+                Log::info(6);
+                return redirect()->away($frontendUrl . "/not-found");
+            }
+
+            $discount = null;
+            if (!empty($couponCode)) {
+                $discount = Coupon::query()
+                    ->where(['code' => $couponCode, 'status' => '1'])
+                    ->first();
+            }
+
+            $invoice = Invoice::create([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'amount' => $originalAmount,
+                'coupon_code' => $discount ? $discount->code : null,
+                'coupon_discount' => $discountAmount,
+                'final_amount' => $finalAmount,
+                'status' => 'Đã thanh toán',
+                'code' => Str::upper(Str::random(10)),
+                'payment_method' => 'momo'
+            ]);
+
+            CourseUser::create([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'enrolled_at' => now(),
+            ]);
+
+            $transaction = Transaction::create([
+                'transaction_code' => $inputData['orderId'],
+                'user_id' => $userId,
+                'amount' => $inputData['amount'],
                 'transactionable_id' => $invoice->id,
                 'transactionable_type' => Invoice::class,
                 'status' => 'Giao dịch thành công',
@@ -530,5 +701,22 @@ class TransactionController extends Controller
             'discount_amount' => $discountAmount,
             'final_amount' => $finalAmount
         ]);
+    }
+
+    private function execPostRequest($url, $data)
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($data))
+        );
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        return $result;
     }
 }

@@ -58,6 +58,7 @@ Route::prefix('auth')->as('auth.')->group(function () {
 });
 
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
+Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 
 Route::prefix('livestreams')->group(function () {
     Route::get('/', [LivestreamController::class, 'index']);
@@ -93,7 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
-    Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
+    Route::post('/create-payment', [TransactionController::class, 'createPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::get('get-user-with-token', [AuthController::class, 'getUserWithToken']);
@@ -133,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
         Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
         Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::put('/set-default', [UserController::class, 'setDefaultBankingInfo']);
         Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================

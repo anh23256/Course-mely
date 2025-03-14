@@ -63,7 +63,7 @@ class GoogleController extends Controller
                 } else {
                     $user = User::query()
                         ->create([
-                            'code' => Str::random(8),
+                            'code' => Str::upper(Str::random(8)),
                             'name' => $googleUser->getName(),
                             'email' => $googleUser->getEmail(),
                             'avatar' => $googleUser->getAvatar(),
@@ -93,7 +93,7 @@ class GoogleController extends Controller
 
             $this->logError($e, $request->all());
 
-            return redirect()->away('http://localhost:3000/notfound');
+            return redirect()->away('http://localhost:3000/not-found');
         }
     }
 }
