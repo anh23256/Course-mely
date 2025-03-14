@@ -433,6 +433,7 @@ Route::prefix('courses')
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
+        Route::get('/{slug}', [RatingController::class, 'getRatings']);
         Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);
         Route::get('/{slug}/related', [CommonCourseController::class, 'getRelatedCourses']);
     });
@@ -489,4 +490,6 @@ Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo'
 Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
+
+Route::get('/{slug}', [RatingController::class, 'getRatings']);
 
