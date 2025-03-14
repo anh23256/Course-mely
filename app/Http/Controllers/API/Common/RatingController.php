@@ -37,9 +37,9 @@ class RatingController extends Controller
             }
 
             $completed = CourseUser::where([
-                'user_id' => $userId,
-                'course_id' => $course->id
-            ])->value('progress_percent') === 100;
+                    'user_id' => $userId,
+                    'course_id' => $course->id
+                ])->value('progress_percent') === 100;
 
             if (!$completed) {
                 return $this->respondError('Bạn phải hoa thành khoá học mới được đánh giá');
@@ -143,5 +143,5 @@ class RatingController extends Controller
         }
     }
 
-    
+
 }

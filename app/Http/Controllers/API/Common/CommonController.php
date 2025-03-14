@@ -119,6 +119,7 @@ class CommonController extends Controller
                 )
                 ->where('users.code', $code)
                 ->where('users.status', '!=', 'blocked')
+                ->where('courses.status', '=', 'approved')
                 ->join('profiles', 'users.id', '=', 'profiles.user_id')
                 ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
@@ -163,12 +164,13 @@ class CommonController extends Controller
 
             $courses_instructor = DB::table('courses')
                 ->selectRaw(
-                    'courses.id, 
-                    courses.name, 
-                    courses.slug, 
-                    courses.thumbnail, 
-                    courses.price, 
+                    'courses.id,
+                    courses.name,
+                    courses.slug,
+                    courses.thumbnail,
+                    courses.price,
                     courses.price_sale,
+                    courses.is_free,
                     courses.total_student,
                     ROUND(AVG(ratings.rate), 1) as avg_rating,
                     COUNT(DISTINCT lessons.id) as lessons_count'
