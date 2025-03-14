@@ -143,37 +143,5 @@ class RatingController extends Controller
         }
     }
 
-    public function getCourseReviews($slug)
-    {
-        try {
-
-            $course = Course::where('slug', $slug)->firstOrFail();
-
-            $ratings = Rating::where('course_id', $course->id)
-                ->whereHas('user', fn($q) => $q->where('status', 'active'))
-                ->with('user:id,name,avatar')
-                ->latest()
-                ->limit(5)
-                ->get(['id', 'content', 'user_id']);
-
-            if (!$ratings) {
-                return $this->respondNotFound('Không có đánh giá nào');
-            }
-
-            $totalRatings = $ratings->count();
-            $averageRating = $totalRatings > 0 ? round($ratings->avg('rate'), 1) : 0;
-
-            return $this->respondOk('Danh sách đánh giá', [
-                'ratings' => $ratings,
-                'total_ratings' => $totalRatings,
-                'average_rating' => $averageRating
-            ]);
-            
-        } catch (\Exception $e) {
-
-            $this->logError($e);
-
-            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
-        }
-    }
+    
 }

@@ -216,6 +216,7 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         try {
+
             $validator = $request->validated();
 
             $data = $request->except('avatar');
@@ -230,9 +231,14 @@ class UserController extends Controller
 
             $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
 
+            if ($request->filled('password')) {
+                $data['password'] = bcrypt($request->input('password'));
+            }
+
             $user->update($data);
 
-            if ($request->has('role')) {
+            if ($request->has('role') && !$user->hasRole('admin')) {
+
                 $user->syncRoles([]);
 
                 $user->assignRole($request->input('role'));
@@ -296,12 +302,11 @@ class UserController extends Controller
     public function export(string $role = null)
     {
         try {
-            
+
             $validRoles = Role::pluck('name')->toArray();
             $role = in_array($role, $validRoles) ? $role : 'member';
 
             return Excel::download(new UsersExport($role), 'Users_' . $role . '.xlsx');
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -538,4 +543,6 @@ class UserController extends Controller
 
         return $query;
     }
+
+    
 }

@@ -103,10 +103,10 @@ Route::prefix('admin')->as('admin.')
                 ->can('role.index');
             Route::get('/create', [RoleController::class, 'create'])->name('create')
                 ->can('role.create');
+            Route::get('/{role}', [RoleController::class, 'show'])->name('show')
+                ->can('role.show');
             Route::post('/', [RoleController::class, 'store'])->name('store')
                 ->can('role.create');
-            Route::get('/{id}', [RoleController::class, 'show'])->name('show')
-                ->can('role.show');
             Route::get('/edit/{role}', [RoleController::class, 'edit'])->name('edit')
                 ->can('role.edit');
             Route::put('/{role}', [RoleController::class, 'update'])->name('update')
@@ -150,7 +150,6 @@ Route::prefix('admin')->as('admin.')
             Route::get('/{id}', [CommentController::class, 'show'])->name('show');
             Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy');
             Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
-            
         });
 
         #============================== ROUTE BANNER =============================
@@ -203,7 +202,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
-            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
+            Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');
