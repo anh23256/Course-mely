@@ -112,7 +112,7 @@ class ChatController extends Controller
             $conversation = Conversation::create([
                 'name' => $validated['name'] ?? 'Nhóm ẩn danh',
                 'owner_id' => auth()->id(),
-                'type' => $validated['type'],
+                'type' => 'group',
                 'status' => '1',
                 'conversationable_id' => null,
                 'conversationable_type' => null,

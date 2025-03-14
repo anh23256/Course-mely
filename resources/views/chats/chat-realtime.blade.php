@@ -17,103 +17,115 @@
                 <div class="px-4 pt-4 mb-3">
                     <div class="d-flex align-items-start">
                         <div class="flex-grow-1">
-                            <h5 class="mb-4">Chats</h5>
+                            <h5 class="mb-4">Phòng chat</h5>
                         </div>
-                        <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade" id="addGroupModal"
-                            role="dialog" tabindex="-1">
-                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
-                                <div class="modal-content rounded-3 shadow-lg">
-                                    <div class="modal-header bg-primary text-white rounded-top p-3">
-                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
-                                            Thêm hội thoại
+                        <!-- Modal -->
+                        <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content rounded-3 shadow-lg border-0">
+                                    <!-- Header -->
+                                    <div class="modal-header bg-primary text-white rounded-top">
+                                        <h5 class="modal-title text-white fw-bold">
+                                            <i class="ri-group-line me-2"></i> Thêm Hội Thoại
                                         </h5>
-                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
-                                            type="button">
-                                            <span aria-hidden="true">×</span>
-                                        </button>
+                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-4 bg-light rounded-bottom">
+
+                                    <!-- Body -->
+                                    <div class="modal-body p-4 bg-light">
                                         <form id="createGroupChatForm">
                                             @csrf
-                                            <div class="form-group mb-3">
-                                                <label for="groupType" class="font-weight-bold">Chọn kiểu nhóm</label>
-                                                <select class="form-select py-2" name="type" id="groupType">
-                                                    <option value="#">Chọn kiểu nhóm</option>
-                                                    <option value="1">Personal</option>
-                                                    <option value="2">Group</option>
-                                                </select>
+
+                                            <!-- Nhập tên nhóm -->
+                                            <div class="mb-3">
+                                                <label for="groupName" class="fw-semibold mb-2">Tên nhóm</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white">
+                                                        <i class="ri-chat-3-line"></i>
+                                                    </span>
+                                                    <input class="form-control py-2 shadow-sm" name="name" id="groupName"
+                                                        placeholder="Nhập tên nhóm" type="text" required />
+                                                </div>
                                             </div>
-                                            <div class="form-group mb-3">
-                                                <label for="groupName" class="font-weight-bold">Tên nhóm</label>
-                                                <input class="form-control py-2" name="name" id="groupName"
-                                                    placeholder="Nhập tên nhóm" type="text" />
-                                            </div>
-                                            <div class="form-group mb-3">
-                                                <label for="groupMembers" class="font-weight-bold">Add Members</label>
-                                                <select tabindex="-1" id="groupMembers" name="members[]"
-                                                    multiple="multiple">
+
+                                            <!-- Chọn thành viên -->
+                                            <div class="mb-3">
+                                                <label for="groupMembers" class="fw-semibold mb-2">Thêm Thành Viên</label>
+                                                <select id="groupMembers" name="members[]" class="form-select shadow-sm" multiple="multiple">
                                                     @foreach ($data['admins'] as $admin)
-                                                        <option value="{{ $admin->id }}">
-                                                            {{ $admin->name }}</option>
+                                                        <option value="{{ $admin->id }}" data-avatar="{{ $admin->avatar }}">
+                                                            {{ $admin->name }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <button class="btn btn-primary w-100 py-2" type="submit">
-                                                Add Group
+
+                                            <!-- Nút Thêm -->
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                                <i class="ri-add-circle-line me-1"></i> Tạo Nhóm
                                             </button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div aria-hidden="true" aria-labelledby="addGroupModalLabel" class="modal fade"
-                            id="addChatPrivateModal" role="dialog" tabindex="-1">
-                            <div class="modal-dialog modal-lg d-flex align-items-center justify-content-center h-100">
-                                <div class="modal-content rounded-3 shadow-lg">
-                                    <div class="modal-header bg-primary text-white rounded-top p-3">
-                                        <h5 class="modal-title text-white" id="addGroupModalLabel">
-                                            Thêm trò chuyện
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="addChatPrivateModal" tabindex="-1" aria-labelledby="addGroupModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal">
+                                <div class="modal-content rounded-3 shadow-lg border-0">
+                                    <!-- Header -->
+                                    <div class="modal-header bg-primary text-white rounded-top">
+                                        <h5 class="modal-title text-white fw-bold">
+                                            <i class="ri-chat-new-line me-2"></i> Thêm Trò Chuyện
                                         </h5>
-                                        <button aria-label="Close" class="close text-white" data-dismiss="modal"
-                                            type="button">
-                                            <span aria-hidden="true">×</span>
-                                        </button>
+                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-4 bg-light rounded-bottom">
+
+                                    <!-- Body -->
+                                    <div class="modal-body p-4 bg-light">
                                         <form id="createPrivateChatForm">
                                             @csrf
-                                            <div class="form-group mb-3">
-                                                <label for="groupMembers" class="font-weight-bold">Nhập người muốn trò
+                                            <div class="mb-3">
+                                                <label for="received" class="fw-semibold mb-2">Chọn người muốn trò
                                                     chuyện</label>
-                                                <select tabindex="-1" id="received" name="user_id">
-                                                    @foreach ($data['users'] as $user)
-                                                        <option value="{{ $user->id }}">
-                                                            {{ $user->name }}</option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white">
+                                                        <i class="ri-user-add-line"></i>
+                                                    </span>
+                                                    <select id="received" name="user_id" class="form-select shadow-sm">
+                                                        <option value="" disabled selected>Chọn thành viên...</option>
+                                                        @foreach ($data['users'] as $user)
+                                                            <option value="{{ $user->id }}"
+                                                                data-avatar="{{ $user->avatar }}">
+                                                                {{ $user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <button class="btn btn-primary w-100 py-2" type="submit">
-                                                Thêm
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                                <i class="ri-add-line me-1"></i> Thêm
                                             </button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
                                 title="Add Contact">
 
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-soft-success btn-sm" data-toggle="modal"
-                                    data-target="#addGroupModal">
-                                    <i class="ri-add-line align-bottom"></i>
-                                </button>
+
                             </div>
                         </div>
                     </div>
                     <div class="search-box">
-                        <input type="text" class="form-control bg-light border-light" placeholder="Search here...">
+                        <input type="text" class="form-control bg-light border-light" placeholder="Tìm kiếm...">
                         <i class="ri-search-2-line search-icon"></i>
                     </div>
                 </div> <!-- .p-4 -->
@@ -121,12 +133,12 @@
                 <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" data-bs-toggle="tab" href="#chats" role="tab">
-                            Chats
+                            Trò chuyện
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#contacts" role="tab">
-                            Contacts
+                            Liên hệ gần nhất
                         </a>
                     </li>
                 </ul>
@@ -136,7 +148,7 @@
                         <div class="chat-room-list pt-3" data-simplebar>
                             <div class="d-flex align-items-center px-4 mb-2">
                                 <div class="flex-grow-1">
-                                    <h4 class="mb-0 fs-11 text-muted text-uppercase">Direct Messages</h4>
+                                    <h4 class="mb-0 fs-13">Tin nhắn trực tiếp</h4>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
@@ -203,13 +215,14 @@
 
                             <div class="d-flex align-items-center px-4 mt-4 pt-2 mb-2">
                                 <div class="flex-grow-1">
-                                    <h4 class="mb-0 fs-11 text-muted text-uppercase">Channels</h4>
+                                    <h4 class="mb-0 fs-13">Nhóm</h4>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
-                                        title="Create group">
+                                        title="New Message">
                                         <!-- Button trigger modal -->
-                                        <button type="button" class="btn btn-soft-success btn-sm">
+                                        <button type="button" class="btn btn-soft-success btn-sm" data-toggle="modal"
+                                            data-target="#addGroupModal">
                                             <i class="ri-add-line align-bottom"></i>
                                         </button>
                                     </div>
@@ -391,13 +404,12 @@
                                                                             </button>
                                                                             <button type="button"
                                                                                 class="btn avatar-xs p-0 getID"
-                                                                                title="Rời nhóm"
-                                                                                data-conversation-id=""
+                                                                                title="Rời nhóm" data-conversation-id=""
                                                                                 onclick="leaveConversation(this)">
                                                                                 <span
                                                                                     class="avatar-title rounded bg-light text-body">
                                                                                     <i
-                                                                                    class="ri-delete-bin-5-line align-bottom"></i>
+                                                                                        class="ri-delete-bin-5-line align-bottom"></i>
                                                                                 </span>
                                                                             </button>
                                                                             <div class="dropdown">
@@ -460,7 +472,7 @@
                                                                     <!-- Nội dung tabs chính -->
                                                                     <div class="tab-content" id="myTabContent">
                                                                         <!-- Danh sách thành viên -->
-                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3"
+                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3 memberLists" 
                                                                             id="members" role="tabpanel"
                                                                             aria-labelledby="members-tab">
                                                                             <ul class="list-group member-list"
@@ -614,7 +626,7 @@
                                                                     <div class="search-box">
                                                                         <input type="text"
                                                                             class="form-control bg-light border-light"
-                                                                            placeholder="Search here..."
+                                                                            placeholder="Tìm kiếm..."
                                                                             onkeyup="searchMessages()" id="searchMessage">
                                                                         <i class="ri-search-2-line search-icon"></i>
                                                                     </div>
@@ -760,6 +772,27 @@
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
         const userId = "{{ auth()->id() }}"; // Truyền id người dùng từ Laravel sang JavaScript
+        document.addEventListener("DOMContentLoaded", function() {
+            const selectElement = document.getElementById("received");
+
+            selectElement.addEventListener("change", function() {
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                const avatarUrl = selectedOption.getAttribute("data-avatar") ||
+                    'default-avatar.png'; // Hình mặc định nếu không có avatar
+
+                // Thêm avatar vào dropdown
+                const container = document.querySelector('.custom-select-container');
+                let avatarElement = container.querySelector(".avatar");
+
+                if (!avatarElement) {
+                    avatarElement = document.createElement("img");
+                    avatarElement.classList.add("avatar");
+                    container.prepend(avatarElement);
+                }
+
+                avatarElement.src = avatarUrl;
+            });
+        });
     </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
@@ -876,15 +909,76 @@
                 placeholder: "Chọn thành viên thêm vào nhóm",
                 allowClear: true,
                 dropdownParent: $('#addGroupModal'),
-                // dropdownParent: $('#addChatPrivateModal'),
+                templateResult: formatUser, // Hiển thị trong danh sách
+                templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+            function formatUser(user) {
+                if (!user.id) {
+                    return user.text; // Trả về văn bản nếu không có ID
+                }
+
+                var avatar = $(user.element).data('avatar'); // Lấy avatar từ data-avatar
+                var $user = $(
+                    `<div class="d-flex align-items-center">
+                <img src="${avatar}" class="rounded-circle me-2" width="30" height="30" />
+                <span>${user.text}</span>
+            </div>`
+                );
+
+                return $user;
+            }
+
+            function formatUserSelection(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+
+                var avatar = $(user.element).data('avatar');
+                return $(
+                    `<div class="d-flex align-items-center">
+                <img src="${avatar}" class="rounded-circle me-2" width="25" height="25" />
+                <span>${user.text}</span>
+            </div>`
+                );
+            }
         });
         $(document).ready(function() {
             $('#received').select2({
                 placeholder: "Chọn thành viên thêm vào nhóm",
                 allowClear: true,
                 dropdownParent: $('#addChatPrivateModal'),
+                templateResult: formatUser, // Hiển thị trong danh sách
+                templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+            function formatUser(user) {
+                if (!user.id) {
+                    return user.text; // Trả về văn bản nếu không có ID
+                }
+
+                var avatar = $(user.element).data('avatar'); // Lấy avatar từ data-avatar
+                var $user = $(
+                    `<div class="d-flex align-items-center">
+                <img src="${avatar}" class="rounded-circle me-2" width="30" height="30" />
+                <span>${user.text}</span>
+            </div>`
+                );
+
+                return $user;
+            }
+
+            function formatUserSelection(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+
+                var avatar = $(user.element).data('avatar');
+                return $(
+                    `<div class="d-flex align-items-center">
+                <img src="${avatar}" class="rounded-circle me-2" width="25" height="25" />
+                <span>${user.text}</span>
+            </div>`
+                );
+            }
         });
     </script>
     <script>
@@ -1187,7 +1281,7 @@
                         if (data.status === 'success') {
                             alert(data.message);
                             location
-                        .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
                             alert(data.message);
                         }
@@ -1197,6 +1291,7 @@
                     });
             }
         }
+
         function leaveConversation(button) {
             const conversationId = button.getAttribute('data-conversation-id');
 
@@ -1213,7 +1308,7 @@
                         if (data.status === 'success') {
                             alert(data.message);
                             location
-                        .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
                             alert(data.message);
                         }
@@ -1223,6 +1318,7 @@
                     });
             }
         }
+
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
                 if (response.status === 'success') {
