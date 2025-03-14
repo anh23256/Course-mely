@@ -70,15 +70,13 @@
                                     <label for="inputEmail4" class="form-label">Email</label>
                                     <input type="email" class="form-control" name="email" id="inputEmail4"
                                         placeholder="Nhập email" value="{{ $user->email }}">
-                                    @error('email')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+
                                 </div>
                             @else
                                 <div class="col-md-12 mb-3">
                                     <label for="inputEmail4" class="form-label">Email</label>
                                     <input type="email" class="form-control" name="email" id="inputEmail4"
-                                        placeholder="Nhập email" value="{{ $user->email }}" disabled>
+                                        placeholder="Nhập email" value="{{ $user->email }}" readonly>
                                 </div>
                             @endif
 
@@ -87,24 +85,12 @@
                                 <div class="col-md-12 mb-3">
                                     <label for="inputEmail4" class="form-label">Password</label>
 
-                                    <div class="position-relative auth-pass-inputgroup">
-                                        <input type="password" class="form-control pe-5 password-input" name="password"
-                                            onpaste="return false" id="password" placeholder="Nhập password"
-                                            name="password">
-                                        <button
-                                            class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
-                                            type="button" id="password-addon"><i
-                                                class="ri-eye-fill align-middle"></i></button>
-                                        <div class="invalid-feedback">
-                                            Vui lòng nhập mật khẩu
-                                        </div>
-                                    </div>
-                                    @error('password')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+                                    <input type="password" class="form-control pe-5 password-input" name="password"
+                                         id="password" placeholder="Nhập password">
+                                        
                                 </div>
                             @endif
-                            
+
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Avatar mới</label>
                                 <input type="file" name="avatar" id="imageInput" accept="image/*"
@@ -123,9 +109,7 @@
                                         <option @selected($user->status === 'inactive') value="inactive">Inactive</option>
                                         <option @selected($user->status === 'blocked') value="blocked">Blocked</option>
                                     </select>
-                                    @error('status')
-                                        <span class="text-danger mt-2">{{ $message }}</span>
-                                    @enderror
+                                    
                                 </div>
                             @else
                                 <input type="hidden" name="status" value="{{ $user->status }}">

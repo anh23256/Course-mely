@@ -351,6 +351,7 @@
     </div>
 @endsection
 @push('page-scripts')
+
     <script>
         var routeUrlFilter = "{{ route('admin.coupons.index') }}";
         var routeDeleteAll = "{{ route('admin.coupons.destroy', ':itemID') }}";
@@ -364,6 +365,7 @@
             window.location = routeUrlFilter;
         });
     </script>
+
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>
     <script src="{{ asset('assets/js/common/delete-all-selected.js') }}"></script>
