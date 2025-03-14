@@ -259,3 +259,66 @@
 .download-btn i {
     font-size: 18px;
 }
+.custom-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-container select {
+    padding-left: 40px; /* Chừa chỗ cho avatar */
+}
+
+.custom-select-container .avatar {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+/* Chứa danh sách tin nhắn trực tiếp */
+.chat-message-list {
+    max-height: 300px; /* Chiều cao tối đa của danh sách */
+    overflow-y: auto;  /* Hiển thị thanh cuộn dọc khi vượt quá chiều cao */
+    padding-left: 20px; /*Khoảng cách phải để tránh thanh cuộn bị ẩn*/
+}
+
+/* Tùy chỉnh thanh cuộn để đẹp hơn */
+.chat-message-list::-webkit-scrollbar {
+    width: 5px; /* Chiều rộng thanh cuộn */
+    margin-left: 10px;
+}
+
+.chat-message-list::-webkit-scrollbar-thumb {
+    background-color: #888; /* Màu của thanh cuộn */
+    border-radius: 10px; /* Bo góc thanh cuộn */
+}
+
+.chat-message-list::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Màu khi hover vào thanh cuộn */
+}
+
+#membersList {
+    max-height: 300px; /* Chiều cao tối đa của danh sách */
+    overflow-y: auto;  /* Hiển thị thanh cuộn dọc khi vượt quá chiều cao */
+    padding-left: 20px; /*Khoảng cách phải để tránh thanh cuộn bị ẩn*/
+}
+
+/* Tùy chỉnh thanh cuộn để đẹp hơn */
+#membersList::-webkit-scrollbar {
+    width: 5px; /* Chiều rộng thanh cuộn */
+    margin-left: 10px;
+}
+
+#membersList::-webkit-scrollbar-thumb {
+    background-color: #888; /* Màu của thanh cuộn */
+    border-radius: 10px; /* Bo góc thanh cuộn */
+}
+
+#membersList::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Màu khi hover vào thanh cuộn */
+}
