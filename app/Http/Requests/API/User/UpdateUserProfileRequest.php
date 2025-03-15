@@ -36,13 +36,13 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'certificates' => 'nullable|array',
             'certificates.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:2048',
             'bio' => 'nullable|array',
-            'bio.facebook' => 'nullable|url',
-            'bio.instagram' => 'nullable|url',
             'bio.github' => 'nullable|url',
-            'bio.linkedin' => 'nullable|url',
-            'bio.twitter' => 'nullable|url',
-            'bio.youtube' => 'nullable|url',
             'bio.website' => 'nullable|url',
+            'bio.youtube' => 'nullable|url',
+            'bio.facebook' => 'nullable|url',
+            'bio.twitter' => 'nullable|url',
+            'bio.linkedin' => 'nullable|url',
+            'bio.instagram' => 'nullable|url',
             'about_me' => 'nullable|string',
             'email' => 'prohibited',
             'qa_systems' => 'prohibited',
@@ -58,6 +58,18 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'careers.*.end_date' => 'nullable|date|after_or_equal:careers.*.start_date',
             'careers.*.description' => 'nullable|string',
             'careers.*.id' => 'nullable',
+        ];
+    }
+    public function messages(): array
+    {
+        return [
+            'bio.facebook' => 'Facebook phải là url.',
+            'bio.instagram' => 'Instagram phải là url.',
+            'bio.github' => 'Github phải là url.',
+            'bio.linkedin' => 'Linkedin phải là url.',
+            'bio.twitter' => 'Twitter phải là url.',
+            'bio.youtube' => 'Youtube phải là url.',
+            'bio.website' => 'Website phải là url.',
         ];
     }
     public function withValidator(Validator $validator)

@@ -358,6 +358,10 @@ class TransactionController extends Controller
             $discount->refresh();
             $discount->increment('used_count');
 
+            if($discount->max_usage > 0){
+                $discount->decrement('max_usage');
+            }
+
             $couponUse = CouponUse::query()->where([
                 'coupon_id' => $discount->id,
                 'user_id' => $userID

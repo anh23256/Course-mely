@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
@@ -61,9 +62,8 @@ Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {
         #============================== ROUTE AUTH =============================
-        Route::get('dashboard', function () {
-            return view('dashboard');
-        })->name('dashboard')->middleware('verified');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('verified');
+        Route::post('dashboard-export', [DashboardController::class, 'export'])->name('dashboard.export');
 
         #============================== ROUTE USER =============================
         Route::prefix('users')->group(function () {

@@ -123,7 +123,7 @@ class UserController extends Controller
     {
         if ($bioData) {
             $bio = [];
-            $profile = !empty($profile->bio) ? json_decode($profile->bio, true) : '';
+            $profile = !empty($profile->bio) ? $profile->bio : '';
 
             if (isset($bioData['facebook'])) {
                 $bio['facebook'] = $bioData['facebook'];

@@ -1,0 +1,126 @@
+.row.g-4 {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row.g-4>[class*="col-"] {
+    display: flex;
+    flex-direction: column;
+}
+
+.row.g-4>[class*="col-"]>.card {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body {
+    flex-grow: 1;
+}
+
+.btn-chart {
+    background: linear-gradient(135deg, #007bff, #00c4cc);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+}
+
+.btn-chart:hover {
+    background: linear-gradient(135deg, #0056b3, #009faf);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+body {
+    background: #f4f7fe;
+    font-family: 'Poppins', sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #6b48ff, #00ddeb);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+h4,
+h5 {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.counter-value {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #34495e;
+}
+
+.apex-charts {
+    border-radius: 10px;
+    background: white;
+    padding: 10px;
+}
+
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+    transition: background 0.2s ease;
+}
+
+.swiper-slide .card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #6b48ff;
+}
+
+.badge.bg-primary {
+    background: #6b48ff !important;
+    border-radius: 20px;
+}
+
+.btn-outline-primary {
+    border-color: #6b48ff;
+    color: #6b48ff;
+}
+
+.btn-outline-primary:hover {
+    background: #6b48ff;
+    color: white;
+}
+
+#renderTopInstructorsChart,
+#bestSellingCourses {
+    min-height: 400px;
+}
