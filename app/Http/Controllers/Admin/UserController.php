@@ -136,7 +136,7 @@ class UserController extends Controller
 
             $data['email_verified_at'] = now();
 
-            $user =  User::query()->create($data);
+            $user = User::query()->create($data);
 
             $user->assignRole($request->role);
 
@@ -190,7 +190,6 @@ class UserController extends Controller
     public function edit(User $user)
     {
         try {
-
             $title = 'Quản lý thành viên';
             $subTitle = 'Cập nhật người dùng';
 
@@ -204,6 +203,29 @@ class UserController extends Controller
             ]));
         } catch (\Exception $e) {
 
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function profile()
+    {
+        try {
+            $title = 'Quản lý thành viên';
+            $subTitle = 'Cập nhật người dùng';
+
+            $user = Auth::user();
+
+            if (!$user->hasRole('admin')) {
+                return abort(403, 'Bạn không có quyền truy cập vào hệ thống.');
+            }
+
+            return view('administrator.profile', compact([
+                'title',
+                'subTitle',
+            ]));
+        } catch (\Exception $e) {
             $this->logError($e);
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
@@ -267,6 +289,7 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
     public function import(Request $request, string $role = null)
     {
         try {
@@ -299,6 +322,7 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại!');
         }
     }
+
     public function export(string $role = null)
     {
         try {
@@ -481,6 +505,7 @@ class UserController extends Controller
             }
         }
     }
+
     private function restoreDeleteUsers(array $userID)
     {
 
@@ -544,5 +569,5 @@ class UserController extends Controller
         return $query;
     }
 
-    
+
 }

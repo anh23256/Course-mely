@@ -67,6 +67,8 @@ Route::prefix('admin')->as('admin.')
             return view('dashboard');
         })->name('dashboard')->middleware('verified');
 
+        Route::get('administrator-profile', [UserController::class, 'profile'])->name('administrator.profile');
+
         #============================== ROUTE USER =============================
         Route::prefix('users')->group(function () {
             Route::get('user-clients', [UserController::class, 'index'])->name('clients.index');
