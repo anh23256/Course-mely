@@ -32,12 +32,39 @@ class DashboardController extends Controller
             $querySystem_Funds = $this->getSystemFund();
             $queryCourseRatings = $this->getCourseRating();
 
-            $topCoursesProgress = $this->getTopCourseProgress();
-            $getTopViewCourses = $this->getTopViewCourse();
-            $topInstructorsFollows = $this->getTopInstructorFollow();
-            $categoryStats = $this->getCategoryStat();
+            $queryTopCoursesProgress = $this->getTopCourseProgress();
+            $queryGetTopViewCourses = $this->getTopViewCourse();
+            $quertTopInstructorsFollows = $this->getTopInstructorFollow();
+            $queryCategoryStats = $this->getCategoryStat();
 
-            list($queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds) = $this->getFilterDataChart($request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds);
+            list(
+                $queryTopInstructors,
+                $queryTopUsers,
+                $queryTopCourses,
+                $queryCourseRatings,
+                $querySystem_Funds,
+                $queryTotalAmount,
+                $queryTotalCourse,
+                $queryTotalInstructor,
+                $queryTopCoursesProgress,
+                $queryGetTopViewCourses,
+                $quertTopInstructorsFollows,
+                $queryCategoryStats,
+            ) = $this->getFilterDataChart(
+                $request,
+                $queryTopInstructors,
+                $queryTopUsers,
+                $queryTopCourses,
+                $queryCourseRatings,
+                $querySystem_Funds,
+                $queryTotalAmount,
+                $queryTotalCourse,
+                $queryTotalInstructor,
+                $queryTopCoursesProgress,
+                $queryGetTopViewCourses,
+                $quertTopInstructorsFollows,
+                $queryCategoryStats
+            );
 
             $topInstructors = DB::table(DB::raw("({$queryTopInstructors->toSql()}) as sub"))
                 ->mergeBindings($queryTopInstructors)
@@ -52,14 +79,14 @@ class DashboardController extends Controller
                 ->paginate(5);
 
             $totalAmount = $queryTotalAmount->first();
-
             $totalCourse = $queryTotalCourse->count();
-
             $totalInstructor = $queryTotalInstructor->count();
-
             $courseRatings = $queryCourseRatings->get();
-
             $system_Funds =  $querySystem_Funds->get();
+            $topCoursesProgress = $queryTopCoursesProgress->get();
+            $getTopViewCourses = $queryGetTopViewCourses->get();
+            $topInstructorsFollows = $quertTopInstructorsFollows->get();
+            $categoryStats = $queryCategoryStats->get();
 
             if ($request->ajax()) {
                 return response()->json([
@@ -120,15 +147,48 @@ class DashboardController extends Controller
         return $query;
     }
 
-    private function getFilterDataChart(Request $request, $queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds)
-    {
+    private function getFilterDataChart(
+        Request $request,
+        $queryTopInstructors,
+        $queryTopUsers,
+        $queryTopCourses,
+        $queryCourseRatings,
+        $querySystem_Funds,
+        $queryTotalAmount,
+        $queryTotalCourse,
+        $queryTotalInstructor,
+        $queryTopCoursesProgress,
+        $queryGetTopViewCourses,
+        $quertTopInstructorsFollows,
+        $queryCategoryStats
+    ) {
         $queryTopInstructors = $this->applyGlobalFilter($queryTopInstructors, $request, 'invoices', 'created_at');
         $queryTopUsers = $this->applyGlobalFilter($queryTopUsers, $request, 'invoices', 'created_at');
         $queryTopCourses = $this->applyGlobalFilter($queryTopCourses, $request, 'invoices', 'created_at');
         $queryCourseRatings = $this->applyGlobalFilter($queryCourseRatings, $request, 'courses', 'created_at');
         $querySystem_Funds = $this->applyGlobalFilter($querySystem_Funds, $request, 'invoices', 'created_at');
+        $queryTotalAmount = $this->applyGlobalFilter($queryTotalAmount, $request, 'invoices', 'created_at');
+        $queryTotalCourse = $this->applyGlobalFilter($queryTotalCourse, $request, 'courses', 'created_at');
+        $queryTotalInstructor = $this->applyGlobalFilter($queryTotalInstructor, $request, 'users', 'created_at');
+        $queryTopCoursesProgress = $this->applyGlobalFilter($queryTopCoursesProgress, $request, 'course_users', 'created_at');
+        $queryGetTopViewCourses = $this->applyGlobalFilter($queryGetTopViewCourses, $request, 'courses', 'created_at');
+        $quertTopInstructorsFollows = $this->applyGlobalFilter($quertTopInstructorsFollows, $request, 'users', 'created_at');
+        $queryCategoryStats = $this->applyGlobalFilter($queryCategoryStats, $request, 'categories', 'created_at');
 
-        return [$queryTopInstructors, $queryTopUsers, $queryTopCourses, $queryCourseRatings, $querySystem_Funds];
+        return [
+            $queryTopInstructors,
+            $queryTopUsers,
+            $queryTopCourses,
+            $queryCourseRatings,
+            $querySystem_Funds,
+            $queryTotalAmount,
+            $queryTotalCourse,
+            $queryTotalInstructor,
+            $queryTopCoursesProgress,
+            $queryGetTopViewCourses,
+            $quertTopInstructorsFollows,
+            $queryCategoryStats
+        ];
     }
     public function export(Request $request)
     {
@@ -254,8 +314,7 @@ class DashboardController extends Controller
             })
             ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
             ->groupBy('categories.id', 'categories.name')
-            ->limit(10)
-            ->get();
+            ->limit(10);
     }
     private function getTopInstructorFollow()
     {
@@ -275,7 +334,7 @@ class DashboardController extends Controller
             )
             ->groupBy('users.name', 'users.code', 'users.avatar')
             ->orderBy('total_follow', 'desc')
-            ->limit(10)->get();
+            ->limit(10);
     }
     private function getTopViewCourse()
     {
@@ -284,8 +343,7 @@ class DashboardController extends Controller
             ->join('users', 'users.id', '=', 'courses.user_id')
             ->where('courses.status', 'approved')
             ->orderByDesc('courses.views')
-            ->limit(10)
-            ->get();
+            ->limit(10);
     }
     private function getTopCourseProgress()
     {
@@ -293,8 +351,7 @@ class DashboardController extends Controller
             ->groupBy('course_id')
             ->orderByDesc('avg_progress')
             ->with('course:id,name')
-            ->limit(10)
-            ->get();
+            ->limit(10);
     }
     private function getTopInstructor()
     {

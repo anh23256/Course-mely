@@ -69,7 +69,7 @@
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
                                 <span class="counter-value"
-                                    data-target="totalProfit">{{ number_format($totalAmount->total_profit ?? 0, 0,'.','.') }}</span>
+                                    data-target="totalProfit">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
                                 <span class="fs-14 text-muted"></span>
                             </h4>
                         </div>
@@ -89,7 +89,7 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value">{{ $totalCourse ?? 0 }}</span>
+                                <span class="counter-value" data-target="totalCourse">{{ $totalCourse ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -108,7 +108,7 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value">{{ $totalInstructor ?? 0 }}</span>
+                                <span class="counter-value" data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -184,7 +184,7 @@
                             <div class="col-6 col-sm-6">
                                 <div class="p-3 border border-dashed border-start-0">
                                     <h5 class="mb-1"><span class="counter-value-revenue" data-target="228.89">
-                                            {{ number_format($totalAmount->total_revenue ?? 0, 0,'.','.') }}</span>
+                                            {{ number_format($totalAmount->total_revenue ?? 0, 0, '.', '.') }}</span>
                                         VND</h5>
                                     <p class="text-muted mb-0">Doanh thu</p>
                                 </div>
@@ -193,7 +193,7 @@
                             <div class="col-6 col-sm-6">
                                 <div class="p-3 border border-dashed border-start-0 border-end-0">
                                     <h5 class="mb-1 text-success"><span class="counter-value-profit"
-                                            data-target="10589">{{ number_format($totalAmount->total_profit ?? 0,0,'.','.') }}</span>
+                                            data-target="10589">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
                                         VND</h5>
                                     <p class="text-muted mb-0">Lợi nhuận</p>
                                 </div>
@@ -542,7 +542,7 @@
                 chart.destroy();
                 chart = undefined;
             }
-            
+
             chartContainer.innerHTML = "";
 
             if (!newData || newData.length === 0) {
@@ -1237,6 +1237,16 @@
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0
                     }).format(response.totalAmount.total_profit || 0));
+
+                    $('.counter-value[data-target="totalCourse"]').text(new Intl.NumberFormat('vi-VN', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(response.totalCourse || 0));
+
+                    $('.counter-value[data-target="totalInstructor"]').text(new Intl.NumberFormat('vi-VN', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(response.totalInstructor || 0));
 
                     $('.counter-value-revenue').text(new Intl.NumberFormat('vi-VN', {
                         minimumFractionDigits: 0,
