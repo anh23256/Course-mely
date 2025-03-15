@@ -255,14 +255,21 @@ class CourseController extends Controller
                 )
                 : $thumbnailOld;
 
-            $data['intro'] = $request->hasFile('intro')
-                ? $this->handleFileUpload(
-                    $request->file('intro'),
-                    $introOld,
-                    self::FOLDER_COURSE_INTRO,
-                    'video'
-                )
-                : $introOld;
+            if ( $data['intro'] === null) {
+                if ($introOld) {
+                    $this->deleteVideo($introOld, self::FOLDER_COURSE_INTRO);
+                }
+                $data['intro'] = null;
+            } else {
+                $data['intro'] = $request->hasFile('intro')
+                    ? $this->handleFileUpload(
+                        $request->file('intro'),
+                        $introOld,
+                        self::FOLDER_COURSE_INTRO,
+                        'video'
+                    )
+                    : $introOld;
+            }
 
             $course->update($data);
 

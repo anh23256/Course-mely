@@ -67,6 +67,8 @@ Route::prefix('admin')->as('admin.')
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('verified');
         Route::post('dashboard-export', [DashboardController::class, 'export'])->name('dashboard.export');
 
+        Route::get('administrator-profile', [UserController::class, 'profile'])->name('administrator.profile');
+
         #============================== ROUTE USER =============================
         Route::prefix('users')->group(function () {
             Route::get('user-clients', [UserController::class, 'index'])->name('clients.index');
