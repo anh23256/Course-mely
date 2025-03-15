@@ -119,4 +119,29 @@ class RatingController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
+    public function getLastRatings()
+    {
+        try {
+
+            $ratings = Rating::with('user:id,name,avatar')
+                ->whereHas('user', fn($q) => $q->where('status', 'active'))
+                ->latest()
+                ->limit(6)
+                ->get(['id', 'content', 'user_id']);
+
+            if (!$ratings) {
+                return $this->respondNotFound('Không có đánh giá nào');
+            }
+
+            return $this->respondOk('Danh sách đánh giá', $ratings);
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+
 }

@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait ,UploadToLocalTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToCloudinaryTrait, UploadToLocalTrait;
 
     const FOLDER_USER = 'users';
     const FOLDER_CERTIFICATE = 'certificates';
@@ -288,7 +288,9 @@ class UserController extends Controller
                         'average' => $ratingInfo ? $ratingInfo->average_rating : 0
                     ],
                     'total_video_duration' => $totalVideoDuration,
-                    'progress_percent' => $course->courseUsers->first()->progress_percent,
+                    'progress_percent' => $course->courseUsers
+                            ->where('user_id', Auth::id())->first()
+                            ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
                     'category' => [
                         'id' => $course->category->id ?? null,
@@ -303,7 +305,7 @@ class UserController extends Controller
                 ];
             });
 
-            return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, $result);
+            return $this->respondOk('Danh sách khoá học của người dùng aa: ' . $user->name, $result);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -656,13 +658,26 @@ class UserController extends Controller
                 return $this->respondError('Số tài khoản đã tồn tại');
             }
 
+            $isFirstRecord = empty($bankingInfos);
+
             $newBankingInfo = [
                 'id' => uniqid(),
+                'acq_id' => $data['bin'],
+                'name' => $data['name'],
+                'logo' => $data['logo'] ?? '',
+                'logo_rounded' => $data['logo_rounded'] ?? '',
+                'short_name' => $data['short_name'] ?? '',
                 'account_no' => $data['account_no'],
                 'account_name' => $data['account_name'],
-                'acq_id' => $data['acq_id'],
-                'bank_name' => $data['bank_name']
+                'is_default' => $isFirstRecord ? true : ($data['is_default'] ?? false),
             ];
+
+            if ($newBankingInfo['is_default']) {
+                $bankingInfos = collect($bankingInfos)->map(function ($item) {
+                    $item['is_default'] = false;
+                    return $item;
+                })->toArray();
+            }
 
             $bankingInfos[] = $newBankingInfo;
 
@@ -697,35 +712,108 @@ class UserController extends Controller
 
             $bankingInfos = $profile->banking_info ?? [];
             $data = $request->validated();
+            $bankingInfoId = $data['id'];
+
+            $index = null;
+            foreach ($bankingInfos as $key => $info) {
+                if ($info['id'] === $bankingInfoId) {
+                    $index = $key;
+                    break;
+                }
+            }
+
+            if ($index === null) {
+                return $this->respondNotFound('Không tìm thấy thông tin ngân hàng cần cập nhật');
+            }
+
+            $duplicateExists = collect($bankingInfos)
+                ->filter(function ($item) use ($data, $bankingInfoId) {
+                    return $item['account_no'] === $data['account_no'] &&
+                        $item['id'] !== $bankingInfoId;
+                })->isNotEmpty();
+
+            if ($duplicateExists) {
+                return $this->respondError('Số tài khoản đã tồn tại');
+            }
 
             $updatedBankingInfos = collect($bankingInfos)->map(function ($item) use ($data) {
                 if ($item['id'] === $data['id']) {
                     return [
                         'id' => $data['id'],
+                        'acq_id' => $data['bin'],
+                        'name' => $data['name'],
+                        'logo' => $data['logo'] ?? $item['logo'] ?? '',
+                        'logo_rounded' => $data['logo_rounded'] ?? $item['logo_rounded'] ?? '',
+                        'short_name' => $data['short_name'] ?? $item['short_name'] ?? '',
                         'account_no' => $data['account_no'],
                         'account_name' => $data['account_name'],
-                        'acq_id' => $data['acq_id'],
-                        'bank_name' => $data['bank_name']
+                        'is_default' => isset($data['is_default']) ? (bool)$data['is_default'] : ($item['is_default'] ?? false),
                     ];
                 }
+
+                if (isset($data['is_default']) && $data['is_default'] && $item['id'] !== $data['id']) {
+                    $item['is_default'] = false;
+                }
+
                 return $item;
             })->all();
-
-            $duplicateAccounts = collect($updatedBankingInfos)
-                ->filter(function ($item) use ($data) {
-                    return $item['account_no'] === $data['account_no'] &&
-                        $item['id'] !== $data['id'];
-                });
-
-            if ($duplicateAccounts->isNotEmpty()) {
-                return $this->respondError('Số tài khoản đã tồn tại');
-            }
 
             $profile->update([
                 'banking_info' => $updatedBankingInfos
             ]);
 
             return $this->respondOk('Cập nhật thông tin ngân hàng thành công', $updatedBankingInfos);
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function setDefaultBankingInfo(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng');
+            }
+
+            $profile = Profile::query()->where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondNotFound('Không tìm thấy hồ sơ');
+            }
+
+            $bankingInfos = $profile->banking_info ?? [];
+
+            if (empty($bankingInfos)) {
+                return $this->respondNotFound('Không có thông tin ngân hàng nào');
+            }
+
+            $bankingInfoId = $request->input('id');
+
+            $exists = collect($bankingInfos)->contains(function ($item) use ($bankingInfoId) {
+                return $item['id'] === $bankingInfoId;
+            });
+
+            if (!$exists) {
+                return $this->respondNotFound('Không tìm thấy thông tin ngân hàng');
+            }
+
+            $updatedBankingInfos = collect($bankingInfos)
+                ->map(function ($item) use ($bankingInfoId) {
+                    // Đặt tài khoản được chọn thành mặc định, các tài khoản khác thành không mặc định
+                    $item['is_default'] = ($item['id'] === $bankingInfoId);
+                    return $item;
+                })
+                ->all();
+
+            $profile->update([
+                'banking_info' => $updatedBankingInfos
+            ]);
+
+            return $this->respondOk('Cập nhật tài khoản mặc định thành công', $updatedBankingInfos);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -751,6 +839,15 @@ class UserController extends Controller
             $bankingInfos = $profile->banking_info ?? [];
             $bankingInfoId = $request->input('id');
 
+            $bankingInfo = collect($bankingInfos)->firstWhere('id', $bankingInfoId);
+
+            if (!$bankingInfo) {
+                return $this->respondNotFound('Không tìm thấy thông tin ngân hàng cần xóa');
+            }
+
+            $isDefault = $bankingInfo['is_default'] ?? false;
+
+            // Lọc ra các tài khoản không bị xóa
             $updatedBankingInfos = collect($bankingInfos)
                 ->reject(function ($item) use ($bankingInfoId) {
                     return $item['id'] === $bankingInfoId;
@@ -758,14 +855,15 @@ class UserController extends Controller
                 ->values()
                 ->all();
 
+            if ($isDefault && !empty($updatedBankingInfos)) {
+                $updatedBankingInfos[0]['is_default'] = true;
+            }
+
             $profile->update([
                 'banking_info' => $updatedBankingInfos
             ]);
 
-            return $this->respondOk('Xóa thông tin ngân hàng thành công', [
-                'banking_info' => $updatedBankingInfos
-            ]);
-
+            return $this->respondOk('Xóa thông tin ngân hàng thành công', $updatedBankingInfos);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 

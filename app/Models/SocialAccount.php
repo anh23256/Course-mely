@@ -21,4 +21,9 @@ class SocialAccount extends Model
     protected $attributes = [
         'avatar' => null,
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -58,6 +58,7 @@ Route::prefix('auth')->as('auth.')->group(function () {
 });
 
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
+Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 
 Route::prefix('livestreams')->group(function () {
     Route::get('/', [LivestreamController::class, 'index']);
@@ -86,14 +87,17 @@ Route::get('/top-instructors', [TopInstructorController::class, 'index']);
 
 Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'getFollowersCount']);
 
+Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
 
-    Route::post('/vnpay-payment', [TransactionController::class, 'createVNPayPayment']);
+    Route::post('/create-payment', [TransactionController::class, 'createPayment']);
 
     Route::prefix('auth')->as('auth.')->group(function () {
+        Route::get('get-user-with-token', [AuthController::class, 'getUserWithToken']);
         Route::post('logout', [AuthController::class, 'logout']);
     });
     Route::prefix('instructor')->as('instructor.')->group(function () {
@@ -130,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
         Route::post('/add-banking-info', [UserController::class, 'addBankingInfo']);
         Route::put('/update-banking-info', [UserController::class, 'updateBankingInfo']);
+        Route::put('/set-default', [UserController::class, 'setDefaultBankingInfo']);
         Route::delete('/remove-banking-info', [UserController::class, 'removeBankingInfo']);
 
         #============================== ROUTE CAREERS =============================
@@ -481,5 +486,11 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->name('verification.resend');
 Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getValidateCourse']);
 
+
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
 Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
+
+Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
+
+Route::get('/{slug}', [RatingController::class, 'getRatings']);
+

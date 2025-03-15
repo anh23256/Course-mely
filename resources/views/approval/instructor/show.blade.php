@@ -472,8 +472,8 @@
 
 @push('page-scripts')
     <script>
-        $(document).ready(function() {
-            $(".approve").click(function(event) {
+        $(document).ready(function () {
+            $(".approve").click(function (event) {
                 event.preventDefault();
 
                 Swal.fire({
@@ -491,7 +491,7 @@
                 });
             });
 
-            $('#submitRejectForm').on('click', function() {
+            $('#submitRejectForm').on('click', function () {
                 const note = $('#rejectNote').val();
 
                 if (note.trim() === '') {
@@ -509,7 +509,7 @@
                         _method: 'PUT',
                         note,
                     },
-                    success: function(response) {
+                    success: function (response) {
                         Swal.fire({
                             title: 'Thao tác thành công!',
                             text: 'Lý do từ chối đã được ghi nhận.',
@@ -519,7 +519,7 @@
                             location.reload();
                         });
                     },
-                    error: function(error) {
+                    error: function (error) {
                         Swal.fire({
                             title: 'Thao tác thất bại!',
                             text: 'Đã có lỗi xảy ra. Vui lòng thử lại.',

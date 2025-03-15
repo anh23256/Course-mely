@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
@@ -33,10 +34,20 @@ class ChatController extends Controller
     public function index()
     {
         $data = $this->getAdminsAndChannels();
+        $directConversations = Conversation::whereHas('users', function ($query) {
+            $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
+        })->where('type', 'direct')->get();
+    
+        $groupConversations = Conversation::whereHas('users', function ($query) {
+            $query->where('user_id', auth()->id());
+        })->where('type', 'group')->get();
+    
         return view(
             'chats.chat-realtime',
             [
-                'data' => $data
+                'data' => $data,
+                'directConversations' =>$directConversations,
+                'groupConversations' =>$groupConversations
             ]
         );
     }
@@ -62,22 +73,28 @@ class ChatController extends Controller
                 })
                 ->first();
 
-            if (!$conversation) {
-                // Nếu chưa có, tạo cuộc trò chuyện 1-1
-                $conversation = Conversation::create([
-                    'name' => null, // Không cần tên nhóm trong chat 1-1
-                    'owner_id' => null, // Không cần owner trong chat 1-1
-                    'type' => 'direct',
-                    'status' => '1',
+            if ($conversation) {
+                $data = $this->getAdminsAndChannels();
+                $data['conversation'] = $conversation;
+                DB::commit();
+                return response()->json([
+                    'status' => 'failed',
+                    'data' => $data
                 ]);
-
-                $conversation->users()->attach([$user1, $user2]);
             }
-
+            $conversation = Conversation::create([
+                'name' => null, // Không cần tên nhóm trong chat 1-1
+                'owner_id' => null, // Không cần owner trong chat 1-1
+                'type' => 'direct',
+                'status' => '1',
+            ]);
+            $conversation->users()->attach([$user1, $user2]);
+            $data = $this->getAdminsAndChannels();
+            $data['conversation'] = $conversation;
             DB::commit();
             return response()->json([
                 'status' => 'success',
-                'conversation' => $conversation
+                'data' => $data
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -95,7 +112,7 @@ class ChatController extends Controller
             $conversation = Conversation::create([
                 'name' => $validated['name'] ?? 'Nhóm ẩn danh',
                 'owner_id' => auth()->id(),
-                'type' => $validated['type'],
+                'type' => 'group',
                 'status' => '1',
                 'conversationable_id' => null,
                 'conversationable_type' => null,
@@ -186,7 +203,7 @@ class ChatController extends Controller
             $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
                 ->where('user_id', '<>', auth()->id())->pluck('user_id');
 
-            User::whereIn('id', $users)->get()->each->notify(new MessageNotification($message));
+           Notification::send(User::whereIn('id', $users)->get(), new MessageNotification($message));
 
             return response()->json(['status' => 'success', 'message' => $message]);
         } catch (\Exception $e) {
@@ -196,17 +213,23 @@ class ChatController extends Controller
 
     protected function getAdminsAndChannels()
     {
-        $roleUser = 'employee';
+        $roleUser = ['employee','admin'];
         $admins = User::whereHas('roles', function ($query) use ($roleUser) {
-            $query->where('name', $roleUser);
+            $query->whereIn('name', $roleUser);
         })->where('id', '!=', auth()->id())->get();
 
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
         })->get();
+        $users = User::all();
+        $type = Conversation::where('type', 'direct')->get();
+        $group = Conversation::where('type', 'group')->get(); // Lọc loại "group"
         return [
             'admins' => $admins,
             'channels' => $channels,
+            'users' =>$users,
+            'type' =>$type,
+            'group' =>$group,
         ];
     }
     public function getGroupInfo(Request $request)
@@ -326,4 +349,93 @@ class ChatController extends Controller
             $this->logError($e);
         }
     }
+    public function leaveConversation($conversationId)
+{
+    try {
+        $user = auth()->user();  // Lấy người dùng hiện tại
+        $conversation = Conversation::findOrFail($conversationId);
+    
+        // Kiểm tra nếu người dùng có trong cuộc trò chuyện
+        if ($conversation->users->contains($user)) {
+            // Kiểm tra nếu người rời nhóm là trưởng nhóm (owner)
+            if ($conversation->owner_id == $user->id) {
+                // Kiểm tra nếu chỉ còn một người tham gia trong nhóm
+                if ($conversation->users->count() > 1) {
+                    // Tìm người tham gia tiếp theo trong nhóm để làm chủ nhóm mới (owner mới)
+                    $newOwner = $conversation->users()->where('user_id', '!=', $user->id)->first();  // Chọn người tham gia đầu tiên không phải trưởng nhóm
+                    $conversation->owner_id = $newOwner->id;  // Cập nhật chủ nhóm mới
+
+                    // Lưu lại thay đổi
+                    $conversation->save();
+                } else {
+                    // Nếu chỉ còn một người trong nhóm, không thể chuyển quyền
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Không thể rời nhóm, nhóm này chỉ còn bạn là thành viên.',
+                    ]);
+                }
+            }
+    
+            // Xóa liên kết giữa người dùng và cuộc trò chuyện
+            $conversation->users()->detach($user->id);
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Bạn đã rời khỏi cuộc trò chuyện này.',
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Bạn không phải là thành viên của cuộc trò chuyện này.',
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
+        ]);
+    }
+}
+
+    public function deleteConversation($conversationId)
+{
+    try {
+        $user = auth()->user();  // Lấy người dùng hiện tại
+        $conversation = Conversation::findOrFail($conversationId);
+
+        // Kiểm tra nếu cuộc trò chuyện là 1-1 (chỉ có 2 người tham gia)
+        if ($conversation->users()->count() == 2) {
+            // Kiểm tra nếu người dùng là một trong hai người tham gia cuộc trò chuyện
+            if ($conversation->users->contains($user)) {
+                // Xóa tất cả liên kết người dùng với cuộc trò chuyện
+                $conversation->users()->detach();
+
+                // Xóa cuộc trò chuyện
+                $conversation->delete();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Cuộc trò chuyện đã bị xóa.',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Bạn không có quyền xóa cuộc trò chuyện này.',
+                ]);
+            }
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cuộc trò chuyện này không phải là cuộc trò chuyện 1-1.',
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
+        ]);
+    }
+}
+
+
 }

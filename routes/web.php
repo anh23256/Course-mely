@@ -58,6 +58,8 @@ Route::get('buyCourse', function () {
 Route::get('forgot-password', function () {
     return view('emails.auth.forgot-password');
 });
+
+
 Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {
@@ -101,10 +103,10 @@ Route::prefix('admin')->as('admin.')
                 ->can('role.index');
             Route::get('/create', [RoleController::class, 'create'])->name('create')
                 ->can('role.create');
+            Route::get('/{role}', [RoleController::class, 'show'])->name('show')
+                ->can('role.show');
             Route::post('/', [RoleController::class, 'store'])->name('store')
                 ->can('role.create');
-            Route::get('/{id}', [RoleController::class, 'show'])->name('show')
-                ->can('role.show');
             Route::get('/edit/{role}', [RoleController::class, 'edit'])->name('edit')
                 ->can('role.edit');
             Route::put('/{role}', [RoleController::class, 'update'])->name('update')
@@ -145,10 +147,10 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COMMENTS =============================
         Route::prefix('comments')->as('comments.')->group(function () {
             Route::get('/', [CommentController::class, 'index'])->name('index');
-            Route::get('/{id}', [CommentController::class, 'show'])->name('show');
-            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy');
+            // Route::get('/{id}', [CommentController::class, 'show'])->name('show');
             Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
-            
+            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy')
+                    ->can('comment.delete');
         });
 
         #============================== ROUTE BANNER =============================
@@ -201,7 +203,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
-            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
+            Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');
@@ -383,6 +385,8 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
                 Route::get('/get-sent-files/{conversationId}', [ChatController::class, 'getSentFiles']);
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
-                Route::get('/group/{groupId}/get-existing-members', [ChatController::class, 'getExistingMembers']);
+                Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
+                Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
+
             });
     });

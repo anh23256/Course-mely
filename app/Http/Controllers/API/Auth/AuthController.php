@@ -149,7 +149,8 @@ class AuthController extends Controller
             $data['verification_token'] = Str::random(60);
 
             do {
-                $data['code'] = str_replace('-', '', Str::uuid()->toString());
+                $uuid = str_replace('-', '', Str::uuid()->toString());
+                $data['code'] = substr($uuid, 0, 10);
             } while (User::query()->where('code', $data['code'])->exists());
 
             $user = User::query()->create($data);
@@ -249,6 +250,36 @@ class AuthController extends Controller
             Auth::user()->currentAccessToken()->delete();
 
             return $this->respondOk('Đăng xuất thành công');
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getUserWithToken()
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy người dùng');
+            }
+
+            $role = $user->roles->first()->name;
+
+            $response = [
+                'user' => [
+                    'id' => $user->id,
+                    'code' => $user->code,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ],
+                'role' => $role
+            ];
+
+            return $this->respondOk('Thông tin người dùng: ' . $user->name, $response);
         } catch (\Exception $e) {
             $this->logError($e);
 

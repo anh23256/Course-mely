@@ -34,6 +34,8 @@ class CourseController extends Controller
     const FOLDER_COURSE_THUMBNAIL = 'courses/thumbnail';
     const FOLDER_COURSE_INTRO = 'courses/intro';
 
+    const THUMBNAIL_DEFAULT = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1741966561/placeholder-16-9-26571_1080x675_zeynku.jpg';
+
     public function index(Request $request)
     {
         try {
@@ -201,6 +203,7 @@ class CourseController extends Controller
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'slug' => $data['slug'],
+                'thumbnail' => self::THUMBNAIL_DEFAULT ?? '',
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),
@@ -432,13 +435,13 @@ class CourseController extends Controller
                     continue;
                 }
 
-                if ($course->chapters()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
+                if ($course->courseUsers()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
                     continue;
                 }
 
-                if ($course->courseUsers()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
+                if ($course->chapters()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
                     continue;
                 }
 

@@ -106,7 +106,7 @@
                                             <th>Số lượng cảm xúc</th>
                                             <th>Bình luận trả lời</th>
                                             <th>Thời gian bình luận</th>
-
+                                            <th>Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody class="list form-check-all">
@@ -130,13 +130,18 @@
                                                 <td class="id">{{ $comment->total_reactions }}</td>
 
                                                 <td>
-                                                    <button class="btn btn-sm btn-danger"
+                                                    <button class="btn btn-sm btn-primary"
                                                         onclick="loadReplies({{ $comment->id }}, '{{ addslashes($comment->content) }}')"
                                                         data-bs-toggle="modal" data-bs-target="#replyModal"> Xem bình luận
                                                     </button>
                                                 </td>
-
                                                 <td>{{ $comment->created_at }}</td>
+                                                <td>
+                                                    <a href="{{ route('admin.comments.destroy', $comment->id) }}"
+                                                        class="sweet-confirm btn btn-sm btn-danger remove-item-btn">
+                                                        <span class="ri-delete-bin-7-line"></span>
+                                                    </a>
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -180,7 +185,7 @@
 @push('page-scripts')
     <script>
         var routeUrlFilter = "{{ route('admin.comments.index') }}";
-
+        var routeDeleteAll = "{{ route('admin.comments.destroy', ':itemID') }}";
 
         $(document).on('click', '#resetFilter', function() {
             window.location = routeUrlFilter;
@@ -215,6 +220,7 @@
                             let replyItem = document.createElement("li");
                             replyItem.classList.add("list-group-item", "d-flex", "justify-content-between",
                                 "align-items-center");
+                            replyItem.id = `reply-${reply.id}`;
 
                             let reactionCount = reply.reactions_count !== undefined ? reply.reactions_count : 0;
 
@@ -223,7 +229,12 @@
                                     <strong>${reply.user_name}:</strong> ${reply.content} <br>
                                     <small class="text-muted">${reply.created_at}</small>
                                 </div>
-                                <div class="col-3 text-end text-danger">${reactionCount} lượt react</div>
+                                <div class="col-3 text-end">
+                                    <span class="text-danger">${reactionCount} lượt react</span>
+                                    <button class="sweet-confirm btn btn-sm btn-danger remove-item-btn">
+                                        <span class="ri-delete-bin-7-line" onclick="deleteReply(${reply.id})"></span>
+                                    </button>
+                                </div>     
                             `;
 
                             replyList.appendChild(replyItem);
@@ -234,6 +245,49 @@
                     console.error("Lỗi khi tải phản hồi:", error);
                     replyList.innerHTML = '<li class="list-group-item text-danger">Lỗi khi tải phản hồi.</li>';
                 });
+        }
+
+
+        function deleteReply(replyId) {
+            Swal.fire({
+                title: "Bạn có muốn xóa?",
+                text: "Bạn sẽ không thể khôi phục dữ liệu khi xoá!!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Đồng ý!!",
+                cancelButtonText: "Hủy!!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/comments/${replyId}`, {
+                            method: "DELETE",
+                            headers: {
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    "content"),
+                                "Content-Type": "application/json",
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                let replyElement = document.getElementById(`reply-${replyId}`);
+                                if (replyElement) {
+                                    replyElement.remove(); // Xóa chỉ khi phần tử tồn tại
+                                    Swal.fire('Đã xóa!', 'Phản hồi đã được xóa.', 'success');
+                                } else {
+                                    Swal.fire('Lỗi!', 'Không tìm thấy phản hồi để xóa.', 'error');
+                                }
+                            } else {
+                                Swal.fire('Lỗi!', 'Xóa thất bại, vui lòng thử lại.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Lỗi khi xóa phản hồi:", error);
+                            Swal.fire('Lỗi!', 'Xảy ra lỗi, vui lòng thử lại sau.', 'error');
+                        });
+                }
+            });
         }
     </script>
 @endpush
