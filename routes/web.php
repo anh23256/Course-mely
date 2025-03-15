@@ -69,6 +69,8 @@ Route::prefix('admin')->as('admin.')
 
         Route::get('administrator-profile', [UserController::class, 'profile'])->name('administrator.profile');
 
+        Route::put('administrator-profile-update/{user}', [UserController::class, 'profileUpdate'])->name('administrator.profileUpdate');
+
         #============================== ROUTE USER =============================
         Route::prefix('users')->group(function () {
             Route::get('user-clients', [UserController::class, 'index'])->name('clients.index');

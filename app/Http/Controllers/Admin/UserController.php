@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\UsersExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Users\StoreUserRequest;
+use App\Http\Requests\Admin\Users\UpdateProfileRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Imports\UsersImport;
 use App\Models\User;
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -253,13 +255,9 @@ class UserController extends Controller
 
             $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
 
-            if ($request->filled('password')) {
-                $data['password'] = bcrypt($request->input('password'));
-            }
-
             $user->update($data);
 
-            if ($request->has('role') && !$user->hasRole('admin')) {
+            if ($request->has('role')) {
 
                 $user->syncRoles([]);
 
@@ -569,5 +567,56 @@ class UserController extends Controller
         return $query;
     }
 
+    public function profileUpdate(UpdateProfileRequest $request, User $user)
+    {
+        try {
 
+            $validator = $request->validated();
+
+            $data = $request->except('avatar');
+
+            DB::beginTransaction();
+
+            $currencyAvatar = $user->avatar;
+
+            if ($request->hasFile('avatar')) {
+                $data['avatar'] = $this->uploadImage($request->file('avatar'), self::FOLDER);
+            }
+
+            if ($request->filled('current_password') && $request->filled('password')) {
+                $data['password'] = Hash::make($request->password);
+            } else {
+                unset($data['password']); 
+            }
+
+            $data['email'] = $user->email;
+
+            $data['status'] = $user->status;
+
+            $user->update($data);
+
+            if (
+                isset($data['avatar']) && !empty($data['avatar'])
+                && filter_var($data['avatar'], FILTER_VALIDATE_URL)
+                && !empty($currencyAvatar) && $currencyAvatar !== self::URLIMAGEDEFAULT
+            ) {
+                $this->deleteImage($currencyAvatar, self::FOLDER);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.administrator.profile', $user)->with('success', 'Cập nhật thành công');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (isset($data['avatar']) && !empty($data['avatar']) && filter_var($data['avatar'], FILTER_VALIDATE_URL)) {
+                $this->deleteImage($data['avatar']);
+            }
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
 }
