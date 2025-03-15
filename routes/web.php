@@ -147,9 +147,10 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COMMENTS =============================
         Route::prefix('comments')->as('comments.')->group(function () {
             Route::get('/', [CommentController::class, 'index'])->name('index');
-            Route::get('/{id}', [CommentController::class, 'show'])->name('show');
-            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy');
+            // Route::get('/{id}', [CommentController::class, 'show'])->name('show');
             Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
+            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy')
+                    ->can('comment.delete');
         });
 
         #============================== ROUTE BANNER =============================
