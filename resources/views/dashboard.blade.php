@@ -121,7 +121,7 @@
             <div class="col-xl-7">
                 <div class="card">
                     <div class="card-header d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1">Biểu đồ tổng quan top 10 danh mục</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Biểu đồ tổng quan top 10 danh mục</h4>
                     </div>
                     <div class="card-body">
                         <div id="category-revenue-chart" class="apex-charts"></div>
@@ -131,7 +131,7 @@
             <div class="col-xl-5">
                 <div class="card">
                     <div class="card-header d-flex align-items-center justify-content-between">
-                        <h4 class="card-title mb-0">Tổng quan top 10 danh mục</h4>
+                        <h4 class="card-title mb-0 text-white">Tổng quan top 10 danh mục</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_category"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                     </div>
@@ -174,7 +174,7 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-header border-0 align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Doanh thu 2025 CourseMeLy</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Doanh thu 2025 CourseMeLy</h4>
                     </div>
                     <!-- end card header -->
 
@@ -217,7 +217,7 @@
             <div class="col-xl-6">
                 <div class="card">
                     <div class="card-header d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1">Người hướng dẫn nổi bật</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Người hướng dẫn nổi bật</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_instructor"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                         <button class="fs-7 badge bg-primary mx-2" id="showTopInstructorButton">Xem biểu đồ</button>
@@ -269,7 +269,7 @@
             <div class="col-xl-6">
                 <div class="card">
                     <div class="card-header d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1">Top khoá học bán chạy</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Top khoá học bán chạy</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_course"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                         <button class="fs-7 badge bg-primary mx-2" id="showBestSellingCoursesButton">Xem biểu đồ</button>
@@ -324,7 +324,7 @@
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">Đánh giá khoá học</h4>
+                        <h4 class="card-title mb-0 text-white">Đánh giá khoá học</h4>
                     </div>
                     <div class="card-body d-flex align-items-center justify-content-center">
                         <div id="rating-pie-chart" class="w-100"></div>
@@ -334,7 +334,7 @@
             <div class="col-xl-8">
                 <div class="card">
                     <div class="card-header d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1">Top học viên</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Top học viên</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_student"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                         <button class="fs-7 badge bg-primary mx-2" id="showRenderTopStudentsButton">Xem biểu đồ</button>
@@ -389,7 +389,7 @@
                     <div class="card-header d-flex align-items-center">
                         <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
                             class="avatar-xs rounded-circle object-fit-cover" alt="">
-                        <h4 class="card-title mb-0 mx-2">Top 10 khóa học có tỉ lệ hoàn thành cao nhất</h4>
+                        <h4 class="card-title mb-0 mx-2 text-white">Top 10 khóa học có tỉ lệ hoàn thành cao nhất</h4>
                     </div>
                     <div class="card-body">
                         <div id="topCompletedCourses" class="w-100"></div>
@@ -399,7 +399,7 @@
             <div class="col-xxl-5">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">Top 10 giảng viên được yêu thích nhất</h4>
+                        <h4 class="card-title mb-0 text-white">Top 10 giảng viên được yêu thích nhất</h4>
                     </div>
                     <div class="card-body d-flex align-items-center justify-content-center">
                         <div id="topInstructorsChart" class="w-100"></div>
