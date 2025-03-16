@@ -5,6 +5,15 @@
     <link rel="stylesheet" href="{{ asset('assets/libs/glightbox/css/glightbox.min.css') }}">
     <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/cssChat.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: gray;
+        }
+    </style>
 @endpush
 @php
     $title = 'Chat';
@@ -20,7 +29,8 @@
                             <h5 class="mb-4">Phòng chat</h5>
                         </div>
                         <!-- Modal -->
-                        <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel"
+                            aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content rounded-3 shadow-lg border-0">
                                     <!-- Header -->
@@ -28,7 +38,8 @@
                                         <h5 class="modal-title text-white fw-bold">
                                             <i class="ri-group-line me-2"></i> Thêm Hội Thoại
                                         </h5>
-                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
 
                                     <!-- Body -->
@@ -51,9 +62,11 @@
                                             <!-- Chọn thành viên -->
                                             <div class="mb-3">
                                                 <label for="groupMembers" class="fw-semibold mb-2">Thêm Thành Viên</label>
-                                                <select id="groupMembers" name="members[]" class="form-select shadow-sm" multiple="multiple">
+                                                <select id="groupMembers" name="members[]" class="form-select shadow-sm"
+                                                    multiple="multiple">
                                                     @foreach ($data['admins'] as $admin)
-                                                        <option value="{{ $admin->id }}" data-avatar="{{ $admin->avatar }}">
+                                                        <option value="{{ $admin->id }}"
+                                                            data-avatar="{{ $admin->avatar }}">
                                                             {{ $admin->name }}
                                                         </option>
                                                     @endforeach
@@ -300,7 +313,7 @@
                                                             <img src=""
                                                                 class="rounded-circle avatar-xs imageUser avatar"
                                                                 alt="">
-                                                            <span class="status"></span>
+                                                            <span class="text-success show-status-user"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
                                                             <h5 class="text-truncate mb-0 fs-16">
@@ -472,7 +485,7 @@
                                                                     <!-- Nội dung tabs chính -->
                                                                     <div class="tab-content" id="myTabContent">
                                                                         <!-- Danh sách thành viên -->
-                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3 memberLists" 
+                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3 memberLists"
                                                                             id="members" role="tabpanel"
                                                                             aria-labelledby="members-tab">
                                                                             <ul class="list-group member-list"
@@ -835,18 +848,17 @@
         $(document).ready(function() {
             console.log('Đã chọn user với ID:------------------------', userId);
 
-            window.Echo.channel('App.Models.User.' + userId)
-                .listen('UserStatusChanged', (event) => {
-                    console.log('Chạy event: ', event);
-                    // Tìm phần tử với class 'user-status' và cập nhật trạng thái
-                    const statusElement = document.querySelector('.status');
+            window.Echo.channel("user-status")
+                .listen("UserStatusChanged", (event) => {
+                    console.log('pusher-status-change', event);
 
-                    if (event.status === 'online') {
-                        // Cập nhật trạng thái online
-                        statusElement.innerHTML = '<span class="text-success">Online</span>';
-                    } else if (event.status === 'offline') {
-                        // Cập nhật trạng thái offline
-                        statusElement.innerHTML = '<span class="text-danger">Offline</span>';
+                    const statusElement = $('.show-status-user');
+
+                    if (event.is_online == 'online') {
+                        statusElement.html(
+                            '<span class="text-success">Online</span>');
+                    } else {
+                        statusElement.html('<span class="text-danger">Offline</span>');
                     }
                 });
             $("#upload-btn").click(function() {
@@ -912,6 +924,7 @@
                 templateResult: formatUser, // Hiển thị trong danh sách
                 templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+
             function formatUser(user) {
                 if (!user.id) {
                     return user.text; // Trả về văn bản nếu không có ID
@@ -950,6 +963,7 @@
                 templateResult: formatUser, // Hiển thị trong danh sách
                 templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+
             function formatUser(user) {
                 if (!user.id) {
                     return user.text; // Trả về văn bản nếu không có ID
@@ -1047,6 +1061,17 @@
                             $('#OnetoOne').hide();
                             $('#filetofile').removeClass('col-6');
                             $('#filetofile').addClass('col-12');
+
+                            const statusElement = $('.show-status-user');
+
+                            if (response.data.status === 'online') {
+                                statusElement.html(
+                                    '<span class="text-success">Online</span>');
+                            } else {
+                                statusElement.html(
+                                    '<span class="text-danger">Offline</span>');
+                            }
+
                             loadMessages(response.data.direct.id);
                             loadSentFiles(response.data.direct.id);
                         } else {
