@@ -35,8 +35,41 @@ class BlogController extends Controller
             if (!$posts) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào');
             }
+            $filteredBlogs = $posts->map(function ($post) {
+                $commentCount = $post->comments()->count();
 
-            return $this->respondOk('Danh sách bài viết:', $posts);
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'description' => $post->description,
+                    'thumbnail' => $post->thumbnail,
+                    'views' => $post->views,
+                    'comment_count' => $commentCount,
+                    'published_at' => $post->published_at,
+                    'users' => $post->user ? [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'avatar' => $post->user->avatar,
+                        'email' => $post->user->email,
+                    ] : null,
+
+                    'category' => $post->category ? [
+                        'id' => $post->category->id,
+                        'name' => $post->category->name,
+                        'slug' => $post->category->slug,
+                    ] : null,
+
+                    'tags' => $post->tags ? $post->tags->map(function ($tag) {
+                        return [
+                            'id' => $tag->id,
+                            'name' => $tag->name,
+                            'slug' => $tag->slug,
+                        ];
+                    }) : [],
+                ];
+            });
+            return $this->respondOk('Danh sách bài viết:', $filteredBlogs);
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -52,11 +85,15 @@ class BlogController extends Controller
                     'user',
                     'category',
                     'tags',
+                    'comments',
                 ])
                 ->where('slug', $slug)
                 ->where('status', Post::STATUS_PUBLISHED)
                 ->first();
+            $commentCount = $post->comments()->count();
 
+            // Thêm số bình luận vào phản hồi
+            $post->comment_count = $commentCount;
             if (!$post) {
                 return $this->respondNotFound('Không tìm thấy bài viết');
             }
@@ -70,9 +107,9 @@ class BlogController extends Controller
             // Log::info("Before update - Recent posts in session: " . json_encode($recentPosts));
 
             if (!in_array($slug, $recentPosts)) {
-                $recentPosts[] = $slug; 
-                session()->put('recent_posts', $recentPosts); 
-                session()->save(); 
+                $recentPosts[] = $slug;
+                session()->put('recent_posts', $recentPosts);
+                session()->save();
             }
             // Log::info('Recent posts after update: ' . json_encode(session()->get('recent_posts')));
 
@@ -112,6 +149,7 @@ class BlogController extends Controller
                     'user',
                     'category',
                     'tags',
+                    'comments',
                 ])
                 ->where('status', Post::STATUS_PUBLISHED)
                 ->whereHas('category', function ($query) use ($slug) {
@@ -122,8 +160,34 @@ class BlogController extends Controller
             if ($posts->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào trong danh mục này');
             }
+            $filteredBlogs = collect($posts->items())->map(function ($post) {
+                $commentCount = $post->comments ? $post->comments->count() : 0;
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'description' => $post->description,
+                    'thumbnail' => $post->thumbnail,
+                    'views' => $post->views,
+                    'comment_count' => $commentCount,
+                    'published_at' => $post->published_at,
+                    'users' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'avatar' => $post->user->avatar,
+                        'email' => $post->user->email,
+                    ],
+                    'category' => [
+                        'id' => $post->category->id,
+                        'name' => $post->category->name,
+                        'slug' => $post->category->slug,
+                    ]
+                ];
+            });
 
-            return $this->respondOk('Danh sách bài viết trong danh mục:', $posts);
+
+
+            return $this->respondOk('Danh sách bài viết trong danh mục:', $filteredBlogs);
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -138,6 +202,7 @@ class BlogController extends Controller
                     'user',
                     'category',
                     'tags',
+                    'comments',
                 ])
                 ->where('status', Post::STATUS_PUBLISHED)
                 ->whereHas('tags', function ($query) use ($slug) {  // Lọc theo thẻ
@@ -148,8 +213,31 @@ class BlogController extends Controller
             if ($posts->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào với thẻ này');
             }
-
-            return $this->respondOk('Danh sách bài viết với thẻ:', $posts);
+            $filteredBlogs = collect($posts->items())->map(function ($post) {
+                $commentCount = $post->comments ? $post->comments->count() : 0;
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'description' => $post->description,
+                    'thumbnail' => $post->thumbnail,
+                    'views' => $post->views,
+                    'comment_count' => $commentCount,
+                    'published_at' => $post->published_at,
+                    'users' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'avatar' => $post->user->avatar,
+                        'email' => $post->user->email,
+                    ],
+                    'category' => [
+                        'id' => $post->category->id,
+                        'name' => $post->category->name,
+                        'slug' => $post->category->slug,
+                    ]
+                ];
+            });
+            return $this->respondOk('Danh sách bài viết với thẻ:', $filteredBlogs);
         } catch (\Exception $e) {
             $this->logError($e);
 
