@@ -93,8 +93,7 @@
                             </div>
 
                             <div class="col-lg-8">
-                                <form action="" method="POST"
-                                      enctype="multipart/form-data">
+                                <form action="{{ route('admin.administrator.profileUpdate', auth()->user()->id) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     @method('PUT')
                                     <input type="file" id="profile-img-file-input" name="avatar" class="d-none"
@@ -118,7 +117,7 @@
                                             <div class="mb-3">
                                                 <label for="email" class="form-label">Email</label>
                                                 <input type="email" class="form-control" id="email"
-                                                       value="{{ auth()->user()->email }}" readonly disabled>
+                                                       value="{{ auth()->user()->email }}" readonly>
                                                 <small class="form-text text-muted">Email không thể thay đổi.</small>
                                             </div>
 
@@ -146,9 +145,7 @@
                                                         class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
                                                         type="button"><i class="ri-eye-fill align-middle"></i></button>
                                                 </div>
-                                                @error('current_password')
-                                                <span class="text-danger">{{ $message }}</span>
-                                                @enderror
+                                                
                                             </div>
 
                                             <div class="mb-3">
@@ -160,9 +157,7 @@
                                                         class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
                                                         type="button"><i class="ri-eye-fill align-middle"></i></button>
                                                 </div>
-                                                @error('password')
-                                                <span class="text-danger">{{ $message }}</span>
-                                                @enderror
+                                                
                                             </div>
 
                                             <div class="mb-3">

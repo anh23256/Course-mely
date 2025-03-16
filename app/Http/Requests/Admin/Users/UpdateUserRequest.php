@@ -30,6 +30,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name'       => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s]+$/u'],
             'email'      => ['required', 'email', Rule::unique('users','email')->ignore($this->route('user')), 'max:255', 'regex:/^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
+            
             'avatar'     => ['nullable', 'image', 'max:2000'],
             'status'     => ['required', 'in:active,inactive,blocked'],
             'role' => [
