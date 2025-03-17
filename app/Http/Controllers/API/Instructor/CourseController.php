@@ -63,7 +63,7 @@ class CourseController extends Controller
                     'chapters.lessons:id,chapter_id,title,slug,order'
                 ])
                 ->search($query)
-                ->orderBy('created_at')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             if ($courses->isEmpty()) {
@@ -83,10 +83,47 @@ class CourseController extends Controller
         }
     }
 
+    public function courseApproved()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $courses = Course::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->select([
+                    'id',
+                    'code',
+                    'name',
+                    'thumbnail',
+                    'total_student'
+                ])
+                ->get();
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy khoá học');
+            }
+
+            return $this->respondOk(
+                'Danh sách khoá học đã được kiểm duyệt của: ' . Auth::user()->name,
+                $courses
+            );
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
     public function courseListOfUser(string $slug)
     {
         try {
             $user = Auth::user();
+
             $course = Course::query()
                 ->select('id', 'user_id', 'code', 'category_id', 'name', 'slug', 'thumbnail', 'intro', 'level', 'price', 'price_sale', 'total_student', 'accepted')
                 ->where('slug', $slug)
@@ -255,7 +292,7 @@ class CourseController extends Controller
                 )
                 : $thumbnailOld;
 
-            if ( $data['intro'] === null) {
+            if ($data['intro'] === null) {
                 if ($introOld) {
                     $this->deleteVideo($introOld, self::FOLDER_COURSE_INTRO);
                 }
