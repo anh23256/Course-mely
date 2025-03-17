@@ -492,5 +492,5 @@ Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourse
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
-Route::get('/{slug}', [RatingController::class, 'getRatings']);
+Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
 
