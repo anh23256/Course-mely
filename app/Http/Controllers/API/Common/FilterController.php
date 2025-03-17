@@ -98,7 +98,7 @@ class FilterController extends Controller
                     DB::raw('(SELECT COUNT(*) FROM lessons WHERE lessons.chapter_id IN (SELECT id FROM chapters WHERE chapters.course_id = courses.id)) as lessons_count')
                 ])
                 ->where('status', 'approved')
-                ->whereIn('courses.id', $courseIds)->with('user:id,name');
+                ->whereIn('courses.id', $courseIds)->with('user:id,name,code');
 
             switch ($sortBy) {
                 case 'price_asc':

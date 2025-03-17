@@ -60,18 +60,7 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'careers.*.id' => 'nullable',
         ];
     }
-    public function messages(): array
-    {
-        return [
-            'bio.facebook' => 'Facebook phải là url.',
-            'bio.instagram' => 'Instagram phải là url.',
-            'bio.github' => 'Github phải là url.',
-            'bio.linkedin' => 'Linkedin phải là url.',
-            'bio.twitter' => 'Twitter phải là url.',
-            'bio.youtube' => 'Youtube phải là url.',
-            'bio.website' => 'Website phải là url.',
-        ];
-    }
+
     public function withValidator(Validator $validator)
     {
         $validator->after(function ($validator) {
