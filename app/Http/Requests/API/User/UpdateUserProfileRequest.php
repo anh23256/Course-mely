@@ -30,7 +30,7 @@ class UpdateUserProfileRequest extends BaseFormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,webp,png|max:2048',
-            'phone' => 'sometimes|numeric|min:10|max:11',
+            'phone' => 'sometimes|numeric|min:10',
             'address' => 'sometimes|string|max:255',
             'experience' => 'sometimes|string',
             'certificates' => 'nullable|array',

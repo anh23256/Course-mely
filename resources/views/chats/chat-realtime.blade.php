@@ -20,7 +20,8 @@
                             <h5 class="mb-4">Phòng chat</h5>
                         </div>
                         <!-- Modal -->
-                        <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel"
+                            aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content rounded-3 shadow-lg border-0">
                                     <!-- Header -->
@@ -28,7 +29,8 @@
                                         <h5 class="modal-title text-white fw-bold">
                                             <i class="ri-group-line me-2"></i> Thêm Hội Thoại
                                         </h5>
-                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
 
                                     <!-- Body -->
@@ -51,9 +53,11 @@
                                             <!-- Chọn thành viên -->
                                             <div class="mb-3">
                                                 <label for="groupMembers" class="fw-semibold mb-2">Thêm Thành Viên</label>
-                                                <select id="groupMembers" name="members[]" class="form-select shadow-sm" multiple="multiple">
+                                                <select id="groupMembers" name="members[]" class="form-select shadow-sm"
+                                                    multiple="multiple">
                                                     @foreach ($data['admins'] as $admin)
-                                                        <option value="{{ $admin->id }}" data-avatar="{{ $admin->avatar }}">
+                                                        <option value="{{ $admin->id }}"
+                                                            data-avatar="{{ $admin->avatar }}">
                                                             {{ $admin->name }}
                                                         </option>
                                                     @endforeach
@@ -434,9 +438,10 @@
                                                                                             href="javascript:void(0);"><i
                                                                                                 class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a>
                                                                                     </li>
-                                                                                    <li><a class="dropdown-item"
-                                                                                            href="javascript:void(0);"><i
-                                                                                                class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a>
+                                                                                    <li><a class="dropdown-item getID"
+                                                                                            href="#" data-conversation-id=""
+                                                                                            onclick="dissolveGroup(this)"><i
+                                                                                                class="las la-skull-crossbones align-bottom text-muted me-2"></i>Giải tán nhóm</a>
                                                                                     </li>
                                                                                 </ul>
                                                                             </div>
@@ -472,7 +477,7 @@
                                                                     <!-- Nội dung tabs chính -->
                                                                     <div class="tab-content" id="myTabContent">
                                                                         <!-- Danh sách thành viên -->
-                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3 memberLists" 
+                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3 memberLists"
                                                                             id="members" role="tabpanel"
                                                                             aria-labelledby="members-tab">
                                                                             <ul class="list-group member-list"
@@ -835,7 +840,7 @@
         $(document).ready(function() {
             console.log('Đã chọn user với ID:------------------------', userId);
 
-            window.Echo.channel('App.Models.User.' + userId)
+            window.Echo.present('App.Models.User.' + userId)
                 .listen('UserStatusChanged', (event) => {
                     console.log('Chạy event: ', event);
                     // Tìm phần tử với class 'user-status' và cập nhật trạng thái
@@ -912,6 +917,7 @@
                 templateResult: formatUser, // Hiển thị trong danh sách
                 templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+
             function formatUser(user) {
                 if (!user.id) {
                     return user.text; // Trả về văn bản nếu không có ID
@@ -950,6 +956,7 @@
                 templateResult: formatUser, // Hiển thị trong danh sách
                 templateSelection: formatUserSelection // Hiển thị sau khi chọn
             });
+
             function formatUser(user) {
                 if (!user.id) {
                     return user.text; // Trả về văn bản nếu không có ID
@@ -1007,17 +1014,28 @@
                                 close: true
                             }).showToast();
                             window.location.href = "{{ route('admin.chats.index') }}";
-                        } else if (response.status == 'failed') {
-                            Toastify({
-                                text: "Đã tồn tại cuộc hội thoại",
-                                backgroundColor: "red",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
                         }
                     },
-                    error: function() {
-                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                    error: function(xhr, status, error) {
+                        console.log(xhr.responseText); // Log lỗi để debug
+
+                        let errorMessage = "Đã có lỗi xảy ra. Vui lòng thử lại.";
+
+                        if (xhr.status === 400) {
+                            // 📌 Nếu API trả về lỗi 400 (cuộc trò chuyện đã tồn tại)
+                            let res = JSON.parse(xhr.responseText);
+                            errorMessage = res.message || "Cuộc trò chuyện đã tồn tại!";
+                        } else if (xhr.status === 500) {
+                            // 📌 Nếu API gặp lỗi hệ thống (500 Internal Server Error)
+                            errorMessage = "Lỗi hệ thống, vui lòng thử lại sau!";
+                        }
+
+                        Toastify({
+                            text: errorMessage,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
                     }
                 });
             });
@@ -1133,8 +1151,18 @@
                                                         </div>
                                                         <div class="flex-grow-1 ms-2">
                                                             ${member.name}
-                                                        </div>`;
-
+                                                        </div>
+                                                        <button class="btn avatar-xs p-0 getID" type="button"
+                                                            data-bs-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false"
+                                                            data-conversation-id="${channelId}"
+                                                            data-user-id="${member.user_id}"
+                                                            onclick="kickUser(this)">
+                                                            <span class="avatar-title bg-light text-body rounded">
+                                                                <i
+                                                                    class="ri-delete-bin-5-line align-bottom text-muted"></i>
+                                                            </span>
+                                                        </button>`;
                                 // Kiểm tra nếu người dùng là trưởng nhóm
                                 if (member.user_id == response.data.group.owner_id) {
                                     membersHtml +=
@@ -1201,13 +1229,25 @@
 
                             // Đóng modal sau khi thêm thành viên
                             $('#myModal').modal('hide');
-                        } else {
-                            alert('Có lỗi xảy ra khi thêm thành viên.');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.log(xhr.responseText);
-                        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+
+                        if (xhr.status === 400) {
+                            let res = JSON.parse(xhr.responseText);
+
+                            if (res.duplicate_members) {
+                                let existingMembersList = res.duplicate_members.join(', ');
+                                alert(
+                                    `Thành viên đã tồn tại trong nhóm: ${existingMembersList}`
+                                );
+                            } else {
+                                alert(res.message);
+                            }
+                        } else {
+                            alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                        }
                     }
                 });
             });
@@ -1264,6 +1304,111 @@
                 }
             });
         });
+
+        function kickUser(button) {
+            let groupId = button.getAttribute("data-conversation-id");
+            let userId = button.getAttribute("data-user-id");
+
+            if (!groupId || !userId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/kick-member',
+                type: 'POST',
+                data: {
+                    group_id: groupId,
+                    user_id: userId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    } else {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền kick người này!";
+                    }
+                    Toastify({
+                        text: errorMessage,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
+            });
+        }
+
+        function dissolveGroup(a) {
+            let groupId = a.getAttribute("data-conversation-id");
+
+            if (!groupId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy nhóm",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
+
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
+                type: 'POST',
+                data: {
+                    group_id: groupId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                            text: "Nhóm đã được giải tán!",
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                        window.location.reload();
+                    } else {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền giải tán nhóm!";
+                    }
+                    Toastify({
+                        text: errorMessage,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
+            });
+        }
 
         function deleteConversation(button) {
             const conversationId = button.getAttribute('data-conversation-id');
