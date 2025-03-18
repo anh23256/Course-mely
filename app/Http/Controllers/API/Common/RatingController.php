@@ -126,11 +126,11 @@ class RatingController extends Controller
 
             $ratings = Rating::with('user:id,name,avatar')
                 ->whereHas('user', fn($q) => $q->where('status', 'active'))
-                ->latest()
-                ->get(['id', 'content', 'user_id'])
-                ->groupBy('user_id') // Nhóm theo user_id
-                ->values() // Reset lại chỉ số mảng
-                ->take(6); // Lấy tối đa 6 người khác nhau
+                ->select('id', 'content', 'user_id', 'created_at')
+                ->orderByDesc('created_at') // Lấy đánh giá mới nhất trước
+                ->get()
+                ->unique('user_id') // Giữ lại mỗi user 1 đánh giá mới nhất
+                ->take(6); // Chỉ lấy tối đa 6 user khác nhau
 
 
             if (!$ratings) {

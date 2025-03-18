@@ -274,6 +274,8 @@
                 success: function (response) {
                     $("#transaction-container").html(response.systemFunds);
 
+                    console.log(response);
+                    
                     if (data.search && data.search.length > 0) {
                         $("#load-more").hide();
                     } else {

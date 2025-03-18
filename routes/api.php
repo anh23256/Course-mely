@@ -425,6 +425,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
     });
+
+    Route::post('/check-status-user', [CommonController::class, 'statusUser']);
 });
 
 #============================== ROUTE COURSE =============================
@@ -453,6 +455,7 @@ Route::prefix('blogs')
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
 Route::prefix('blogs')

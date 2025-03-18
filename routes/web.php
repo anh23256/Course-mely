@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
@@ -63,9 +64,8 @@ Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {
         #============================== ROUTE AUTH =============================
-        Route::get('dashboard', function () {
-            return view('dashboard');
-        })->name('dashboard')->middleware('verified');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('verified');
+        Route::post('dashboard-export', [DashboardController::class, 'export'])->name('dashboard.export');
 
         Route::get('administrator-profile', [UserController::class, 'profile'])->name('administrator.profile');
 
@@ -154,7 +154,7 @@ Route::prefix('admin')->as('admin.')
             // Route::get('/{id}', [CommentController::class, 'show'])->name('show');
             Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
             Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy')
-                    ->can('comment.delete');
+                ->can('comment.delete');
         });
 
         #============================== ROUTE BANNER =============================
@@ -391,6 +391,7 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
                 Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
-
             });
+
+        Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
     });
