@@ -126,12 +126,11 @@ class RatingController extends Controller
 
             $ratings = Rating::with('user:id,name,avatar')
                 ->whereHas('user', fn($q) => $q->where('status', 'active'))
-                ->latest()
-                ->get(['id', 'content', 'user_id'])
-                ->groupBy('user_id') // Nhóm theo user_id
-                ->values() // Reset lại chỉ số mảng
-                ->take(6); // Lấy tối đa 6 người khác nhau
-
+                ->select('id', 'content', 'user_id', 'created_at')
+                ->orderByDesc('created_at') // Lấy đánh giá mới nhất trước
+                ->get()
+                ->unique('user_id') // Giữ lại mỗi user 1 đánh giá mới nhất
+                ->take(6); // Chỉ lấy tối đa 6 user khác nhau
 
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
@@ -149,6 +148,27 @@ class RatingController extends Controller
     public function getCourseRatings($slug)
     {
         try {
+            $course = Course::where('slug', $slug)->firstOrFail();
+
+            $ratings = Rating::where('course_id', $course->id)
+                ->whereHas('user', fn($q) => $q->where('status', 'active'))
+                ->with('user:id,name,avatar')
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'content', 'user_id']);
+
+            if (!$ratings) {
+                return $this->respondNotFound('Không có đánh giá nào');
+            }
+
+            $totalRatings = $ratings->count();
+            $averageRating = $totalRatings > 0 ? round($ratings->avg('rate'), 1) : 0;
+
+            return $this->respondOk('Danh sách đánh giá', [
+                'ratings' => $ratings,
+                'total_ratings' => $totalRatings,
+                'average_rating' => $averageRating
+            ]);
 
             $course = Course::where('slug', $slug)->firstOrFail();
 

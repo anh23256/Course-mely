@@ -447,9 +447,12 @@
                                                                                             href="javascript:void(0);"><i
                                                                                                 class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a>
                                                                                     </li>
-                                                                                    <li><a class="dropdown-item"
-                                                                                            href="javascript:void(0);"><i
-                                                                                                class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a>
+                                                                                    <li><a class="dropdown-item getID"
+                                                                                            href="#"
+                                                                                            data-conversation-id=""
+                                                                                            onclick="dissolveGroup(this)"><i
+                                                                                                class="las la-skull-crossbones align-bottom text-muted me-2"></i>Giải
+                                                                                            tán nhóm</a>
                                                                                     </li>
                                                                                 </ul>
                                                                             </div>
@@ -624,51 +627,44 @@
                                         <div class="col-sm-8 col-4">
                                             <ul class="list-inline user-chat-nav text-end mb-0">
                                                 <!-- Kiểm tra nếu có cuộc trò chuyện 'direct' -->
-                                                @if ($directConversations->isNotEmpty())
-                                                    <li class="list-inline-item m-0">
-                                                        <div class="dropdown">
-                                                            <button class="btn btn-ghost-secondary btn-icon"
-                                                                type="button" data-bs-toggle="dropdown"
-                                                                aria-haspopup="true" aria-expanded="false">
-                                                                <i class="lab la-sistrix"
-                                                                    style="font-size: 20px;color:black"></i>
-                                                            </button>
-                                                            <div
-                                                                class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
-                                                                <div class="p-2">
-                                                                    <div class="search-box">
-                                                                        <input type="text"
-                                                                            class="form-control bg-light border-light"
-                                                                            placeholder="Tìm kiếm..."
-                                                                            onkeyup="searchMessages()" id="searchMessage">
-                                                                        <i class="ri-search-2-line search-icon"></i>
-                                                                    </div>
+                                                <li class="list-inline-item m-0">
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
+                                                            data-bs-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false">
+                                                            <i class="lab la-sistrix"
+                                                                style="font-size: 20px;color:black"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
+                                                            <div class="p-2">
+                                                                <div class="search-box">
+                                                                    <input type="text"
+                                                                        class="form-control bg-light border-light"
+                                                                        placeholder="Tìm kiếm..."
+                                                                        onkeyup="searchMessages()" id="searchMessage">
+                                                                    <i class="ri-search-2-line search-icon"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </li>
-                                                @endif
-
-                                                <!-- Kiểm tra nếu có cuộc trò chuyện 'group' -->
-                                                @if ($groupConversations->isNotEmpty())
-                                                    <li class="list-inline-item m-0">
-                                                        <button type="button" class="btn btn-ghost-secondary btn-icon"
-                                                            title="Thêm thành viên" data-bs-toggle="modal"
-                                                            data-bs-target="#myModal">
-                                                            <i class="las la-user-plus"
-                                                                style="font-size: 20px;color:black"></i>
-                                                        </button>
-                                                    </li>
-                                                    <li class="list-inline-item d-none d-lg-inline-block m-0">
-                                                        <button type="button" class="btn btn-ghost-secondary btn-icon"
-                                                            data-bs-toggle="offcanvas"
-                                                            data-bs-target="#userProfileCanvasExample"
-                                                            aria-controls="userProfileCanvasExample">
-                                                            <i class="las la-users-cog"
-                                                                style="font-size: 20px;color:black"></i>
-                                                        </button>
-                                                    </li>
-                                                @endif
+                                                    </div>
+                                                </li>
+                                                <li class="list-inline-item m-0" id="showadd" style="display: none;">
+                                                    <button type="button" class="btn btn-ghost-secondary btn-icon"
+                                                        title="Thêm thành viên" data-bs-toggle="modal"
+                                                        data-bs-target="#myModal">
+                                                        <i class="las la-user-plus"
+                                                            style="font-size: 20px;color:black"></i>
+                                                    </button>
+                                                </li>
+                                                <li class="list-inline-item d-none d-lg-inline-block m-0">
+                                                    <button type="button" class="btn btn-ghost-secondary btn-icon"
+                                                        data-bs-toggle="offcanvas"
+                                                        data-bs-target="#userProfileCanvasExample"
+                                                        aria-controls="userProfileCanvasExample">
+                                                        <i class="las la-users-cog"
+                                                            style="font-size: 20px;color:black"></i>
+                                                    </button>
+                                                </li>
                                             </ul>
 
 
@@ -1021,17 +1017,28 @@
                                 close: true
                             }).showToast();
                             window.location.href = "{{ route('admin.chats.index') }}";
-                        } else if (response.status == 'failed') {
-                            Toastify({
-                                text: "Đã tồn tại cuộc hội thoại",
-                                backgroundColor: "red",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
                         }
                     },
-                    error: function() {
-                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                    error: function(xhr, status, error) {
+                        console.log(xhr.responseText); // Log lỗi để debug
+
+                        let errorMessage = "Đã có lỗi xảy ra. Vui lòng thử lại.";
+
+                        if (xhr.status === 400) {
+                            // 📌 Nếu API trả về lỗi 400 (cuộc trò chuyện đã tồn tại)
+                            let res = JSON.parse(xhr.responseText);
+                            errorMessage = res.message || "Cuộc trò chuyện đã tồn tại!";
+                        } else if (xhr.status === 500) {
+                            // 📌 Nếu API gặp lỗi hệ thống (500 Internal Server Error)
+                            errorMessage = "Lỗi hệ thống, vui lòng thử lại sau!";
+                        }
+
+                        Toastify({
+                            text: errorMessage,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
                     }
                 });
             });
@@ -1087,6 +1094,7 @@
             $('.private-button').click(function() {
                 currentConversationId = $(this).data('private-id');
                 let userId = @json(auth()->id());
+                $('#showadd').hide(); // Hiển thị nút
                 console.log('Đã chọn conversation với ID:------------------------', currentConversationId);
                 window.Echo.private('private-chat.' + currentConversationId)
                     .listen('PrivateMessageSent', function(event) {
@@ -1151,15 +1159,25 @@
                             loadSentFiles(response.data.group.id);
                             let membersHtml = '';
                             response.data.member.forEach(function(member) {
-                                membersHtml += `<li class="list-group-item">
+                                membersHtml += ` <li class="list-group-item">
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0">
                                                             <img src="${member.avatar}" alt="" class="avatar-xs rounded-circle">
                                                         </div>
                                                         <div class="flex-grow-1 ms-2">
                                                             ${member.name}
-                                                        </div>`;
-
+                                                        </div>
+                                                        <button class="btn avatar-xs p-0 getID" type="button"
+                                                            data-bs-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false"
+                                                            data-conversation-id="${channelId}"
+                                                            data-user-id="${member.user_id}"
+                                                            onclick="kickUser(this)">
+                                                            <span class="avatar-title bg-light text-body rounded">
+                                                                <i
+                                                                    class="ri-delete-bin-5-line align-bottom text-muted"></i>
+                                                            </span>
+                                                        </button>`;
                                 // Kiểm tra nếu người dùng là trưởng nhóm
                                 if (member.user_id == response.data.group.owner_id) {
                                     membersHtml +=
@@ -1186,6 +1204,7 @@
             $('.group-button').click(function() {
                 currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
                 console.log('Đã chọn nhóm với ID:', currentConversationId);
+                $('#showadd').show(); // Hiển thị nút
                 window.Echo.private('conversation.' + currentConversationId)
                     .listen('GroupMessageSent', function(event) {
                         $('#messagesList').append(renderMessage(event));
@@ -1226,14 +1245,29 @@
 
                             // Đóng modal sau khi thêm thành viên
                             $('#myModal').modal('hide');
-                        } else {
-                            alert('Có lỗi xảy ra khi thêm thành viên.');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.log(xhr.responseText);
-                        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+
+                        if (xhr.status === 400) {
+                            let res = JSON.parse(xhr.responseText);
+
+                            // Kiểm tra nếu response trả về trường duplicate_members
+                            if (res.success === false && res.duplicate_members) {
+                                let existingMembersList = res.duplicate_members.join(', ');
+                                alert(
+                                    `Thành viên đã tồn tại trong nhóm: ${existingMembersList}`
+                                );
+                            } else {
+                                // Nếu không phải lỗi thành viên trùng lặp, hiển thị thông báo chung
+                                alert(res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                            }
+                        } else {
+                            alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                        }
                     }
+
                 });
             });
             // Khi người dùng nhấn gửi tin nhắn
@@ -1289,6 +1323,111 @@
                 }
             });
         });
+
+        function kickUser(button) {
+            let groupId = button.getAttribute("data-conversation-id");
+            let userId = button.getAttribute("data-user-id");
+
+            if (!groupId || !userId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/kick-member',
+                type: 'POST',
+                data: {
+                    group_id: groupId,
+                    user_id: userId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    } else {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền kick người này!";
+                    }
+                    Toastify({
+                        text: errorMessage,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
+            });
+        }
+
+        function dissolveGroup(a) {
+            let groupId = a.getAttribute("data-conversation-id");
+
+            if (!groupId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy nhóm",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
+
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
+                type: 'POST',
+                data: {
+                    group_id: groupId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                            text: "Nhóm đã được giải tán!",
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                        window.location.reload();
+                    } else {
+                        Toastify({
+                            text: response.message,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền giải tán nhóm!";
+                    }
+                    Toastify({
+                        text: errorMessage,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
+            });
+        }
 
         function deleteConversation(button) {
             const conversationId = button.getAttribute('data-conversation-id');
