@@ -2,8 +2,8 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -16,7 +16,7 @@ class UserStatusChanged implements ShouldBroadcast
     public $userId;
     public $isOnline;
 
-    public function __construct($userId, $isOnline = 'offline')
+    public function __construct($userId, $isOnline = false)
     {
         $this->userId = $userId;
         $this->isOnline = $isOnline;
@@ -24,7 +24,7 @@ class UserStatusChanged implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('user-status');
+        return new PresenceChannel('user-status');
     }
 
     public function broadcastWith()

@@ -206,26 +206,4 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
-    public function statusUser(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $status = $request->status;
-
-            if (!$user) {
-                return;
-            }
-            
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
-
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
-
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
-            $this->logError($e);
-
-            return;
-        }
-    }
 }

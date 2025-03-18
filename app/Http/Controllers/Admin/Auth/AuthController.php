@@ -67,7 +67,6 @@ class AuthController extends Controller
                 $user =  Auth::user();
 
                 if ($user->hasRole('admin') || $user->hasRole('employee')) {
-                    broadcast(new UserStatusChanged($user, 'online'));
                     Log::info('User logged in', ['user' => $user]);
                     return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công');
                 } else {
@@ -90,8 +89,8 @@ class AuthController extends Controller
         try {
             $user = $request->user();
             Log::info('User logged out', ['user' => $user]);
+            broadcast(new UserStatusChanged($user->id));
             Auth::logout();
-            broadcast(new UserStatusChanged($user, 'offline'));
             session()->flush();
             return redirect()->route('admin.login');
         } catch (\Exception $e) {

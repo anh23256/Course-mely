@@ -390,6 +390,4 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
                 Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
             });
-
-        Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
     });

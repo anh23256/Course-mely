@@ -846,21 +846,7 @@
         initIcons();
 
         $(document).ready(function() {
-            console.log('Đã chọn user với ID:------------------------', userId);
 
-            window.Echo.channel("user-status")
-                .listen("UserStatusChanged", (event) => {
-                    console.log('pusher-status-change', event);
-
-                    const statusElement = $('.show-status-user');
-
-                    if (event.is_online == 'online') {
-                        statusElement.html(
-                            '<span class="text-success">Online</span>');
-                    } else {
-                        statusElement.html('<span class="text-danger">Offline</span>');
-                    }
-                });
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
@@ -1062,15 +1048,8 @@
                             $('#filetofile').removeClass('col-6');
                             $('#filetofile').addClass('col-12');
 
-                            const statusElement = $('.show-status-user');
-
-                            if (response.data.status === 'online') {
-                                statusElement.html(
-                                    '<span class="text-success">Online</span>');
-                            } else {
-                                statusElement.html(
-                                    '<span class="text-danger">Offline</span>');
-                            }
+                            $('.show-status-user').attr('data-user-id', response.data
+                                .sender_id);
 
                             loadMessages(response.data.direct.id);
                             loadSentFiles(response.data.direct.id);
@@ -1083,6 +1062,7 @@
                     }
                 });
             });
+
             // Khi người dùng chọn một nhóm
             $('.private-button').click(function() {
                 currentConversationId = $(this).data('private-id');
@@ -1669,6 +1649,14 @@
             let i = Math.floor(Math.log(bytes) / Math.log(1024));
             let size = (bytes / Math.pow(1024, i)).toFixed(2);
             return `${size} ${sizes[i - 1]}`;
+        }
+
+        function updateUserStatus(userId, status) {
+            let userElement = $('.show-status-user[data-user-id="' + userId + '"]');
+
+            if (userElement.length) {
+                userElement.text(status == 'online' ? '🟢' : '🔴');
+            }
         }
     </script>
 @endpush

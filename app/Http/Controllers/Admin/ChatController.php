@@ -295,7 +295,7 @@ class ChatController extends Controller
                     'avatarUser' => $avatar,
                     'channelId' => $conversation->id,
                     'memberCount' => $memberCount,
-                    'status' => Cache::get('user_status_'.$otherUser->id,'offline'),
+                    'sender_id' => $otherUser->id
                 ]
             ]);
         } catch (\Exception $e) {
@@ -439,29 +439,6 @@ class ChatController extends Controller
                 'status' => 'error',
                 'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
             ]);
-        }
-    }
-
-    public function statusUser(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $status = $request->status;
-
-            if (!$user) {
-                return;
-            }
-            
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
-
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
-
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
-            $this->logError($e);
-
-            return;
         }
     }
 }
