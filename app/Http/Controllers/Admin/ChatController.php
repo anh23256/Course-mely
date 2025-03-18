@@ -22,6 +22,7 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -491,28 +492,6 @@ class ChatController extends Controller
             ]);
         }
     }
-    public function statusUser(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $status = $request->status;
-
-            if (!$user) {
-                return;
-            }
-            
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
-
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
-
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
-            $this->logError($e);
-
-            return;
-        }
-    }
     public function kickUserFromGroup(Request $request)
     {
         try {
@@ -587,6 +566,28 @@ class ChatController extends Controller
             DB::rollBack();
             Log::error('Lỗi khi giải tán nhóm', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
+        }
+    }
+    public function statusUser(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $status = $request->status;
+
+            if (!$user) {
+                return;
+            }
+            
+            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
+            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
+
+            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
+
+            return response()->json(['success' => true, 'status' => $status]);
+        } catch (\Throwable $e) {
+            $this->logError($e);
+
+            return;
         }
     }
 }
