@@ -34,6 +34,8 @@ class CourseController extends Controller
     const FOLDER_COURSE_THUMBNAIL = 'courses/thumbnail';
     const FOLDER_COURSE_INTRO = 'courses/intro';
 
+    const THUMBNAIL_DEFAULT = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1741966561/placeholder-16-9-26571_1080x675_zeynku.jpg';
+
     public function index(Request $request)
     {
         try {
@@ -61,7 +63,7 @@ class CourseController extends Controller
                     'chapters.lessons:id,chapter_id,title,slug,order'
                 ])
                 ->search($query)
-                ->orderBy('created_at')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             if ($courses->isEmpty()) {
@@ -81,10 +83,47 @@ class CourseController extends Controller
         }
     }
 
+    public function courseApproved()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $courses = Course::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->select([
+                    'id',
+                    'code',
+                    'name',
+                    'thumbnail',
+                    'total_student'
+                ])
+                ->get();
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy khoá học');
+            }
+
+            return $this->respondOk(
+                'Danh sách khoá học đã được kiểm duyệt của: ' . Auth::user()->name,
+                $courses
+            );
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
     public function courseListOfUser(string $slug)
     {
         try {
             $user = Auth::user();
+
             $course = Course::query()
                 ->select('id', 'user_id', 'code', 'category_id', 'name', 'slug', 'thumbnail', 'intro', 'level', 'price', 'price_sale', 'total_student', 'accepted')
                 ->where('slug', $slug)
@@ -201,6 +240,7 @@ class CourseController extends Controller
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'slug' => $data['slug'],
+                'thumbnail' => self::THUMBNAIL_DEFAULT ?? '',
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),
@@ -252,14 +292,21 @@ class CourseController extends Controller
                 )
                 : $thumbnailOld;
 
-            $data['intro'] = $request->hasFile('intro')
-                ? $this->handleFileUpload(
-                    $request->file('intro'),
-                    $introOld,
-                    self::FOLDER_COURSE_INTRO,
-                    'video'
-                )
-                : $introOld;
+            if ($data['intro'] === null) {
+                if ($introOld) {
+                    $this->deleteVideo($introOld, self::FOLDER_COURSE_INTRO);
+                }
+                $data['intro'] = null;
+            } else {
+                $data['intro'] = $request->hasFile('intro')
+                    ? $this->handleFileUpload(
+                        $request->file('intro'),
+                        $introOld,
+                        self::FOLDER_COURSE_INTRO,
+                        'video'
+                    )
+                    : $introOld;
+            }
 
             $course->update($data);
 
@@ -432,13 +479,13 @@ class CourseController extends Controller
                     continue;
                 }
 
-                if ($course->chapters()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
+                if ($course->courseUsers()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
                     continue;
                 }
 
-                if ($course->courseUsers()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
+                if ($course->chapters()->count() > 0) {
+                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
                     continue;
                 }
 

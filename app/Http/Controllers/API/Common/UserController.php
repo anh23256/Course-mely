@@ -123,7 +123,7 @@ class UserController extends Controller
     {
         if ($bioData) {
             $bio = [];
-            $profile = !empty($profile->bio) ? json_decode($profile->bio, true) : '';
+            $profile = !empty($profile->bio) ? $profile->bio : '';
 
             if (isset($bioData['facebook'])) {
                 $bio['facebook'] = $bioData['facebook'];
@@ -664,7 +664,8 @@ class UserController extends Controller
                 'id' => uniqid(),
                 'acq_id' => $data['bin'],
                 'name' => $data['name'],
-                'logo' => $data['logo'],
+                'logo' => $data['logo'] ?? '',
+                'logo_rounded' => $data['logo_rounded'] ?? '',
                 'short_name' => $data['short_name'] ?? '',
                 'account_no' => $data['account_no'],
                 'account_name' => $data['account_name'],
@@ -742,6 +743,7 @@ class UserController extends Controller
                         'acq_id' => $data['bin'],
                         'name' => $data['name'],
                         'logo' => $data['logo'] ?? $item['logo'] ?? '',
+                        'logo_rounded' => $data['logo_rounded'] ?? $item['logo_rounded'] ?? '',
                         'short_name' => $data['short_name'] ?? $item['short_name'] ?? '',
                         'account_no' => $data['account_no'],
                         'account_name' => $data['account_name'],

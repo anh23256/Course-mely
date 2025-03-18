@@ -60,16 +60,15 @@ class ChatController extends Controller
         try {
             DB::beginTransaction();
 
-            // Validate dữ liệu đầu vào
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id'
             ]);
 
-            $user1 = auth()->id();  // Người dùng đang đăng nhập
-            $user2 = $validated['user_id'];  // Người dùng muốn nhắn tin
+            $user1 = auth()->id();
+            $user2 = $validated['user_id'];
 
-            // 🛠 Kiểm tra nếu cuộc trò chuyện đã tồn tại
-            $existingConversation = Conversation::where('type', 'direct')
+            // Kiểm tra xem cuộc trò chuyện 1-1 đã tồn tại chưa
+            $conversation = Conversation::where('type', 'direct')
                 ->whereHas('users', function ($q) use ($user1) {
                     $q->where('user_id', $user1);
                 })
@@ -78,48 +77,35 @@ class ChatController extends Controller
                 })
                 ->first();
 
-            if ($existingConversation) {
-                DB::rollBack(); // Không cần tiếp tục giao dịch
-
+            if ($conversation) {
+                $data = $this->getAdminsAndChannels();
+                $data['conversation'] = $conversation;
+                DB::commit();
                 return response()->json([
                     'status' => 'failed',
-                    'message' => 'Cuộc trò chuyện đã tồn tại.',
-                    'conversation' => $existingConversation // Trả về cuộc trò chuyện cũ nếu đã tồn tại
-                ], 400);
+                    'data' => $data
+                ]);
             }
-
-            // Nếu chưa tồn tại, tạo mới cuộc trò chuyện
             $conversation = Conversation::create([
-                'name' => null,
-                'owner_id' => null,
+                'name' => null, // Không cần tên nhóm trong chat 1-1
+                'owner_id' => null, // Không cần owner trong chat 1-1
                 'type' => 'direct',
                 'status' => '1',
             ]);
-
-            // Thêm hai người dùng vào cuộc trò chuyện
             $conversation->users()->attach([$user1, $user2]);
-
             $data = $this->getAdminsAndChannels();
             $data['conversation'] = $conversation;
-
             DB::commit();
-
             return response()->json([
                 'status' => 'success',
                 'data' => $data
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-
             $this->logError($e, $request->all());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Không thể tạo cuộc trò chuyện.'
-            ], 500);
+            return response()->json(['status' => 'error', 'message' => 'Không thể tạo cuộc trò chuyện']);
         }
     }
-
 
     public function createGroupChat(StoreGroupChatRequest $request)
     {
@@ -332,63 +318,26 @@ class ChatController extends Controller
     }
     public function addMembersToGroup(Request $request)
     {
-        try {
-            // Validate dữ liệu đầu vào
-            $validated = $request->validate([
-                'group_id' => 'required|exists:conversations,id',  // Kiểm tra nhóm có tồn tại không
-                'members' => 'required|array',
-                'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users
-            ]);
+        $validated = $request->validate([
+            'members' => 'required|array',
+            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
+        ]);
 
-            // Lấy group_id và danh sách members
-            $group = Conversation::find($request->group_id);
-            $members = $request->members;
-
-            if (!$group) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Nhóm không tồn tại.',
-                ], 404);
-            }
-
-            // Lấy danh sách ID thành viên hiện tại của nhóm
-            $existingMembers = $group->users->pluck('id')->toArray();
-
-            // Tìm các thành viên đã có trong nhóm
-            $duplicateMembers = array_intersect($members, $existingMembers);
-
-            // Nếu có thành viên trùng, trả về danh sách thành viên bị trùng lặp
-            if (!empty($duplicateMembers)) {
-                $duplicateNames = User::whereIn('id', $duplicateMembers)->pluck('name')->toArray(); // Lấy tên của thành viên
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Một số thành viên đã có trong nhóm.',
-                    'duplicate_members' => $duplicateNames, // Gửi danh sách tên thành viên đã có trong nhóm
-                ], 400);
-            }
-
-            // Thêm thành viên vào nhóm
-            $newMembers = array_diff($members, $existingMembers);
-            $group->users()->attach($newMembers);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Thành viên đã được thêm vào nhóm.',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Lỗi khi thêm thành viên vào nhóm', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Đã xảy ra lỗi, vui lòng thử lại sau.',
-            ], 500);
+        // Lấy group_id và members
+        $group = Conversation::find($request->group_id);
+        $members = $request->members;
+        $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
+        $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
+        // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
+        foreach ($newMembers as $memberId) {
+            $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thành viên đã được thêm vào nhóm.',
+        ]);
     }
-
-
 
     public function getSentFiles($conversationId)
     {
@@ -492,7 +441,7 @@ class ChatController extends Controller
             ]);
         }
     }
-    
+
     public function statusUser(Request $request)
     {
         try {

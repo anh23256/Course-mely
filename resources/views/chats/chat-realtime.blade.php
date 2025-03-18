@@ -5,6 +5,15 @@
     <link rel="stylesheet" href="{{ asset('assets/libs/glightbox/css/glightbox.min.css') }}">
     <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/cssChat.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: gray;
+        }
+    </style>
 @endpush
 @php
     $title = 'Chat';
@@ -304,7 +313,7 @@
                                                             <img src=""
                                                                 class="rounded-circle avatar-xs imageUser avatar"
                                                                 alt="">
-                                                            <span class="status"></span>
+                                                            <span class="text-success show-status-user"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
                                                             <h5 class="text-truncate mb-0 fs-16">
@@ -1066,6 +1075,17 @@
                             $('#OnetoOne').hide();
                             $('#filetofile').removeClass('col-6');
                             $('#filetofile').addClass('col-12');
+
+                            const statusElement = $('.show-status-user');
+
+                            if (response.data.status === 'online') {
+                                statusElement.html(
+                                    '<span class="text-success">Online</span>');
+                            } else {
+                                statusElement.html(
+                                    '<span class="text-danger">Offline</span>');
+                            }
+
                             loadMessages(response.data.direct.id);
                             loadSentFiles(response.data.direct.id);
                         } else {

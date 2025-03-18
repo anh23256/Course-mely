@@ -127,8 +127,11 @@ class RatingController extends Controller
             $ratings = Rating::with('user:id,name,avatar')
                 ->whereHas('user', fn($q) => $q->where('status', 'active'))
                 ->latest()
-                ->limit(6)
-                ->get(['id', 'content', 'user_id']);
+                ->get(['id', 'content', 'user_id'])
+                ->groupBy('user_id') // Nhóm theo user_id
+                ->values() // Reset lại chỉ số mảng
+                ->take(6); // Lấy tối đa 6 người khác nhau
+
 
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
@@ -143,7 +146,7 @@ class RatingController extends Controller
         }
     }
 
-    public function getCourseReviews($slug)
+    public function getCourseRatings($slug)
     {
         try {
 
@@ -168,7 +171,6 @@ class RatingController extends Controller
                 'total_ratings' => $totalRatings,
                 'average_rating' => $averageRating
             ]);
-            
         } catch (\Exception $e) {
 
             $this->logError($e);

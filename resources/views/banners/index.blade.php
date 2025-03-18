@@ -144,10 +144,9 @@
                                                         value="option">
                                                 </div>
                                             </th>
-                                            <th>Mã banner</th>
+                                            <th>STT</th>
                                             <th>Tiêu đề</th>
                                             <th>Ảnh</th>
-                                            <th>Thứ tự</th>
                                             <th>Trạng thái</th>
                                             <th>Ngày tạo</th>
                                             <th>Ngày cập nhật</th>
@@ -163,8 +162,7 @@
                                                             value="option1">
                                                     </div>
                                                 </th>
-
-                                                <td class="id">{{ $banner->id }}</td>
+                                                <td class="order">{{ $banner->order }}</td>
                                                 <td class="customer_name">{{ $banner->title }}</td>
                                                 <td class="phone">
                                                     @if ($banner->image)
@@ -174,7 +172,6 @@
                                                     @endif
 
                                                 </td>
-                                                <td class="order">{{ $banner->order }}</td>
                                                 @if ($banner->status)
                                                     <td class="status"><span class="badge bg-success-subtle text-success">
                                                             Hoạt động

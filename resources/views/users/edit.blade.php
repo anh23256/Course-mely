@@ -64,14 +64,14 @@
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div>
+
                             <div class="col-md-12 mb-3">
                                 <label for="inputEmail4" class="form-label">Email</label>
                                 <input type="email" class="form-control" name="email" id="inputEmail4"
                                     placeholder="Nhập email" value="{{ $user->email }}">
-                                @error('email')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
+
                             </div>
+
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Avatar mới</label>
                                 <input type="file" name="avatar" id="imageInput" accept="image/*"
@@ -81,6 +81,7 @@
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div> <!-- end col -->
+
                             <div class="col-md-12 mb-3">
                                 <label for="">Trạng thái</label>
                                 <select name="status" id="" class="form-select mb-2">
@@ -89,10 +90,9 @@
                                     <option @selected($user->status === 'inactive') value="inactive">Inactive</option>
                                     <option @selected($user->status === 'blocked') value="blocked">Blocked</option>
                                 </select>
-                                @error('status')
-                                    <span class="text-danger mt-2">{{ $message }}</span>
-                                @enderror
+
                             </div>
+
                             <div class="col-md-12 mb-3">
                                 <label for="">Vai trò</label>
                                 <select name="role" id="" class="form-select mb-2">
@@ -102,10 +102,9 @@
                                             {{ Str::ucfirst($role) }}</option>
                                     @endforeach
                                 </select>
-                                @error('role')
-                                    <span class="text-danger mt-2">{{ $message }}</span>
-                                @enderror
+
                             </div>
+
                             <div class="col-md-12 mb-3">
                                 <label for="">Xác thực email</label>
                                 <div class="form-check form-switch form-switch-warning">
@@ -116,6 +115,7 @@
                                     <span class="text-danger mt-2">{{ $message }}</span>
                                 @enderror
                             </div>
+
                             <div class="col-12">
                                 <div class="text-start">
                                     <button type="submit" class="btn btn-primary">Cập nhật</button>
@@ -149,4 +149,13 @@
             }
         });
     </script>
+
+    <!-- particles js -->
+    <script src="{{ asset('assets/libs/particles.js/particles.js') }}"></script>
+    <!-- particles app js -->
+    <script src="{{ asset('assets/js/pages/particles.app.js') }}"></script>
+    <!-- validation init -->
+    <script src="{{ asset('assets/js/pages/form-validation.init.js') }}"></script>
+    <!-- password create init -->
+    <script src="{{ asset('assets/js/pages/passowrd-create.init.js') }}"></script>
 @endpush

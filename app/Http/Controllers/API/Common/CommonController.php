@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\API\Common;
 
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
-use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CommonController extends Controller
@@ -119,6 +121,7 @@ class CommonController extends Controller
                 )
                 ->where('users.code', $code)
                 ->where('users.status', '!=', 'blocked')
+                ->where('courses.status', '=', 'approved')
                 ->join('profiles', 'users.id', '=', 'profiles.user_id')
                 ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
@@ -163,12 +166,13 @@ class CommonController extends Controller
 
             $courses_instructor = DB::table('courses')
                 ->selectRaw(
-                    'courses.id, 
-                    courses.name, 
-                    courses.slug, 
-                    courses.thumbnail, 
-                    courses.price, 
+                    'courses.id,
+                    courses.name,
+                    courses.slug,
+                    courses.thumbnail,
+                    courses.price,
                     courses.price_sale,
+                    courses.is_free,
                     courses.total_student,
                     ROUND(AVG(ratings.rate), 1) as avg_rating,
                     COUNT(DISTINCT lessons.id) as lessons_count'
@@ -200,6 +204,28 @@ class CommonController extends Controller
             $this->logError($e);
 
             return $this->respondServerError();
+        }
+    }
+    public function statusUser(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $status = $request->status;
+
+            if (!$user) {
+                return;
+            }
+            
+            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
+            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
+
+            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
+
+            return response()->json(['success' => true, 'status' => $status]);
+        } catch (\Throwable $e) {
+            $this->logError($e);
+
+            return;
         }
     }
 }

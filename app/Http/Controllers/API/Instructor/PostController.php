@@ -33,7 +33,9 @@ class PostController extends Controller
             $posts = Post::query()->with([
                 'user',
                 'category',
-            ])->get();
+            ])
+                ->where('user_id', $user->id)
+                ->get();
 
             if (!$posts) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào');
