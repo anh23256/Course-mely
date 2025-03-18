@@ -126,7 +126,7 @@
                                                     aria-labelledby="heading{{ $index + 1 }}"
                                                     data-bs-parent="#default-accordion-example">
                                                     <div class="accordion-body">
-                                                        {{ $item['answers'] }}
+                                                        {{ $item['answer'] }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -382,7 +382,7 @@
                                                                     <td>{{ $courseUser->progress_percent }}%</td>
                                                                     <td>
                                                                         <button class="btn btn-primary"
-                                                                            onclick="showRating({{ $course->id }}, 
+                                                                            onclick="showRating({{ $course->id }},
                                                                         {{ $courseUser->id }})">
                                                                             Xem đánh giá
                                                                         </button>
@@ -393,7 +393,7 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                {{ $courseUsers->links() }} 
+                                                {{ $courseUsers->links() }}
                                             </div>
 
                                             <div class="d-flex">
@@ -616,7 +616,7 @@
             if (chartProgress) {
                 chartProgress.destroy();
             }
-            
+
             // Nếu không có dữ liệu, hiển thị thông báo
             if (data.length == 0) {
                 chartContainer.innerHTML = `<p style="text-align: center; color: #999;">Không có dữ liệu</p>`;
