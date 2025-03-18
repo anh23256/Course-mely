@@ -387,8 +387,7 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
                 Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
-                Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
-                Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
-            Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
+
+        Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
     });
