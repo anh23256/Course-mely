@@ -307,6 +307,8 @@ class MemberShipPlanController extends Controller
             ));
 
             DB::commit();
+
+            return $this->respondCreated('Gửi yêu cầu kiểm duyệt thành công');
         } catch (\Exception $e) {
             $this->logError($e);
 

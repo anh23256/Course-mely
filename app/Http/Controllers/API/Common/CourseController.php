@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Redis\Connections\PredisConnection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 class CourseController
@@ -340,7 +341,7 @@ class CourseController
                 ->with([
                     'category:id,name,slug',
                     'user' => function ($query) {
-                        $query->select(['id', 'name', 'avatar', 'created_at'])
+                        $query->select(['id', 'name', 'code', 'avatar', 'created_at'])
                             ->with(['profile:id,user_id,about_me,bio']);
                     },
                     'chapters' => function ($query) {
@@ -432,7 +433,8 @@ class CourseController
     public function getRelatedCourses(string $courseSlug)
     {
         try {
-            $currentCourse = Course::query()->where('slug', $courseSlug)
+            $currentCourse = Course::query()
+                ->where('slug', $courseSlug)
                 ->where('visibility', 'public')
                 ->where('status', 'approved')
                 ->first();
@@ -582,6 +584,7 @@ class CourseController
                     'courses.visibility' => 'public',
                     'courses.status' => 'approved',
                 ])
+                ->where('courses.user_id', $course->user_id)
                 ->where('courses.slug', '<>', $slug)
                 ->groupBy('courses.code', 'courses.name', 'courses.slug')
                 ->orderBy('courses.total_student', 'desc')
@@ -613,7 +616,7 @@ class CourseController
             return response()->json([
                 'message' => 'Danh sách khóa học và thông tin giảng viên',
                 'get_other_courses' => $getOtherCourses,
-                'profile_instructor' => $profileIntructor
+                'profile_instructor' => $profileIntructor,
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

@@ -1,10 +1,56 @@
 @extends('layouts.app')
 
 @push('page-css')
-    <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
+    <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}"/>
+
+    <style>
+        .marketplace-swiper {
+            padding: 0 30px;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            width: 30px;
+            height: 30px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            color: #405189;
+        }
+
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .swiper-button-next.swiper-button-disabled,
+        .swiper-button-prev.swiper-button-disabled {
+            opacity: 0.35;
+            cursor: auto;
+            pointer-events: none;
+        }
+
+        .swiper-button-next {
+            right: 5px;
+        }
+
+        .swiper-button-prev {
+            left: 5px;
+        }
+
+        @media (max-width: 767px) {
+            .swiper-button-next,
+            .swiper-button-prev {
+                display: none;
+            }
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -14,7 +60,7 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">{{ $title ?? 'Dashboard' }}</h4>
                     <div class="dateRangePicker btn btn-outline-primary rounded-pill px-3"
-                        data-filter="totalRevenueCourseMely"></div>
+                         data-filter="totalRevenueCourseMely"></div>
                 </div>
             </div>
         </div>
@@ -35,7 +81,7 @@
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body p-4"
-                        style="background: linear-gradient(135deg, #e9f7ef, #d4efdf); border-radius: 12px;">
+                         style="background: linear-gradient(135deg, #e9f7ef, #d4efdf); border-radius: 12px;">
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng doanh thu</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -46,7 +92,7 @@
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
                                 <span class="counter-value"
-                                    data-target="totalRevenue">{{ number_format($totalAmount->total_revenue ?? 0, 0, '.', '.') }}</span>
+                                      data-target="totalRevenue">{{ number_format($totalAmount->total_revenue ?? 0, 0, '.', '.') }}</span>
                                 <span class="fs-14 text-muted"></span>
                             </h4>
                         </div>
@@ -58,7 +104,7 @@
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body p-4"
-                        style="background: linear-gradient(135deg, #e9f2ff, #d6eaff); border-radius: 12px;">
+                         style="background: linear-gradient(135deg, #e9f2ff, #d6eaff); border-radius: 12px;">
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Lợi nhuận đạt được</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -69,7 +115,7 @@
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
                                 <span class="counter-value"
-                                    data-target="totalProfit">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
+                                      data-target="totalProfit">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
                                 <span class="fs-14 text-muted"></span>
                             </h4>
                         </div>
@@ -79,7 +125,7 @@
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body p-4"
-                        style="background: linear-gradient(135deg, #fff3e6, #ffeedb); border-radius: 12px;">
+                         style="background: linear-gradient(135deg, #fff3e6, #ffeedb); border-radius: 12px;">
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng khóa học</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -98,7 +144,7 @@
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body p-4"
-                        style="background: linear-gradient(135deg, #e9e9ff, #dcdbff); border-radius: 12px;">
+                         style="background: linear-gradient(135deg, #e9e9ff, #dcdbff); border-radius: 12px;">
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Người hướng dẫn</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -108,7 +154,8 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value" data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
+                                <span class="counter-value"
+                                      data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -117,10 +164,10 @@
         </div>
 
         <!-- Category Analysis -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-2 g-4">
             <div class="col-xl-7">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Biểu đồ tổng quan top 10 danh mục</h4>
                     </div>
                     <div class="card-body">
@@ -130,7 +177,7 @@
             </div>
             <div class="col-xl-5">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center justify-content-between">
                         <h4 class="card-title mb-0 text-white">Tổng quan top 10 danh mục</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_category"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
@@ -138,28 +185,29 @@
                     <div class="card-body" style="overflow-x: hidden; max-width: 100%;">
                         <div class="table-responsive table-card" style="overflow-x: hidden;">
                             <table id="table-categories" class="table table-centered table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th
-                                            style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                            Danh mục</th>
-                                        <th style="width: 100px;">Khóa học</th>
-                                        <th style="width: 100px;">Học viên</th>
-                                        <th style="width: 100px;">Giảng viên</th>
-                                    </tr>
+                                <thead >
+                                <tr>
+                                    <th
+                                        style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        Danh mục
+                                    </th>
+                                    <th style="width: 100px;">Khóa học</th>
+                                    <th style="width: 100px;">Học viên</th>
+                                    <th style="width: 100px;">Giảng viên</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($categoryStats as $category)
-                                        <tr>
-                                            <td
-                                                style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ $category->category_name ?? 'Không xác định' }}
-                                            </td>
-                                            <td class="text-center">{{ $category->total_courses }}</td>
-                                            <td class="text-center">{{ $category->total_enrolled_students }}</td>
-                                            <td class="text-center">{{ $category->total_instructors }}</td>
-                                        </tr>
-                                    @endforeach
+                                @foreach ($categoryStats as $category)
+                                    <tr>
+                                        <td
+                                            style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            {{ $category->category_name ?? 'Không xác định' }}
+                                        </td>
+                                        <td class="text-center">{{ $category->total_courses }}</td>
+                                        <td class="text-center">{{ $category->total_enrolled_students }}</td>
+                                        <td class="text-center">{{ $category->total_instructors }}</td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -173,7 +221,7 @@
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
-                    <div class="card-header border-0 align-items-center d-flex">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 border-0 align-items-center d-flex">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Doanh thu 2025 CourseMeLy</h4>
                     </div>
                     <!-- end card header -->
@@ -193,7 +241,7 @@
                             <div class="col-6 col-sm-6">
                                 <div class="p-3 border border-dashed border-start-0 border-end-0">
                                     <h5 class="mb-1 text-success"><span class="counter-value-profit"
-                                            data-target="10589">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
+                                                                        data-target="10589">{{ number_format($totalAmount->total_profit ?? 0, 0, '.', '.') }}</span>
                                         VND</h5>
                                     <p class="text-muted mb-0">Lợi nhuận</p>
                                 </div>
@@ -204,8 +252,8 @@
                     <div class="card-body p-0 pb-2">
                         <div>
                             <div id="projects-overview-chart"
-                                data-colors='["--vz-primary", "--vz-warning", "--vz-danger"]' dir="ltr"
-                                class="apex-charts"></div>
+                                 data-colors='["--vz-primary", "--vz-warning", "--vz-danger"]' dir="ltr"
+                                 class="apex-charts"></div>
                         </div>
                     </div><!-- end card body -->
                 </div><!-- end card -->
@@ -213,10 +261,10 @@
         </div><!-- end row -->
 
         <!-- Top Instructors & Courses -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-2 g-4">
             <div class="col-xl-6">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Người hướng dẫn nổi bật</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_instructor"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
@@ -225,36 +273,37 @@
                     <div class="card-body" id="showTopInstructorDiv">
                         <div class="table-responsive table-card">
                             <table id="table-instructors"
-                                class="table table-centered table-hover align-middle table-nowrap mb-0">
+                                   class="table table-centered table-hover align-middle table-nowrap mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>Người hướng dẫn</th>
-                                        <th>Khoá học</th>
-                                        <th>Học viên</th>
-                                        <th>Doanh thu</th>
-                                    </tr>
+                                <tr>
+                                    <th>Người hướng dẫn</th>
+                                    <th>Khoá học</th>
+                                    <th>Học viên</th>
+                                    <th>Doanh thu</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($topInstructors as $topInstructor)
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ $topInstructor->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}"
-                                                        alt=""
-                                                        class="avatar-sm p-2 rounded-circle object-fit-cover" />
-                                                    <div class="ms-2">
-                                                        <h5 class="fs-14 my-1 fw-medium">{{ $topInstructor->name ?? '' }}
-                                                        </h5>
-                                                        <span class="text-muted">Tham gia
+                                @foreach ($topInstructors as $topInstructor)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img
+                                                    src="{{ $topInstructor->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}"
+                                                    alt=""
+                                                    class="avatar-sm p-2 rounded-circle object-fit-cover"/>
+                                                <div class="ms-2">
+                                                    <h5 class="fs-14 my-1 fw-medium">{{ $topInstructor->name ?? '' }}
+                                                    </h5>
+                                                    <span class="text-muted">Tham gia
                                                             {{ \Carbon\Carbon::parse($topInstructor->created_at)->format('d/m/Y') ?? '' }}</span>
-                                                    </div>
                                                 </div>
-                                            </td>
-                                            <td class="text-center">{{ $topInstructor->total_courses ?? '' }}</td>
-                                            <td>{{ $topInstructor->total_enrolled_students ?? '' }}</td>
-                                            <td>{{ number_format($topInstructor->total_revenue) ?? '' }}</td>
-                                        </tr>
-                                    @endforeach
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ $topInstructor->total_courses ?? '' }}</td>
+                                        <td>{{ $topInstructor->total_enrolled_students ?? '' }}</td>
+                                        <td>{{ number_format($topInstructor->total_revenue) ?? '' }}</td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                             <div class="mt-4 px-4 text-center">
@@ -268,44 +317,45 @@
             </div>
             <div class="col-xl-6">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center bg-primary bg-gradient bg-opacity-60">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Top khoá học bán chạy</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_course"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
-                        <button class="fs-7 badge bg-primary mx-2" id="showBestSellingCoursesButton">Xem biểu đồ</button>
+                        <button class="fs-7 badge bg-primary mx-2" id="showBestSellingCoursesButton">Xem biểu đồ
+                        </button>
                     </div>
                     <div class="card-body" id="showBestSellingCoursesDiv">
                         <div class="table-responsive table-card">
                             <table id="table-courses"
-                                class="table table-hover table-centered align-middle table-nowrap mb-0">
+                                   class="table table-hover table-centered align-middle table-nowrap mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>Khoá học</th>
-                                        <th>Đã bán</th>
-                                        <th>Người học</th>
-                                        <th>Doanh thu</th>
-                                    </tr>
+                                <tr>
+                                    <th>Khoá học</th>
+                                    <th>Đã bán</th>
+                                    <th>Người học</th>
+                                    <th>Doanh thu</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($topCourses as $topCourse)
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <img style="width:70px" src="{{ $topCourse->thumbnail }}"
-                                                        alt="" class="img-fluid d-block" />
-                                                    <div>
-                                                        <h5 class="fs-14 my-1">
-                                                            {{ \Illuminate\Support\Str::limit($topCourse->name, 20) }}</h5>
-                                                        <span
-                                                            class="text-muted">{{ \Carbon\Carbon::parse($topCourse->created_at)->format('d/m/Y') }}</span>
-                                                    </div>
+                                @foreach ($topCourses as $topCourse)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img style="width:70px" src="{{ $topCourse->thumbnail }}"
+                                                     alt="" class="img-fluid d-block"/>
+                                                <div>
+                                                    <h5 class="fs-14 my-1">
+                                                        {{ \Illuminate\Support\Str::limit($topCourse->name, 20) }}</h5>
+                                                    <span
+                                                        class="text-muted">{{ \Carbon\Carbon::parse($topCourse->created_at)->format('d/m/Y') }}</span>
                                                 </div>
-                                            </td>
-                                            <td class="text-center">{{ $topCourse->total_sales }}</td>
-                                            <td class="text-center">{{ $topCourse->total_enrolled_students }}</td>
-                                            <td>{{ number_format($topCourse->total_revenue) }}</td>
-                                        </tr>
-                                    @endforeach
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ $topCourse->total_sales }}</td>
+                                        <td class="text-center">{{ $topCourse->total_enrolled_students }}</td>
+                                        <td>{{ number_format($topCourse->total_revenue) }}</td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                             <div class="mt-4 px-4 text-center">
@@ -320,10 +370,10 @@
         </div>
 
         <!-- Ratings & Top Students -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-2 ">
             <div class="col-xl-4">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60">
                         <h4 class="card-title mb-0 text-white">Đánh giá khoá học</h4>
                     </div>
                     <div class="card-body d-flex align-items-center justify-content-center">
@@ -333,7 +383,7 @@
             </div>
             <div class="col-xl-8">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Top học viên</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_student"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
@@ -342,33 +392,34 @@
                     <div class="card-body" id="showRenderTopStudentsDiv">
                         <div class="table-responsive table-card">
                             <table id="table-students"
-                                class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                   class="table table-borderless table-centered align-middle table-nowrap mb-0">
                                 <thead class="text-muted table-light">
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Học viên</th>
-                                        <th>Khoá học đã mua</th>
-                                        <th>Tổng tiền đã chi</th>
-                                        <th>Lần mua gần nhất</th>
-                                    </tr>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Học viên</th>
+                                    <th>Khoá học đã mua</th>
+                                    <th>Tổng tiền đã chi</th>
+                                    <th>Lần mua gần nhất</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($topUsers as $topUser)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ $topUser->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}"
-                                                        alt=""
-                                                        class="avatar-xs rounded-circle object-fit-cover" />
-                                                    <div class="ms-2">{{ $topUser->name ?? '' }}</div>
-                                                </div>
-                                            </td>
-                                            <td>{{ $topUser->total_courses_purchased }}</td>
-                                            <td>{{ number_format($topUser->total_spent ?? 0) }}</td>
-                                            <td>{{ $topUser->last_purchase_date }}</td>
-                                        </tr>
-                                    @endforeach
+                                @foreach ($topUsers as $topUser)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img
+                                                    src="{{ $topUser->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}"
+                                                    alt=""
+                                                    class="avatar-xs rounded-circle object-fit-cover"/>
+                                                <div class="ms-2">{{ $topUser->name ?? '' }}</div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $topUser->total_courses_purchased }}</td>
+                                        <td>{{ number_format($topUser->total_spent ?? 0) }}</td>
+                                        <td>{{ $topUser->last_purchase_date }}</td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                             <div class="mt-4 px-4 text-center">
@@ -383,12 +434,12 @@
         </div>
 
         <!-- Top Completed Courses & Top Instructors -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-2 ">
             <div class="col-xxl-7">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center bg-primary bg-gradient bg-opacity-60">
                         <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
-                            class="avatar-xs rounded-circle object-fit-cover" alt="">
+                             class="avatar-xs rounded-circle object-fit-cover" alt="">
                         <h4 class="card-title mb-0 mx-2 text-white">Top 10 khóa học có tỉ lệ hoàn thành cao nhất</h4>
                     </div>
                     <div class="card-body">
@@ -398,7 +449,7 @@
             </div>
             <div class="col-xxl-5">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60">
                         <h4 class="card-title mb-0 text-white">Top 10 giảng viên được yêu thích nhất</h4>
                     </div>
                     <div class="card-body d-flex align-items-center justify-content-center">
@@ -408,48 +459,119 @@
             </div>
         </div>
 
-        <!-- Top Viewed Courses -->
-        <div class="row mt-4">
+        <!-- Top Courses Views -->
+        <div class="row mt-2">
             <div class="col-xxl-12">
-                <div class="swiper marketplace-swiper rounded gallery-light">
-                    <div class="d-flex pt-2 pb-4">
-                        <h4 class="fs-16 mb-0 mx-2 fw-bold">Top 10 khóa học có lượt xem nhiều nhất</h4>
+                <div class="card border-0 shadow">
+                    <div
+                        class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center justify-content-between p-3">
+                        <h4 class="card-title mb-0 fw-bold text-white">
+                            <i class="ri-award-fill me-2"></i>Top 10 khóa học có lượt xem nhiều nhất
+                        </h4>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-filter-3-line"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="#">Mới nhất</a></li>
+                                <li><a class="dropdown-item" href="#">Giá thấp đến cao</a></li>
+                                <li><a class="dropdown-item" href="#">Giá cao đến thấp</a></li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="swiper-wrapper">
-                        @foreach ($getTopViewCourses as $getTopViewCourse)
-                            <div class="swiper-slide h-100">
-                                <div class="card explore-box card-animate rounded">
-                                    <div class="explore-place-bid-img">
-                                        <img src="{{ $getTopViewCourse->thumbnail }}" alt=""
-                                            class="img-fluid card-img-top explore-img" />
-                                        <div class="bg-overlay"></div>
-                                        <div class="place-bid-btn">
-                                            <a class="btn btn-success"><i
-                                                    class="ri-auction-fill align-bottom me-1 fw-bold text-white"></i>{{ $getTopViewCourse->instructor_name }}</a>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="fw-medium mb-0 float-end"><i
-                                                class="mdi mdi-eye text-primary align-middle"></i>
-                                            {{ $getTopViewCourse->views }}</p>
-                                        <h5 class="mb-1">{{ $getTopViewCourse->name }}</h5>
-                                    </div>
-                                    <div class="card-footer border-top border-top-dashed">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1 fs-14">
-                                                <i class="ri-price-tag-3-fill text-warning align-bottom me-2"></i> Giá:
-                                                <span
-                                                    class="fw-medium">{{ number_format($getTopViewCourse->price_sale != 0 ? $getTopViewCourse->price_sale : $getTopViewCourse->price ?? 0) }}
-                                                    VND</span>
+                    <div class="card-body p-2">
+                        <div class="swiper marketplace-swiper rounded gallery-light">
+                            <div class="swiper-wrapper py-3">
+                                @foreach ($getTopViewCourses as $getTopViewCourse)
+                                    <div class="swiper-slide h-100">
+                                        <div
+                                            class="card explore-box card-animate rounded-lg overflow-hidden h-100 shadow-sm border-0 position-relative">
+                                            @if($getTopViewCourse->is_free)
+                                                <div class="ribbon ribbon-primary ribbon-shape position-absolute"><span>Miễn phí</span>
+                                                </div>
+                                            @elseif($getTopViewCourse->price_sale > 0)
+                                                @php
+                                                    $discount = round((1 - $getTopViewCourse->price_sale / $getTopViewCourse->price) * 100);
+                                                @endphp
+                                                <div class="ribbon ribbon-danger ribbon-shape position-absolute"><span>-{{ $discount }}%</span>
+                                                </div>
+                                            @endif
+
+                                            <div class="explore-place-bid-img position-relative">
+                                                <img src="{{ $getTopViewCourse->thumbnail }}"
+                                                     alt="{{ $getTopViewCourse->name }}"
+                                                     class="img-fluid card-img-top explore-img"
+                                                     style="height: 200px; object-fit: cover;"/>
+                                                <div class="bg-overlay bg-dark opacity-25"></div>
+
+                                                <div class="position-absolute bottom-0 start-0 w-100 p-3">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar-xs me-2 bg-white rounded-circle p-1">
+                                                                <img
+                                                                    src="{{ $getTopViewCourse->instructor_avatar ?? '' }}"
+                                                                    alt=""
+                                                                    class="rounded-circle w-100 h-100 object-fit-cover">
+                                                            </div>
+                                                            <span
+                                                                class="text-white fw-medium text-shadow">{{ $getTopViewCourse->instructor_name }}</span>
+                                                        </div>
+                                                        <span class="badge bg-primary rounded-pill fs-11 px-2 py-1">
+                                                    <i class="mdi mdi-eye align-middle me-1"></i>{{ number_format($getTopViewCourse->views) }}
+                                                </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body p-3">
+                                                <h5 class="mb-3 fw-semibold text-truncate course-title"
+                                                    title="{{ $getTopViewCourse->name }}">
+                                                    {{ $getTopViewCourse->name }}
+                                                </h5>
+
+                                                <div class="d-flex align-items-center mb-2">
+                                                    @if($getTopViewCourse->is_free)
+                                                        <span class="badge bg-success me-1">Miễn phí</span>
+                                                    @elseif($getTopViewCourse->price_sale > 0)
+                                                        <span class="fs-15 fw-semibold text-success">{{ number_format($getTopViewCourse->price_sale) }} VND</span>
+                                                        <span
+                                                            class="text-muted text-decoration-line-through ms-2 fs-13">{{ number_format($getTopViewCourse->price) }} VND</span>
+                                                        @php
+                                                            $discount = round((1 - $getTopViewCourse->price_sale / $getTopViewCourse->price) * 100);
+                                                        @endphp
+                                                        <span class="badge bg-danger ms-auto">-{{ $discount }}%</span>
+                                                    @elseif($getTopViewCourse->price > 0)
+                                                        <span class="fs-15 fw-semibold">{{ number_format($getTopViewCourse->price) }} VND</span>
+                                                    @else
+                                                        <span class="badge bg-success">Miễn phí</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="card-footer bg-light p-3 border-top">
+                                                <div class="d-grid gap-2">
+                                                    <a href="{{ config('app.fe_url' . '/courses/' . $getTopViewCourse->slug) }}"
+                                                       target="_blank"
+                                                       class="btn btn-primary btn-sm">
+                                                        <i class="ri-eye-line align-bottom me-1"></i>
+                                                        Xem chi tiết
+                                                    </a>
+                                                    <a href="{{ route('admin.courses.show', $getTopViewCourse->id) }}"
+                                                       class="btn btn-outline-secondary btn-sm">
+                                                        <i class="ri-settings-3-line align-bottom me-1"></i>
+                                                        Quản lý
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                            <div class="swiper-button-next swiper-nav-btn"></div>
+                            <div class="swiper-button-prev swiper-nav-btn"></div>
+                        </div>
                     </div>
-                    <div class="swiper-button-next"></div>
-                    <div class="swiper-button-prev"></div>
                 </div>
             </div>
         </div>
@@ -484,7 +606,7 @@
         else greetingText = "Chúc ngủ ngon, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
         $("#greeting").text(greetingText);
 
-        $(".dateRangePicker").each(function() {
+        $(".dateRangePicker").each(function () {
             let button = $(this);
 
             function updateDateRangeText(start, end) {
@@ -520,7 +642,7 @@
                     cancelLabel: "Hủy",
                     customRangeLabel: "Tùy chỉnh",
                 }
-            }, function(start, end) {
+            }, function (start, end) {
                 updateDateRangeText(start, end);
 
                 let data = {
@@ -565,10 +687,10 @@
 
             let options = {
                 series: [{
-                        name: "Doanh thu",
-                        type: "bar",
-                        data: revenueData
-                    },
+                    name: "Doanh thu",
+                    type: "bar",
+                    data: revenueData
+                },
                     {
                         name: "Lợi nhuận",
                         type: "bar",
@@ -609,7 +731,7 @@
                 },
                 tooltip: {
                     y: {
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.toLocaleString("vi-VN").replace(/\./g,
                                 ",") + 'VND';
                         }
@@ -677,9 +799,9 @@
 
             let options = {
                 series: [{
-                        name: 'Số khóa học',
-                        data: totalCoursesSeries
-                    },
+                    name: 'Số khóa học',
+                    data: totalCoursesSeries
+                },
                     {
                         name: 'Số học viên',
                         data: totalEnrolledStudentsSeries
@@ -726,14 +848,14 @@
                         text: 'Số lượng'
                     },
                     labels: {
-                        formatter: function(val) {
+                        formatter: function (val) {
                             return val.toLocaleString();
                         }
                     }
                 },
                 tooltip: {
                     y: {
-                        formatter: function(val) {
+                        formatter: function (val) {
                             return val.toLocaleString();
                         }
                     }
@@ -778,10 +900,10 @@
                     }
                 },
                 series: [{
-                        name: 'Số lượng bán',
-                        type: "bar",
-                        data: data.data.map(item => item.total_sales)
-                    },
+                    name: 'Số lượng bán',
+                    type: "bar",
+                    data: data.data.map(item => item.total_sales)
+                },
                     {
                         name: "Doanh thu (triệu VND)",
                         type: "line",
@@ -789,10 +911,10 @@
                     }
                 ],
                 yaxis: [{
-                        labels: {
-                            formatter: val => val.toLocaleString("vi-VN")
-                        }
-                    },
+                    labels: {
+                        formatter: val => val.toLocaleString("vi-VN")
+                    }
+                },
                     {
                         opposite: true,
                         labels: {
@@ -821,7 +943,10 @@
                         }) => {
                             if (seriesIndex === 0)
                                 return `${data.data[dataPointIndex].name}: ${val.toLocaleString("vi-VN") + ' lượt bán'}`;
-                            return `${data.data[dataPointIndex].name}: ${val.toLocaleString("vi-VN", { style: "currency", currency: "VND" })}`;
+                            return `${data.data[dataPointIndex].name}: ${val.toLocaleString("vi-VN", {
+                                style: "currency",
+                                currency: "VND"
+                            })}`;
                         }
                     }
                 }
@@ -857,9 +982,9 @@
                     }
                 },
                 series: [{
-                        name: "Doanh thu (VND)",
-                        data: data.data.map(item => Number(item.total_revenue) || 0)
-                    },
+                    name: "Doanh thu (VND)",
+                    data: data.data.map(item => Number(item.total_revenue) || 0)
+                },
                     {
                         name: "Số khóa học",
                         data: data.data.map(item => Number(item.total_courses) || 0)
@@ -896,7 +1021,10 @@
                             seriesIndex
                         }) => {
                             if (seriesIndex === 0)
-                                return `Doanh thu: ${val.toLocaleString("vi-VN", { style: "currency", currency: "VND" })}`;
+                                return `Doanh thu: ${val.toLocaleString("vi-VN", {
+                                    style: "currency",
+                                    currency: "VND"
+                                })}`;
                             else if (seriesIndex === 1) return `Số khóa học: ${val}`;
                             return `Số học viên: ${val}`;
                         }
@@ -968,7 +1096,7 @@
                 tooltip: {
                     y: {
                         formatter: val =>
-                            `Doanh thu: ${val.toLocaleString("vi-VN", { style: "currency", currency: "VND" })}`
+                            `Doanh thu: ${val.toLocaleString("vi-VN", {style: "currency", currency: "VND"})}`
                     },
                     z: {
                         formatter: val => `Số lượt mua: ${val}`
@@ -1024,11 +1152,11 @@
                 },
                 tooltip: {
                     custom: ({
-                        series,
-                        seriesIndex,
-                        dataPointIndex,
-                        w
-                    }) => {
+                                 series,
+                                 seriesIndex,
+                                 dataPointIndex,
+                                 w
+                             }) => {
                         let data = w.config.series[seriesIndex].data[dataPointIndex].custom;
                         return `<div class="custom-tooltip">🧑‍🏫 <b>${data.name}</b><br>🔥 Follow: <b>${data.follow}</b><br>🎓 Học viên: <b>${data.students}</b></div>`;
                     }
@@ -1106,7 +1234,7 @@
             chartTopCompletedCourses.render();
         }
 
-        $(document).on('click', '#pagination-links-courses a', function(e) {
+        $(document).on('click', '#pagination-links-courses a', function (e) {
             e.preventDefault();
             var page = $(this).attr('href').split('page=')[1];
             loadCoursesContent({
@@ -1114,7 +1242,7 @@
             });
         });
 
-        $(document).on('click', '#pagination-links-instructors a', function(e) {
+        $(document).on('click', '#pagination-links-instructors a', function (e) {
             e.preventDefault();
             var page = $(this).attr('href').split('page=')[1];
             loadInstructorsContent({
@@ -1122,7 +1250,7 @@
             });
         });
 
-        $(document).on('click', '#pagination-links-users a', function(e) {
+        $(document).on('click', '#pagination-links-users a', function (e) {
             e.preventDefault();
             var page = $(this).attr('href').split('page=')[1];
             loadUsersContent({
@@ -1137,7 +1265,7 @@
                 type: "GET",
                 data: dataFilter,
                 dataType: "json",
-                success: function(data) {
+                success: function (data) {
                     $('#table-courses tbody').html(data.top_courses_table);
                     $('#pagination-links-courses').html(data.pagination_links_courses);
                     topCourse = data.topCourses;
@@ -1153,7 +1281,7 @@
                 type: "GET",
                 data: dataFilter,
                 dataType: "json",
-                success: function(data) {
+                success: function (data) {
                     $('#table-instructors tbody').html(data.top_instructors_table);
                     $('#pagination-links-instructors').html(data.pagination_links_instructors);
                     topInstructor = data.topInstructors;
@@ -1170,7 +1298,7 @@
                 type: "GET",
                 data: dataFilter,
                 dataType: "json",
-                success: function(data) {
+                success: function (data) {
                     $('#table-students tbody').html(data.top_users_table);
                     $('#pagination-links-users').html(data.pagination_links_users);
                     topStudent = data.topUsers;
@@ -1184,7 +1312,7 @@
                 url: "{{ route('admin.dashboard') }}",
                 type: "GET",
                 data: filterData,
-                success: function(response) {
+                success: function (response) {
                     updateChart(response.apexCharts);
                 }
             });
@@ -1195,7 +1323,7 @@
                 url: "{{ route('admin.dashboard') }}",
                 type: "GET",
                 data: filterData,
-                success: function(response) {
+                success: function (response) {
                     updatePieChart(response.course_rating);
                 }
             });
@@ -1206,7 +1334,7 @@
                 url: "{{ route('admin.dashboard') }}",
                 type: "GET",
                 data: filterData,
-                success: function(response) {
+                success: function (response) {
                     console.log(response.topCourses);
 
                     topCourse = response.topCourses;
@@ -1274,7 +1402,7 @@
             };
         }
 
-        $(document).on('click', '#showBestSellingCoursesButton', function(e) {
+        $(document).on('click', '#showBestSellingCoursesButton', function (e) {
             e.preventDefault();
             let tableDiv = $('#table-courses').closest('.table-responsive');
             let chartDiv = $('#bestSellingCourses');
@@ -1296,7 +1424,7 @@
             }
         });
 
-        $(document).on('click', '#showTopInstructorButton', function(e) {
+        $(document).on('click', '#showTopInstructorButton', function (e) {
             e.preventDefault();
             let tableDiv = $('#table-instructors').closest('.table-responsive');
             let chartDiv = $('#renderTopInstructorsChart');
@@ -1318,7 +1446,7 @@
             }
         });
 
-        $(document).on('click', '#showRenderTopStudentsButton', function(e) {
+        $(document).on('click', '#showRenderTopStudentsButton', function (e) {
             e.preventDefault();
             let tableDiv = $('#table-students').closest('.table-responsive');
             let chartDiv = $('#renderTopStudentsChart');
@@ -1340,7 +1468,7 @@
             }
         });
 
-        $(document).on('click', '.dowloadExcel', function() {
+        $(document).on('click', '.dowloadExcel', function () {
             let type_export = $(this).data('type');
             let data_export;
 
@@ -1370,7 +1498,7 @@
                 xhrFields: {
                     responseType: 'blob'
                 },
-                success: function(response, status, xhr) {
+                success: function (response, status, xhr) {
                     let filename = `${type_export}_export.xlsx`;
                     const disposition = xhr.getResponseHeader('Content-Disposition');
 
