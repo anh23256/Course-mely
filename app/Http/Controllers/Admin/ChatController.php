@@ -491,8 +491,7 @@ class ChatController extends Controller
                 'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
             ]);
         }
-    }
-    
+    }    
     public function statusUser(Request $request)
     {
         try {
