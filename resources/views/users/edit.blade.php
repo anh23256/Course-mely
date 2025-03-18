@@ -65,31 +65,12 @@
                                 @enderror
                             </div>
 
-                            @if (!$user->hasRole('admin'))
-                                <div class="col-md-12 mb-3">
-                                    <label for="inputEmail4" class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" id="inputEmail4"
-                                        placeholder="Nhập email" value="{{ $user->email }}">
+                            <div class="col-md-12 mb-3">
+                                <label for="inputEmail4" class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" id="inputEmail4"
+                                    placeholder="Nhập email" value="{{ $user->email }}">
 
-                                </div>
-                            @else
-                                <div class="col-md-12 mb-3">
-                                    <label for="inputEmail4" class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" id="inputEmail4"
-                                        placeholder="Nhập email" value="{{ $user->email }}" readonly>
-                                </div>
-                            @endif
-
-
-                            @if ($user->hasRole('admin'))
-                                <div class="col-md-12 mb-3">
-                                    <label for="inputEmail4" class="form-label">Password</label>
-
-                                    <input type="password" class="form-control pe-5 password-input" name="password"
-                                         id="password" placeholder="Nhập password">
-                                        
-                                </div>
-                            @endif
+                            </div>
 
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Avatar mới</label>
@@ -100,36 +81,29 @@
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div> <!-- end col -->
-                            @if (!$user->hasRole('admin'))
-                                <div class="col-md-12 mb-3">
-                                    <label for="">Trạng thái</label>
-                                    <select name="status" id="" class="form-select mb-2">
-                                        <option value="">Chọn trạng thái</option>
-                                        <option @selected($user->status === 'active') value="active">Active</option>
-                                        <option @selected($user->status === 'inactive') value="inactive">Inactive</option>
-                                        <option @selected($user->status === 'blocked') value="blocked">Blocked</option>
-                                    </select>
-                                    
-                                </div>
-                            @else
-                                <input type="hidden" name="status" value="{{ $user->status }}">
-                            @endif
 
-                            @if (!$user->hasRole('admin'))
-                                <div class="col-md-12 mb-3">
-                                    <label for="">Vai trò</label>
-                                    <select name="role" id="" class="form-select mb-2">
-                                        <option value="">Chọn vai trò</option>
-                                        @foreach ($roles as $role)
-                                            <option @selected($user->roles->first()->name == $role) value="{{ $role }}">
-                                                {{ Str::ucfirst($role) }}</option>
-                                        @endforeach
-                                    </select>
+                            <div class="col-md-12 mb-3">
+                                <label for="">Trạng thái</label>
+                                <select name="status" id="" class="form-select mb-2">
+                                    <option value="">Chọn trạng thái</option>
+                                    <option @selected($user->status === 'active') value="active">Active</option>
+                                    <option @selected($user->status === 'inactive') value="inactive">Inactive</option>
+                                    <option @selected($user->status === 'blocked') value="blocked">Blocked</option>
+                                </select>
 
-                                </div>
-                            @else
-                                <input type="hidden" name="role" value="{{ $user->roles->first()->name }}">
-                            @endif
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="">Vai trò</label>
+                                <select name="role" id="" class="form-select mb-2">
+                                    <option value="">Chọn vai trò</option>
+                                    @foreach ($roles as $role)
+                                        <option @selected($user->roles->first()->name == $role) value="{{ $role }}">
+                                            {{ Str::ucfirst($role) }}</option>
+                                    @endforeach
+                                </select>
+
+                            </div>
 
                             <div class="col-md-12 mb-3">
                                 <label for="">Xác thực email</label>

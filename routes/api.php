@@ -98,8 +98,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('auth')->as('auth.')->group(function () {
         Route::get('get-user-with-token', [AuthController::class, 'getUserWithToken']);
+        Route::get('online-users', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetOnlineUsers']);
         Route::post('logout', [AuthController::class, 'logout']);
     });
+
     Route::prefix('instructor')->as('instructor.')->group(function () {
         Route::post('register', [RegisterController::class, 'register']);
         Route::post('check-handle-role', [RegisterController::class, 'checkHandleRole']);
@@ -200,7 +202,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -219,6 +222,17 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                 });
+
+            #============================== ROUTE MEMBERSHIP PLAN =================================
+            Route::prefix('member-ship-plans')->group(function () {
+                Route::get('/', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'getMemberShipPlans']);
+                Route::get('/{code}', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'getMemberShipPlan']);
+                Route::post('/', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'storeMemberShipPlan']);
+                Route::post('/send-request-membership-plan/{code}', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'sendRequestMembershipPlan']);
+                Route::put('/{code}', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'updateMemberShipPlan']);
+                Route::put('/{code}/{action}', [\App\Http\Controllers\API\Instructor\MemberShipPlanController::class, 'toggleStatus'])
+                    ->where('action', 'enable|disable');
+            });
 
             #============================== ROUTE SUPPORT BANK =================================
             Route::prefix('support-banks')->group(function () {
@@ -255,7 +269,6 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('learners')
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
-                            //                            Route::get('/{learners}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'infoLearner']);
                             Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
                         });
 
@@ -263,6 +276,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::prefix('courses')
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
+                            Route::get('/course-approved', [CourseController::class, 'courseApproved']);
                             Route::get('/trash', [CourseController::class, 'trash']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
                             Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);
@@ -390,7 +404,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::put('/update-info-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiUpdateInfoGroupChat']);
                     Route::put('/block-member-group-chat/{id}/{memberId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiBlockMemberGroupChat']);
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
-                    Route::delete('/kick-member-group-chat/{id}/{memberId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
+                    Route::delete('/kick-member-group-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
                     Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
@@ -453,6 +467,7 @@ Route::prefix('blogs')
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
+        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });
 Route::prefix('blogs')
@@ -464,6 +479,7 @@ Route::prefix('blogs')
                 Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
                 Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
                 Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
+
             });
     });
 
@@ -492,5 +508,5 @@ Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourse
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
-Route::get('/{slug}', [RatingController::class, 'getRatings']);
+Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
 

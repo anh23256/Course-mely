@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Auth;
 
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Auth\ForgotPassWordRequest;
 use App\Http\Requests\API\Auth\ResetPasswordRequest;
@@ -21,6 +22,7 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -149,7 +151,7 @@ class AuthController extends Controller
             $data['verification_token'] = Str::random(60);
 
             do {
-                $uuid = str_replace('-', '', Str::uuid()->toString());
+                $uuid = strtolower(str_replace('-', '', Str::uuid()->toString()));
                 $data['code'] = substr($uuid, 0, 10);
             } while (User::query()->where('code', $data['code'])->exists());
 
@@ -220,6 +222,10 @@ class AuthController extends Controller
 
                 DB::commit();
 
+                Cache::put('user_status_' . $user->id, true, now()->addMinutes(2));
+                Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
+                event(new UserStatusChanged($user->id, 'online'));
+
                 $role = $user->roles->first()->name;
 
                 return response()->json([
@@ -247,7 +253,16 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            Auth::user()->currentAccessToken()->delete();
+            $user = Auth::user();
+
+            $userId = $user->id;
+
+            $user->currentAccessToken()->delete();
+
+            Cache::forget('user_status_' . $userId);
+            Cache::forget('user_broadcast_' . $userId);
+
+            event(new UserStatusChanged($user->id, 'offline'));
 
             return $this->respondOk('Đăng xuất thành công');
         } catch (\Exception $e) {
