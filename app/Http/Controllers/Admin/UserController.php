@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\UsersExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Users\StoreUserRequest;
+use App\Http\Requests\Admin\Users\UpdateProfileRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Imports\UsersImport;
 use App\Models\User;
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -136,7 +138,7 @@ class UserController extends Controller
 
             $data['email_verified_at'] = now();
 
-            $user =  User::query()->create($data);
+            $user = User::query()->create($data);
 
             $user->assignRole($request->role);
 
@@ -190,7 +192,6 @@ class UserController extends Controller
     public function edit(User $user)
     {
         try {
-
             $title = 'Quản lý thành viên';
             $subTitle = 'Cập nhật người dùng';
 
@@ -210,12 +211,36 @@ class UserController extends Controller
         }
     }
 
+    public function profile()
+    {
+        try {
+            $title = 'Quản lý thành viên';
+            $subTitle = 'Cập nhật người dùng';
+
+            $user = Auth::user();
+
+            if (!$user->hasRole('admin')) {
+                return abort(403, 'Bạn không có quyền truy cập vào hệ thống.');
+            }
+
+            return view('administrator.profile', compact([
+                'title',
+                'subTitle',
+            ]));
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */
     public function update(UpdateUserRequest $request, User $user)
     {
         try {
+
             $validator = $request->validated();
 
             $data = $request->except('avatar');
@@ -233,6 +258,7 @@ class UserController extends Controller
             $user->update($data);
 
             if ($request->has('role')) {
+
                 $user->syncRoles([]);
 
                 $user->assignRole($request->input('role'));
@@ -261,6 +287,7 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
     public function import(Request $request, string $role = null)
     {
         try {
@@ -293,15 +320,15 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại!');
         }
     }
+
     public function export(string $role = null)
     {
         try {
-            
+
             $validRoles = Role::pluck('name')->toArray();
             $role = in_array($role, $validRoles) ? $role : 'member';
 
             return Excel::download(new UsersExport($role), 'Users_' . $role . '.xlsx');
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -476,6 +503,7 @@ class UserController extends Controller
             }
         }
     }
+
     private function restoreDeleteUsers(array $userID)
     {
 
@@ -537,5 +565,58 @@ class UserController extends Controller
         }
 
         return $query;
+    }
+
+    public function profileUpdate(UpdateProfileRequest $request, User $user)
+    {
+        try {
+
+            $validator = $request->validated();
+
+            $data = $request->except('avatar');
+
+            DB::beginTransaction();
+
+            $currencyAvatar = $user->avatar;
+
+            if ($request->hasFile('avatar')) {
+                $data['avatar'] = $this->uploadImage($request->file('avatar'), self::FOLDER);
+            }
+
+            if ($request->filled('current_password') && $request->filled('password')) {
+                $data['password'] = Hash::make($request->password);
+            } else {
+                unset($data['password']); 
+            }
+
+            $data['email'] = $user->email;
+
+            $data['status'] = $user->status;
+
+            $user->update($data);
+
+            if (
+                isset($data['avatar']) && !empty($data['avatar'])
+                && filter_var($data['avatar'], FILTER_VALIDATE_URL)
+                && !empty($currencyAvatar) && $currencyAvatar !== self::URLIMAGEDEFAULT
+            ) {
+                $this->deleteImage($currencyAvatar, self::FOLDER);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.administrator.profile', $user)->with('success', 'Cập nhật thành công');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (isset($data['avatar']) && !empty($data['avatar']) && filter_var($data['avatar'], FILTER_VALIDATE_URL)) {
+                $this->deleteImage($data['avatar']);
+            }
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 }

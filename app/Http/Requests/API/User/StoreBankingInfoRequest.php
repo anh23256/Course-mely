@@ -27,6 +27,7 @@ class StoreBankingInfoRequest extends BaseFormRequest
             'bin' => 'required|numeric',
             'short_name' => 'nullable|string',
             'logo' => 'nullable|string',
+            'logo_rounded' => 'nullable|string',
             'account_no' => 'required|numeric',
             'account_name' => [
                 'required',

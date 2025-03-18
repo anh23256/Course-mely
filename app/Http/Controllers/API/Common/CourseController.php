@@ -26,7 +26,7 @@ class CourseController
             $courses = Course::query()
                 ->with([
                     'category:id,name',
-                    'user:id,name,avatar',
+                    'user:id,name,avatar,code',
                 ])
                 ->withCount([
                     'chapters',
@@ -74,6 +74,7 @@ class CourseController
                     'is_free' => $course->is_free,
                     'price' => $course->price,
                     'price_sale' => $course->price_sale,
+                    'total_student' => $course->total_student,
                     'lessons_count' => $course->lessons_count,
                     'ratings' => [
                         'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
@@ -88,7 +89,8 @@ class CourseController
                     'user' => [
                         'id' => $course->user->id ?? null,
                         'name' => $course->user->name ?? null,
-                        'avatar' => $course->user->avatar ?? null
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
                     ]
                 ];
             });
@@ -111,7 +113,7 @@ class CourseController
             $courses = Course::query()
                 ->with([
                     'category:id,name',
-                    'user:id,name,avatar',
+                    'user:id,name,avatar,code',
                 ])
                 ->withCount([
                     'chapters',
@@ -159,6 +161,7 @@ class CourseController
                     'is_free' => $course->is_free,
                     'price' => $course->price,
                     'price_sale' => $course->price_sale,
+                    'total_student' => $course->total_student,
                     'lessons_count' => $course->lessons_count,
                     'ratings' => [
                         'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
@@ -173,7 +176,8 @@ class CourseController
                     'user' => [
                         'id' => $course->user->id ?? null,
                         'name' => $course->user->name ?? null,
-                        'avatar' => $course->user->avatar ?? null
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
                     ]
                 ];
             });
@@ -192,7 +196,7 @@ class CourseController
             $courses = Course::query()
                 ->with([
                     'category:id,name',
-                    'user:id,name,avatar',
+                    'user:id,name,avatar,code',
                 ])
                 ->withCount([
                     'chapters',
@@ -254,7 +258,8 @@ class CourseController
                     'user' => [
                         'id' => $course->user->id ?? null,
                         'name' => $course->user->name ?? null,
-                        'avatar' => $course->user->avatar ?? null
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
                     ]
                 ];
             });

@@ -58,7 +58,8 @@
 
 <div class="col-12 col-md-12">
     <div class="d-flex mt-4 justify-content-center">
-        <span class="text-primary text-decoration-underline" id="load-more">Xem
-            thêm</span>
+        <button id="load-more" class="btn btn-sm btn-primary px-4 rounded-pill">
+            <i class="ri-refresh-line me-1"></i> Xem thêm
+        </button>
     </div>
 </div>

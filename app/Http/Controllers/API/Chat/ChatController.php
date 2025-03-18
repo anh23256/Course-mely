@@ -311,27 +311,32 @@ class ChatController extends Controller
         }
     }
 
-    public function apiKickMemberGroupChat(Request $request, string $id, string $memberId)
+    public function apiKickMemberGroupChat(Request $request)
     {
         try {
-            $conversation = $this->getOwnedGroupChat($id);
+            $data = $request->validate([
+                'conversation_id' => 'required|exists:conversations,id',
+                'member_id' => 'required|exists:users,id',
+            ]);
+
+            $conversation = $this->getOwnedGroupChat($data['conversation_id']);
             if (!($conversation instanceof Conversation)) {
                 return $conversation;
             }
 
-            if (!$conversation->users()->where('user_id', $memberId)->exists()) {
+            if (!$conversation->users()->where('user_id', $data['member_id'])->exists()) {
                 return $this->respondNotFound('Không tìm thấy thành viên trong nhóm');
             }
 
-            if (!$conversation->users()->where('user_id', $memberId)->exists()) {
+            if (!$conversation->users()->where('user_id', $data['member_id'])->exists()) {
                 return $this->respondNotFound('Không tìm thấy thành viên trong nhóm');
             }
 
-            if ($memberId == Auth::id()) {
+            if ($data['member_id'] == Auth::id()) {
                 return $this->respondBadRequest('Bạn là chủ phòng nên không thể xoá bản thân');
             }
 
-            $conversation->users()->detach($memberId);
+            $conversation->users()->detach($data['member_id']);
 
             return $this->respondOk('Xoá người dùng khỏi nhóm thành công');
         } catch (\Exception $e) {
@@ -423,6 +428,8 @@ class ChatController extends Controller
                 'file' => 'nullable|file|max:10240',
             ]);
 
+            Log::info('Message request received', $request->all());
+
             DB::beginTransaction();
 
             $userId = Auth::id();
@@ -501,22 +508,15 @@ class ChatController extends Controller
     public function apiGetOnlineUsers(Request $request)
     {
         try {
-            $data = $request->validate([
-                'conversation_id' => 'required|exists:conversations,id',
-            ]);
+            $users = User::all();
 
-            $userId = Auth::id();
+            $onlineUsers = [];
 
-            if (!$this->isUserInConversation($userId, $data['conversation_id'])) {
-                return $this->respondError('Bản thân không online trong nhóm');
+            foreach ($users as $user) {
+                $onlineUsers[$user->id] = Cache::has('user_status_' . $user->id);
             }
 
-            $conversationId = $data['conversation_id'];
-            $cacheKey = "conversation:$conversationId:online_users:$userId";
-
-            Cache::put($cacheKey, true, 300);
-
-            return $this->respondOk('Danh sách user online');
+            return $this->respondOk('Danh sách người dùng đang hoạt đông', $onlineUsers);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 

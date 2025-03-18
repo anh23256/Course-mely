@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 //Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return true;
+    return (int) $user->id === (int) $id;
 });
 
 Broadcast::channel('member.{id}', function ($user, $id) {
@@ -42,7 +42,7 @@ Broadcast::channel('private-chat.{conversationId}', function ($user, $conversati
     ->first();
     return $conversationUser ? true : false;
 });
-// Broadcast::channel('user.{userId}', function ($user, $userId) {
-//     return (int) $user->id === (int) $userId; 
-// });
+Broadcast::channel('user-status', function ($user, $userId) {
+    return true; 
+});
 

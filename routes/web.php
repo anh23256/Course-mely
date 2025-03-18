@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
@@ -63,9 +64,12 @@ Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
     ->group(function () {
         #============================== ROUTE AUTH =============================
-        Route::get('dashboard', function () {
-            return view('dashboard');
-        })->name('dashboard')->middleware('verified');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('verified');
+        Route::post('dashboard-export', [DashboardController::class, 'export'])->name('dashboard.export');
+
+        Route::get('administrator-profile', [UserController::class, 'profile'])->name('administrator.profile');
+
+        Route::put('administrator-profile-update/{user}', [UserController::class, 'profileUpdate'])->name('administrator.profileUpdate');
 
         #============================== ROUTE USER =============================
         Route::prefix('users')->group(function () {
@@ -103,10 +107,10 @@ Route::prefix('admin')->as('admin.')
                 ->can('role.index');
             Route::get('/create', [RoleController::class, 'create'])->name('create')
                 ->can('role.create');
+            Route::get('/{role}', [RoleController::class, 'show'])->name('show')
+                ->can('role.show');
             Route::post('/', [RoleController::class, 'store'])->name('store')
                 ->can('role.create');
-            Route::get('/{id}', [RoleController::class, 'show'])->name('show')
-                ->can('role.show');
             Route::get('/edit/{role}', [RoleController::class, 'edit'])->name('edit')
                 ->can('role.edit');
             Route::put('/{role}', [RoleController::class, 'update'])->name('update')
@@ -147,10 +151,10 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COMMENTS =============================
         Route::prefix('comments')->as('comments.')->group(function () {
             Route::get('/', [CommentController::class, 'index'])->name('index');
-            Route::get('/{id}', [CommentController::class, 'show'])->name('show');
-            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy');
+            // Route::get('/{id}', [CommentController::class, 'show'])->name('show');
             Route::get('{comment}/replies', [CommentController::class, 'getReplies'])->name('getReplies');
-            
+            Route::delete('/{comment}', [CommentController::class, 'destroy'])->name('destroy')
+                ->can('comment.delete');
         });
 
         #============================== ROUTE BANNER =============================
@@ -203,7 +207,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CouponController::class, 'index'])->name('index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
-            Route::get('suggest-coupon-code',[CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
+            Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');
@@ -387,6 +391,8 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
                 Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
+                Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
+                Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
 
         Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
