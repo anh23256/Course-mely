@@ -439,9 +439,11 @@
                                                                                                 class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a>
                                                                                     </li>
                                                                                     <li><a class="dropdown-item getID"
-                                                                                            href="#" data-conversation-id=""
+                                                                                            href="#"
+                                                                                            data-conversation-id=""
                                                                                             onclick="dissolveGroup(this)"><i
-                                                                                                class="las la-skull-crossbones align-bottom text-muted me-2"></i>Giải tán nhóm</a>
+                                                                                                class="las la-skull-crossbones align-bottom text-muted me-2"></i>Giải
+                                                                                            tán nhóm</a>
                                                                                     </li>
                                                                                 </ul>
                                                                             </div>
@@ -840,18 +842,17 @@
         $(document).ready(function() {
             console.log('Đã chọn user với ID:------------------------', userId);
 
-            window.Echo.present('App.Models.User.' + userId)
-                .listen('UserStatusChanged', (event) => {
-                    console.log('Chạy event: ', event);
-                    // Tìm phần tử với class 'user-status' và cập nhật trạng thái
-                    const statusElement = document.querySelector('.status');
+            window.Echo.channel("user-status")
+                .listen("UserStatusChanged", (event) => {
+                    console.log('pusher-status-change', event);
 
-                    if (event.status === 'online') {
-                        // Cập nhật trạng thái online
-                        statusElement.innerHTML = '<span class="text-success">Online</span>';
-                    } else if (event.status === 'offline') {
-                        // Cập nhật trạng thái offline
-                        statusElement.innerHTML = '<span class="text-danger">Offline</span>';
+                    const statusElement = $('.show-status-user');
+
+                    if (event.is_online == 'online') {
+                        statusElement.html(
+                            '<span class="text-success">Online</span>');
+                    } else {
+                        statusElement.html('<span class="text-danger">Offline</span>');
                     }
                 });
             $("#upload-btn").click(function() {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Events\GroupMessageSent;
 use App\Events\PrivateMessageSent;
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Chats\StoreGroupChatRequest;
 use App\Http\Requests\Admin\Chats\StoreSendMessageRequest;
@@ -20,6 +21,8 @@ use App\Traits\UploadToLocalTrait;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -304,7 +307,8 @@ class ChatController extends Controller
                     'direct' => $conversation,
                     'avatarUser' => $avatar,
                     'channelId' => $conversation->id,
-                    'memberCount' => $memberCount
+                    'memberCount' => $memberCount,
+                    'status' => Cache::get('user_status_'.$otherUser->id,'offline'),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -487,7 +491,28 @@ class ChatController extends Controller
             ]);
         }
     }
+    public function statusUser(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $status = $request->status;
 
+            if (!$user) {
+                return;
+            }
+            
+            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
+            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
+
+            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
+
+            return response()->json(['success' => true, 'status' => $status]);
+        } catch (\Throwable $e) {
+            $this->logError($e);
+
+            return;
+        }
+    }
     public function kickUserFromGroup(Request $request)
     {
         try {
