@@ -185,8 +185,8 @@ class WalletController extends Controller
             }
 
             $query = WithdrawalRequest::query()
-                ->whereHas('wallet.user', function ($query) {
-                    $query->whereColumn('users.id', 'wallets.user_id');
+                ->whereHas('wallet', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
                 })
                 ->with('wallet.user');
 

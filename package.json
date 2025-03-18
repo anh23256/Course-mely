@@ -2,7 +2,9 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "start": "concurrently \"php artisan ser\" \"php artisan reverb:start\"",
+        "start:all": "concurrently \"php artisan ser\" \"npm run dev\" \"php artisan queue:work\" \"php artisan reverb:start\""
     },
     "devDependencies": {
         "axios": "^1.1.2",
@@ -10,6 +12,7 @@
         "vite": "^4.5.9"
     },
     "dependencies": {
+        "concurrently": "^9.1.2",
         "laravel-echo": "^1.19.0",
         "pusher-js": "^8.4.0"
     }
