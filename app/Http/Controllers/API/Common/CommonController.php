@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Common;
 use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\MembershipPlan;
 use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -92,6 +93,7 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function instructorInfo(string $code)
     {
         try {
@@ -117,11 +119,10 @@ class CommonController extends Controller
                     'profiles.about_me',
                     'users.created_at',
                     'users.updated_at',
-                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(courses.id) as total_courses, COUNT(follows.id) as total_followers')
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(DISTINCT courses.id) as total_courses, COUNT(DISTINCT follows.id) as total_followers')
                 )
                 ->where('users.code', $code)
                 ->where('users.status', '!=', 'blocked')
-                ->where('courses.status', '=', 'approved')
                 ->join('profiles', 'users.id', '=', 'profiles.user_id')
                 ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
@@ -151,6 +152,7 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function getCourseInstructor(string $code)
     {
         try {
@@ -206,26 +208,41 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
-    public function statusUser(Request $request)
+
+    public function getMemberShipPlans(string $code)
     {
         try {
-            $user = Auth::user();
-            $status = $request->status;
+            $user = User::query()->where('code', $code)
+                ->where('status', '!=', 'blocked')
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'instructor');
+                })->first();
 
             if (!$user) {
-                return;
+                return $this->respondNotFound('Không tìm thấy giảng viên');
             }
-            
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
 
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
+            $memberShipPlans = MembershipPlan::query()
+                ->with('membershipCourseAccess', function ($query) {
+                    $query->select('id', 'code', 'name', 'slug', 'thumbnail')
+                        ->where('status', 'approved')
+                        ->where('visibility', 'public');
+                })
+                ->where([
+                    'instructor_id' => $user->id
+                ])->get();
 
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
+            $memberShipPlans->makeHidden([
+                'instructor_id',
+                'created_at',
+                'updated_at'
+            ]);
+
+            return $this->respondOk('Danh sách gói membership của giảng viên: ' . $user->name, $memberShipPlans);
+        } catch (\Exception $e) {
             $this->logError($e);
 
-            return;
+            return $this->respondServerError();
         }
     }
 }

@@ -22,11 +22,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('member.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
-
-Broadcast::channel('instructor.{id}', function ($user, $id) {
+Broadcast::channel('notification.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
@@ -36,13 +32,14 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
     ->first();
     return $conversationUser ? true : false;
 });
+
 Broadcast::channel('private-chat.{conversationId}', function ($user, $conversationId) {
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
     ->where('user_id', $user->id)
     ->first();
     return $conversationUser ? true : false;
 });
-Broadcast::channel('user-status', function ($user, $userId) {
-    return true; 
-});
 
+Broadcast::channel('user-status', function ($user) {
+    return $user ? ['id' => $user->id, 'name' => $user->name] : null;
+});

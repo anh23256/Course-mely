@@ -34,17 +34,17 @@ class StatisticController extends Controller
 
             $totalEnrollments = DB::table('course_users')
                 ->join('courses', 'course_users.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])
+                ->where('courses.user_id', $user->id)
                 ->count();
 
             $totalRevenue = DB::table('invoices')->selectRaw('SUM(final_amount) as total_revenue')->where('invoices.status',  "Đã thanh toán")
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])
+                ->where('courses.user_id', $user->id)
                 ->first();
 
             $averageRating = DB::table('ratings')->selectRaw('ROUND(AVG(ratings.rate), 1) as avg_rating')
                 ->join('courses', 'ratings.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])->first();
+                ->where('courses.user_id', $user->id)->first();
 
             return $this->respondOk('Dữ liệu thông kê tổng quan của giảng viên ' . $user->name, [
                 'totalCourse' => $totalCourse,
@@ -85,11 +85,12 @@ class StatisticController extends Controller
                 )
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
                 ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
-                ->join('categories','categories.id', '=','courses.category_id')
+                ->join('categories', 'categories.id', '=', 'courses.category_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
                 ->where([
                     'courses.user_id' => $user->id,
-                    'invoices.status' => 'Đã thanh toán'
+                    'invoices.status' => 'Đã thanh toán',
+                    'courses.status' => 'approved'
                 ])
                 ->groupBy('courses.slug')
                 ->orderByDesc('total_revenue')
@@ -113,7 +114,7 @@ class StatisticController extends Controller
             $yearNow = now()->year;
 
             $year = $request->input('year', $yearNow);
-            if($year > $yearNow) $year = $yearNow;
+            if ($year > $yearNow) $year = $yearNow;
 
             $monthlyRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
@@ -190,7 +191,7 @@ class StatisticController extends Controller
 
             $yearNow = now()->year;
             $year = $request->input('year', $yearNow);
-            if($year > $yearNow) $year = $yearNow;
+            if ($year > $yearNow) $year = $yearNow;
 
             $monthlyPurchases = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, COUNT(invoices.id) as total_purchases')
@@ -222,6 +223,57 @@ class StatisticController extends Controller
             }
 
             return $this->respondOk('Thống kê lượt mua và học viên theo tháng', $allMonths);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getTotalSalesByMonth(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $yearNow = now()->year;
+            $year = $request->input('year', $yearNow);
+            if ($year > $yearNow) $year = $yearNow;
+
+            // Lấy tổng số lượng bán theo tháng
+            $totalMembership = DB::table('invoices')
+                ->selectRaw('MONTH(invoices.created_at) as month, 
+                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership')
+                ->join('courses', 'invoices.course_id', '=', 'courses.id')
+                ->where('courses.user_id', $user->id)
+                ->whereYear('invoices.created_at', $year)
+                ->groupBy('month')
+                ->pluck('total_membership', 'month')
+                ->toArray();
+
+            $totalCourse = DB::table('invoices')
+                ->selectRaw('MONTH(invoices.created_at) as month, 
+                    SUM(CASE WHEN invoices.invoice_type = "course" THEN 1 ELSE 0 END) as total_course')
+                ->join('courses', 'invoices.course_id', '=', 'courses.id')
+                ->where('courses.user_id', $user->id)
+                ->whereYear('invoices.created_at', $year)
+                ->groupBy('month')
+                ->pluck('total_course', 'month')
+                ->toArray();
+
+
+            $monthlySales = [];
+            for ($i = 1; $i <= 12; $i++) {
+                $monthlySales[$i] = [
+                    'month' => $i,
+                    'total_membership' => $totalMembership[$i] ?? 0,
+                    'total_course' => $totalCourse[$i] ?? 0,
+                ];
+            }
+
+            return $this->respondOk('Thống kê lượt mua và học viên theo tháng', $monthlySales);
+
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

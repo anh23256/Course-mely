@@ -53,7 +53,7 @@ class CourseModificationNotificationForStudent extends Notification
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('member.' . $this->student->id);
+        $channel = new PrivateChannel('notification.' . $this->student->id);
         return $channel;
     }
 }

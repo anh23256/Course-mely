@@ -221,6 +221,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-month-revenue', [StatisticController::class, 'getMonthlyRevenue']);
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
+                    Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
+                    
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================
@@ -439,8 +441,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
     });
-
-    Route::post('/check-status-user', [CommonController::class, 'statusUser']);
 });
 
 #============================== ROUTE COURSE =============================
@@ -507,8 +507,11 @@ Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getV
 
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
 Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
+Route::get('/get-member-ship-plans/{code}', [CommonController::class, 'getMemberShipPlans']);
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
 Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
+
+
 

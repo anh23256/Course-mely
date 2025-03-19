@@ -109,17 +109,6 @@ class CourseController extends Controller
             ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
             ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
             // dd($videos->map(fn($video) => $video->toArray()));
-        // Lấy danh sách tài liệu (Document)
-        $documents = $course->chapters
-            ->flatMap(fn($chapter) => $chapter->lessons)
-            ->filter(fn($lesson) => $lesson->lessonable_type === Document::class)
-            ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
-
-        // Lấy danh sách bài kiểm tra (Quiz) và tải câu hỏi + câu trả lời
-        $quizzes = $course->chapters
-            ->flatMap(fn($chapter) => $chapter->lessons)
-            ->filter(fn($lesson) => $lesson->lessonable_type === Quiz::class)
-            ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable->load('questions.answers')]);
         $recentLessons = LessonProgress::query()
             ->selectRaw('lesson_progress.user_id, lessons.title as lesson_title, MAX(lesson_progress.updated_at) as last_updated')
             ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
@@ -160,6 +149,31 @@ class CourseController extends Controller
 
         // dd($chapterProgressStats->toArray());
 
+        $totalDuration = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type === Video::class;
+        })->sum(function ($lesson) {
+            return $lesson->lessonable->duration ?? 0;
+        });
+
+        $documents = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type == Document::class;
+        })->mapToGroups(function ($lesson) {
+            return [$lesson->id => $lesson->lessonable]  ?? null;
+        });
+
+        $quizzes = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type == Quiz::class;
+        })->mapToGroups(function ($lesson) {
+
+            return [$lesson->id => $lesson->lessonable->load('questions.answers')] ?? null;
+        });
+
 
         $title = 'Quản lý khoá học';
         $subTitle = 'Thông tin khoá học: ' . $course->name;
@@ -177,6 +191,7 @@ class CourseController extends Controller
             'documents',
             'quizzes',
             'videos',
+            'totalDuration',
         ));
     }
 
