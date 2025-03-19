@@ -58,53 +58,122 @@
                                 </div>
                             </div>
 
-                            <div class="table-responsive table-card mt-3 mb-1">
-                                <table class="table align-middle table-nowrap" id="notificationTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col" style="width: 50px;">
-                                                <input type="checkbox" id="checkAll">
-                                            </th>
-                                            <th>STT</th>
-                                            <th>Loại thông báo</th>
-                                            <th>Nội dung</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ngày gửi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="list">
-                                        @foreach($notifications as $notification)
-                                            <tr>
-                                                <td>
-                                                    <input type="checkbox" class="checkItem" value="{{ $notification->id }}">
-                                                </td>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>
-                                                    @if(isset($notification->data['type']))
-                                                        <span class="badge bg-primary">{{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}</span>
-                                                    @else
-                                                        <span class="badge bg-secondary">Không xác định</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}</td>
-                                                <td>
-                                                    @if(is_null($notification->read_at))
-                                                        <span class="badge bg-danger">Chưa đọc</span>
-                                                    @else
-                                                        <span class="badge bg-success">Đã đọc</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
-                                                
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                            <ul class="nav nav-tabs" id="notificationTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all">Tất cả</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="unread-tab" data-bs-toggle="tab" href="#unread">Chưa đọc</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="read-tab" data-bs-toggle="tab" href="#read">Đã đọc</a>
+                                </li>
+                            </ul>
+
+
+                            <div class="tab-content mt-3">
+                                <!-- Tab Tất cả -->
+                                <div class="tab-pane fade show active" id="all">
+                                    <div class="table-responsive table-card">
+                                        <table class="table align-middle table-nowrap">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>STT</th>
+                                                    <th>Loại thông báo</th>
+                                                    <th>Nội dung</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Ngày gửi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($notifications as $notification)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>
+                                                            <span class="badge bg-primary">
+                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}</td>
+                                                        <td>
+                                                            @if (is_null($notification->read_at))
+                                                                <span class="badge bg-danger">Chưa đọc</span>
+                                                            @else
+                                                                <span class="badge bg-success">Đã đọc</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Chưa đọc -->
+                                <div class="tab-pane fade" id="unread">
+                                    <div class="table-responsive table-card">
+                                        <table class="table align-middle table-nowrap">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>STT</th>
+                                                    <th>Loại thông báo</th>
+                                                    <th>Nội dung</th>
+                                                    <th>Ngày gửi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($notifications->whereNull('read_at') as $notification)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>
+                                                            <span class="badge bg-primary">
+                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}
+                                                        </td>
+                                                        <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Đã đọc -->
+                                <div class="tab-pane fade" id="read">
+                                    <div class="table-responsive table-card">
+                                        <table class="table align-middle table-nowrap">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>STT</th>
+                                                    <th>Loại thông báo</th>
+                                                    <th>Nội dung</th>
+                                                    <th>Ngày gửi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($notifications->whereNotNull('read_at') as $notification)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>
+                                                            <span class="badge bg-primary">
+                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}
+                                                        </td>
+                                                        <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="row justify-content-end">
-                                {{ $notifications->appends(request()->query())->links() }}
-                            </div>
+
 
                         </div>
                     </div>
@@ -121,13 +190,10 @@
     </div>
 @endsection
 @push('page-scripts')
-    
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>
     <script src="{{ asset('assets/js/common/delete-all-selected.js') }}"></script>
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
-
-    
 @endpush
