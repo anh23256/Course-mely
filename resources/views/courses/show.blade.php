@@ -247,7 +247,8 @@
                                                                                 {{ $lesson->title }}
                                                                             </span>
                                                                             @if ($lesson->type === 'video')
-                                                                                <span class="ms-3">10h</span>
+                                                                                <span
+                                                                                    class="ms-3">{{ gmdate('i:s', $lesson->lessonable->duration) }}</span>
                                                                             @endif
                                                                         </div>
                                                                     </button>
@@ -393,7 +394,7 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                {{ $courseUsers->links() }} 
+                                                {{ $courseUsers->links() }}
                                             </div>
 
                                             <div class="d-flex">
@@ -616,7 +617,7 @@
             if (chartProgress) {
                 chartProgress.destroy();
             }
-            
+
             // Nếu không có dữ liệu, hiển thị thông báo
             if (data.length == 0) {
                 chartContainer.innerHTML = `<p style="text-align: center; color: #999;">Không có dữ liệu</p>`;

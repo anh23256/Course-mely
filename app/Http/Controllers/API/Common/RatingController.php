@@ -130,8 +130,8 @@ class RatingController extends Controller
                 ->orderByDesc('created_at') // Lấy đánh giá mới nhất trước
                 ->get()
                 ->unique('user_id') // Giữ lại mỗi user 1 đánh giá mới nhất
-                ->take(6); // Chỉ lấy tối đa 6 user khác nhau
-
+                ->take(6) // Chỉ lấy tối đa 6 user khác nhau
+                ->values();
 
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
