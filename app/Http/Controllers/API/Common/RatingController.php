@@ -133,6 +133,7 @@ class RatingController extends Controller
                 ->take(6) // Chỉ lấy tối đa 6 user khác nhau
                 ->values();
 
+
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
             }

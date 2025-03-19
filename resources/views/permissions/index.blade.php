@@ -3,7 +3,84 @@
 @section('title', $title)
 
 @push('page-css')
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+    <style>
+        .permission-card {
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .permission-card .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .module-header {
+            background-color: #f1f5f9;
+            padding: 10px 15px;
+            font-weight: 600;
+            border-left: 4px solid #4b72b2;
+            margin-bottom: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .permission-badges .badge {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 4px;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .permission-badges .badge:hover {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .permission-badges .badge-view {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+        }
+
+        .permission-badges .badge-create {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .permission-badges .badge-edit {
+            background-color: #fff8e1;
+            color: #f57c00;
+        }
+
+        .permission-badges .badge-delete {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .permission-badges .badge-manage {
+            background-color: #e8eaf6;
+            color: #3f51b5;
+        }
+
+        .search-box .form-control:focus {
+            box-shadow: none;
+            border-color: #4b72b2;
+        }
+
+        .actions-column {
+            min-width: 100px;
+        }
+
+        .permission-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+    </style>
 @endpush
 
 @section('content')
@@ -31,7 +108,8 @@
                         <h5 class="card-title mb-0 flex-grow-1">
                             <i class="ri-add-line me-1"></i> Thêm quyền mới
                         </h5>
-                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newPermissionForm" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#newPermissionForm" aria-expanded="false">
                             <i class="ri-arrow-down-s-line"></i>
                         </button>
                     </div>
@@ -83,9 +161,10 @@
                                 <div class="d-flex justify-content-sm-end">
                                     <div class="search-box ms-2">
                                         <input type="text" name="search_full" class="form-control search h-75"
-                                            placeholder="Tìm kiếm..." data-search>
-                                        <button id="search-full" class="h-75 ri-search-line search-icon m-0 p-0 border-0"
-                                            style="background: none;"></button>
+                                               placeholder="Tìm kiếm..." data-search>
+                                        <button id="search-full"
+                                                class="h-75 ri-search-line search-icon m-0 p-0 border-0"
+                                                style="background: none;"></button>
                                     </div>
                                 </div>
                             </div>
@@ -95,7 +174,7 @@
                             </button>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-primary h-75" type="button" id="filterDropdown"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                        data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-filter-2-line"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
@@ -107,22 +186,24 @@
                                                     <div class="mb-2">
                                                         <label for="startDate" class="form-label">Từ ngày</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                            name="created_at" id="dateRequest" data-filter>
+                                                               name="created_at" id="dateRequest" data-filter>
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
                                                     <div class="mb-2">
                                                         <label for="endDate" class="form-label">Đến ngày</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                            name="updated_at" id="dateComplete" data-filter>
+                                                               name="updated_at" id="dateComplete" data-filter>
                                                     </div>
                                                 </li>
                                             </div>
                                             <li class="mt-2 d-flex gap-1">
                                                 <button class="btn btn-sm btn-success flex-grow-1" type="reset"
-                                                    id="resetFilter">Reset</button>
+                                                        id="resetFilter">Reset
+                                                </button>
                                                 <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
-                                                    dụng</button>
+                                                    dụng
+                                                </button>
                                             </li>
                                         </div>
                                     </form>
@@ -137,12 +218,12 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Quyền</label>
                                     <input class="form-control form-control-sm" name="name" type="text"
-                                        placeholder="Nhập quyền..." data-advanced-filter>
+                                           placeholder="Nhập quyền..." data-advanced-filter>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Mô tả</label>
                                     <input class="form-control form-control-sm" name="description" type="text"
-                                        placeholder="Nhập mô tả quyền..." data-advanced-filter>
+                                           placeholder="Nhập mô tả quyền..." data-advanced-filter>
                                 </div>
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
@@ -151,50 +232,70 @@
                             </div>
                         </form>
                     </div>
+
                     <div class="card-body" id="item_List">
-                        <div class="live-preview">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-nowrap align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Quyền</th>
-                                            <th scope="col">Mô tả</th>
-                                            <th scope="col">Ngày tạo</th>
-                                            <th scope="col">Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($permissions as $guardName => $groupedPermissions)
-                                            <td class="fw-bold" colspan="5">Module {{ Str::ucfirst($guardName) }}</td>
+                        <div class="permission-list">
+                            @foreach ($permissions as $guardName => $groupedPermissions)
+                                <div class="module-group mb-4">
+                                    <div class="module-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="ri-shield-keyhole-line me-1"></i>
+                                            Module {{ Str::ucfirst($guardName) }}
+                                            <span
+                                                class="badge bg-secondary ms-2">{{ count($groupedPermissions) }}</span>
+                                        </div>
+                                        <div class="permission-badges d-none d-md-block">
+                                            <span class="badge badge-view">view_*</span>
+                                            <span class="badge badge-create">create_*</span>
+                                            <span class="badge badge-edit">edit_*</span>
+                                            <span class="badge badge-delete">delete_*</span>
+                                            <span class="badge badge-manage">manage_*</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover permission-table">
+                                            <thead>
+                                            <tr>
+                                                <th width="5%">#</th>
+                                                <th width="25%">Tên quyền</th>
+                                                <th width="45%">Mô tả</th>
+                                                <th width="15%">Ngày tạo</th>
+                                                <th width="10%" class="text-center">Thao tác</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
                                             @foreach ($groupedPermissions as $permission)
                                                 <tr>
-                                                    <td class="fw-medium">{{ $loop->iteration }}</td>
-                                                    <td>{{ $permission->name }}</td>
-                                                    <td>{{ $permission->description }}</td>
-                                                    <td>{{ $permission->created_at }}</td>
+                                                    <td>{{ $loop->iteration }}</td>
                                                     <td>
-                                                        <a href="{{ route('admin.permissions.edit', $permission) }}">
-                                                            <button class="btn btn-sm btn-warning edit-item-btn">
-                                                                <span class="ri-edit-box-line"></span>
-                                                            </button></a>
-
-
-                                                        <a href="{{ route('admin.permissions.destroy', $permission->id) }}"
-                                                            class="sweet-confirm btn btn-sm btn-danger ">
-                                                            <span class="ri-delete-bin-7-line"></span>
-                                                        </a>
+                                                        {{ $permission->name }}
+                                                    </td>
+                                                    <td>{{ $permission->description }}</td>
+                                                    <td>{{ $permission->created_at->format('d/m/Y H:i') }}</td>
+                                                    <td class="text-center actions-column">
+                                                        <div class="btn-group">
+                                                            <a href="{{ route('admin.permissions.edit', $permission) }}"
+                                                               class="btn btn-sm btn-outline-warning">
+                                                                <i class="ri-edit-line"></i>
+                                                            </a>
+                                                            <a href="{{ route('admin.permissions.destroy', $permission->id) }}"
+                                                               class="sweet-confirm btn btn-sm btn-outline-danger">
+                                                                <i class="ri-delete-bin-line"></i>
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             @endforeach
-                                        @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
 
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="row justify-content-end mt-3">
-                                {{ $permissions->appends(request()->query())->links() }}
-                            </div>
+                        <div class=" justify-content-between align-items-center flex-wrap mt-3">
+                            {{ $permissions->appends(request()->query())->links() }}
                         </div>
                     </div>
                 </div>
@@ -206,9 +307,10 @@
 @push('page-scripts')
     <script>
         var routeUrlFilter = "{{ route('admin.permissions.index') }}";
-        $(document).on('click', '#resetFilter', function() {
+        $(document).on('click', '#resetFilter', function () {
             handleSearchFilter('');
         });
+
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>

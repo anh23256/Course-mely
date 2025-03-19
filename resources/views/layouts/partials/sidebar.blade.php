@@ -86,7 +86,7 @@
                     @endcan
                 </ul>
             </div>
-            @canany(['permission.create', 'permission.edit', 'permission.read', 'permission.delete'])
+            @canany(['permissions.create', 'permissions.edit', 'permissions.read', 'permissions.delete'])
                 <a class="nav-link menu-link" href="#sidebarRole" data-bs-toggle="collapse" role="button"
                     aria-expanded="false" aria-controls="sidebarRole">
                     <i class=" ri-shield-user-line"></i> <span data-key="t-authentication">Phân quyền</span>
@@ -113,8 +113,9 @@
 
         <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Quản lý hệ thống</span>
         </li>
-
+        
         <li class="nav-item">
+            @canany(['categories.create', 'categories.edit', 'categories.read', 'categories.delete'])
             <a class="nav-link menu-link" href="#sidebarCategory" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarCategory">
                 <i class="ri-apps-2-line"></i> <span data-key="t-authentication">Quản lý danh mục</span>
@@ -131,8 +132,8 @@
                     </li>
                 </ul>
             </div>
-
-
+            @endcanany
+            @canany(['banner.create', 'banner.edit', 'banner.read', 'banner.delete'])
             <a class="nav-link menu-link" href="#sidebarBanner" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarBanner">
                 <i class=" las la-image"></i> <span data-key="t-authentication">Quản lý banners</span>
@@ -156,7 +157,7 @@
                     </li>
                 </ul>
             </div>
-
+            @endcanany
             <a class="nav-link menu-link" href="#sidebarPost" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarPost">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý bài viết</span>
@@ -177,7 +178,7 @@
                     </li>
                 </ul>
             </div>
-            @canany(['coupons.create', 'coupons.edit', 'coupons.read', 'coupons.delete'])
+            @canany(['coupon.create', 'coupon.edit', 'coupon.read', 'coupon.delete'])
             <a class="nav-link menu-link" href="#sidebarCoupon" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarCoupon">
                 <i class=" ri-coupon-line"></i> <span data-key="t-authentication">Quản lý mã giảm giá</span>
@@ -214,7 +215,6 @@
 
                 </ul>
             </div>
-
             <a class="nav-link menu-link" href="#sidebarCourse" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarCourse">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý khóa học</span>
@@ -229,7 +229,7 @@
 
                 </ul>
             </div>
-
+            @canany(['setting.create', 'setting.edit', 'setting.read', 'setting.delete'])
             <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarSetting">
                 <i class=" ri-settings-3-line"></i> <span data-key="t-authentication">Quản lý settings</span>
@@ -246,12 +246,17 @@
                     </li>
                 </ul>
             </div>
+            @endcanany
+            @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
             <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                 <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
             </a>
+            @endcanany
+            @canany(['qa_system.create', 'qa_system.edit', 'qa_system.read', 'qa_system.delete'])
             <a class="nav-link menu-link" href="{{ route('admin.qa-systems.index') }}">
                 <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
             </a>
+            @endcanany
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
                 <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>

@@ -126,7 +126,7 @@
                                                     aria-labelledby="heading{{ $index + 1 }}"
                                                     data-bs-parent="#default-accordion-example">
                                                     <div class="accordion-body">
-                                                        {{ $item['answers'] }}
+                                                        {{ $item['answer'] }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -383,7 +383,7 @@
                                                                     <td>{{ $courseUser->progress_percent }}%</td>
                                                                     <td>
                                                                         <button class="btn btn-primary"
-                                                                            onclick="showRating({{ $course->id }}, 
+                                                                            onclick="showRating({{ $course->id }},
                                                                         {{ $courseUser->id }})">
                                                                             Xem đánh giá
                                                                         </button>
