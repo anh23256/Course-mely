@@ -119,11 +119,10 @@ class CommonController extends Controller
                     'profiles.about_me',
                     'users.created_at',
                     'users.updated_at',
-                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(courses.id) as total_courses, COUNT(follows.id) as total_followers')
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(DISTINCT courses.id) as total_courses, COUNT(DISTINCT follows.id) as total_followers')
                 )
                 ->where('users.code', $code)
                 ->where('users.status', '!=', 'blocked')
-                ->where('courses.status', '=', 'approved')
                 ->join('profiles', 'users.id', '=', 'profiles.user_id')
                 ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
@@ -244,29 +243,6 @@ class CommonController extends Controller
             $this->logError($e);
 
             return $this->respondServerError();
-        }
-    }
-
-    public function statusUser(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $status = $request->status;
-
-            if (!$user) {
-                return;
-            }
-
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
-
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
-
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
-            $this->logError($e);
-
-            return;
         }
     }
 }

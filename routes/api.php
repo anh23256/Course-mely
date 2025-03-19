@@ -440,8 +440,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PostController::class, 'index']);
         Route::post('/', [PostController::class, 'store']);
     });
-
-    Route::post('/check-status-user', [CommonController::class, 'statusUser']);
 });
 
 #============================== ROUTE COURSE =============================

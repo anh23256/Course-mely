@@ -40,7 +40,6 @@ Broadcast::channel('private-chat.{conversationId}', function ($user, $conversati
     return $conversationUser ? true : false;
 });
 
-Broadcast::channel('user-status', function ($user, $userId) {
-    return true;
+Broadcast::channel('user-status', function ($user) {
+    return $user ? ['id' => $user->id, 'name' => $user->name] : null;
 });
-

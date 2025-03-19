@@ -394,6 +394,4 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
-
-        Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
     });
