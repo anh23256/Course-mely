@@ -62,7 +62,7 @@ class JoiFreeCourseNotification extends Notification
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
+        $channel = new PrivateChannel('notification.' . $this->course->user_id);
         Log::info('Broadcasting on channel: ' . $channel->name);
         return $channel;
     }

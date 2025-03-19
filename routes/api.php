@@ -506,6 +506,7 @@ Route::get('/{code}/{slug}/get-validate-course', [CourseController::class, 'getV
 
 Route::get('/instructor-info/{code}', [CommonController::class, 'instructorInfo']);
 Route::get('/get-course-instructor/{code}', [CommonController::class, 'getCourseInstructor']);
+Route::get('/get-member-ship-plans/{code}', [CommonController::class, 'getMemberShipPlans']);
 
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 

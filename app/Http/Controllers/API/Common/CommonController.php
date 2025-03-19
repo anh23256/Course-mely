@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Common;
 use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\MembershipPlan;
 use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -92,6 +93,7 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function instructorInfo(string $code)
     {
         try {
@@ -151,6 +153,7 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function getCourseInstructor(string $code)
     {
         try {
@@ -206,6 +209,44 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
+    public function getMemberShipPlans(string $code)
+    {
+        try {
+            $user = User::query()->where('code', $code)
+                ->where('status', '!=', 'blocked')
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'instructor');
+                })->first();
+
+            if (!$user) {
+                return $this->respondNotFound('Không tìm thấy giảng viên');
+            }
+
+            $memberShipPlans = MembershipPlan::query()
+                ->with('membershipCourseAccess', function ($query) {
+                    $query->select('id', 'code', 'name', 'slug', 'thumbnail')
+                        ->where('status', 'approved')
+                        ->where('visibility', 'public');
+                })
+                ->where([
+                    'instructor_id' => $user->id
+                ])->get();
+
+            $memberShipPlans->makeHidden([
+                'instructor_id',
+                'created_at',
+                'updated_at'
+            ]);
+
+            return $this->respondOk('Danh sách gói membership của giảng viên: ' . $user->name, $memberShipPlans);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
     public function statusUser(Request $request)
     {
         try {
@@ -215,7 +256,7 @@ class CommonController extends Controller
             if (!$user) {
                 return;
             }
-            
+
             Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
             Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
 
