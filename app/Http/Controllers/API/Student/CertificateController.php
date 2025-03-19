@@ -42,9 +42,9 @@ class CertificateController extends Controller
                 return $this->respondForbidden('Người dùng chưa mua khóa học này.');
             }
 
-//            if ($courseUser->progress_percent !== 100 || $courseUser->completed_at == null) {
-//                return $this->respondError('Tiến độ chưa đạt 100%.');
-//            }
+            if ($courseUser->progress_percent !== 100 || $courseUser->completed_at == null) {
+                return $this->respondError('Tiến độ chưa đạt 100%.');
+            }
 
             $certificate = Certificate::query()->where(['user_id' => $user->id, 'course_id' => $course->id])->first();
 

@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Redis\Connections\PredisConnection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 class CourseController
@@ -273,58 +274,63 @@ class CourseController
     }
 
     public function getTopCategoriesWithMostCourses()
-    {
-        try {
-            $categories = Category::query()
-                ->select('id', 'name', 'slug', 'parent_id')
-                ->with([
-                    'courses' => function ($query) {
-                        $query->select(
-                            'courses.name',
-                            'courses.code',
-                            'courses.category_id',
-                            'courses.slug',
-                            'courses.thumbnail',
-                            'courses.price',
-                            'courses.price_sale',
-                            'courses.total_student',
-                            DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
-                            DB::raw('COUNT(DISTINCT ratings.rate) as total_rating'),
-                        )
-                            ->where('visibility', '=', 'public')
-                            ->whereRaw('courses.id IN (
-                                SELECT id FROM (
-                                    SELECT id, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_student DESC) as row_num
-                                    FROM courses
-                                    WHERE visibility = "public" AND status = "approved"
-                                ) as ranked WHERE row_num <= 7
-                            )')
-                            ->where('status', '=', 'approved')
-                            ->orderBy('total_student', 'desc')
-                            ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
-                            ->groupBy('courses.name', 'courses.slug', 'courses.code');
-                    },
-                ])
-                ->whereHas('courses', function ($query) {
-                    $query->where('visibility', '=', 'public')
-                        ->where('status', '=', 'approved');
-                })
-                ->withCount('courses')
-                ->orderBy('courses_count', 'desc')
-                ->limit(3)
-                ->get();
+{
+    try {
+        $categories = Category::query()
+            ->select('id', 'name', 'slug', 'parent_id')
+            ->with([
+                'courses' => function ($query) {
+                    $query->select(
+                        'courses.name',
+                        'courses.code',
+                        'courses.category_id',
+                        'courses.slug',
+                        'courses.thumbnail',
+                        'courses.price',
+                        'courses.price_sale',
+                        'courses.is_free',
+                        'courses.total_student',
+                        DB::raw('COUNT(lessons.id) as total_lesson'), 
+                        DB::raw('SUM(videos.duration) as total_duration'), 
+                        DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT ratings.rate) as total_rating')
+                    )
+                    ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+                    ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
+                    ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
+                    ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id') 
+                    ->where('courses.visibility', '=', 'public')
+                    ->where('courses.status', '=', 'approved') 
+                    ->whereRaw('courses.id IN (
+                        SELECT id FROM (
+                            SELECT id, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_student DESC) as row_num
+                            FROM courses
+                            WHERE visibility = "public" AND status = "approved" 
+                        ) as ranked WHERE row_num <= 7
+                    )')
+                    ->groupBy('courses.name', 'courses.slug', 'courses.code', 'courses.is_free');
+                },
+            ])
+            ->whereHas('courses', function ($query) {
+                $query->where('visibility', '=', 'public')
+                    ->where('status', '=', 'approved'); 
+            })
+            ->withCount('courses')
+            ->orderBy('courses_count', 'desc')
+            ->limit(3)
+            ->get();
 
-            if ($categories->isEmpty()) {
-                return $this->respondNotFound('Không có dữ liệu');
-            }
-
-            return $this->respondOk('Danh sách danh mục', $categories);
-        } catch (\Exception $e) {
-            $this->logError($e);
-
-            return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
+        if ($categories->isEmpty()) {
+            return $this->respondNotFound('Không có dữ liệu');
         }
+
+        return $this->respondOk('Danh sách danh mục', $categories);
+    } catch (\Exception $e) {
+        $this->logError($e);
+
+        return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
     }
+}
 
     public function getCourseDetail(Request $request, string $slug)
     {
@@ -335,7 +341,7 @@ class CourseController
                 ->with([
                     'category:id,name,slug',
                     'user' => function ($query) {
-                        $query->select(['id', 'name', 'avatar', 'created_at'])
+                        $query->select(['id', 'name', 'code', 'avatar', 'created_at'])
                             ->with(['profile:id,user_id,about_me,bio']);
                     },
                     'chapters' => function ($query) {
@@ -427,7 +433,8 @@ class CourseController
     public function getRelatedCourses(string $courseSlug)
     {
         try {
-            $currentCourse = Course::query()->where('slug', $courseSlug)
+            $currentCourse = Course::query()
+                ->where('slug', $courseSlug)
                 ->where('visibility', 'public')
                 ->where('status', 'approved')
                 ->first();
@@ -577,6 +584,7 @@ class CourseController
                     'courses.visibility' => 'public',
                     'courses.status' => 'approved',
                 ])
+                ->where('courses.user_id', $course->user_id)
                 ->where('courses.slug', '<>', $slug)
                 ->groupBy('courses.code', 'courses.name', 'courses.slug')
                 ->orderBy('courses.total_student', 'desc')
@@ -608,7 +616,7 @@ class CourseController
             return response()->json([
                 'message' => 'Danh sách khóa học và thông tin giảng viên',
                 'get_other_courses' => $getOtherCourses,
-                'profile_instructor' => $profileIntructor
+                'profile_instructor' => $profileIntructor,
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

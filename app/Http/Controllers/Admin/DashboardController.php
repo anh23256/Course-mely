@@ -85,7 +85,7 @@ class DashboardController extends Controller
             $totalCourse = $queryTotalCourse->count();
             $totalInstructor = $queryTotalInstructor->count();
             $courseRatings = $queryCourseRatings->get();
-            $system_Funds =  $querySystem_Funds->get();
+            $system_Funds = $querySystem_Funds->get();
             $topCoursesProgress = $queryTopCoursesProgress->get();
             $getTopViewCourses = $queryGetTopViewCourses->get();
             $topInstructorsFollows = $quertTopInstructorsFollows->get();
@@ -139,6 +139,7 @@ class DashboardController extends Controller
             return redirect()->back()->with('error', 'Lấy dữ liệu không thành công vui lòng thử lại');
         }
     }
+
     private function applyGlobalFilter($query, Request $request, $table, $column)
     {
         $startDate = $request->input('startDate');
@@ -201,6 +202,7 @@ class DashboardController extends Controller
             $queryTotalByPaymentMethodAndInvoiceType
         ];
     }
+
     public function export(Request $request)
     {
         try {
@@ -288,11 +290,13 @@ class DashboardController extends Controller
             return;
         }
     }
+
     private function getTotalCourse()
     {
         return Course::query()
             ->where('status', 'approved');
     }
+
     private function getTotalInstructor()
     {
         return User::query()
@@ -300,15 +304,17 @@ class DashboardController extends Controller
                 $query->where('name', 'instructor');
             });
     }
+
     private function getTotalAmount()
     {
         return DB::table('invoices')
             ->selectRaw('SUM(final_amount) as total_revenue, SUM(final_amount * ?) as total_profit', [self::RATE])
             ->where('status', 'Đã thanh toán');
     }
+
     private function getCategoryStat()
     {
-        return  DB::table('categories')
+        return DB::table('categories')
             ->select(
                 'categories.id',
                 'categories.name as category_name',
@@ -328,6 +334,7 @@ class DashboardController extends Controller
             ->groupBy('categories.id', 'categories.name')
             ->limit(10);
     }
+
     private function getTopInstructorFollow()
     {
         return DB::table('users')
@@ -348,6 +355,7 @@ class DashboardController extends Controller
             ->orderBy('total_follow', 'desc')
             ->limit(10);
     }
+
     private function getTopViewCourse()
     {
         return DB::table('courses')
@@ -358,6 +366,7 @@ class DashboardController extends Controller
             ->orderByDesc('courses.views')
             ->limit(10);
     }
+
     private function getTopCourseProgress()
     {
         return CourseUser::selectRaw('course_id, ROUND(AVG(progress_percent),2) as avg_progress')
@@ -366,6 +375,7 @@ class DashboardController extends Controller
             ->with('course:id,name')
             ->limit(10);
     }
+
     private function getTopInstructor()
     {
         return DB::table('users')
@@ -397,7 +407,7 @@ class DashboardController extends Controller
 
     private function getTopCourse()
     {
-        return  DB::table('courses')
+        return DB::table('courses')
             ->leftJoin('invoices', function ($join) {
                 $join->on('courses.id', '=', 'invoices.course_id')->where('invoices.status', 'Đã thanh toán');
             })
@@ -456,6 +466,7 @@ class DashboardController extends Controller
             ->groupBy(DB::raw('MONTH(created_at), YEAR(created_at)'))
             ->orderBy('year')->orderBy('month');
     }
+
     private function getCourseRating()
     {
         return DB::table(DB::raw('(SELECT course_id, FLOOR(AVG(rate)) as rating FROM ratings GROUP BY course_id) as subquery'))

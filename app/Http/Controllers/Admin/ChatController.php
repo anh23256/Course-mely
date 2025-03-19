@@ -38,20 +38,10 @@ class ChatController extends Controller
     public function index()
     {
         $data = $this->getAdminsAndChannels();
-        $directConversations = Conversation::whereHas('users', function ($query) {
-            $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
-        })->where('type', 'direct')->get();
-
-        $groupConversations = Conversation::whereHas('users', function ($query) {
-            $query->where('user_id', auth()->id());
-        })->where('type', 'group')->get();
-
         return view(
             'chats.chat-realtime',
             [
                 'data' => $data,
-                'directConversations' => $directConversations,
-                'groupConversations' => $groupConversations
             ]
         );
     }
@@ -317,27 +307,42 @@ class ChatController extends Controller
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
     public function addMembersToGroup(Request $request)
-    {
-        $validated = $request->validate([
-            'members' => 'required|array',
-            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
-        ]);
+{
+    $validated = $request->validate([
+        'members' => 'required|array',
+        'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
+    ]);
 
-        // Lấy group_id và members
-        $group = Conversation::find($request->group_id);
-        $members = $request->members;
-        $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
-        $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
-        // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
-        foreach ($newMembers as $memberId) {
-            $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
-        }
-
+    // Lấy group_id và members
+    $group = Conversation::find($request->group_id);
+    $members = $request->members;
+    $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
+    $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
+    
+    // Kiểm tra xem có thành viên nào đã tồn tại trong nhóm hay không
+    $alreadyExists = array_intersect($members, $existingMembers);
+    
+    if (count($alreadyExists) > 0) {
+        // Lấy tên các thành viên đã tồn tại
+        $duplicateMembers = User::whereIn('id', $alreadyExists)->pluck('name')->toArray();
+        
         return response()->json([
-            'success' => true,
-            'message' => 'Thành viên đã được thêm vào nhóm.',
-        ]);
+            'success' => false,
+            'message' => 'Các thành viên sau đã có trong nhóm.',
+            'duplicate_members' => $duplicateMembers,  // Trả về danh sách tên thành viên trùng lặp
+        ], 400);
     }
+    // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
+    foreach ($newMembers as $memberId) {
+        $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Thành viên đã được thêm vào nhóm.',
+    ]);
+}
+
 
     public function getSentFiles($conversationId)
     {
@@ -439,6 +444,105 @@ class ChatController extends Controller
                 'status' => 'error',
                 'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
             ]);
+        }
+    }
+
+    public function statusUser(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $status = $request->status;
+
+            if (!$user) {
+                return;
+            }
+            
+            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
+            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
+
+            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
+
+            return response()->json(['success' => true, 'status' => $status]);
+        } catch (\Throwable $e) {
+            $this->logError($e);
+
+            return;
+        }
+    }
+    public function kickUserFromGroup(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Validate dữ liệu đầu vào
+            $validated = $request->validate([
+                'group_id' => 'required|exists:conversations,id',
+                'user_id' => 'required|exists:users,id',
+            ]);
+
+            $group = Conversation::find($validated['group_id']);
+            $userToKick = User::find($validated['user_id']);
+            $admin = auth()->user(); // Người đang thực hiện thao tác
+
+            if (!$group || !$userToKick) {
+                return response()->json(['success' => false, 'message' => 'Nhóm hoặc người dùng không tồn tại.'], 404);
+            }
+
+            // Kiểm tra nếu người gọi API là admin hoặc chủ nhóm
+            if ($group->owner_id !== $admin->id && !$group->admins->contains($admin->id)) {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
+            }
+
+            // Không thể kick chủ nhóm
+            if ($group->owner_id == $userToKick->id) {
+                return response()->json(['success' => false, 'message' => 'Không thể kick chủ nhóm.'], 403);
+            }
+
+            // Xóa người dùng khỏi nhóm
+            $group->users()->detach($userToKick->id);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Người dùng đã bị kick khỏi nhóm.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi kick người dùng khỏi nhóm', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
+        }
+    }
+    public function dissolveGroup(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Validate dữ liệu đầu vào
+            $validated = $request->validate([
+                'group_id' => 'required|exists:conversations,id',
+            ]);
+
+            $group = Conversation::find($validated['group_id']);
+            $admin = auth()->user(); // Người thực hiện thao tác
+
+            if (!$group) {
+                return response()->json(['success' => false, 'message' => 'Nhóm không tồn tại.'], 404);
+            }
+
+            // Kiểm tra nếu người gọi API là chủ nhóm
+            if ($group->owner_id !== $admin->id) {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền giải tán nhóm.'], 403);
+            }
+
+            // Xóa tất cả thành viên khỏi nhóm
+            $group->users()->detach();
+
+            // Xóa nhóm
+            $group->delete();
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Nhóm đã được giải tán.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi giải tán nhóm', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
         }
     }
 }

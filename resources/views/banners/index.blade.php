@@ -162,7 +162,7 @@
                                                             value="option1">
                                                     </div>
                                                 </th>
-                                                <td class="order">{{ $banner->order }}</td>
+                                                <td class="order">{{ $loop->iteration }}</td>
                                                 <td class="customer_name">{{ $banner->title }}</td>
                                                 <td class="phone">
                                                     @if ($banner->image)
@@ -315,5 +315,5 @@
             }
         });
     </script>
-    
+
 @endpush
