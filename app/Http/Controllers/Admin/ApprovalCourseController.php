@@ -103,6 +103,11 @@ class ApprovalCourseController extends Controller
             })->sum(function ($lesson) {
                 return $lesson->lessonable->duration ?? 0;
             });
+            $videos = $approval->approvable->chapters
+            ->flatMap(fn($chapter) => $chapter->lessons)
+            ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
+            ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
+            // dd($videos->toArray());
 
             $documents = $approval->approvable->chapters->flatMap(function ($chapter) {
                 return $chapter->lessons;
@@ -127,7 +132,8 @@ class ApprovalCourseController extends Controller
                 'approval',
                 'totalDuration',
                 'documents',
-                'quizzes'
+                'quizzes',
+                'videos',
             ]));
 
         } catch (\Exception $e) {

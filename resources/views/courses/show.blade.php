@@ -19,9 +19,73 @@
                 </div>
                 <div class="col">
                     <div class="p-2">
-                        <h3 class="text-white mb-1">
-                            {{ $course->name }}
-                        </h3>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3 class="text-white mb-1 d-flex align-items-center gap-2">
+                                {{ $course->name }}
+                        
+                                @switch($course->status)
+                                    @case('pending')
+                                        <span class="badge badge-label bg-warning">
+                                            <i class="mdi mdi-circle-medium"></i> Chờ phê duyệt
+                                        </span>
+                                    @break
+                        
+                                    @case('approved')
+                                        <span class="badge badge-label bg-success">
+                                            <i class="mdi mdi-circle-medium"></i> Đã duyệt
+                                        </span>
+                                    @break
+                        
+                                    @case('modify_request')
+                                        <span class="badge badge-label bg-warning">
+                                            <i class="mdi mdi-circle-medium"></i> Chờ chỉnh sửa nội dung
+                                        </span>
+                                    @break
+                        
+                                    @default
+                                        <span class="badge badge-label bg-danger">
+                                            <i class="mdi mdi-circle-medium"></i> Đã từ chối
+                                        </span>
+                                @endswitch
+                            </h3>
+                        
+                            <!-- Các nút hành động -->
+                            <div class="d-flex gap-2">
+                                @if ($course->status !== 'rejected')
+                                    <!-- Nút từ chối -->
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectCourseModal">
+                                        Từ chối
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <!-- Modal từ chối khóa học -->
+                        <div id="rejectCourseModal" class="modal fade" tabindex="-1" aria-labelledby="rejectCourseModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="rejectCourseModalLabel">Từ chối khóa học</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form id="rejectCourseForm" action="{{ route('admin.courses.reject', $course->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="rejectCourseReason" class="form-label">Lý do từ chối</label>
+                                                <textarea placeholder="Nhập lý do từ chối..." class="form-control" id="rejectCourseReason" name="note" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">Xác nhận</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="hstack gap-3 flex-wrap mt-3 text-white">
                             <div>
                                 <i class="ri-map-pin-user-line me-1"></i>
@@ -38,6 +102,7 @@
                             <div class="vr"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -126,7 +191,7 @@
                                                     aria-labelledby="heading{{ $index + 1 }}"
                                                     data-bs-parent="#default-accordion-example">
                                                     <div class="accordion-body">
-                                                        {{ $item['answer'] }}
+                                                        {{ $item['answer'] ?? null }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -247,7 +312,8 @@
                                                                                 {{ $lesson->title }}
                                                                             </span>
                                                                             @if ($lesson->type === 'video')
-                                                                                <span class="ms-3">10h</span>
+                                                                                <span
+                                                                                    class="ms-3">{{ gmdate('i:s', $lesson->lessonable->duration) }}</span>
                                                                             @endif
                                                                         </div>
                                                                     </button>
@@ -256,16 +322,115 @@
                                                                     class="accordion-collapse collapse {{ $lessonIndex == 0 ? 'show' : '' }}"
                                                                     aria-labelledby="headingLesson{{ $chapterIndex }}{{ $lessonIndex }}">
                                                                     <div class="accordion-body">
-                                                                        @if ($lesson->type === 'video')
-                                                                            <mux-player
-                                                                                playback-id="EcHgOK9coz5K4rjSwOkoE7Y7O01201YMIC200RI6lNxnhs"
-                                                                                metadata-video-title="Test VOD"
-                                                                                metadata-viewer-user-id="user-id-007"
-                                                                                style="height: 300px; width: 100%;"></mux-player>
+                                                                        @if ($lesson->type === 'video' && isset($videos[$lesson->id]))
+                                                                            @foreach ($videos[$lesson->id] as $video)
+                                                                            @if (!empty($video['mux_playback_id']))
+                                                                            <mux-player 
+                                                                                playback-id="{{ $video['mux_playback_id'] }}" 
+                                                                                metadata-video-title="{{ $video['title'] ?? 'Không có tiêu đề' }}" 
+                                                                                style="height: 300px; width: 100%;">
+                                                                            </mux-player>
+                                                                        @else
+                                                                            <p>Không có video để phát.</p>
+                                                                        @endif
+                                                                        
+                                                                            @endforeach
+                                                                        @endif
+                                                                        @if ($lesson->type === 'document' && isset($documents[$lesson->id]))
+                                                                            <ul>
+                                                                                @foreach ($documents[$lesson->id] as $document)
+                                                                                    <li>
+                                                                                        <a href="#"
+                                                                                            data-bs-toggle="modal"
+                                                                                            data-bs-target="#documentModal{{ $document->id }}">
+                                                                                            {{ $document->title }}
+                                                                                        </a>
+
+                                                                                        <!-- Modal -->
+                                                                                        <div class="modal fade"
+                                                                                            id="documentModal{{ $document->id }}"
+                                                                                            tabindex="-1"
+                                                                                            aria-labelledby="documentModalLabel{{ $document->id }}"
+                                                                                            aria-hidden="true">
+                                                                                            <div
+                                                                                                class="modal-dialog modal-lg">
+                                                                                                <div class="modal-content">
+                                                                                                    <div
+                                                                                                        class="modal-header">
+                                                                                                        <h5 class="modal-title"
+                                                                                                            id="documentModalLabel{{ $document->id }}">
+                                                                                                            {{ $document->title }}
+                                                                                                        </h5>
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            class="btn-close"
+                                                                                                            data-bs-dismiss="modal"
+                                                                                                            aria-label="Close"></button>
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="modal-body">
+                                                                                                        @if (Str::endsWith($document->file_path, '.pdf'))
+                                                                                                            <iframe
+                                                                                                                src="{{ asset($document->file_path) }}"
+                                                                                                                width="100%"
+                                                                                                                height="500px"></iframe>
+                                                                                                        @else
+                                                                                                            <p>Không thể xem
+                                                                                                                trước tệp
+                                                                                                                này, <a
+                                                                                                                    href="{{ asset($document->file_path) }}"
+                                                                                                                    target="_blank">Tải
+                                                                                                                    xuống
+                                                                                                                    tại
+                                                                                                                    đây</a>
+                                                                                                            </p>
+                                                                                                        @endif
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </li>
+                                                                                @endforeach
+                                                                            </ul>
+                                                                        @endif
+
+                                                                        @if ($lesson->type === 'quiz' && isset($quizzes[$lesson->id]))
+                                                                            <div class="quiz-section">
+
+
+                                                                                @foreach ($quizzes[$lesson->id] as $quiz)
+                                                                                    @foreach ($quiz->questions as $question)
+                                                                                        <div class="question-container">
+                                                                                            {{ $question->question }}
+                                                                                        </div>
+                                                                                        @if ($question->answers->isNotEmpty())
+                                                                                            @foreach ($question->answers as $answer)
+                                                                                                <div class="form-check">
+                                                                                                    <input
+                                                                                                        class="form-check-input"
+                                                                                                        type="{{ $question->answer_type == 'multiple_choice' ? 'checkbox' : 'radio' }}"
+                                                                                                        name="question_{{ $question->id }}{{ $question->answer_type == 'multiple_choice' ? '[]' : '' }}"
+                                                                                                        id="answer_{{ $answer->id }}"
+                                                                                                        {{ $answer->is_correct ? 'checked' : '' }}
+                                                                                                        disabled>
+                                                                                                    <label
+                                                                                                        class="form-check-label"
+                                                                                                        for="answer_{{ $answer->id }}">
+                                                                                                        {{ $answer->answer }}
+                                                                                                    </label>
+                                                                                                </div>
+                                                                                            @endforeach
+                                                                                        @else
+                                                                                            <p class="no-answer">Chưa có
+                                                                                                đáp án cho câu hỏi này.</p>
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                @endforeach
+                                                                            </div>
                                                                         @endif
                                                                         <div
                                                                             style="margin-top: auto; display: flex; justify-content: flex-end;">
-                                                                            <a class="btn btn-primary" href="#">Xem
+                                                                            <a class="btn btn-primary" href="">Xem
                                                                                 bài
                                                                                 học</a>
                                                                         </div>
@@ -488,6 +653,7 @@
 @endsection
 
 @push('page-scripts')
+    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
@@ -737,5 +903,66 @@
         // Chuyển dữ liệu từ Blade PHP sang JavaScript
         let monthlyRevenueData = @json($monthlyRevenue);
         renderRevenueChart(monthlyRevenueData);
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Kiểm duyệt khóa học
+            $(".approveCourse").click(function(event) {
+                event.preventDefault();
+
+                Swal.fire({
+                    title: "Kiểm duyệt khóa học?",
+                    text: "Bạn có chắc chắn muốn phê duyệt khóa học này?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#28a745",
+                    confirmButtonText: "Phê duyệt",
+                    cancelButtonText: "Hủy"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $("#approveCourseForm").submit();
+                    }
+                });
+            });
+
+            // Xác nhận từ chối khóa học
+            $('#submitRejectCourseForm').on('click', function() {
+                const note = $('#rejectCourseReason').val();
+
+                if (note.trim() === '') {
+                    Swal.fire({
+                        text: "Vui lòng nhập lý do từ chối.",
+                        icon: 'warning'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: $('#rejectCourseForm').attr('action'),
+                    data: {
+                        _method: 'PUT',
+                        note,
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Thao tác thành công!',
+                            text: 'Lý do từ chối đã được ghi nhận.',
+                            icon: 'success'
+                        }).then(() => {
+                            $('#rejectCourseModal').modal('hide');
+                            location.reload();
+                        });
+                    },
+                    error: function(error) {
+                        Swal.fire({
+                            title: 'Thao tác thất bại!',
+                            text: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
+                            icon: 'error'
+                        });
+                    }
+                });
+            });
+        });
     </script>
 @endpush
