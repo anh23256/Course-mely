@@ -73,7 +73,7 @@ class InstructorRejectedNotification extends Notification implements ShouldBroad
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('member.' . $this->user->id);
+        $channel = new PrivateChannel('notification.' . $this->user->id);
         return $channel;
     }
 }

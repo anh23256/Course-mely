@@ -68,7 +68,7 @@ class RatingNotification extends Notification
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
+        $channel = new PrivateChannel('notification.' . $this->course->user_id);
         return $channel;
     }
 }

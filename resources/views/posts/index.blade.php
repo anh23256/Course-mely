@@ -172,10 +172,12 @@
                                                 </th>
 
                                                 <td class="customer_name">{{ $loop->iteration }}</td>
-                                                <td class="email">{{ $post->title }}</td>
                                                 <td>
-                                                    <img class="img-thumbnail" src="{{ $post->thumbnail }}"
-                                                        alt="Hình đại diện" width="100">
+                                                    <h6 class="mb-0 text-truncate" style="max-width: 250px;">{{ $post->title }}</h6>
+                                                </td>
+                                                <td>
+                                                    <img class="rounded shadow-sm" src="{{ $post->thumbnail }}"
+                                                         alt="Hình đại diện" width="80" height="50" style="object-fit: cover;">
                                                 </td>
                                                 <td class="text-danger fw-bold">{{ $post->user->name ?? '' }}</td>
                                                 <td>{{ $post->category->name ?? '' }}</td>

@@ -66,7 +66,7 @@ class ConfirmPaymentToInstructorNotification extends Notification
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('instructor.' . $this->withdrawal->wallet->user_id);
+        $channel = new PrivateChannel('notification.' . $this->withdrawal->wallet->user_id);
         return $channel;
     }
 
