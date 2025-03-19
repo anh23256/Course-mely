@@ -319,6 +319,141 @@
             </div>
         </div>
 
+        <!-- Top Completed Courses & Top Instructors -->
+        <div class="row mt-4 g-4">
+            <div class="col-xxl-7">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
+                            class="avatar-xs rounded-circle object-fit-cover" alt="">
+                        <h4 class="card-title mb-0 mx-2 text-white">Tỷ trọng bán hàng: Khóa học & Gói thành viên</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                    ? (fmod(
+                                        (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
+                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                            100,
+                                        1,
+                                    ) == 0
+                                        ? intval(
+                                            (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                        )
+                                        : round(
+                                            (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                            2,
+                                        ))
+                                    : 0 }}%
+                            </div>
+                            <div class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                    ? (fmod(
+                                        (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
+                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                            100,
+                                        1,
+                                    ) == 0
+                                        ? intval(
+                                            (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                        )
+                                        : round(
+                                            (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                            2,
+                                        ))
+                                    : 0 }}%
+                            </div>
+                        </div>
+                        <div id="render-membership-chart" class="w-100"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xxl-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0 text-white">Tỷ trọng giao dịch qua từng phương thức thanh toán</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                    ? (fmod(
+                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
+                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                            100,
+                                        1,
+                                    ) == 0
+                                        ? intval(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                        )
+                                        : round(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                            2,
+                                        ))
+                                    : 0 }}%
+                            </div>
+                            <div class="col-4 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                    ? (fmod(
+                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
+                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                            100,
+                                        1,
+                                    ) == 0
+                                        ? intval(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                        )
+                                        : round(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                            2,
+                                        ))
+                                    : 0 }}%
+                            </div>
+                            <div class="col-4 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                    ? (fmod(
+                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
+                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                            100,
+                                        1,
+                                    ) == 0
+                                        ? intval(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                        )
+                                        : round(
+                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
+                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                100,
+                                            2,
+                                        ))
+                                    : 0 }}%
+                            </div>
+                        </div>
+                        <div id="render-payment-method-chart" class="w-100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Ratings & Top Students -->
         <div class="row mt-4 g-4">
             <div class="col-xl-4">
@@ -415,7 +550,7 @@
                     <div class="d-flex pt-2 pb-4">
                         <h4 class="fs-16 mb-0 mx-2 fw-bold">Top 10 khóa học có lượt xem nhiều nhất</h4>
                     </div>
-                    <div class="swiper-wrapper">
+                    <div class="swiper-wrapper" id="top-course-view">
                         @foreach ($getTopViewCourses as $getTopViewCourse)
                             <div class="swiper-slide h-100">
                                 <div class="card explore-box card-animate rounded">
@@ -465,13 +600,13 @@
     <script>
         var topCourse = @json($topCourses);
         var topInstructor = @json($topInstructors);
-        var newData = @json($system_Funds);
+        var system_Funds = @json($system_Funds);
         var ratingData = @json($courseRatings);
         var topStudent = @json($topUsers);
         var topCategory = @json($categoryStats);
 
         let chart, pieChart, chartBestSellingCourses, chartTopInstructors, chartTopInstructorFollows,
-            chartTopCompletedCourses, chartTopStudents, categoryRevenueChart;
+            chartTopCompletedCourses, chartTopStudents, categoryRevenueChart, chartMembership, chartPaymentMethod;
 
         var currentHour = new Date().getHours();
         var greetingText = "Xin chào, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
@@ -535,7 +670,7 @@
             updateDateRangeText(defaultStart, defaultEnd);
         });
 
-        function updateChart(newData) {
+        function updateChart(data = []) {
             let chartContainer = document.querySelector("#projects-overview-chart");
 
             if (typeof chart !== "undefined" && chart) {
@@ -545,39 +680,145 @@
 
             chartContainer.innerHTML = "";
 
-            if (!newData || newData.length === 0) {
+            if (!data || data.length === 0) {
                 chartContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #999;">
-                <p><i class="fas fa-exclamation-circle"></i> Không có doanh thu</p>
-            </div>`;
+        <div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có doanh thu</p>
+        </div>`;
                 return;
             }
 
             let categories = [];
             let revenueData = [];
             let profitData = [];
+            let courseSalesData = [];
+            let membershipSalesData = [];
+            let momoSalesData = [];
+            let vnpaySalesData = [];
 
-            newData.forEach(item => {
+            data.forEach(item => {
                 categories.push("Tháng " + item.month + ", " + item.year);
                 revenueData.push(parseFloat(item.total_revenue));
                 profitData.push(parseFloat(item.total_profit));
             });
 
+
             let options = {
                 series: [{
                         name: "Doanh thu",
-                        type: "bar",
                         data: revenueData
                     },
                     {
                         name: "Lợi nhuận",
-                        type: "bar",
                         data: profitData
                     }
                 ],
                 chart: {
-                    height: 374,
-                    type: "line",
+                    type: "bar",
+                    height: 400,
+                    stacked: false,
+                    zoom: {
+                        enabled: true
+                    },
+                    toolbar: {
+                        show: true
+                    }
+                },
+                dataLabels: {
+                    enabled: false,
+                    formatter: function(val) {
+                        return val.toLocaleString() + " VND";
+                    },
+                    offsetY: -10,
+                    style: {
+                        fontSize: "12px",
+                        colors: ["#304758"]
+                    }
+                },
+                xaxis: {
+                    categories: categories,
+                    labels: {
+                        rotate: -45
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: "Doanh thu & Lợi nhuận (VND)"
+                    }
+                },
+                grid: {
+                    padding: {
+                        left: 10,
+                        right: 10
+                    }
+                },
+                colors: ["#007BFF", "#FF4D4D"],
+                yaxis: [{
+                    title: {
+                        text: "Doanh thu & lợi nhuận (VND)"
+                    },
+                    labels: {
+                        formatter: function(value) {
+                            return value.toLocaleString("vi-VN").replace(/\./g, ",") + " VND";
+                        }
+                    }
+                }],
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return value.toLocaleString("vi-VN").replace(/\./g, ",") + " VND";
+                        }
+                    }
+                }
+
+            };
+
+            chart = new ApexCharts(chartContainer, options);
+            chart.render();
+        }
+
+        function renderMembershipChart(data = []) {
+            let chartContainer = document.querySelector("#render-membership-chart");
+
+            if (typeof chartMembership !== "undefined" && chartMembership) {
+                chartMembership.destroy();
+                chartMembership = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                chartContainer.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #999;">
+            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+        </div>`;
+                return;
+            }
+
+            let categories = [];
+            let courseSalesData = [];
+            let membershipSalesData = [];
+
+            data.forEach(item => {
+                categories.push("Tháng " + item.month + ", " + item.year);
+                courseSalesData.push(parseInt(item.total_course_sales));
+                membershipSalesData.push(parseInt(item.total_membership_sales));
+            });
+
+
+            let options = {
+                series: [{
+                        name: "Khóa học bán ra",
+                        data: courseSalesData
+                    },
+                    {
+                        name: "Gói thành viên bán ra",
+                        data: membershipSalesData
+                    }
+                ],
+                chart: {
+                    type: "area",
+                    height: 400,
                     toolbar: {
                         show: true,
                         tools: {
@@ -589,36 +830,122 @@
                             pan: false,
                             reset: false
                         }
-                    },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
                     }
                 },
-                colors: ["#007bff", "#ff4d4d"],
                 xaxis: {
-                    categories: categories,
-                    tickPlacement: 'on',
-                    labels: {
-                        rotate: -45
-                    },
-                    scrollbar: {
-                        enabled: true
+                    categories: categories
+                },
+                yaxis: {
+                    title: {
+                        text: "Số lượng bán ra"
                     }
                 },
-                tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return value.toLocaleString("vi-VN").replace(/\./g,
-                                ",") + 'VND';
-                        }
+                colors: ["#007BFF", "#FF4D4D"],
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                fill: {
+                    type: "gradient",
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.5,
+                        opacityTo: 0.2
                     }
                 }
             };
 
-            chart = new ApexCharts(chartContainer, options);
-            chart.render();
+            chartMembership = new ApexCharts(chartContainer, options);
+            chartMembership.render();
+
+        }
+
+        function renderPaymentMethodChart(data) {
+            let chartContainer = document.querySelector("#render-payment-method-chart");
+
+            if (typeof chartPaymentMethod !== "undefined" && chartPaymentMethod) {
+                chartPaymentMethod.destroy();
+                chartPaymentMethod = undefined;
+            }
+
+            chartContainer.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                chartContainer.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #999;">
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
+                return;
+            }
+
+            let categories = [];
+            let momoData = [];
+            let vnpayData = [];
+            let creditCardData = [];
+
+            data.forEach(item => {
+                categories.push("Tháng " + item.month + ", " + item.year);
+                momoData.push(parseInt(item.total_payment_method_momo) || 0);
+                vnpayData.push(parseInt(item.total_payment_method_vnpay) || 0);
+                creditCardData.push(parseInt(item.total_payment_method_credit_card) || 0);
+            });
+
+            let options = {
+                series: [{
+                        name: "Momo",
+                        data: momoData
+                    },
+                    {
+                        name: "VNPay",
+                        data: vnpayData
+                    },
+                    {
+                        name: "Credit Card",
+                        data: creditCardData
+                    }
+                ],
+                chart: {
+                    type: "bar",
+                    height: 400,
+                    stacked: true,
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            selection: false,
+                            zoom: false,
+                            zoomin: false,
+                            zoomout: false,
+                            pan: false,
+                            reset: false
+                        }
+                    }
+                },
+                xaxis: {
+                    categories: categories
+                },
+                yaxis: {
+                    title: {
+                        text: "Số lượng giao dịch"
+                    }
+                },
+                colors: ["#F39C12", "#8E44AD", "#E67E22"],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: "60%"
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: "top"
+                }
+            };
+
+            chartPaymentMethod = new ApexCharts(chartContainer, options);
+            chartPaymentMethod.render();
         }
 
         function updatePieChart(ratingData) {
@@ -1222,10 +1549,14 @@
                     $('#table-courses tbody').html(response.top_courses_table);
                     $('#pagination-links-courses').html(response.pagination_links_courses);
 
-                    updateChart(response.apexCharts);
+                    $('#top-course-view').html(response.getTopViewCourses);
+
+                    updateChart(response.system_Funds);
                     updatePieChart(response.course_rating);
                     renderTopCompletedCourses(response.topCoursesProgress);
                     renderTopInstructorsFollow(response.topInstructorsFollows);
+                    renderMembershipChart(response.system_Funds);
+                    renderPaymentMethodChart(response.system_Funds);
                     updateCategoryRevenueChart(response.categoryStats);
 
                     $('.counter-value[data-target="totalRevenue"]').text(new Intl.NumberFormat('vi-VN', {
@@ -1393,10 +1724,12 @@
             });
         });
 
-        updateChart(newData);
+        updateChart(system_Funds);
         updatePieChart(ratingData);
         renderTopCompletedCourses(@json($topCoursesProgress));
         renderTopInstructorsFollow(@json($topInstructorsFollows));
+        renderMembershipChart(system_Funds);
+        renderPaymentMethodChart(system_Funds);
         updateCategoryRevenueChart(topCategory);
 
         new Swiper('.marketplace-swiper', {

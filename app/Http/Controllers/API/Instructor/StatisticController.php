@@ -34,17 +34,17 @@ class StatisticController extends Controller
 
             $totalEnrollments = DB::table('course_users')
                 ->join('courses', 'course_users.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])
+                ->where('courses.user_id', $user->id)
                 ->count();
 
             $totalRevenue = DB::table('invoices')->selectRaw('SUM(final_amount) as total_revenue')->where('invoices.status',  "Đã thanh toán")
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])
+                ->where('courses.user_id', $user->id)
                 ->first();
 
             $averageRating = DB::table('ratings')->selectRaw('ROUND(AVG(ratings.rate), 1) as avg_rating')
                 ->join('courses', 'ratings.course_id', '=', 'courses.id')
-                ->where(['courses.user_id' => $user->id, 'courses.status' => 'approved'])->first();
+                ->where('courses.user_id', $user->id)->first();
 
             return $this->respondOk('Dữ liệu thông kê tổng quan của giảng viên ' . $user->name, [
                 'totalCourse' => $totalCourse,
@@ -89,7 +89,8 @@ class StatisticController extends Controller
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
                 ->where([
                     'courses.user_id' => $user->id,
-                    'invoices.status' => 'Đã thanh toán'
+                    'invoices.status' => 'Đã thanh toán',
+                    'courses.status' => 'approved'
                 ])
                 ->groupBy('courses.slug')
                 ->orderByDesc('total_revenue')

@@ -117,11 +117,10 @@ class CommonController extends Controller
                     'profiles.about_me',
                     'users.created_at',
                     'users.updated_at',
-                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(courses.id) as total_courses, COUNT(follows.id) as total_followers')
+                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating, COUNT(DISTINCT courses.id) as total_courses, COUNT(DISTINCT follows.id) as total_followers')
                 )
                 ->where('users.code', $code)
                 ->where('users.status', '!=', 'blocked')
-                ->where('courses.status', '=', 'approved')
                 ->join('profiles', 'users.id', '=', 'profiles.user_id')
                 ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
