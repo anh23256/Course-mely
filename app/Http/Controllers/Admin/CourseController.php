@@ -7,9 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\Document;
 use App\Models\LessonProgress;
+use App\Models\Quiz;
 use App\Models\Rating;
 use App\Models\Transaction;
+use App\Models\Video;
 use App\Traits\FilterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,9 +51,10 @@ class CourseController extends Controller
 
     public function show(string $id)
     {
-        $course = Course::query()
-            ->with('user')
-            ->findOrFail($id);
+        $course = Course::with([
+            'user', 
+            'chapters.lessons.lessonable', // Load cả bài học và nội dung của bài học (Video, Document, Quiz)
+        ])->findOrFail($id);
 
         $courseUsers = CourseUser::query()
             ->where('course_id', $id)
@@ -108,6 +112,31 @@ class CourseController extends Controller
 
         // dd($chapterProgressStats->toArray());
 
+        $totalDuration = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type === Video::class;
+        })->sum(function ($lesson) {
+            return $lesson->lessonable->duration ?? 0;
+        });
+
+        $documents = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type == Document::class;
+        })->mapToGroups(function ($lesson) {
+            return [$lesson->id => $lesson->lessonable]  ?? null;
+        });
+
+        $quizzes = $course->chapters->flatMap(function ($chapter) {
+            return $chapter->lessons;
+        })->filter(function ($lesson) {
+            return $lesson->lessonable_type == Quiz::class;
+        })->mapToGroups(function ($lesson) {
+
+            return [$lesson->id => $lesson->lessonable->load('questions.answers')] ?? null;
+        });
+
 
         $title = 'Quản lý khoá học';
         $subTitle = 'Thông tin khoá học: ' . $course->name;
@@ -121,7 +150,10 @@ class CourseController extends Controller
             'recentLessons',
             'ratingsData',
             'chapterProgressStats',
-            'monthlyRevenue'
+            'monthlyRevenue',
+            'totalDuration',
+            'documents',
+            'quizzes'
         ));
     }
 
@@ -130,7 +162,6 @@ class CourseController extends Controller
         try {
 
             return Excel::download(new CoursesExport, 'Courses.xlsx');
-            
         } catch (\Exception $e) {
 
             $this->logError($e);

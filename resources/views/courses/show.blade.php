@@ -247,7 +247,8 @@
                                                                                 {{ $lesson->title }}
                                                                             </span>
                                                                             @if ($lesson->type === 'video')
-                                                                                <span class="ms-3">10h</span>
+                                                                                <span
+                                                                                    class="ms-3">{{ gmdate('i:s', $lesson->lessonable->duration) }}</span>
                                                                             @endif
                                                                         </div>
                                                                     </button>

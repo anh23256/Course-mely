@@ -26,7 +26,7 @@ class WithdrawalRequest extends Model
         'instructor_confirmation',
         'instructor_confirmation_date',
         'instructor_confirmation_note',
-        'is_received'
+        'is_received',
     ];
 
     public function wallet()
