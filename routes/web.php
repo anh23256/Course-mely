@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
@@ -350,6 +351,8 @@ Route::prefix('admin')->as('admin.')
             ->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])
                     ->name('index');
+                Route::get('/show', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])
+                    ->name('show');
                 Route::get('/unread-count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadNotificationsCount'])
                     ->name('unread-count');
                 Route::put('/{notificationId}', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])
