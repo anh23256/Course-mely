@@ -481,6 +481,7 @@ Route::prefix('blogs')
                 Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
                 Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
                 Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
+
             });
     });
 

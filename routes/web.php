@@ -135,7 +135,7 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE CATEGORY =============================
         Route::prefix('categories')->as('categories.')->group(function () {
-            Route::get('/', [CategoryController::class, 'index'])->name('index');
+            Route::get('/', [CategoryController::class, 'index'])->name('index')->can('category.index');
             Route::get('/create', [CategoryController::class, 'create'])->name('create')
                 ->can('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('store')
@@ -159,12 +159,12 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE BANNER =============================
         Route::prefix('banners')->as('banners.')->group(function () {
-            Route::get('/', [BannerController::class, 'index'])->name('index');
+            Route::get('/', [BannerController::class, 'index'])->name('index')->can('banner.index');
             Route::get('/deleted', [BannerController::class, 'listDeleted'])->name('deleted');
             Route::get('/create', [BannerController::class, 'create'])->name('create')
                 ->can('banners.create');
             Route::post('/', [BannerController::class, 'store'])->name('store')
-                ->can('banners.create');
+                ->can('banner.create');
             Route::post('/update-order', [BannerController::class, 'updateOrder'])->name('updateOrder')
                 ->can('banner.update');
             Route::get('/{id}', [BannerController::class, 'show'])->name('show');
@@ -204,7 +204,7 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE COUPON =============================
         Route::prefix('coupons')->as('coupons.')->group(function () {
-            Route::get('/', [CouponController::class, 'index'])->name('index');
+            Route::get('/', [CouponController::class, 'index'])->name('index')->can('coupon.index');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
             Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
@@ -225,7 +225,7 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE SETTINGS =============================
         Route::prefix('settings')->as('settings.')->group(function () {
-            Route::get('/', [SettingController::class, 'index'])->name('index');
+            Route::get('/', [SettingController::class, 'index'])->name('index')->can('setting.index');
             Route::get('/create', [SettingController::class, 'create'])->name('create')
                 ->can('setting.create');
             Route::post('/', [SettingController::class, 'store'])->name('store')
@@ -258,7 +258,7 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE COMMISSION =============================
         Route::prefix('commissions')->as('commissions.')->group(function () {
-            Route::get('/', [CommissionController::class, 'index'])->name('index');
+            Route::get('/', [CommissionController::class, 'index'])->name('index')->can('commission.index');
             Route::get('/create', [CommissionController::class, 'create'])->name('create')
                 ->can('commission.create');
             Route::post('/', [CommissionController::class, 'store'])->name('store');
@@ -380,9 +380,9 @@ Route::prefix('admin')->as('admin.')
         Route::prefix('chats')
             ->as('chats.')
             ->group(function () {
-                Route::get('/chat-realtime', [ChatController::class, 'index'])->name('index');
+                Route::get('/chat-room', [ChatController::class, 'index'])->name('index');
                 Route::post('/private', [ChatController::class, 'createPrivateChat'])->name('createOnetoOne');
-                Route::post('/chat-realtime', [ChatController::class, 'createGroupChat'])->name('create');
+                Route::post('/chat-room', [ChatController::class, 'createGroupChat'])->name('create');
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::get('/get-user-info', [ChatController::class, 'getUserInfo'])->name('getUserInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
@@ -391,6 +391,8 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/add-members-to-group', [ChatController::class, 'addMembersToGroup']);
                 Route::post('/conversation/{conversationId}/leave', [ChatController::class, 'leaveConversation'])->name('leaveConversation');
                 Route::delete('/conversation/{conversationId}/delete', [ChatController::class, 'deleteConversation'])->name('deleteConversation');
+                Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
+                Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
 
         Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');

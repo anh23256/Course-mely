@@ -137,34 +137,45 @@ class CommentBlogController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
+            // Kiểm tra quyền truy cập của người dùng
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
-
+    
+            // Lấy dữ liệu đã validated từ request
             $data = $request->validated();
-
-            $parentComment = Comment::query()->find($commentId);
-
+    
+            // Tìm bình luận cha (comment parent)
+            $parentComment = Comment::find($commentId);
+    
+            // Kiểm tra nếu không tìm thấy bình luận cha
             if (!$parentComment) {
                 return $this->respondNotFound('Không có bình luận cha');
             }
-
-            $reply = Comment::query()->create([
+    
+            // Kiểm tra xem content có hợp lệ không
+            if (empty($data['content'])) {
+                return $this->respondBadRequest('Nội dung không được để trống');
+            }
+    
+            // Tạo bình luận phản hồi
+            $reply = Comment::create([
                 'user_id' => $user->id,
-                'content' => $data['content'] ?? '',
-                'parent_id' => $parentComment->id,
-                'commentable_id' => $parentComment->commentable_id,
-                'commentable_type' => Post::class,
+                'content' => $data['content'], // Nội dung phản hồi
+                'parent_id' => $parentComment->id, // Lưu parent_id là id của bình luận cha
+                'commentable_id' => $parentComment->commentable_id, // Lưu commentable_id như của bình luận cha
+                'commentable_type' => $parentComment->commentable_type, // Lưu commentable_type như của bình luận cha
             ]);
-
+    
             return $this->respondCreated('Phản hồi bình luận thành công', $reply);
         } catch (\Exception $e) {
+            // Log lỗi và trả về thông báo lỗi server
             $this->logError($e, $request->all());
-
             return $this->respondServerError();
         }
     }
+    
 
     public function deleteComment(string $commentId)
     {
