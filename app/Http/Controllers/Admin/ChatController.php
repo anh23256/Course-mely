@@ -172,22 +172,45 @@ class ChatController extends Controller
             ]);
 
             if ($request->hasFile('input_file')) {
-                $file = $request->file('input_file');
-                $filePath = $this->uploadToLocal($file, self::FOLDER);
+                $files = $request->file('input_file');
+                $filePaths = $this->uploadMultiple($files, self::FOLDER);
 
-                $media = Media::create([
-                    'file_path' => $filePath,
-                    'file_type' => $file->getClientMimeType(),
-                    'file_size' => $file->getSize(),
-                    'message_id' => $message->id,
-                ]);
+                if (!$filePaths) {
+                    return;
+                }
 
-                $message->update(['meta_data' => json_encode(['media_id' => $media->id])]);
+                foreach ($files as $index => $file) {
+                    if (!isset($filePaths[$index])) {
+                        continue;
+                    }
+                    $file_path = $filePaths[$index];
+                    $file_type = $file->getClientMimeType();
+                    $file_size = $file->getSize();
+                    $file_name = $file->getClientOriginalName();
+
+                    $media = Media::create([
+                        'file_path' => $file_path,
+                        'file_type' => $file_type,
+                        'file_size' => $file_size,
+                        'message_id' => $message->id,
+                    ]);
+
+                    $mediaData[] = [
+                        'media_id' => $media->id,
+                        'file_name' => $file_name,
+                        'file_path' => $file_path,
+                        'file_type' => $file_type,
+                        'file_size' => $file_size,
+                    ];
+                }
+
+                $message->update(['meta_data' => $mediaData]);
             }
+
             $message->load(['sender', 'media']);
 
             DB::commit();
-            // Kiểm tra loại hội thoại (chat nhóm hay chat 1-1)
+
             if ($message->conversation->type === 'direct') {
                 broadcast(new PrivateMessageSent($message))->toOthers();
             } else {
@@ -200,7 +223,8 @@ class ChatController extends Controller
             Notification::send(User::whereIn('id', $users)->get(), new MessageNotification($message));
 
             return response()->json(['status' => 'success', 'message' => $message]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
             $this->logError($e, $request->all());
         }
     }
@@ -307,41 +331,41 @@ class ChatController extends Controller
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
     public function addMembersToGroup(Request $request)
-{
-    $validated = $request->validate([
-        'members' => 'required|array',
-        'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
-    ]);
+    {
+        $validated = $request->validate([
+            'members' => 'required|array',
+            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
+        ]);
 
-    // Lấy group_id và members
-    $group = Conversation::find($request->group_id);
-    $members = $request->members;
-    $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
-    $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
-    
-    // Kiểm tra xem có thành viên nào đã tồn tại trong nhóm hay không
-    $alreadyExists = array_intersect($members, $existingMembers);
-    
-    if (count($alreadyExists) > 0) {
-        // Lấy tên các thành viên đã tồn tại
-        $duplicateMembers = User::whereIn('id', $alreadyExists)->pluck('name')->toArray();
-        
+        // Lấy group_id và members
+        $group = Conversation::find($request->group_id);
+        $members = $request->members;
+        $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
+        $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
+
+        // Kiểm tra xem có thành viên nào đã tồn tại trong nhóm hay không
+        $alreadyExists = array_intersect($members, $existingMembers);
+
+        if (count($alreadyExists) > 0) {
+            // Lấy tên các thành viên đã tồn tại
+            $duplicateMembers = User::whereIn('id', $alreadyExists)->pluck('name')->toArray();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Các thành viên sau đã có trong nhóm.',
+                'duplicate_members' => $duplicateMembers,  // Trả về danh sách tên thành viên trùng lặp
+            ], 400);
+        }
+        // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
+        foreach ($newMembers as $memberId) {
+            $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'Các thành viên sau đã có trong nhóm.',
-            'duplicate_members' => $duplicateMembers,  // Trả về danh sách tên thành viên trùng lặp
-        ], 400);
+            'success' => true,
+            'message' => 'Thành viên đã được thêm vào nhóm.',
+        ]);
     }
-    // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
-    foreach ($newMembers as $memberId) {
-        $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Thành viên đã được thêm vào nhóm.',
-    ]);
-}
 
 
     public function getSentFiles($conversationId)
@@ -456,7 +480,7 @@ class ChatController extends Controller
             if (!$user) {
                 return;
             }
-            
+
             Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
             Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
 
