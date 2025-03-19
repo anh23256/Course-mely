@@ -38,6 +38,8 @@ class DashboardController extends Controller
             $queryCategoryStats = $this->getCategoryStat();
             $queryTotalByPaymentMethodAndInvoiceType = $this->getTotalByPaymentMethodAndInvoiceType();
 
+            $queryGetTopViewCourses = $this->filterTopCourseView($queryGetTopViewCourses, $request);
+
             list(
                 $queryTopInstructors,
                 $queryTopUsers,
@@ -151,6 +153,30 @@ class DashboardController extends Controller
         } else {
             $query->where("{$table}.{$column}", '>=', "{$year}-01-01 00:00:00")
                 ->where("{$table}.{$column}", '<', now()->startOfDay());
+        }
+
+        return $query;
+    }
+
+    private function filterTopCourseView($query, Request $request)
+    {
+        $orderby_course = $request->input('orderby_course', 'views');
+
+        switch ($orderby_course) {
+            case 'created_at':
+                $query->orderBy('courses.created_at', 'desc');
+                break;
+
+            case 'price_asc':
+                $query->orderBy('courses.price', 'asc');
+                break;
+
+            case 'price_desc':
+                $query->orderBy('courses.price', 'desc');
+                break;
+            default:
+                $query->orderBy('courses.views', 'desc');
+                break;
         }
 
         return $query;
@@ -359,11 +385,10 @@ class DashboardController extends Controller
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale')
-            ->join('users', function($join){
+            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
+            ->join('users', function ($join) {
                 $join->on('users.id', '=', 'courses.user_id')->where('courses.status', 'approved');
             })
-            ->orderByDesc('courses.views')
             ->limit(10);
     }
 
