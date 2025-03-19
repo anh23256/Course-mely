@@ -115,4 +115,42 @@ class NotificationController extends Controller
             return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+
+    public function show(Request $request)
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            $notification_key = $request->query('notification_key', 'approval');
+
+            $typeGroups = [
+                'approval' => [
+                    'type' => ['register_course', 'register_instructor', "withdrawal"],
+                ],
+                'message' => [
+                    'type' => ['user_buy_course'],
+                ],
+                'buycourse' => [
+                    'type' => ['receive_message'],
+                ]
+            ];
+
+            $notifications = $user->notifications()
+                ->where(function ($query) use ($notification_key, $typeGroups) {
+                    foreach ($typeGroups[$notification_key]['type'] as $type) {
+                        $query->orWhereJsonContains('data->type', $type);
+                    }
+                })
+                ->latest()
+                ->get();
+
+            return view('notifications.index', compact('notifications'));
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
 }
