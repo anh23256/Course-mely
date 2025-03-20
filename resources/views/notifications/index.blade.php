@@ -33,18 +33,7 @@
                     <div class="card-body" id="item_List">
                         <div class="listjs-table" id="customerList">
                             <div class="row g-4 mb-3">
-                                <div class="col-sm-auto">
-                                    <div>
-                                        <a href="{{ route('admin.categories.create') }}">
-                                            <button type="button" class="btn btn-primary add-btn">
-                                                <i class="ri-add-line align-bottom me-1"></i> Thêm mới
-                                            </button>
-                                        </a>
-                                        <button class="btn btn-danger" id="deleteSelected">
-                                            <i class="ri-delete-bin-2-line"> Xóa nhiều</i>
-                                        </button>
-                                    </div>
-                                </div>
+                                
                                 <div class="col-sm">
                                     <div class="d-flex justify-content-sm-end">
                                         <div class="search-box ms-2">

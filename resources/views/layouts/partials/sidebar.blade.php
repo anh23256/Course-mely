@@ -84,6 +84,10 @@
                                 Danh sách thành viên đã xóa </a>
                         </li>
                     @endcan
+                    <li class="nav-item">
+                        <a href="{{ route('admin.memberships.index') }}" class="nav-link">
+                            Danh sách thành viên </a>
+                    </li>
                 </ul>
             </div>
             @canany(['permissions.create', 'permissions.edit', 'permissions.read', 'permissions.delete'])
