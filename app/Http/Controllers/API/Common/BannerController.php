@@ -47,6 +47,7 @@ class BannerController extends Controller
                         'content' => $course->description ?? 'Khóa học nổi bật', // Nội dung mô tả khóa học
                         'image' => $course->thumbnail, // Ảnh của khóa học
                         'price' => $course->price,
+                        'is_free'=>$course->is_free,
                         'total_student'=>$course->total_student,
                         'order' => $index + 1, // Đặt thứ tự hiển thị
                         'type' => 'course', // Đánh dấu là khóa học
