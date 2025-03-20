@@ -12,6 +12,7 @@ use App\Http\Controllers\API\Common\FollowController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
+use App\Http\Controllers\API\Common\TagController;
 use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
 use App\Http\Controllers\API\Common\WishListController;
@@ -457,6 +458,9 @@ Route::prefix('courses')
 
 #============================== ROUTE BANNER =============================
 Route::get('/banners', [BannerController::class, 'index']);
+
+#============================== ROUTE TAG =============================
+Route::get('/tags', [TagController::class, 'index']);
 
 #============================== ROUTE CATEGORY =============================
 Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::class, 'index']);
