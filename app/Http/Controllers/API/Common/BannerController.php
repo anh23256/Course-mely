@@ -33,9 +33,41 @@ class BannerController extends Controller
             $systemAverageRating = Rating::query()->whereHas('course', function ($query) {
                 $query->where('status', 'approved');
             })->avg('rate');
-
+            $popularCourses = Course::query()
+                ->where('status', 'approved')
+                ->where('is_popular', '=', 1)
+                ->where('visibility', '=', 'public')
+                ->orderBy('total_student', 'desc')
+                ->limit(4)
+                ->get();
+                $slides = $popularCourses->map(function ($course, $index) {
+                    return [
+                        'id' => $course->id,
+                        'title' => $course->name, // Tiêu đề của khóa học
+                        'content' => $course->description ?? 'Khóa học nổi bật', // Nội dung mô tả khóa học
+                        'image' => $course->thumbnail, // Ảnh của khóa học
+                        'price' => $course->price,
+                        'total_student'=>$course->total_student,
+                        'order' => $index + 1, // Đặt thứ tự hiển thị
+                        'type' => 'course', // Đánh dấu là khóa học
+                    ];
+                });
+        
+                // Nếu khóa học chưa đủ 4, bổ sung banner vào danh sách
+                while ($slides->count() < 4 && $banners->isNotEmpty()) {
+                    $banner = $banners->shift();
+                    $slides->push([
+                        'id' => $banner->id,
+                        'title' => $banner->title ?? 'Banner quảng cáo',
+                        'content' => $banner->content ?? 'Thông tin quảng cáo',
+                        'image' => $banner->image,
+                        'order' => $banner->order,
+                        'type' => 'banner', // Đánh dấu là banner
+                    ]);
+                }
+        
             return $this->respondOk('Danh sách dữ liệu', [
-                'banners' => $banners,
+                'slides' => $slides,
                 'system_average_rating' => $systemAverageRating ?? 0,
                 'total_courses' => $totalCourses,
             ]);
@@ -45,5 +77,4 @@ class BannerController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
 }

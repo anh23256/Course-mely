@@ -277,6 +277,9 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
+            Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
+            Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
+
         });
 
         #============================== ROUTE APPROVAL =============================

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\CoursesExport;
 use App\Http\Controllers\Controller;
+use App\Models\Approvable;
 use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -16,6 +17,7 @@ use App\Models\Video;
 use App\Traits\FilterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 
@@ -48,13 +50,44 @@ class CourseController extends Controller
 
         return view('courses.index', compact('title', 'subTitle', 'courses'));
     }
+    public function reject(Request $request, $id)
+    {
+        $course = Course::findOrFail($id);
+        $course->status = 'rejected';
+        $course->save();
+
+        // Kiểm tra xem bản ghi đã tồn tại trong bảng approvables chưa
+        $approval = Approvable::where('approvable_type', Course::class)
+            ->where('approvable_id', $id)
+            ->first();
+
+        if ($approval) {
+            // Nếu đã có, cập nhật trạng thái & lý do từ chối
+            $approval->status = 'rejected';
+            $approval->reason = $request->note ?? null;
+            $approval->approved_at = now();
+            $approval->save();
+        } else {
+            // Nếu chưa có, tạo bản ghi mới
+            $approval = new Approvable();
+            $approval->approvable_type = Course::class;
+            $approval->approvable_id = $id;
+            $approval->approver_id = auth()->id(); // Lưu ai là người từ chối
+            $approval->status = 'rejected';
+            $approval->reason = $request->note ?? null;
+            $approval->request_date = now();
+            $approval->approved_at = now();
+            $approval->save();
+        }
+        return redirect()->back()->with('success', 'Khóa học đã bị từ chối.');
+    }
+
 
     public function show(string $id)
     {
-        $course = Course::with([
-            'user', 
-            'chapters.lessons.lessonable', // Load cả bài học và nội dung của bài học (Video, Document, Quiz)
-        ])->findOrFail($id);
+        $course = Course::query()
+            ->with('user', 'chapters.lessons.lessonable')
+            ->findOrFail($id);
 
         $courseUsers = CourseUser::query()
             ->where('course_id', $id)
@@ -71,7 +104,11 @@ class CourseController extends Controller
                 COUNT(CASE WHEN progress_percent = 0 THEN 1 END) as not_started_students
             ')
             ->first();
-
+        $videos = $course->chapters
+            ->flatMap(fn($chapter) => $chapter->lessons)
+            ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
+            ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
+            // dd($videos->map(fn($video) => $video->toArray()));
         $recentLessons = LessonProgress::query()
             ->selectRaw('lesson_progress.user_id, lessons.title as lesson_title, MAX(lesson_progress.updated_at) as last_updated')
             ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
@@ -151,9 +188,10 @@ class CourseController extends Controller
             'ratingsData',
             'chapterProgressStats',
             'monthlyRevenue',
-            'totalDuration',
             'documents',
-            'quizzes'
+            'quizzes',
+            'videos',
+            'totalDuration',
         ));
     }
 
