@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\MembershipUserController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RoleController;
@@ -312,6 +313,12 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
             Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');
+        });
+
+        #============================== ROUTE memberships =============================
+        Route::prefix('memberships')->as('memberships.')->group(function () {
+            Route::get('/', [MembershipUserController::class, 'index'])->name('index');
+            
         });
 
 
