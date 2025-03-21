@@ -271,10 +271,6 @@
                 aria-expanded="false" aria-controls="sidebarNotification">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý thông báo</span>
             </a>
-            <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarNotification">
-                <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
-            </a>
             <div class="collapse menu-dropdown" id="sidebarNotification">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">

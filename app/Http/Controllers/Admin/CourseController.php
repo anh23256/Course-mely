@@ -108,7 +108,7 @@ class CourseController extends Controller
             ->flatMap(fn($chapter) => $chapter->lessons)
             ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
             ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
-            // dd($videos->map(fn($video) => $video->toArray()));
+        // dd($videos->map(fn($video) => $video->toArray()));
         $recentLessons = LessonProgress::query()
             ->selectRaw('lesson_progress.user_id, lessons.title as lesson_title, MAX(lesson_progress.updated_at) as last_updated')
             ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
@@ -193,6 +193,14 @@ class CourseController extends Controller
             'videos',
             'totalDuration',
         ));
+    }
+    public function updatePopular(Request $request, $id)
+    {
+        $course = Course::findOrFail($id);
+        $course->is_popular = $request->is_popular ? 1 : 0;
+        $course->save();
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật thành công!']);
     }
 
     public function export()

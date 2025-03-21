@@ -22,70 +22,76 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <h3 class="text-white mb-1 d-flex align-items-center gap-2">
                                 {{ $course->name }}
-                        
+
                                 @switch($course->status)
                                     @case('pending')
                                         <span class="badge badge-label bg-warning">
                                             <i class="mdi mdi-circle-medium"></i> Chờ phê duyệt
                                         </span>
                                     @break
-                        
+
                                     @case('approved')
                                         <span class="badge badge-label bg-success">
                                             <i class="mdi mdi-circle-medium"></i> Đã duyệt
                                         </span>
                                     @break
-                        
+
                                     @case('modify_request')
                                         <span class="badge badge-label bg-warning">
                                             <i class="mdi mdi-circle-medium"></i> Chờ chỉnh sửa nội dung
                                         </span>
                                     @break
-                        
+
                                     @default
                                         <span class="badge badge-label bg-danger">
                                             <i class="mdi mdi-circle-medium"></i> Đã từ chối
                                         </span>
                                 @endswitch
                             </h3>
-                        
+
                             <!-- Các nút hành động -->
                             <div class="d-flex gap-2">
                                 @if ($course->status !== 'rejected')
                                     <!-- Nút từ chối -->
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectCourseModal">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#rejectCourseModal">
                                         Từ chối
                                     </button>
                                 @endif
                             </div>
                         </div>
-                        
+
                         <!-- Modal từ chối khóa học -->
-                        <div id="rejectCourseModal" class="modal fade" tabindex="-1" aria-labelledby="rejectCourseModalLabel" aria-hidden="true">
+                        <div id="rejectCourseModal" class="modal fade" tabindex="-1"
+                            aria-labelledby="rejectCourseModalLabel" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="rejectCourseModalLabel">Từ chối khóa học</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
-                                    <form id="rejectCourseForm" action="{{ route('admin.courses.reject', $course->id) }}" method="POST">
+                                    <form id="rejectCourseForm" action="{{ route('admin.courses.reject', $course->id) }}"
+                                        method="POST">
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="rejectCourseReason" class="form-label">Lý do từ chối</label>
-                                                <textarea placeholder="Nhập lý do từ chối..." class="form-control" id="rejectCourseReason" name="note" rows="3"></textarea>
+                                                <textarea placeholder="Nhập lý do từ chối..." class="form-control" id="rejectCourseReason" name="note"
+                                                    rows="3"></textarea>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="button" class="btn btn-light"
+                                                data-bs-dismiss="modal">Hủy</button>
                                             <button type="submit" class="btn btn-primary">Xác nhận</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="hstack gap-3 flex-wrap mt-3 text-white">
                             <div>
                                 <i class="ri-map-pin-user-line me-1"></i>
@@ -244,6 +250,19 @@
                                                 <td class="fw-medium">Ngày chấp nhận</td>
                                                 <td>{!! $course->accepted ?? '<span class="badge bg-success-subtle text-danger">Chưa kiểm duyệt</span>' !!}</td>
                                             </tr>
+                                            <tr>
+                                                <td class="fw-medium">Khóa học phổ biến</td>
+                                                <td>
+                                                    <div class="form-check form-switch form-switch-warning">
+                                                        <input class="form-check-input popular-course-toggle"
+                                                            type="checkbox" role="switch" name="popular_course"
+                                                            value="{{ $course->id }}"
+                                                            data-course-id="{{ $course->id }}"
+                                                            data-status="{{ $course->status }}"
+                                                            @checked($course->is_popular != null)>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -324,16 +343,15 @@
                                                                     <div class="accordion-body">
                                                                         @if ($lesson->type === 'video' && isset($videos[$lesson->id]))
                                                                             @foreach ($videos[$lesson->id] as $video)
-                                                                            @if (!empty($video['mux_playback_id']))
-                                                                            <mux-player 
-                                                                                playback-id="{{ $video['mux_playback_id'] }}" 
-                                                                                metadata-video-title="{{ $video['title'] ?? 'Không có tiêu đề' }}" 
-                                                                                style="height: 300px; width: 100%;">
-                                                                            </mux-player>
-                                                                        @else
-                                                                            <p>Không có video để phát.</p>
-                                                                        @endif
-                                                                        
+                                                                                @if (!empty($video['mux_playback_id']))
+                                                                                    <mux-player
+                                                                                        playback-id="{{ $video['mux_playback_id'] }}"
+                                                                                        metadata-video-title="{{ $video['title'] ?? 'Không có tiêu đề' }}"
+                                                                                        style="height: 300px; width: 100%;">
+                                                                                    </mux-player>
+                                                                                @else
+                                                                                    <p>Không có video để phát.</p>
+                                                                                @endif
                                                                             @endforeach
                                                                         @endif
                                                                         @if ($lesson->type === 'document' && isset($documents[$lesson->id]))
@@ -962,6 +980,51 @@
                         });
                     }
                 });
+            });
+        });
+    </script>
+    <script>
+        $(document).on('change', '.popular-course-toggle', function() {
+            var courseID = $(this).data('course-id'); // Lấy ID khóa học
+            var courseStatus = $(this).data('status'); // Lấy trạng thái khóa học
+            var isChecked = $(this).is(':checked'); // Kiểm tra trạng thái checkbox
+            // Kiểm tra nếu khóa học bị từ chối, disable checkbox và không cho cập nhật
+            if (courseStatus === 'rejected') {
+                $(this).prop('checked', !isChecked); // Đảo lại trạng thái checkbox
+                Toastify({
+                    text: "Khóa học đã bị từ chối, không thể cập nhật.",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return; // Dừng function, không gửi AJAX
+            }
+            var updateUrl = "{{ route('admin.courses.updatePopular', ':courseID') }}".replace(':courseID',
+                courseID);
+
+            $.ajax({
+                type: "PUT",
+                url: updateUrl,
+                data: {
+                    is_popular: isChecked ? 1 : 0, // Gửi giá trị 1 nếu checked, 0 nếu không
+                    _token: "{{ csrf_token() }}" // Thêm CSRF token để tránh lỗi 419
+                },
+                success: function(response) {
+                    Toastify({
+                        text: "Cập nhật khóa học phổ biến thành công",
+                        backgroundColor: "green",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                },
+                error: function(xhr) {
+                    Toastify({
+                        text: response.message,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                }
             });
         });
     </script>
