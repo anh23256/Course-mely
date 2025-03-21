@@ -10,6 +10,7 @@ use App\Models\SpinHistory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SpinController extends Controller
 {
@@ -208,7 +209,18 @@ class SpinController extends Controller
         $response = ['reward' => $reward['name']];
         if ($reward['type'] === 'coupon') {
             $coupon = Coupon::find($reward['id']);
+            // Lưu vào bảng
+            DB::table('coupon_uses')->insert([
+                'user_id' => $user->id,
+                'coupon_id' => $coupon->id,
+                'status' => 'unused', // Ban đầu chưa sử dụng
+                'applied_at' => now(),
+                'expired_at' => $coupon->expire_date, // Hạn 7 ngày, có thể đổi
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             $response['coupon_code'] = $coupon->code;
+            $response['expired_at'] = $coupon->expire_date;
         }
 
         return response()->json($response);

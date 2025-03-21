@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\FilterTrait;
 use Illuminate\Http\Request;
 
 class MembershipUserController extends Controller
 {
+    use FilterTrait;
+  
     public function index(Request $request)
     {
         $title = 'Quản lý thành viên';
@@ -43,9 +46,11 @@ class MembershipUserController extends Controller
 
     private function filter(Request $request, $query)
     {
+
         $filters = [
             'created_at' => ['queryWhere' => '>='],
             'updated_at' => ['queryWhere' => '<='],
+            'course_name_approved' => null,
         ];
 
         $query = $this->filterTrait($filters, $request, $query);

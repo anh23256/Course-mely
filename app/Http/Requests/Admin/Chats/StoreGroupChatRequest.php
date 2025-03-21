@@ -22,9 +22,9 @@ class StoreGroupChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'nullable|string|max:255',  // Kiểm tra tên nhóm
-            'members' => 'required|array',  // Kiểm tra danh sách thành viên
-            'members.*' => 'exists:users,id',  // Kiểm tra từng thành viên có tồn tại trong bảng users
+            'name' => ['required', 'string', 'max:255'],
+            'members' => ['required', 'array', 'min:2'],
+            'members.*' => ['exists:users,id'],
         ];
     }
     public function messages()
@@ -32,9 +32,10 @@ class StoreGroupChatRequest extends FormRequest
         return [
             'name.string' =>'Tên phải là chuỗi',
             'name.max'=> 'Tên không được quá 255 kí tự',
-            'members.required' =>'Thành viên là bắt buộc',
-            'members.array' =>'Thành viên phải là một mảng',
-            'members.*.exists'=>'Thành viên chưa tồn tại',
+            'members.required' => 'Nhóm phải có ít nhất 2 thành viên khác.',
+            'members.array' => 'Danh sách thành viên không hợp lệ.',
+            'members.min' => 'Nhóm phải có ít nhất 3 người (bao gồm bạn).',
+            'members.*.exists' => 'Thành viên không hợp lệ.',
         ];
     }
 }

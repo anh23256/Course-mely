@@ -281,7 +281,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
-
+            Route::put('{id}/update-popular', [CourseController::class, 'updatePopular'])->name('updatePopular');
         });
 
         #============================== ROUTE APPROVAL =============================
