@@ -38,6 +38,7 @@ class ChatController extends Controller
     public function index()
     {
         $data = $this->getAdminsAndChannels();
+
         return view(
             'chats.chat-realtime',
             [
@@ -237,17 +238,27 @@ class ChatController extends Controller
         })->where('id', '!=', auth()->id())->get();
 
         $channels = Conversation::whereHas('users', function ($query) {
-            $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
-        })->get();
+            $query->where('user_id', auth()->id());
+        })->orderByDesc(
+            Message::whereColumn('conversation_id', 'conversations.id')
+                ->select('created_at')
+                ->latest()
+                ->take(1)
+        )->limit(50)->get();
+
+        $firstChanel = optional($channels->select(['type', 'id'])->first());
+
         $users = User::all();
-        $type = Conversation::where('type', 'direct')->get();
-        $group = Conversation::where('type', 'group')->get(); // Lọc loại "group"
+        $type = $channels->where('type', 'direct');
+        $group = $channels->where('type', 'group');
+
         return [
             'admins' => $admins,
             'channels' => $channels,
             'users' => $users,
             'type' => $type,
             'group' => $group,
+            'firstChanel' => $firstChanel
         ];
     }
     public function getGroupInfo(Request $request)
@@ -323,10 +334,10 @@ class ChatController extends Controller
     }
     public function getGroupMessages($conversationId)
     {
-        $messages = Message::where('conversation_id', $conversationId)
-            ->with('sender', 'media') // Lấy thông tin người gửi
-            ->orderBy('created_at', 'asc')
-            ->get();
+        $messages =  Message::where('conversation_id', $conversationId)
+            ->with('sender', 'media')
+            ->latest()
+            ->limit(80)->get()->sortBy('created_at')->values()->toArray();
 
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
@@ -366,14 +377,13 @@ class ChatController extends Controller
             'message' => 'Thành viên đã được thêm vào nhóm.',
         ]);
     }
-
-
     public function getSentFiles($conversationId)
     {
         try {
-            $files = Media::whereHas('message', function ($query) use ($conversationId) {
-                $query->where('conversation_id', $conversationId);
-            })->orderBy('created_at', 'desc')->get();
+            $files = Message::where('conversation_id', $conversationId)
+                ->whereNotNull('meta_data')
+                ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
+                ->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 'status' => 'success',

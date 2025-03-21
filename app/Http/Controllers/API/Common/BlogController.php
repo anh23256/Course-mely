@@ -184,7 +184,7 @@ class BlogController extends Controller
                 'views' => $post->views,
                 'comment_count' => $commentCount,
                 'published_at' => $post->published_at,
-                'users' => [
+                'user' => [
                     'id' => $post->user->id,
                     'name' => $post->user->name,
                     'avatar' => $post->user->avatar,
@@ -246,7 +246,7 @@ class BlogController extends Controller
                     'views' => $post->views,
                     'comment_count' => $commentCount,
                     'published_at' => $post->published_at,
-                    'users' => [
+                    'user' => [
                         'id' => $post->user->id,
                         'name' => $post->user->name,
                         'avatar' => $post->user->avatar,
@@ -259,7 +259,16 @@ class BlogController extends Controller
                     ]
                 ];
             });
-            return $this->respondOk('Danh sách bài viết với thẻ:', $filteredBlogs);
+            return response()->json([
+                'message' => 'Danh sách bài viết với thẻ:',
+                'data' => $filteredBlogs,
+                'pagination' => [
+                    'total' => $posts->total(),
+                    'per_page' => $posts->perPage(),
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             $this->logError($e);
 

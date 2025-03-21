@@ -277,10 +277,13 @@ class CourseController
 {
     try {
         $categories = Category::query()
+        
             ->select('id', 'name', 'slug', 'parent_id')
             ->with([
                 'courses' => function ($query) {
                     $query->select(
+                        'courses.id',
+                        'courses.user_id',
                         'courses.name',
                         'courses.code',
                         'courses.category_id',
@@ -298,7 +301,9 @@ class CourseController
                     ->join('chapters', 'chapters.course_id', '=', 'courses.id')
                     ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
                     ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
-                    ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id') 
+                    ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
+                    ->leftJoin('users', 'users.id', '=', 'courses.user_id') 
+                    ->addSelect('users.code as creator_code', 'users.name as creator_name', 'users.email as creator_email','users.avatar as creator_avatar')
                     ->where('courses.visibility', '=', 'public')
                     ->where('courses.status', '=', 'approved') 
                     ->whereRaw('courses.id IN (
@@ -308,7 +313,7 @@ class CourseController
                             WHERE visibility = "public" AND status = "approved" 
                         ) as ranked WHERE row_num <= 7
                     )')
-                    ->groupBy('courses.name', 'courses.slug', 'courses.code', 'courses.is_free');
+                    ->groupBy('courses.name', 'courses.slug', 'courses.code', 'courses.is_free','users.code', 'users.name', 'users.email','users.avatar');
                 },
             ])
             ->whereHas('courses', function ($query) {

@@ -463,7 +463,7 @@
                                                                         <div class="row w-100" id="addClass">
                                                                             <li class="nav-item col-6" id="OnetoOne"
                                                                                 role="presentation">
-                                                                                <button class="nav-link active"
+                                                                                <button class="nav-link active w-100"
                                                                                     id="members-tab" data-bs-toggle="tab"
                                                                                     data-bs-target="#members"
                                                                                     type="button" role="tab"
@@ -474,8 +474,8 @@
                                                                             </li>
                                                                             <li class="nav-item col-6" id="filetofile"
                                                                                 role="presentation">
-                                                                                <button class="nav-link" id="files-tab"
-                                                                                    data-bs-toggle="tab"
+                                                                                <button class="nav-link w-100"
+                                                                                    id="files-tab" data-bs-toggle="tab"
                                                                                     data-bs-target="#files" type="button"
                                                                                     role="tab" aria-controls="files"
                                                                                     aria-selected="false">
@@ -496,7 +496,7 @@
                                                                         </div>
 
                                                                         <!-- File đã gửi -->
-                                                                        <div class="tab-pane fade border-top border-top-dashed p-3"
+                                                                        <div class="files-chat-message tab-pane fade border-top border-top-dashed p-3"
                                                                             id="files" role="tabpanel"
                                                                             aria-labelledby="files-tab">
                                                                             <!-- Tabs con -->
@@ -505,7 +505,8 @@
                                                                                 <div class="row w-100">
                                                                                     <li class="nav-item col-6"
                                                                                         role="presentation">
-                                                                                        <button class="nav-link active"
+                                                                                        <button
+                                                                                            class="nav-link active w-100"
                                                                                             id="media-tab"
                                                                                             data-bs-toggle="tab"
                                                                                             data-bs-target="#media"
@@ -517,7 +518,7 @@
                                                                                     </li>
                                                                                     <li class="nav-item col-6"
                                                                                         role="presentation">
-                                                                                        <button class="nav-link"
+                                                                                        <button class="nav-link w-100"
                                                                                             id="documents-tab"
                                                                                             data-bs-toggle="tab"
                                                                                             data-bs-target="#documents"
@@ -778,9 +779,15 @@
 @endsection
 
 @push('page-scripts')
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/fg-emoji-picker/fgEmojiPicker.js') }}"></script>
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
         const userId = "{{ auth()->id() }}"; // Truyền id người dùng từ Laravel sang JavaScript
+        const firstChanelId = "{{ $data['firstChanel']['id'] }}";
+        const firstChanelType = "{{ $data['firstChanel']['type'] }}";
+
         document.addEventListener("DOMContentLoaded", function() {
             const selectElement = document.getElementById("received");
 
@@ -802,11 +809,7 @@
                 avatarElement.src = avatarUrl;
             });
         });
-    </script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/fg-emoji-picker/fgEmojiPicker.js') }}"></script>
-    <script>
+
         function initIcons() {
             document.addEventListener("DOMContentLoaded", function() {
                 let emojiButton = document.getElementById("emoji-btn");
@@ -836,7 +839,6 @@
                         }
                     }, 100);
                 });
-                console.log("Hàm initIcons đã chạy thành công!");
             });
         }
         initIcons();
@@ -901,8 +903,7 @@
                 document.getElementById("chatinput-form").reset();
             }
         });
-    </script>
-    <script>
+
         $(document).ready(function() {
             $('#groupMembers').select2({
                 placeholder: "Chọn thành viên thêm vào nhóm",
@@ -981,8 +982,6 @@
                 );
             }
         });
-    </script>
-    <script>
         // Tạo chat đơn
         var currentConversationId = null;
         $(document).ready(function() {
@@ -1040,39 +1039,7 @@
                 var channelId = $(this).data('private-id'); // Lấy ID của nhóm chat
 
                 // Gửi yêu cầu AJAX để lấy thông tin nhóm
-                $.ajax({
-                    url: "{{ route('admin.chats.getUserInfo') }}", // Endpoint API để lấy thông tin nhóm
-                    method: 'GET',
-                    data: {
-                        id: channelId
-                    },
-                    success: function(response) {
-                        console.log(response);
-                        if (response) {
-
-                            // Cập nhật tên nhóm và số thành viên
-                            $('.nameUser').text(response.data.nameUser);
-                            $('.imageUser').attr('src', response.data.avatarUser);
-                            $('.getID').attr('data-conversation-id', response.data.channelId);
-                            $('#memberCount').empty();
-                            $('#membersList').empty();
-                            $('#OnetoOne').hide();
-                            $('#filetofile').removeClass('col-6');
-                            $('#filetofile').addClass('col-12');
-
-                            $('.show-status-user').attr('data-user-id', response.data
-                                .sender_id);
-
-                            loadMessages(response.data.direct.id);
-                            loadSentFiles(response.data.direct.id);
-                        } else {
-                            alert('Không thể lấy thông tin nhóm');
-                        }
-                    },
-                    error: function() {
-                        alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
-                    }
-                });
+                getUserInfo(channelId);
             });
 
             // Khi người dùng chọn một nhóm
@@ -1101,17 +1068,21 @@
                     method: "POST",
                     data: formData,
                     success: function(response) {
-                        if (response.status == 'success') {
-                            // Cập nhật lại dữ liệu nhóm và admin trên giao diện
+                        if (response.status === 'success') {
                             $('#conversationList').html(response.data.channels);
-                            alert(response.message); // Hiển thị thông báo thành công
-                            window.location.href = "{{ route('admin.chats.index') }}";
+
+                            toastr.success(response.message, "Thành công!");
+
+                            setTimeout(() => {
+                                window.location.href =
+                                    "{{ route('admin.chats.index') }}";
+                            }, 1500);
                         } else {
-                            alert(response.message); // Hiển thị thông báo lỗi
+                            toastr.error(response.message, "Lỗi!");
                         }
                     },
                     error: function() {
-                        alert("Có lỗi xảy ra!"); // Hiển thị lỗi
+                        toastr.error("Có lỗi xảy ra, vui lòng thử lại!", "Lỗi!");
                     }
                 });
             });
@@ -1122,68 +1093,7 @@
                 var channelId = $(this).data('group-id'); // Lấy ID của nhóm chat
 
                 // Gửi yêu cầu AJAX để lấy thông tin nhóm
-                $.ajax({
-                    url: "{{ route('admin.chats.getGroupInfo') }}", // Endpoint API để lấy thông tin nhóm
-                    method: 'GET',
-                    data: {
-                        id: channelId
-                    },
-                    success: function(response) {
-                        console.log(response);
-                        if (response) {
-
-                            // Cập nhật tên nhóm và số thành viên
-                            $('.name').text(response.data.name);
-                            $('#memberCount').text(response.data.memberCount);
-                            $('.avatar').attr('src', response.data.avatar);
-                            $('.getID').attr('data-conversation-id', response.data.channelId);
-                            $('#OnetoOne').show();
-                            $('#filetofile').removeClass('col-12');
-                            $('#filetofile').addClass('col-6');
-                            loadMessages(response.data.group.id);
-                            loadSentFiles(response.data.group.id);
-                            let membersHtml = '';
-                            response.data.member.forEach(function(member) {
-                                membersHtml += ` <li class="list-group-item">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="flex-shrink-0">
-                                                            <img src="${member.avatar}" alt="" class="avatar-xs rounded-circle">
-                                                        </div>
-                                                        <div class="flex-grow-1 ms-2">
-                                                            ${member.name}
-                                                        </div>
-                                                        <button class="btn avatar-xs p-0 getID" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false"
-                                                            data-conversation-id="${channelId}"
-                                                            data-user-id="${member.user_id}"
-                                                            onclick="kickUser(this)">
-                                                            <span class="avatar-title bg-light text-body rounded">
-                                                                <i
-                                                                    class="ri-delete-bin-5-line align-bottom text-muted"></i>
-                                                            </span>
-                                                        </button>`;
-                                // Kiểm tra nếu người dùng là trưởng nhóm
-                                if (member.user_id == response.data.group.owner_id) {
-                                    membersHtml +=
-                                        `<p style="padding-top:12px">Trưởng nhóm</p>`; // Thêm dòng "Trưởng nhóm" nếu đúng
-                                }
-
-                                membersHtml += `</div>
-                                                </li>`;
-
-                            });
-                            $('#membersList').html(
-                                membersHtml); // Cập nhật danh sách thành viên vào giao diện
-
-                        } else {
-                            alert('Không thể lấy thông tin nhóm');
-                        }
-                    },
-                    error: function() {
-                        alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
-                    }
-                });
+                getGroupInfo(channelId);
             });
             // Khi người dùng chọn một nhóm
             $('.group-button').click(function() {
@@ -1223,36 +1133,29 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            // Cập nhật giao diện nếu thành viên được thêm thành công
-                            alert('Thành viên đã được thêm vào nhóm!');
-
-                            // Bạn có thể cập nhật danh sách thành viên ở frontend, ví dụ như thêm thành viên vào danh sách nhóm chat.
+                            toastr.success("Thành viên đã được thêm vào nhóm!", "Thành công!");
 
                             // Đóng modal sau khi thêm thành viên
                             $('#myModal').modal('hide');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.log(xhr.responseText);
-
+                    error: function(xhr) {
                         if (xhr.status === 400) {
                             let res = JSON.parse(xhr.responseText);
 
-                            // Kiểm tra nếu response trả về trường duplicate_members
                             if (res.success === false && res.duplicate_members) {
                                 let existingMembersList = res.duplicate_members.join(', ');
-                                alert(
-                                    `Thành viên đã tồn tại trong nhóm: ${existingMembersList}`
-                                );
+                                toastr.warning(
+                                    `Thành viên đã tồn tại trong nhóm: ${existingMembersList}`,
+                                    "Cảnh báo!");
                             } else {
-                                // Nếu không phải lỗi thành viên trùng lặp, hiển thị thông báo chung
-                                alert(res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                                toastr.error(res.message || "Có lỗi xảy ra, vui lòng thử lại.",
+                                    "Lỗi!");
                             }
                         } else {
-                            alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                            toastr.error("Đã có lỗi xảy ra. Vui lòng thử lại.", "Lỗi!");
                         }
                     }
-
                 });
             });
             // Khi người dùng nhấn gửi tin nhắn
@@ -1260,14 +1163,14 @@
                 e.preventDefault();
                 let content = $('#messageInput').val();
                 let parentId = $('#parentMessageId').val();
-                let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
+                let metaData = null;
                 let formData = new FormData();
                 let messageTypes = [];
 
                 formData.append('conversation_id', currentConversationId);
                 formData.append('content', content);
                 formData.append('parent_id', parentId || '');
-                
+
                 let fileInput = $('#fileInput')[0].files;
 
                 if (fileInput.length > 0) {
@@ -1290,7 +1193,6 @@
 
                 let messageTypeString = messageTypes.join(',');
 
-                // Nếu không có file, tin nhắn là text
                 if (messageTypeString === '') {
                     messageTypeString = 'text';
                 }
@@ -1308,182 +1210,253 @@
                         success: function(response) {
 
                             if (response.status == 'success') {
-                                $('#messageInput').val(''); // Xóa nội dung nhập
-                                $('#fileInput').val(''); // Reset input file
-                                $('#previewContainer').hide(); // Ẩn preview ảnh sau khi gửi 
+
+                                $('#messageInput').val('');
+                                $('#fileInput').val('');
+                                $('#previewContainer').hide();
                                 $('#messagesList').append(renderMessage(response));
                                 scrollToBottom();
+
+                                if (response.message.meta_data && response.message.meta_data
+                                    .length > 0) {
+                                    const mediaHtml = [];
+                                    const documentHtml = [];
+
+                                    response.message.meta_data.forEach(
+                                        media => {
+                                            let fileName = media.file_name;
+                                            let mediaFile = media.file_path;
+                                            let fileType = media.file_type;
+                                            let fileExt = fileName.split('.').pop()
+                                                .toLowerCase();
+                                            let fileSize = formatFileSize(media.file_size);
+                                            let fileIcon = getFileThumbnail(fileExt);
+                                            let storagePath = `/storage/${mediaFile}`;
+
+                                            if (fileType.startsWith('image')) {
+                                                mediaHtml.push(`
+                                                    <div class="gallery-item">
+                                                        <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; position: relative">
+                                                            <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                                                style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                                                <i class='bx bx-download'></i>
+                                                            </a> 
+                                                            <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; height:100%; border-radius: 8px; object-fit:cover;">
+                                                        </div>
+                                                    </div>`);
+                                            } else if (fileType.startsWith('video')) {
+                                                mediaHtml.push(`
+                                                    <div class="gallery-item">
+                                                        <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                                            <video controls style="max-width:100%; height:200px; border-radius: 8px;">
+                                                                <source src="${storagePath}" type="${fileType}">
+                                                            </video>                                
+                                                        </div>
+                                                    </div>`);
+                                            } else {
+                                                documentHtml.push(`
+                                                    <div class="gallery-item">
+                                                        <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                                            <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                                            <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                                                <div class="col-9">
+                                                                    <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                                                                    <p class="text-muted">${fileSize}</p>
+                                                                </div>
+                                                                <div class="col-2 d-flex align-items-center justify-content-center">
+                                                                    <a href="${storagePath}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                                        <i class='fs-4 bx bx-download'></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>`);
+                                            }
+                                        });
+
+                                    $('#mediaFilesList').prepend(mediaHtml.join(''));
+                                    $('#documentFilesList').prepend(documentHtml.join(''));
+                                }
                             }
                         },
                         error: function(xhr) {
-                            alert("Gửi tin nhắn thất bại, thử lại!");
-                            console.error(xhr.responseText);
+                            if (xhr.status === 422) {
+                                let errors = xhr.responseJSON.errors;
+                                Object.values(errors).forEach(err => {
+                                    toastr.error(err[0]);
+                                });
+                            } else {
+                                toastr.error("Gửi tin nhắn thất bại, vui lòng thử lại!");
+                            }
                         }
                     });
                 } else {
                     alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
             });
+
+            function kickUser(button) {
+                let groupId = button.getAttribute("data-conversation-id");
+                let userId = button.getAttribute("data-user-id");
+
+                if (!groupId || !userId) {
+                    Toastify({
+                        text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                    return;
+                }
+                $.ajax({
+                    url: 'http://127.0.0.1:8000/admin/chats/kick-member',
+                    type: 'POST',
+                    data: {
+                        group_id: groupId,
+                        user_id: userId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "green",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "red",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = "Đã có lỗi xảy ra!";
+                        if (xhr.status === 403) {
+                            errorMessage = "Bạn không có quyền kick người này!";
+                        }
+                        Toastify({
+                            text: errorMessage,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                });
+            }
+
+            function dissolveGroup(a) {
+                let groupId = a.getAttribute("data-conversation-id");
+
+                if (!groupId) {
+                    Toastify({
+                        text: "Lỗi: Không tìm thấy nhóm",
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                    return;
+                }
+                if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
+
+                $.ajax({
+                    url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
+                    type: 'POST',
+                    data: {
+                        group_id: groupId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Toastify({
+                                text: "Nhóm đã được giải tán!",
+                                backgroundColor: "green",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                            window.location.reload();
+                        } else {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "red",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = "Đã có lỗi xảy ra!";
+                        if (xhr.status === 403) {
+                            errorMessage = "Bạn không có quyền giải tán nhóm!";
+                        }
+                        Toastify({
+                            text: errorMessage,
+                            backgroundColor: "red",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    }
+                });
+            }
+
+            function deleteConversation(button) {
+                const conversationId = button.getAttribute('data-conversation-id');
+
+                if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                location
+                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        });
+                }
+            }
+
+            function leaveConversation(button) {
+                const conversationId = button.getAttribute('data-conversation-id');
+
+                if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
+                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                location
+                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        });
+                }
+            }
+
         });
-
-        function kickUser(button) {
-            let groupId = button.getAttribute("data-conversation-id");
-            let userId = button.getAttribute("data-user-id");
-
-            if (!groupId || !userId) {
-                Toastify({
-                    text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
-                    backgroundColor: "red",
-                    duration: 3000,
-                    close: true
-                }).showToast();
-                return;
-            }
-            $.ajax({
-                url: 'http://127.0.0.1:8000/admin/chats/kick-member',
-                type: 'POST',
-                data: {
-                    group_id: groupId,
-                    user_id: userId
-                },
-                success: function(response) {
-                    if (response.success) {
-                        Toastify({
-                            text: response.message,
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                    } else {
-                        Toastify({
-                            text: response.message,
-                            backgroundColor: "red",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                    }
-                },
-                error: function(xhr) {
-                    let errorMessage = "Đã có lỗi xảy ra!";
-                    if (xhr.status === 403) {
-                        errorMessage = "Bạn không có quyền kick người này!";
-                    }
-                    Toastify({
-                        text: errorMessage,
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
-                }
-            });
-        }
-
-        function dissolveGroup(a) {
-            let groupId = a.getAttribute("data-conversation-id");
-
-            if (!groupId) {
-                Toastify({
-                    text: "Lỗi: Không tìm thấy nhóm",
-                    backgroundColor: "red",
-                    duration: 3000,
-                    close: true
-                }).showToast();
-                return;
-            }
-            if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
-
-            $.ajax({
-                url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
-                type: 'POST',
-                data: {
-                    group_id: groupId
-                },
-                success: function(response) {
-                    if (response.success) {
-                        Toastify({
-                            text: "Nhóm đã được giải tán!",
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                        window.location.reload();
-                    } else {
-                        Toastify({
-                            text: response.message,
-                            backgroundColor: "red",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                    }
-                },
-                error: function(xhr) {
-                    let errorMessage = "Đã có lỗi xảy ra!";
-                    if (xhr.status === 403) {
-                        errorMessage = "Bạn không có quyền giải tán nhóm!";
-                    }
-                    Toastify({
-                        text: errorMessage,
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
-                }
-            });
-        }
-
-        function deleteConversation(button) {
-            const conversationId = button.getAttribute('data-conversation-id');
-
-            if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
-                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            alert(data.message);
-                            location
-                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    });
-            }
-        }
-
-        function leaveConversation(button) {
-            const conversationId = button.getAttribute('data-conversation-id');
-
-            if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
-                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            alert(data.message);
-                            location
-                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    });
-            }
-        }
 
         function getFileThumbnail(ext) {
             return `/assets/images/icons/${ext}.png`;
@@ -1491,92 +1464,87 @@
 
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
+                console.log(response);
+
                 if (response.status === 'success') {
 
                     // Lấy tất cả các tin nhắn
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
-                    const messagesHtml = response.messages.map(message => {
-
-                        // Kiểm tra ID người gửi và người nhận
-                        const messageClass = message.sender.id == userId ? 'sender' :
-                            'received';
+                    const messagesHtml = response.messages.flatMap(message => {
+                        const messageClass = message.sender.id == userId ? 'sender' : 'received';
                         const time = formatTime(message.created_at);
-                        let messageContent = `<p>${message.content || ''}</p>`; // Nội dung tin nhắn
-                        let mediaPreview = ''; // Khu vực hiển thị file
+                        const messageContent = `<p>${message.content || ''}</p>`;
 
-                        try {
-                            if (message.media && message.media.length > 0) {
-                                message.media.forEach(media => {
-                                    let mediaFile = media.file_path;
-                                    let fileType = media.file_type;
-                                    let fileExt = mediaFile.split('.').pop().toLowerCase();
-                                    let fileSize = formatFileSize(media.file_size);
-                                    let fileIcon = getFileThumbnail(fileExt);
-                                    let fileName = mediaFile.split('/').pop();
+                        const mediaPreview = (message.meta_data || []).map(media => {
+                            const {
+                                file_name: fileName,
+                                file_path: filePath,
+                                file_type: fileType,
+                                file_size: fileSize
+                            } = media;
+                            const fileExt = fileName.split('.').pop().toLowerCase();
+                            const formattedSize = formatFileSize(fileSize);
+                            const fileIcon = getFileThumbnail(fileExt);
+                            const storagePath = `/storage/${filePath}`;
 
-                                    if (fileType.startsWith('image')) {
-                                        mediaPreview += `
-                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px; position: relative">
-                        <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
-                            <i class='bx bx-download'></i>
-                        </a> 
-                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
-                    </div>`;
-                                    } else if (fileType.startsWith('video')) {
-                                        mediaPreview += `
-                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                        <video controls style="max-width:100%; border-radius: 8px;">
-                            <source src="/storage/${mediaFile}" type="${fileType}">
-                        </video>                                
-                    </div>`;
-                                    } else if (fileType === 'application/pdf') {
-                                        mediaPreview += `
-                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
-                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
-                            <i class='bx bx-download'></i>
-                        </a>                                    
-                    </div>`;
-                                    } else {
-                                        mediaPreview += `
-                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
-                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
-                            <div class="col-9">
-                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
-                                <p class="text-muted">${fileSize}</p>
-                            </div>
-                            <div class="col-2 d-flex align-items-center justify-content-center">
-                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
-                                    <i class='fs-4 bx bx-download'></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>`;
-                                    }
-                                });
+                            if (fileType.startsWith('image')) {
+                                return `
+                                <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px; position: relative">
+                                    <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                        style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                        <i class='bx bx-download'></i>
+                                    </a> 
+                                    <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                                </div>`;
                             }
-                        } catch (error) {
-                            console.error("Lỗi lấy file:", error);
-                        }
+                            if (fileType.startsWith('video')) {
+                                return `
+                                <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                    <video controls style="max-width:100%; border-radius: 8px;">
+                                        <source src="${storagePath}" type="${fileType}">
+                                    </video>                                
+                                </div>`;
+                            }
+                            if (fileType === 'application/pdf') {
+                                return `
+                                <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                    <embed src="${storagePath}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">                               
+                                </div>`;
+                            }
+                            return `
+                            <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                    <div class="col-9">
+                                        <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                                        <p class="text-muted">${formattedSize}</p>
+                                    </div>
+                                    <div class="col-2 d-flex align-items-center justify-content-center">
+                                        <a href="${storagePath}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                            <i class='fs-4 bx bx-download'></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('');
 
                         return `
-                        <div class="message ${messageClass}" style="padding-top: 10px">
-                            <div class="message-avatar">
-                                <img src="${message.sender.avatar}" alt="avatar">
-                            </div>
-                            <div class="message-content">
-                                <div class="message-header">
-                                    <strong>${message.sender.name}</strong>
-                                    <span class="message-time">${time}</span>
+                            <div class="message ${messageClass}" style="padding-top: 10px">
+                                <div class="message-avatar">
+                                    <img src="${message.sender.avatar}" alt="avatar">
                                 </div>
-                                ${messageContent} 
-                                ${mediaPreview} <!-- Chứa tất cả file -->
-                            </div>
-                        </div>`;
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <strong>${message.sender.name}</strong>
+                                        <span class="message-time">${time}</span>
+                                    </div>
+                                    ${messageContent} 
+                                    ${mediaPreview} 
+                                </div>
+                            </div>`;
+                    }).join('');
 
-                    }).join(''); // Chuyển mảng thành chuỗi HTML
 
                     $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
                     $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
@@ -1588,89 +1556,92 @@
         }
 
         function loadSentFiles(conversationId) {
-            $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
-
+            $.get(`http://127.0.0.1:8000/admin/chats/get-sent-files/${conversationId}`, function(response) {
                 if (response.status === 'success') {
-                    $('#sentFilesList').html('');
+                    $('#sentFilesList, #documentFilesList, #mediaFilesList').html('');
 
                     if (response.files.length === 0) {
-                        $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
-                        $('#documentFilesList').html('<p>Chưa có file nào được gửi</p>');
-                        $('#mediaFilesList').html('<p>Chưa có file nào được gửi</p>')
+                        $('#sentFilesList, #documentFilesList, #mediaFilesList').html(
+                            '<p>Chưa có file nào được gửi</p>');
                         return;
                     }
+
                     let visibleImages = 6; // Số ảnh hiển thị ban đầu
-                    let allFiles = response.files; // Lưu toàn bộ danh sách ảnh
-                    function renderImages() {
-                        $('#sentFilesList').html(''); // Xóa nội dung cũ
-                        $('#documentFilesList').html('');
-                        $('#mediaFilesList').html('')
+                    let allFiles = response.files; // Lưu toàn bộ danh sách file
+
+                    function renderFiles() {
+                        $('#sentFilesList, #documentFilesList, #mediaFilesList').html('');
+
                         let filesToShow = allFiles.slice(0, visibleImages);
+
                         const mediaHtml = [];
                         const documentHtml = [];
-                        const filesHtml = filesToShow.map(file => {
-                            console.log(file);
-                            let mediaFile = file.file_path;
-                            let fileType = file.file_type;
-                            let fileExt = mediaFile.split('.').pop().toLowerCase();
-                            let mediaPreview = '';
-                            let fileSize = formatFileSize(file.file_size);
+
+                        filesToShow.flatMap(file => (file.meta_data || [])).forEach(media => {
+                            let fileName = media.file_name;
+                            let mediaFile = media.file_path;
+                            let fileType = media.file_type;
+                            let fileExt = fileName.split('.').pop().toLowerCase();
+                            let fileSize = formatFileSize(media.file_size);
                             let fileIcon = getFileThumbnail(fileExt);
+                            let storagePath = `/storage/${mediaFile}`;
 
                             if (fileType.startsWith('image')) {
-                                mediaPreview = `
-                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; display: flex; align-items: center; justify-content: center; position:relative;">
-                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                                        <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
-                                            <i class='bx bx-download'></i>
-                                        </a> 
-                                    </div>`;
-                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                                mediaHtml.push(`
+                        <div class="gallery-item">
+                            <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; position: relative">
+                                <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                    style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                                    <i class='bx bx-download'></i>
+                                </a> 
+                                <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; height:100%; border-radius: 8px; object-fit:cover;">
+                            </div>
+                        </div>`);
                             } else if (fileType.startsWith('video')) {
-                                mediaPreview = `
-                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; height: 200px;">
-                                        <video controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                                            <source src="/storage/${mediaFile}" type="${fileType}">
-                                        </video>                                
-                                    </div>`;
-                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                                mediaHtml.push(`
+                        <div class="gallery-item">
+                            <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                <video controls style="max-width:100%; height:200px; border-radius: 8px;">
+                                    <source src="${storagePath}" type="${fileType}">
+                                </video>                                
+                            </div>
+                        </div>`);
                             } else {
-                                let filePreview = `
-                                                <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                                    <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
-                                                    <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
-                                                        <div class="col-9">
-                                                            <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
-                                                            <p class="text-muted">${fileSize} KB</p>
-                                                        </div>
-                                                        <div class="col-2 d-flex align-items-center justify-content-center">
-                                                            <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
-                                                                <i class='fs-4 bx bx-download'></i>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>`;
-                                documentHtml.push(`<div class="gallery-item">${filePreview}</div>`);
+                                documentHtml.push(`
+                        <div class="gallery-item">
+                            <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                    <div class="col-9">
+                                        <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                                        <p class="text-muted">${fileSize}</p>
+                                    </div>
+                                    <div class="col-2 d-flex align-items-center justify-content-center">
+                                        <a href="${storagePath}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                            <i class='fs-4 bx bx-download'></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`);
                             }
-                        }).join('');
+                        });
 
                         $('#mediaFilesList').append(mediaHtml.join(''));
                         $('#documentFilesList').append(documentHtml.join(''));
 
                         if (visibleImages >= allFiles.length) {
-                            $('#loadMore').hide(); // Ẩn nút khi không còn ảnh để load
+                            $('#loadMore').hide(); // Ẩn nút nếu không còn ảnh
                         } else {
                             $('#loadMore').show(); // Hiển thị nút nếu còn ảnh
                         }
                     }
 
-                    // Render ảnh ban đầu
-                    renderImages();
+                    renderFiles();
 
-                    // Xử lý khi bấm nút "Xem thêm"
                     $('#loadMore').off('click').on('click', function() {
                         visibleImages += 6;
-                        renderImages();
+                        renderFiles();
                     });
                 }
             });
@@ -1729,18 +1700,18 @@
         function renderMessage(response) {
             const messageClass = response.message.sender.id == userId ? 'sender' : 'received';
             const time = formatTime(response.message.created_at);
-            let messageContent = '';
+            let messageContent = `<p>${response.message.content || ''}</p>`;
             let mediaPreview = '';
 
             try {
-                if (response.message.media && response.message.media.length > 0) {
-                    response.message.media.forEach(media => {
+                if (response.message.meta_data && response.message.meta_data.length > 0) {
+                    response.message.meta_data.forEach(media => {
+                        let fileName = media.file_name;
                         let mediaFile = media.file_path;
                         let fileType = media.file_type;
-                        let fileExt = mediaFile.split('.').pop().toLowerCase();
+                        let fileExt = fileName.split('.').pop().toLowerCase();
                         let fileSize = formatFileSize(media.file_size);
                         let fileIcon = getFileThumbnail(fileExt);
-                        let fileName = mediaFile.split('/').pop();
 
                         if (fileType.startsWith('image')) {
                             mediaPreview += `
@@ -1782,7 +1753,6 @@
                     });
                 }
             } catch (error) {
-                console.error("Lỗi lấy file:", error);
                 messageContent = `<p>${message.content}</p>`;
             }
 
@@ -1819,6 +1789,126 @@
             if (userElement.length) {
                 userElement.text(status == 'online' ? '🟢' : '🔴');
             }
+        }
+
+        function getUserInfo(channelId) {
+            $.ajax({
+                url: "{{ route('admin.chats.getUserInfo') }}",
+                method: 'GET',
+                data: {
+                    id: channelId
+                },
+                success: function(response) {
+                    console.log(response);
+                    if (response) {
+
+                        // Cập nhật tên nhóm và số thành viên
+                        $('.nameUser').text(response.data.nameUser);
+                        $('.imageUser').attr('src', response.data.avatarUser);
+                        $('.getID').attr('data-conversation-id', response.data.channelId);
+                        $('#memberCount').empty();
+                        $('#membersList').empty();
+                        $('#OnetoOne').hide();
+                        $('#filetofile').removeClass('col-6');
+                        $('#filetofile').addClass('col-12');
+                        $('.files-chat-message').addClass('active show');
+                        $('#media-tab').addClass('active');
+                        $('#documents-tab').removeClass('active');
+                        $('#files-tab').addClass('active');
+                        $('#members-tab').removeClass('active');
+
+                        loadMessages(response.data.direct.id);
+                        loadSentFiles(response.data.direct.id);
+                    } else {
+                        alert('Không thể lấy thông tin nhóm');
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
+                }
+            });
+        }
+
+        function getGroupInfo(channelId) {
+            $.ajax({
+                url: "{{ route('admin.chats.getGroupInfo') }}",
+                method: 'GET',
+                data: {
+                    id: channelId
+                },
+                success: function(response) {
+                    if (response) {
+
+                        // Cập nhật tên nhóm và số thành viên
+                        $('.name').text(response.data.name);
+                        $('#memberCount').text(response.data.memberCount);
+                        $('.avatar').attr('src', response.data.avatar);
+                        $('.getID').attr('data-conversation-id', response.data.channelId);
+                        $('#OnetoOne').show();
+                        $('#filetofile').removeClass('col-12');
+                        $('#filetofile').addClass('col-6');
+                        $('#files-tab').removeClass('active');
+                        $('#members-tab').addClass('active');
+                        $('.files-chat-message').removeClass('active show');
+                        $('#media-tab').addClass('active');
+                        $('#documents-tab').removeClass('active');
+
+                        loadMessages(response.data.group.id);
+                        loadSentFiles(response.data.group.id);
+                        let membersHtml = '';
+                        response.data.member.forEach(function(member) {
+                            membersHtml += ` <li class="list-group-item">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <img src="${member.avatar}" alt="" class="avatar-xs rounded-circle">
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-2">
+                                                            ${member.name}
+                                                        </div>
+                                                        <button class="btn avatar-xs p-0 getID" type="button"
+                                                            data-bs-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false"
+                                                            data-conversation-id="${channelId}"
+                                                            data-user-id="${member.user_id}"
+                                                            onclick="kickUser(this)">
+                                                            <span class="avatar-title bg-light text-body rounded">
+                                                                <i
+                                                                    class="ri-delete-bin-5-line align-bottom text-muted"></i>
+                                                            </span>
+                                                        </button>`;
+                            // Kiểm tra nếu người dùng là trưởng nhóm
+                            if (member.user_id == response.data.group.owner_id) {
+                                membersHtml +=
+                                    `<p style="padding-top:12px">Trưởng nhóm</p>`; // Thêm dòng "Trưởng nhóm" nếu đúng
+                            }
+
+                            membersHtml += `</div>
+                                                </li>`;
+
+                        });
+                        $('#membersList').html(
+                            membersHtml); // Cập nhật danh sách thành viên vào giao diện
+
+                    } else {
+                        alert('Không thể lấy thông tin nhóm');
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra trong quá trình lấy dữ liệu');
+                }
+            });
+        }
+
+        if (firstChanelId && firstChanelType) {
+            currentConversationId = firstChanelId;
+            if (firstChanelType == 'group') {
+                getGroupInfo(firstChanelId);
+            } else {
+                getUserInfo(firstChanelId);
+            }
+
+            loadMessages(firstChanelId);
+            loadSentFiles(firstChanelId);
         }
     </script>
 @endpush

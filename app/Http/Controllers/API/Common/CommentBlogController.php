@@ -137,28 +137,28 @@ class CommentBlogController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             // Kiểm tra quyền truy cập của người dùng
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
-    
+
             // Lấy dữ liệu đã validated từ request
             $data = $request->validated();
-    
+
             // Tìm bình luận cha (comment parent)
             $parentComment = Comment::find($commentId);
-    
+
             // Kiểm tra nếu không tìm thấy bình luận cha
             if (!$parentComment) {
                 return $this->respondNotFound('Không có bình luận cha');
             }
-    
+
             // Kiểm tra xem content có hợp lệ không
             if (empty($data['content'])) {
                 return $this->respondBadRequest('Nội dung không được để trống');
             }
-    
+
             // Tạo bình luận phản hồi
             $reply = Comment::create([
                 'user_id' => $user->id,
@@ -167,7 +167,7 @@ class CommentBlogController extends Controller
                 'commentable_id' => $parentComment->commentable_id, // Lưu commentable_id như của bình luận cha
                 'commentable_type' => $parentComment->commentable_type, // Lưu commentable_type như của bình luận cha
             ]);
-    
+
             return $this->respondCreated('Phản hồi bình luận thành công', $reply);
         } catch (\Exception $e) {
             // Log lỗi và trả về thông báo lỗi server
@@ -175,7 +175,7 @@ class CommentBlogController extends Controller
             return $this->respondServerError();
         }
     }
-    
+
 
     public function deleteComment(string $commentId)
     {
@@ -193,17 +193,18 @@ class CommentBlogController extends Controller
             }
 
             $isRootComment = $comment->parent_id === null;
+            $isAdmin = $user->role === 'admin'; // Giả sử có cột role trong bảng users
 
-            if ($isRootComment && $comment->user_id !== $user->id) {
-                return $this->respondForbidden('Bạn không có quyền xóa bình luận gốc này');
-            }
+            if (!$isAdmin) {
+                // Nếu là bình luận gốc, chỉ cho phép xóa nếu không có phản hồi
+                if ($isRootComment && $comment->replies()->count() > 0) {
+                    return $this->respondForbidden('Bình luận này có phản hồi và không thể xóa, chỉ có thể ẩn');
+                }
 
-            if (!$isRootComment && $comment->user_id !== $user->id) {
-                return $this->respondForbidden('Bạn không có quyền xóa bình luận này');
-            }
-
-            if ($isRootComment) {
-                $comment->replies()->delete();
+                // Chỉ cho phép xóa nếu là bình luận của chính họ
+                if ($comment->user_id !== $user->id) {
+                    return $this->respondForbidden('Bạn không có quyền xóa bình luận này');
+                }
             }
 
             $comment->delete();
@@ -215,5 +216,40 @@ class CommentBlogController extends Controller
             return $this->respondServerError();
         }
     }
+    public function updateComment(Request $request, string $commentId)
+    {
+        try {
+            $user = Auth::user();
 
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $comment = Comment::query()->find($commentId);
+
+            if (!$comment) {
+                return $this->respondNotFound('Không tìm thấy bình luận');
+            }
+
+            // Chỉ admin hoặc chủ bình luận mới có quyền sửa
+            if ($comment->user_id !== $user->id && $user->role !== 'admin') {
+                return $this->respondForbidden('Bạn không có quyền chỉnh sửa bình luận này');
+            }
+
+            // Validate nội dung mới
+            $validatedData = $request->validate([
+                'content' => 'required|string|max:500', // Giới hạn số ký tự nếu cần
+            ]);
+
+            $comment->update([
+                'content' => $validatedData['content'],
+                'updated_at' => now(),
+            ]);
+
+            return $this->respondOk('Cập nhật bình luận thành công');
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError();
+        }
+    }
 }
