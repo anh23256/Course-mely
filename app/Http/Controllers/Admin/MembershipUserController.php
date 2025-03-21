@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class MembershipUserController extends Controller
 {
-    //
     public function index(Request $request)
     {
         $title = 'Quản lý thành viên';

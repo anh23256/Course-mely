@@ -318,7 +318,6 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE memberships =============================
         Route::prefix('memberships')->as('memberships.')->group(function () {
             Route::get('/', [MembershipUserController::class, 'index'])->name('index');
-            
         });
 
 

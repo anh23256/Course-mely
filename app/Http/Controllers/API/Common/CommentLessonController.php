@@ -8,6 +8,7 @@ use App\Http\Requests\API\Lessons\StoreCommentLessonRequest;
 use App\Models\Chapter;
 use App\Models\Comment;
 use App\Models\Lesson;
+use App\Models\Reaction;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -20,10 +21,14 @@ class CommentLessonController extends Controller
     public function getCommentLesson(Request $request, $lessonId)
     {
         try {
+            $userId = Auth::id();
+
             $commentLessons = Comment::query()
                 ->with([
                     'user:id,name,avatar,email',
-                    'replies.user:id,name,email,avatar'
+                    'replies.user:id,name,email,avatar',
+                    'reactions.user:id,name,email,avatar',
+                    'replies.reactions.user:id,name,email,avatar'
                 ])
                 ->withCount('replies')
                 ->where('commentable_type', Lesson::class)
@@ -35,7 +40,20 @@ class CommentLessonController extends Controller
                 return $this->respondNotFound('Không tìm thấy bình luận');
             }
 
-            $filteredComments = $commentLessons->map(function ($comment) {
+            $filteredComments = $commentLessons->map(function ($comment) use ($userId) {
+                $reactions = $comment->reactions->where('reactable_id', $comment->id);
+                $likeCount = $reactions->where('type', 'like')->count();
+                $loveCount = $reactions->where('type', 'love')->count();
+                $hahaCount = $reactions->where('type', 'haha')->count();
+                $wowCount = $reactions->where('type', 'wow')->count();
+                $sadCount = $reactions->where('type', 'sad')->count();
+                $angryCount = $reactions->where('type', 'angry')->count();
+                $totalReactions = $likeCount + $loveCount + $hahaCount + $wowCount + $sadCount + $angryCount;
+
+                $userReaction = $reactions->first(function ($reaction) use ($userId) {
+                    return $reaction->user_id == $userId;
+                });
+
                 return [
                     'id' => $comment->id,
                     'content' => $comment->content,
@@ -47,7 +65,43 @@ class CommentLessonController extends Controller
                         'avatar' => $comment->user->avatar,
                     ],
                     'replies_count' => $comment->replies_count,
-                    'replies' => $comment->replies->map(function ($reply) {
+                    'reactions' => $comment->reactions->map(function ($reaction) {
+                        return [
+                            'id' => $reaction->id,
+                            'type' => $reaction->type,
+                            'user' => [
+                                'id' => $reaction->user->id,
+                                'name' => $reaction->user->name,
+                                'email' => $reaction->user->email,
+                                'avatar' => $reaction->user->avatar,
+                            ]
+                        ];
+                    }),
+                    'reaction_counts' => [
+                        'like' => $likeCount,
+                        'love' => $loveCount,
+                        'haha' => $hahaCount,
+                        'wow' => $wowCount,
+                        'sad' => $sadCount,
+                        'angry' => $angryCount,
+                        'total' => $totalReactions
+                    ],
+                    'user_reaction' => $userReaction ? $userReaction->type : null,
+                    'replies' => $comment->replies->map(function ($reply) use ($userId) {
+                        $replyReactions = $reply->reactions;
+                        $replyLikeCount = $replyReactions->where('type', 'like')->count();
+                        $replyLoveCount = $replyReactions->where('type', 'love')->count();
+                        $replyHahaCount = $replyReactions->where('type', 'haha')->count();
+                        $replyWowCount = $replyReactions->where('type', 'wow')->count();
+                        $replySadCount = $replyReactions->where('type', 'sad')->count();
+                        $replyAngryCount = $replyReactions->where('type', 'angry')->count();
+                        $replyTotalReactions = $replyLikeCount + $replyLoveCount + $replyHahaCount +
+                            $replyWowCount + $replySadCount + $replyAngryCount;
+
+                        $userReplyReaction = $replyReactions->first(function ($reaction) use ($userId) {
+                            return $reaction->user_id == $userId;
+                        });
+
                         return [
                             'id' => $reply->id,
                             'content' => $reply->content,
@@ -57,7 +111,29 @@ class CommentLessonController extends Controller
                                 'name' => $reply->user->name,
                                 'email' => $reply->user->email,
                                 'avatar' => $reply->user->avatar,
-                            ]
+                            ],
+                            'reactions' => $reply->reactions->map(function ($reaction) {
+                                return [
+                                    'id' => $reaction->id,
+                                    'type' => $reaction->type,
+                                    'user' => [
+                                        'id' => $reaction->user->id,
+                                        'name' => $reaction->user->name,
+                                        'email' => $reaction->user->email,
+                                        'avatar' => $reaction->user->avatar,
+                                    ]
+                                ];
+                            }),
+                            'reaction_counts' => [
+                                'like' => $replyLikeCount,
+                                'love' => $replyLoveCount,
+                                'haha' => $replyHahaCount,
+                                'wow' => $replyWowCount,
+                                'sad' => $replySadCount,
+                                'angry' => $replyAngryCount,
+                                'total' => $replyTotalReactions
+                            ],
+                            'user_reaction' => $userReplyReaction ? $userReplyReaction->type : null,
                         ];
                     })
                 ];
@@ -193,8 +269,20 @@ class CommentLessonController extends Controller
             }
 
             if ($isRootComment) {
+                $replyIds = $comment->replies()->pluck('id')->toArray();
+
+                if (!empty($replyIds)) {
+                    Reaction::query()->where('reactable_type', Comment::class)
+                        ->whereIn('reactable_id', $replyIds)
+                        ->delete();
+                }
+
                 $comment->replies()->delete();
             }
+
+            Reaction::query()->where('reactable_id', $comment->id)
+                ->where('reactable_type', Comment::class)
+                ->delete();
 
             $comment->delete();
 
@@ -205,5 +293,4 @@ class CommentLessonController extends Controller
             return $this->respondServerError();
         }
     }
-
 }

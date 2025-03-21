@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 class ReactionController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
+
     public function toggleReaction(StoreReactionRequest $request)
     {
         try {
@@ -66,51 +67,55 @@ class ReactionController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function index($commentId)
-{
-    try {
-        // Tìm comment theo ID
-        $comment = Comment::find($commentId);
-        if (!$comment) {
-            return $this->respondNotFound('Không tìm thấy comment');
+    {
+        try {
+            // Tìm comment theo ID
+            $comment = Comment::find($commentId);
+            if (!$comment) {
+                return $this->respondNotFound('Không tìm thấy comment');
+            }
+
+            // Lấy tất cả các phản ứng của comment đó
+            $reactions = Reaction::where([
+                'reactable_id' => $comment->id,
+                'reactable_type' => Comment::class,
+            ])->with('user')->get();
+
+            $likeCount = $reactions->where('type', 'like')->count();
+            $loveCount = $reactions->where('type', 'love')->count();
+            $hahaCount = $reactions->where('type', 'haha')->count();
+            $wowCount = $reactions->where('type', 'wow')->count();
+            $sadCount = $reactions->where('type', 'sad')->count();
+            $angryCount = $reactions->where('type', 'angry')->count();
+
+            $totalReactions = $likeCount + $loveCount + $hahaCount + $wowCount + $sadCount + $angryCount;
+            // Trả về danh sách các phản ứng
+
+            return response()->json([
+                'message' => 'Lấy phản ứng thành công',
+                'reactions' => $reactions->map(function ($reaction) {
+                    return [
+                        'user_name' => $reaction->user->name,
+                        'avatar' => $reaction->user->avatar,
+                        'react_type' => $reaction->type,
+                    ];
+                }),
+                'totalReactions' => $totalReactions,
+                'like_count' => $likeCount,
+                'love_count' => $loveCount,
+                'haha_count' => $hahaCount,
+                'sad_count' => $sadCount,
+                'wow_count' => $wowCount,
+                'angry_count' => $angryCount,
+            ]);
+
+        } catch (\Exception $e) {
+            // Ghi log lỗi nếu có
+            $this->logError($e, ['comment_id' => $commentId]);
+
+            return $this->respondServerError();
         }
-
-        // Lấy tất cả các phản ứng của comment đó
-        $reactions = Reaction::where([
-            'reactable_id' => $comment->id,
-            'reactable_type' => Comment::class,
-        ])->with('user')->get();
-        $likeCount = $reactions->where('type', 'like')->count();
-        $loveCount = $reactions->where('type', 'love')->count();
-        $hahaCount = $reactions->where('type', 'haha')->count();
-        $wowCount = $reactions->where('type', 'wow')->count();
-        $sadCount = $reactions->where('type', 'sad')->count();
-        $angryCount = $reactions->where('type', 'angry')->count();
-
-        $totalReactions =  $likeCount +  $loveCount +  $hahaCount + $wowCount + $sadCount + $angryCount;
-        // Trả về danh sách các phản ứng
-        return response()->json([
-            'message' => 'Lấy phản ứng thành công',
-            'reactions' => $reactions->map(function($reaction) {
-                return [
-                    'user_name' => $reaction->user->name,
-                    'avatar' => $reaction->user->avatar,
-                    'react_type' => $reaction->type,
-                ];
-            }),
-            'totalReactions' => $totalReactions,
-            'like_count' => $likeCount,
-            'love_count' => $loveCount,
-            'haha_count' => $hahaCount,
-            'sad_count' => $sadCount,
-            'wow_count' => $wowCount,
-            'angry_count' => $angryCount,
-        ]);
-    } catch (\Exception $e) {
-        // Ghi log lỗi nếu có
-        $this->logError($e, ['comment_id' => $commentId]);
-
-        return $this->respondServerError();
     }
-}
 }
