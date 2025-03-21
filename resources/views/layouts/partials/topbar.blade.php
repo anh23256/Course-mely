@@ -385,7 +385,11 @@
             function updateUnreadCount(count) {
                 const $countElement = $('#unread-notification-count');
                 if (count > 0) {
-                    $countElement.text(count).show();
+                    if(count > 99){
+                        $countElement.text('99+').show();
+                    }else{
+                        $countElement.text(count).show();
+                    }
                 } else {
                     $countElement.hide();
                 }

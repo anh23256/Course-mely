@@ -209,34 +209,6 @@
     /* Canh giữa trang */
 }
 
-/* Hiển thị tab theo hàng ngang, mỗi tab chiếm 50% */
-.nav-tabs .nav-item,
-.nav-pills .nav-item {
-    width: 100%;
-    text-align: center;
-}
-
-/* Đảm bảo nút tab chiếm toàn bộ vùng */
-.nav-tabs .nav-link,
-.nav-pills .nav-link {
-    width: 100%;
-    display: block;
-    padding: 12px;
-    font-weight: bold;
-    border: 1px solid transparent;
-    border-radius: 0;
-}
-
-/* Khi tab active hoặc hover */
-.nav-tabs .nav-link.active,
-.nav-tabs .nav-link:hover,
-.nav-pills .nav-link.active,
-.nav-pills .nav-link:hover {
-    background-color: #dc3545;
-    /* Bootstrap Danger */
-    color: white;
-    border-color: #dc3545;
-}
 .download-btn {
     position: absolute;
     top: 10px;

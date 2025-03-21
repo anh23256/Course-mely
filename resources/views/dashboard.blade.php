@@ -330,10 +330,10 @@
         </div>
 
         <!-- Top Completed Courses & Top Instructors -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-4">
             <div class="col-xxl-7">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-3">
                         <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
                             class="avatar-xs rounded-circle object-fit-cover" alt="">
                         <h4 class="card-title mb-0 mx-2 text-white">Tỷ trọng bán hàng: Khóa học & Gói thành viên</h4>
@@ -341,6 +341,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                <h6 class="text-danger">Khóa học bán ra</h6>
                                 {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
                                     ? (fmod(
                                         (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
@@ -362,6 +363,7 @@
                                     : 0 }}%
                             </div>
                             <div class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                <h6 class="text-danger">Gói thành viên bán ra</h6>
                                 {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
                                     ? (fmod(
                                         (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
@@ -389,12 +391,13 @@
             </div>
             <div class="col-xxl-5">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-4">
                         <h4 class="card-title mb-0 text-white">Tỷ trọng giao dịch qua từng phương thức thanh toán</h4>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-4 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                            <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                <h6 class="text-danger">Momo</h6>
                                 {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
                                     ? (fmod(
                                         (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
@@ -415,7 +418,8 @@
                                         ))
                                     : 0 }}%
                             </div>
-                            <div class="col-4 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                            <div class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                <h6 class="text-danger">Vnpay</h6>
                                 {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
                                     ? (fmod(
                                         (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
@@ -430,27 +434,6 @@
                                         )
                                         : round(
                                             (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                            2,
-                                        ))
-                                    : 0 }}%
-                            </div>
-                            <div class="col-4 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
-                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
-                                    ? (fmod(
-                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
-                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                            100,
-                                        1,
-                                    ) == 0
-                                        ? intval(
-                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                        )
-                                        : round(
-                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_credit_card ?? 0) /
                                                 $totalByPaymentMethodAndInvoiceType->total_invoice) *
                                                 100,
                                             2,
@@ -665,7 +648,7 @@
 
                                             <div class="card-footer bg-light p-3 border-top">
                                                 <div class="d-grid gap-2">
-                                                    <a href="{{ config('app.fe_url' . '/courses/' . $getTopViewCourse->slug) }}"
+                                                    <a href="{{ config('app.fe_url') }}courses/{{$getTopViewCourse->slug}}"
                                                         target="_blank" class="btn btn-primary btn-sm">
                                                         <i class="ri-eye-line align-bottom me-1"></i>
                                                         Xem chi tiết
@@ -976,13 +959,13 @@
             let categories = [];
             let momoData = [];
             let vnpayData = [];
-            let creditCardData = [];
+            // let creditCardData = [];
 
             data.forEach(item => {
                 categories.push("Tháng " + item.month + ", " + item.year);
                 momoData.push(parseInt(item.total_payment_method_momo) || 0);
                 vnpayData.push(parseInt(item.total_payment_method_vnpay) || 0);
-                creditCardData.push(parseInt(item.total_payment_method_credit_card) || 0);
+                // creditCardData.push(parseInt(item.total_payment_method_credit_card) || 0);
             });
 
             let options = {
@@ -993,11 +976,12 @@
                     {
                         name: "VNPay",
                         data: vnpayData
-                    },
-                    {
-                        name: "Credit Card",
-                        data: creditCardData
                     }
+                    // ,
+                    // {
+                    //     name: "Credit Card",
+                    //     data: creditCardData
+                    // }
                 ],
                 chart: {
                     type: "bar",
@@ -1024,7 +1008,7 @@
                         text: "Số lượng giao dịch"
                     }
                 },
-                colors: ["#F39C12", "#8E44AD", "#E67E22"],
+                colors: ["#5A6FA7", "#F1C40F"],
                 plotOptions: {
                     bar: {
                         horizontal: false,
@@ -1058,7 +1042,7 @@
                 series: series,
                 chart: {
                     type: "pie",
-                    height: 350,
+                    height: 400,
                     toolbar: {
                         show: true,
                         tools: {
@@ -1354,7 +1338,7 @@
 
             let options = {
                 chart: {
-                    height: "100%",
+                    height: 350,
                     type: "bubble",
                     toolbar: {
                         show: true,

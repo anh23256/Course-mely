@@ -13,17 +13,12 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::prefix('v1')
     ->group(function () {
-        Route::prefix('ai')
-            ->group(function () {
-                Route::post('generate-text', [\App\Http\Controllers\API\AI\AiController::class, 'generateText']);
-            });
+//        Route::prefix('ai')
+//            ->group(function () {
+//                Route::post('generate-text', [\App\Http\Controllers\API\AI\AiController::class, 'generateText']);
+//            });
         Route::prefix('cloudflare')
             ->group(function () {
                 Route::post('generate-text', [\App\Http\Controllers\API\AI\AiController::class, 'generateTextCloudflare']);

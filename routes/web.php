@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
+use App\Http\Controllers\Admin\SpinController;
 use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -320,6 +321,10 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [MembershipUserController::class, 'index'])->name('index');
         });
 
+        Route::prefix('spins')->as('spins.')->group(function () {
+            Route::get('/', [SpinController::class, 'index'])->name('index');
+
+        });
 
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')

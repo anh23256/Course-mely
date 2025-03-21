@@ -33,7 +33,13 @@
                     <div class="card-body" id="item_List">
                         <div class="listjs-table" id="customerList">
                             <div class="row g-4 mb-3">
-                                
+                                <div class="col-sm-auto">
+                                    <div>
+                                        <button class="btn btn-danger" id="deleteSelected">
+                                            <i class="ri-delete-bin-2-line"> Xóa nhiều</i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="col-sm">
                                     <div class="d-flex justify-content-sm-end">
                                         <div class="search-box ms-2">
@@ -161,8 +167,6 @@
                                     </div>
                                 </div>
                             </div>
-
-
 
                         </div>
                     </div>

@@ -5,22 +5,28 @@ namespace App\Http\Controllers\API\Common;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Transaction\BuyCourseRequest;
 use App\Http\Requests\API\Transaction\DepositTransactionRequest;
+use App\Mail\MembershipPurchaseMail;
 use App\Mail\StudentCoursePurchaseMail;
 use App\Models\Coupon;
 use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
+use App\Models\MembershipPlan;
+use App\Models\MembershipSubscription;
 use App\Models\SystemFund;
 use App\Models\SystemFundTransaction;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\InstructorNotificationForCoursePurchase;
+use App\Notifications\InstructorNotificationForMembershipPurchase;
 use App\Notifications\JoiFreeCourseNotification;
 use App\Notifications\UserBuyCourseNotification;
+use App\Notifications\UserBuyMembershipNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -150,35 +156,53 @@ class TransactionController extends Controller
             $user = Auth::user();
 
             if (!$user) {
-                return $this->respondForbidden('Vui lòng đăng nhập để mua khóa học');
+                return $this->respondForbidden('Vui lòng đăng nhập để thực hiện thanh toán');
             }
 
             $validated = $request->validate([
                 'amount' => 'required|numeric',
-                'course_id' => 'required|exists:courses,id',
+                'payment_type' => 'required|in:course,membership',
+                'item_id' => 'required|integer',
                 'coupon_code' => 'nullable|string',
                 'payment_method' => 'required|string',
             ]);
 
-            $courseId = $validated['course_id'];
-
-            if (CourseUser::query()->where('user_id', $user->id)->where('course_id', $courseId)->exists()) {
-                return $this->respondError('Bạn đã sở hữu khoá học này rồi');
-            }
-
-            $course = Course::query()->find($validated['course_id']);
-            if (!$course) {
-                return $this->respondError('Không tìm thấy khóa học');
-            }
-
-            $originalAmount = $course->price_sale > 0 ? $course->price_sale : $course->price;
+            $paymentType = $validated['payment_type'];
+            $itemId = $validated['item_id'];
             $finalAmount = $validated['amount'];
+
+            if ($paymentType === 'course') {
+                if (CourseUser::query()->where('user_id', $user->id)->where('course_id', $itemId)->exists()) {
+                    return $this->respondError('Bạn đã sở hữu khoá học này rồi');
+                }
+
+                $item = Course::query()->find($itemId);
+                if (!$item) {
+                    return $this->respondError('Không tìm thấy khóa học');
+                }
+                $originalAmount = $item->price_sale > 0 ? $item->price_sale : $item->price;
+            } else {
+                if (MembershipSubscription::query()
+                    ->where('user_id', $user->id)
+                    ->where('membership_plan_id', $itemId)
+                    ->where('end_date', '>', now())
+                    ->exists()) {
+                    return $this->respondError('Bạn đã đăng ký gói membership này rồi');
+                }
+
+                $item = MembershipPlan::query()->find($itemId);
+                if (!$item) {
+                    return $this->respondError('Không tìm thấy gói membership');
+                }
+                $originalAmount = $item->price;
+            }
+
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
 
             return match ($validated['payment_method']) {
-                'momo' => $this->createMoMoPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode),
-                'vnpay' => $this->createVnPayPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode),
+                'momo' => $this->createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
+                'vnpay' => $this->createVnPayPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
                 default => $this->respondError('Phương thức thanh toán không hợp lệ')
             };
         } catch (\Exception $e) {
@@ -188,7 +212,7 @@ class TransactionController extends Controller
         }
     }
 
-    protected function createVnPayPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null)
+    protected function createVnPayPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null, $paymentType = 'course')
     {
         $amountVNPay = number_format($finalAmount, 0, '', '');
 
@@ -198,7 +222,7 @@ class TransactionController extends Controller
         $vnp_ReturnUrl = config('vnpay.return_url');
 
         $vnp_TxnRef = 'ORDER' . time();
-        $vnp_OrderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $courseId .
+        $vnp_OrderInfo = $user->id . '-Thanh-toan-' . $paymentType . '-' . $itemId .
             '-' . $originalAmount . '-' . $discountAmount . '-' . $finalAmount;
 
         if (!empty($couponCode)) {
@@ -277,75 +301,144 @@ class TransactionController extends Controller
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            $orderParts = explode('-Thanh-toan-khoa-hoc-', $inputData['vnp_OrderInfo']);
+            $orderParts = explode('-Thanh-toan-', $inputData['vnp_OrderInfo']);
             if (count($orderParts) != 2) {
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
             $userId = filter_var(trim($orderParts[0], '"'), FILTER_VALIDATE_INT);
 
-            $remainingParts = explode('-', $orderParts[1]);
-            if (count($remainingParts) < 4) {
-                return redirect()->away($frontendUrl . "?status=error");
-            }
+            $remainingInfo = $orderParts[1];
+            $typeParts = explode('-', $remainingInfo);
+            $paymentType = $typeParts[0];
 
-            $courseId = filter_var(trim($remainingParts[0], '"'), FILTER_VALIDATE_INT);
+            $itemIdStartPos = strpos($remainingInfo, '-') + 1;
+            $remainingParts = explode('-', substr($remainingInfo, $itemIdStartPos));
+
+            $itemId = filter_var(trim($remainingParts[0], '"'), FILTER_VALIDATE_INT);
             $originalAmount = filter_var(trim($remainingParts[1], '"'), FILTER_VALIDATE_FLOAT);
             $discountAmount = filter_var(trim($remainingParts[2], '"'), FILTER_VALIDATE_FLOAT);
             $finalAmount = filter_var(trim($remainingParts[3], '"'), FILTER_VALIDATE_FLOAT);
             $couponCode = count($remainingParts) > 4 ? trim($remainingParts[4], '"') : null;
 
             $user = User::query()->find($userId);
-            $course = Course::query()->find($courseId);
 
             if (!$user) {
                 return redirect()->away($frontendUrl . "/not-found");
             }
 
-            if (!$course) {
-                return redirect()->away($frontendUrl . "/not-found");
-            }
+            if ($paymentType === 'course') {
+                $course = Course::query()->find($itemId);
 
-            $discount = null;
-            if (!empty($couponCode)) {
-                $discount = Coupon::query()
-                    ->where(['code' => $couponCode, 'status' => '1'])
+                if (!$course) {
+                    return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $discount = null;
+                if (!empty($couponCode)) {
+                    $discount = Coupon::query()
+                        ->where(['code' => $couponCode, 'status' => '1'])
+                        ->first();
+                }
+
+                $invoice = Invoice::create([
+                    'user_id' => $userId,
+                    'course_id' => $itemId,
+                    'membership_plan_id' => null,
+                    'amount' => $originalAmount,
+                    'coupon_code' => $discount ? $discount->code : null,
+                    'coupon_discount' => $discountAmount,
+                    'final_amount' => $finalAmount,
+                    'status' => 'Đã thanh toán',
+                    'code' => Str::upper(Str::random(10)),
+                    'payment_method' => 'vnpay',
+                    'invoice_type' => 'course',
+                ]);
+
+                CourseUser::create([
+                    'user_id' => $userId,
+                    'course_id' => $itemId,
+                    'enrolled_at' => now(),
+                ]);
+
+                $transaction = Transaction::create([
+                    'transaction_code' => $inputData['vnp_TxnRef'],
+                    'user_id' => $userId,
+                    'amount' => $inputData['vnp_Amount'] / 100,
+                    'transactionable_id' => $invoice->id,
+                    'transactionable_type' => Invoice::class,
+                    'status' => 'Giao dịch thành công',
+                    'type' => 'invoice',
+                ]);
+
+                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
+
+                DB::commit();
+
+                return redirect()->away($frontendUrl . "?status=success");
+            } else {
+                $memberShipPlan = MembershipPlan::query()->find($itemId);
+
+                if (!$memberShipPlan) {
+                    return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $invoice = Invoice::query()->create([
+                    'user_id' => $userId,
+                    'course_id' => null,
+                    'membership_plan_id' => $itemId,
+                    'amount' => $originalAmount,
+                    'final_amount' => $finalAmount,
+                    'status' => 'Đã thanh toán',
+                    'code' => Str::upper(Str::random(10)),
+                    'payment_method' => 'vnpay',
+                    'invoice_type' => 'membership'
+                ]);
+
+                $duration = $memberShipPlan->duration_months;
+
+                $existingMembership = MembershipSubscription::query()
+                    ->where('user_id', $userId)
+                    ->where('membership_plan_id', $itemId)
                     ->first();
+
+                if ($existingMembership && $existingMembership->end_date > now()) {
+                    $existingMembership->update([
+                        'end_date' => Carbon::parse($existingMembership->end_date)->addDays($duration),
+                        'status' => 'active'
+                    ]);
+                } else {
+                    MembershipSubscription::query()->create([
+                        'membership_plan_id' => $itemId,
+                        'user_id' => $userId,
+                        'start_date' => now(),
+                        'end_date' => now()->addMonths($duration),
+                        'status' => 'active'
+                    ]);
+                }
+
+                $transaction = Transaction::query()->create([
+                    'transaction_code' => $inputData['vnp_TxnRef'],
+                    'user_id' => $userId,
+                    'amount' => $inputData['vnp_Amount'] / 100,
+                    'transactionable_id' => $invoice->id,
+                    'transactionable_type' => Invoice::class,
+                    'status' => 'Giao dịch thành công',
+                    'type' => 'invoice',
+                ]);
+
+                $this->finalBuyMembership(
+                    $userId,
+                    $memberShipPlan,
+                    $transaction,
+                    $invoice,
+                    $finalAmount
+                );
+
+                DB::commit();
+
+                return redirect()->away($frontendUrl . "?status=success");
             }
-
-            $invoice = Invoice::create([
-                'user_id' => $userId,
-                'course_id' => $courseId,
-                'amount' => $originalAmount,
-                'coupon_code' => $discount ? $discount->code : null,
-                'coupon_discount' => $discountAmount,
-                'final_amount' => $finalAmount,
-                'status' => 'Đã thanh toán',
-                'code' => Str::upper(Str::random(10)),
-                'payment_method' => 'vnpay'
-            ]);
-
-            CourseUser::create([
-                'user_id' => $userId,
-                'course_id' => $courseId,
-                'enrolled_at' => now(),
-            ]);
-
-            $transaction = Transaction::create([
-                'transaction_code' => $inputData['vnp_TxnRef'],
-                'user_id' => $userId,
-                'amount' => $inputData['vnp_Amount'] / 100,
-                'transactionable_id' => $invoice->id,
-                'transactionable_type' => Invoice::class,
-                'status' => 'Giao dịch thành công',
-                'type' => 'invoice',
-            ]);
-
-            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
-
-            DB::commit();
-
-            return redirect()->away($frontendUrl . "?status=success");
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -355,7 +448,7 @@ class TransactionController extends Controller
         }
     }
 
-    protected function createMoMoPayment($user, $courseId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null)
+    protected function createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode = null, $paymentType = 'course')
     {
         try {
             $endpoint = config('momo.endpoint');
@@ -370,7 +463,7 @@ class TransactionController extends Controller
             $orderId = 'ORDER' . time();
             $requestId = time() . "_" . uniqid();
 
-            $orderInfo = $user->id . '-Thanh-toan-khoa-hoc-' . $courseId .
+            $orderInfo = $user->id . '-Thanh-toan-' . $paymentType . '-' . $itemId .
                 '-' . $originalAmount . '-' . $discountAmount . '-' . $finalAmount;
 
             if (!empty($couponCode)) {
@@ -437,83 +530,91 @@ class TransactionController extends Controller
             DB::beginTransaction();
 
             if (!isset($inputData['orderInfo'])) {
-                Log::info(3);
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            $orderParts = explode('-Thanh-toan-khoa-hoc-', $inputData['orderInfo']);
+            $orderParts = explode('-Thanh-toan-', $inputData['orderInfo']);
             if (count($orderParts) != 2) {
-                Log::info(4);
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
             $userId = filter_var(trim($orderParts[0], '"'), FILTER_VALIDATE_INT);
 
-            $remainingParts = explode('-', $orderParts[1]);
+            $remainingInfo = $orderParts[1];
+            $typeParts = explode('-', $remainingInfo);
+            $paymentType = $typeParts[0];
+
+            $itemIdStartPos = strpos($remainingInfo, '-') + 1;
+            $remainingParts = explode('-', substr($remainingInfo, $itemIdStartPos));
+
             if (count($remainingParts) < 4) {
-                Log::info(5);
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            $courseId = filter_var(trim($remainingParts[0], '"'), FILTER_VALIDATE_INT);
+            $itemId = filter_var(trim($remainingParts[0], '"'), FILTER_VALIDATE_INT);
             $originalAmount = filter_var(trim($remainingParts[1], '"'), FILTER_VALIDATE_FLOAT);
             $discountAmount = filter_var(trim($remainingParts[2], '"'), FILTER_VALIDATE_FLOAT);
             $finalAmount = filter_var(trim($remainingParts[3], '"'), FILTER_VALIDATE_FLOAT);
             $couponCode = count($remainingParts) > 4 ? trim($remainingParts[4], '"') : null;
 
             $user = User::query()->find($userId);
-            $course = Course::query()->find($courseId);
-
             if (!$user) {
-                Log::info(6);
                 return redirect()->away($frontendUrl . "/not-found");
             }
 
-            if (!$course) {
-                Log::info(6);
-                return redirect()->away($frontendUrl . "/not-found");
+            if ($paymentType === 'course') {
+                $course = Course::query()->find($itemId);
+                if (!$course) {
+                    return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $discount = null;
+                if (!empty($couponCode)) {
+                    $discount = Coupon::query()
+                        ->where(['code' => $couponCode, 'status' => '1'])
+                        ->first();
+                }
+
+                $invoice = Invoice::create([
+                    'user_id' => $userId,
+                    'course_id' => $itemId,
+                    'membership_plan_id' => null,
+                    'amount' => $originalAmount,
+                    'coupon_code' => $discount ? $discount->code : null,
+                    'coupon_discount' => $discountAmount,
+                    'final_amount' => $finalAmount,
+                    'status' => 'Đã thanh toán',
+                    'code' => Str::upper(Str::random(10)),
+                    'payment_method' => 'momo',
+                    'payment_type' => 'course'
+                ]);
+
+                CourseUser::create([
+                    'user_id' => $userId,
+                    'course_id' => $itemId,
+                    'enrolled_at' => now(),
+                ]);
+
+                $transaction = Transaction::create([
+                    'transaction_code' => $inputData['orderId'],
+                    'user_id' => $userId,
+                    'amount' => $inputData['amount'],
+                    'transactionable_id' => $invoice->id,
+                    'transactionable_type' => Invoice::class,
+                    'status' => 'Giao dịch thành công',
+                    'type' => 'invoice',
+                ]);
+
+                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
+
+                DB::commit();
+
+                return redirect()->away($frontendUrl . "?status=success&type=course");
+            } else {
+                Log::info('member ship');
+
+                return redirect()->away($frontendUrl . "?status=success");
             }
-
-            $discount = null;
-            if (!empty($couponCode)) {
-                $discount = Coupon::query()
-                    ->where(['code' => $couponCode, 'status' => '1'])
-                    ->first();
-            }
-
-            $invoice = Invoice::create([
-                'user_id' => $userId,
-                'course_id' => $courseId,
-                'amount' => $originalAmount,
-                'coupon_code' => $discount ? $discount->code : null,
-                'coupon_discount' => $discountAmount,
-                'final_amount' => $finalAmount,
-                'status' => 'Đã thanh toán',
-                'code' => Str::upper(Str::random(10)),
-                'payment_method' => 'momo'
-            ]);
-
-            CourseUser::create([
-                'user_id' => $userId,
-                'course_id' => $courseId,
-                'enrolled_at' => now(),
-            ]);
-
-            $transaction = Transaction::create([
-                'transaction_code' => $inputData['orderId'],
-                'user_id' => $userId,
-                'amount' => $inputData['amount'],
-                'transactionable_id' => $invoice->id,
-                'transactionable_type' => Invoice::class,
-                'status' => 'Giao dịch thành công',
-                'type' => 'invoice',
-            ]);
-
-            $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
-
-            DB::commit();
-
-            return redirect()->away($frontendUrl . "?status=success");
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -529,7 +630,7 @@ class TransactionController extends Controller
             $discount->refresh();
             $discount->increment('used_count');
 
-            if($discount->max_usage > 0){
+            if ($discount->max_usage > 0) {
                 $discount->decrement('max_usage');
             }
 
@@ -579,7 +680,6 @@ class TransactionController extends Controller
 
         SystemFundTransaction::query()->create([
             'transaction_id' => $transaction->id,
-            'course_id' => $course->id,
             'user_id' => $userID,
             'total_amount' => $finalAmount,
             'retained_amount' => $finalAmount * self::adminRate,
@@ -589,7 +689,7 @@ class TransactionController extends Controller
 
         $instructor = $course->user;
 
-        User::whereHas('roles', function ($query) {
+        User::query()->whereHas('roles', function ($query) {
             $query->where('name', 'admin');
         })
             ->each(fn($manager) => $manager->notify(
@@ -598,16 +698,83 @@ class TransactionController extends Controller
 
         $instructor->notify(
             new InstructorNotificationForCoursePurchase(
-                User::find($userID),
+                User::query()->find($userID),
                 $course,
                 $transaction
             )
         );
 
-        $student = User::find($userID);
+        $student = User::query()->find($userID);
 
         Mail::to($student->email)->send(
             new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
+        );
+    }
+
+    private function finalBuyMembership($userId, $memberShipPlan, $transaction, $invoice, $finalAmount)
+    {
+        $memberShipPlan->refresh();
+
+        $walletInstructor = Wallet::query()
+            ->firstOrCreate([
+                'user_id' => $memberShipPlan->instructor_id
+            ]);
+
+        $walletInstructor->balance += $finalAmount * self::instructorRate;
+        $walletInstructor->save();
+
+        $walletWeb = Wallet::query()
+            ->firstOrCreate([
+                'user_id' => User::query()->where('email', self::walletMail)
+                    ->value('id'),
+            ]);
+
+        $walletWeb->balance += $finalAmount;
+        $walletWeb->save();
+
+        $systemFund = SystemFund::query()->first();
+
+        if ($systemFund) {
+            $systemFund->balance += $finalAmount * self::adminRate;
+            $systemFund->pending_balance += $finalAmount * self::instructorRate;
+            $systemFund->save();
+        } else {
+            SystemFund::query()->create([
+                'balance' => $finalAmount * self::adminRate,
+                'pending_balance' => $finalAmount * self::instructorRate
+            ]);
+        }
+
+        SystemFundTransaction::query()->create([
+            'transaction_id' => $transaction->id,
+            'user_id' => $userId,
+            'total_amount' => $finalAmount,
+            'retained_amount' => $finalAmount * self::adminRate,
+            'type' => 'commission_received',
+            'description' => 'Phí đăng ký gói membership: ' . $memberShipPlan->name,
+        ]);
+
+        $instructor = $memberShipPlan->instructor;
+
+        User::query()->whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })
+            ->each(fn($manager) => $manager->notify(
+                new UserBuyMembershipNotification(User::query()->find($userId), $memberShipPlan->load('invoices.transaction'))
+            ));
+
+        $instructor->notify(
+            new InstructorNotificationForMembershipPurchase(
+                User::query()->find($userId),
+                $memberShipPlan,
+                $transaction
+            )
+        );
+
+        $student = User::query()->find($userId);
+
+        Mail::to($student->email)->send(
+            new MembershipPurchaseMail($student, $memberShipPlan, $transaction, $invoice)
         );
     }
 
