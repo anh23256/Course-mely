@@ -330,7 +330,7 @@
         </div>
 
         <!-- Top Completed Courses & Top Instructors -->
-        <div class="row mt-4 g-4">
+        <div class="row mt-4">
             <div class="col-xxl-7">
                 <div class="card">
                     <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-3">

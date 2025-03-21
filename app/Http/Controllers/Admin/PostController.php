@@ -97,12 +97,11 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         try {
-            
             $request->validated();
             DB::beginTransaction();
 
             $data = $request->except('thumbnail');
-           
+
             if ($request->hasFile('thumbnail')) {
                 $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
             }
@@ -159,7 +158,7 @@ class PostController extends Controller
 
             $post = Post::query()
                 ->with(['tags:id,name', 'category:id,name,parent_id', 'user:id,name'])
-                ->findOrFail($id);
+                ->find($id);
 
             return view('posts.show', compact([
                 'title',
@@ -186,7 +185,7 @@ class PostController extends Controller
             $tags = Tag::query()->get();
             $post = Post::query()
                 ->with(['tags:id,name', 'category:id,name,parent_id'])
-                ->findOrFail($id);
+                ->find($id);
 
             $categoryIds = $post->category->pluck('id')->toArray();
             $tagIds = $post->tags->pluck('id')->toArray();
@@ -217,7 +216,7 @@ class PostController extends Controller
 
             $data = $request->except('thumbnail', 'categories', 'is_hot');
 
-            $post = Post::query()->with(['tags'])->findOrFail($id);
+            $post = Post::query()->with(['tags'])->find($id);
 
             if ($request->hasFile('thumbnail')) {
                 if ($post->thumbnail && filter_var($post->thumbnail, FILTER_VALIDATE_URL)) {
@@ -285,10 +284,11 @@ class PostController extends Controller
             return response()->json($data = ['status' => 'error', 'message' => 'Lỗi thao tác.']);
         }
     }
+
     public function export()
     {
         try {
-            
+
             return Excel::download(new PostsExport, 'Posts.xlsx');
 
         } catch (\Exception $e) {
@@ -328,6 +328,7 @@ class PostController extends Controller
 
         return $query;
     }
+
     public function forceDelete(string $id)
     {
         try {
@@ -339,7 +340,7 @@ class PostController extends Controller
 
                 $this->deleteposts($postID);
             } else {
-                $post = Post::query()->onlyTrashed()->findOrFail($id);
+                $post = Post::query()->onlyTrashed()->find($id);
 
                 $post->forceDelete();
             }
@@ -362,6 +363,7 @@ class PostController extends Controller
             ]);
         }
     }
+
     private function deletePosts(array $postID)
     {
 
@@ -385,6 +387,7 @@ class PostController extends Controller
             }
         }
     }
+
     public function restoreDelete(string $id)
     {
         try {
@@ -421,6 +424,7 @@ class PostController extends Controller
             ]);
         }
     }
+
     public function listPostDelete(Request $request)
     {
         try {
@@ -456,6 +460,7 @@ class PostController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
     private function restoreDeletePosts(array $postID)
     {
 

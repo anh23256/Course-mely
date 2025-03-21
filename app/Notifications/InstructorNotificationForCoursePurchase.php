@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
-class InstructorNotificationForCoursePurchase extends Notification
+class InstructorNotificationForCoursePurchase extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -77,7 +77,6 @@ class InstructorNotificationForCoursePurchase extends Notification
     public function broadcastOn()
     {
         $channel = new PrivateChannel('notification.' . $this->course->user_id);
-        Log::info('Broadcasting on channel: ' . $channel->name);
         return $channel;
     }
 }

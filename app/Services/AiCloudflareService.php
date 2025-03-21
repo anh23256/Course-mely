@@ -36,7 +36,7 @@ class AiCloudflareService
 
     protected function getApiUrl()
     {
-        return env('CLOUDFLARE_URL') . env('CLOUDFLARE_ACCOUNT_ID') . '/ai/run/@cf/meta/llama-3-8b-instruct';
+        return config('cloudflare.url') . config('cloudflare.account_id') . '/ai/run/@cf/meta/llama-3-8b-instruct';
     }
 
     protected function buildMessages($title)
@@ -57,7 +57,7 @@ class AiCloudflareService
     {
         return $this->cloudflare->post($apiUrl, [
             'headers' => [
-                'Authorization' => 'Bearer ' . env('CLOUDFLARE_API_KEY'),
+                'Authorization' => 'Bearer ' . config('cloudflare.api_key'),
                 'Content-Type' => 'application/json'
             ],
             'json' => [

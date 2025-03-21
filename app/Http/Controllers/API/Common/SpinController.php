@@ -304,6 +304,7 @@ class SpinController extends Controller
 
         return response()->json(['message' => 'Khóa học hoàn thành, tặng 1 lượt quay']);
     }
+
     // Lấy lịch sử quay của người dùng
     public function getSpinHistory(Request $request)
     {

@@ -319,13 +319,13 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE memberships =============================
         Route::prefix('memberships')->as('memberships.')->group(function () {
             Route::get('/', [MembershipUserController::class, 'index'])->name('index');
-            
         });
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
-            
+
         });
+
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
             ->as('withdrawals.')
