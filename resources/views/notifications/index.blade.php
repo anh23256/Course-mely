@@ -35,11 +35,6 @@
                             <div class="row g-4 mb-3">
                                 <div class="col-sm-auto">
                                     <div>
-                                        <a href="{{ route('admin.categories.create') }}">
-                                            <button type="button" class="btn btn-primary add-btn">
-                                                <i class="ri-add-line align-bottom me-1"></i> Thêm mới
-                                            </button>
-                                        </a>
                                         <button class="btn btn-danger" id="deleteSelected">
                                             <i class="ri-delete-bin-2-line"> Xóa nhiều</i>
                                         </button>
@@ -101,11 +96,6 @@
                                     </tbody>
                                 </table>
                             </div>
-
-                            <div class="row justify-content-end">
-                                {{ $notifications->appends(request()->query())->links() }}
-                            </div>
-
                         </div>
                     </div>
                     <!-- end card -->
