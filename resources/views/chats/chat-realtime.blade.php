@@ -1081,8 +1081,19 @@
                             toastr.error(response.message, "Lỗi!");
                         }
                     },
-                    error: function() {
-                        toastr.error("Có lỗi xảy ra, vui lòng thử lại!", "Lỗi!");
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors; 
+                            let errorMessage = "\n";
+
+                            $.each(errors, function(field, messages) {
+                                errorMessage += messages.join(", ") + "\n";
+                            });
+
+                            toastr.error(errorMessage);
+                        } else {
+                            toastr.error("Có lỗi xảy ra, vui lòng thử lại!", "Lỗi!");
+                        }
                     }
                 });
             });
@@ -1293,9 +1304,9 @@
                 } else {
                     alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
-            });
-
-            function kickUser(button) {
+            });     
+        });
+        function kickUser(button) {
                 let groupId = button.getAttribute("data-conversation-id");
                 let userId = button.getAttribute("data-user-id");
 
@@ -1308,6 +1319,7 @@
                     }).showToast();
                     return;
                 }
+                if (!confirm("Bạn có chắc chắn muốn xóa người này khỏi nhóm không ?")) return;
                 $.ajax({
                     url: 'http://127.0.0.1:8000/admin/chats/kick-member',
                     type: 'POST',
@@ -1336,6 +1348,9 @@
                         let errorMessage = "Đã có lỗi xảy ra!";
                         if (xhr.status === 403) {
                             errorMessage = "Bạn không có quyền kick người này!";
+                        }
+                        if (xhr.status === 422) {
+                            errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
                         }
                         Toastify({
                             text: errorMessage,
@@ -1454,10 +1469,7 @@
                             alert('Có lỗi xảy ra, vui lòng thử lại!');
                         });
                 }
-            }
-
-        });
-
+            } 
         function getFileThumbnail(ext) {
             return `/assets/images/icons/${ext}.png`;
         }
