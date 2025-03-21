@@ -153,4 +153,6 @@ class NotificationController extends Controller
             return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    
 }
