@@ -445,12 +445,14 @@
                                                                     class="accordion-collapse collapse {{ $lessonIndex == 0 ? 'show' : '' }}"
                                                                     aria-labelledby="headingLesson{{ $chapterIndex }}{{ $lessonIndex }}">
                                                                     <div class="accordion-body">
-                                                                        @if ($lesson->type === 'video')
-                                                                            <mux-player
-                                                                                playback-id="EcHgOK9coz5K4rjSwOkoE7Y7O01201YMIC200RI6lNxnhs"
-                                                                                metadata-video-title="Test VOD"
-                                                                                metadata-viewer-user-id="user-id-007"
-                                                                                style="height: 300px; width: 100%;"></mux-player>
+                                                                        @if ($lesson->type === 'video' && isset($videos[$lesson->id]))
+                                                                            @foreach ($videos[$lesson->id] as $video)
+                                                                                <mux-player
+                                                                                    playback-id="{{ $video['mux_playback_id'] ?? '' }}"
+                                                                                    metadata-video-title="{{ $video['title'] ?? 'Không có tiêu đề' }}"
+                                                                                    style="height: 300px; width: 100%;">
+                                                                                </mux-player>
+                                                                            @endforeach
                                                                         @endif
 
                                                                         @if ($lesson->type === 'document' && isset($documents[$lesson->id]))

@@ -143,7 +143,7 @@ class BlogController extends Controller
                     'ip' => $ip,
                 ]);
             }
-            $post['profile']= $post->user->profile->about_me;
+            $post['profile']= $post->user->profile->about_me ?? null;
             return $this->respondOk('Thông tin bài viết: ' . $post->title, $post);
         } catch (\Exception $e) {
             $this->logError($e);
@@ -165,7 +165,7 @@ class BlogController extends Controller
             ->whereHas('category', function ($query) use ($slug) {
                 $query->where('slug', $slug);
             })
-            ->paginate(4); // Giới hạn số lượng bài viết trên mỗi trang
+            ->paginate(4);
 
         if ($posts->isEmpty()) {
             return response()->json([
@@ -184,7 +184,7 @@ class BlogController extends Controller
                 'views' => $post->views,
                 'comment_count' => $commentCount,
                 'published_at' => $post->published_at,
-                'users' => [
+                'user' => [
                     'id' => $post->user->id,
                     'name' => $post->user->name,
                     'avatar' => $post->user->avatar,
@@ -246,7 +246,7 @@ class BlogController extends Controller
                     'views' => $post->views,
                     'comment_count' => $commentCount,
                     'published_at' => $post->published_at,
-                    'users' => [
+                    'user' => [
                         'id' => $post->user->id,
                         'name' => $post->user->name,
                         'avatar' => $post->user->avatar,
@@ -259,7 +259,16 @@ class BlogController extends Controller
                     ]
                 ];
             });
-            return $this->respondOk('Danh sách bài viết với thẻ:', $filteredBlogs);
+            return response()->json([
+                'message' => 'Danh sách bài viết với thẻ:',
+                'data' => $filteredBlogs,
+                'pagination' => [
+                    'total' => $posts->total(),
+                    'per_page' => $posts->perPage(),
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                ]
+            ], 200);
         } catch (\Exception $e) {
             $this->logError($e);
 
