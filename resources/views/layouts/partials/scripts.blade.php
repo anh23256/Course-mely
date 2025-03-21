@@ -136,39 +136,4 @@
             @endforeach
         @endif
     @endisset
-
-    function updateUserStatus(status) {
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        $.ajax({
-            url: "http://127.0.0.1:8000/admin/check-status-user",
-            method: "POST",
-            data: {
-                status: status
-            },
-            success: function(response) {
-                console.log("User status updated:", response.status);
-            }
-        });
-    }
-    document.addEventListener("visibilitychange", function() {
-        if (document.hidden) {
-            console.log("User đã chuyển tab, có thể giảm tần suất cập nhật.");
-        } else {
-            console.log("User quay lại tab, cập nhật trạng thái online.");
-            updateUserStatus("online");
-        }
-    });
-
-
-    updateUserStatus("online");
-
-    setInterval(() => updateUserStatus("online"), 120000);
-
-    $(window).on("beforeunload", function() {
-        updateUserStatus("offline");
-    });
 </script>

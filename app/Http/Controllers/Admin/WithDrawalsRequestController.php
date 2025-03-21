@@ -90,7 +90,7 @@ class WithDrawalsRequestController extends Controller
 
             $data = $request->validate([
                 'withdrawal_id' => 'required|exists:withdrawal_requests,id',
-                'admin_comment' => 'required|string|max:255',
+                'admin_comment' => 'nullable|string|max:255',
                 'action' => 'required|in:approve,reject'
             ]);
 
@@ -118,7 +118,7 @@ class WithDrawalsRequestController extends Controller
                 if ($systemFundTransaction) {
                     $withdrawal->update([
                         'status' => 'Đã xử lý',
-                        'admin_comment' => $request->input('admin_comment') ?? $withdrawal->admin_comment,
+                        'admin_comment' =>  $withdrawal->admin_comment,
                         'instructor_confirmation' => 'not_received',
                     ]);
                 }
@@ -145,7 +145,7 @@ class WithDrawalsRequestController extends Controller
                     'admin_comment' => $data['admin_comment'],
                 ]);
 
-                $transation = Transaction::query()->create([
+                Transaction::query()->create([
                     'transaction_code' => 'ORDER' . time(),
                     'amount' => $withdrawal->amount,
                     'type' => 'withdrawal',
@@ -204,7 +204,7 @@ class WithDrawalsRequestController extends Controller
             ]);
 
             $withdrawal->update([
-                'admin_comment' => $data['admin_comment'],
+                'admin_comment' => 'Đã thanh toán cho bạn với số tiền ' . number_format($withdrawal->amount),
                 'status' => 'Đã xử lý',
                 'completed_date' => now()
             ]);

@@ -278,6 +278,9 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
+            Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
+            Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
+
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -404,6 +407,4 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
-
-        Route::post('/check-status-user', [ChatController::class, 'statusUser'])->name('status.user');
     });

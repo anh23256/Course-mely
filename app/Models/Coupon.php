@@ -25,6 +25,10 @@ class Coupon extends Model
         'used_count',
         'specific_course'
     ];
+    
+    protected $casts = [
+        'expire_date' => 'date',
+    ];
 
     public function scopeSearch($query, $keyword)
     {
@@ -46,4 +50,6 @@ class Coupon extends Model
     {
         return $this->belongsToMany(Course::class);
     }
+
+    
 }

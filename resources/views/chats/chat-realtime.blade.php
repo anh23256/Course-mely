@@ -720,7 +720,7 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" name="input_file" id="fileInput"
+                                                    <input type="file" name="input_file[]" id="fileInput" multiple
                                                         style="display: none;">
                                                 </div>
                                             </div>
@@ -842,74 +842,65 @@
         initIcons();
 
         $(document).ready(function() {
-            console.log('Đã chọn user với ID:------------------------', userId);
 
-            window.Echo.channel("user-status")
-                .listen("UserStatusChanged", (event) => {
-                    console.log('pusher-status-change', event);
-
-                    const statusElement = $('.show-status-user');
-
-                    if (event.is_online == 'online') {
-                        statusElement.html(
-                            '<span class="text-success">Online</span>');
-                    } else {
-                        statusElement.html('<span class="text-danger">Offline</span>');
-                    }
-                });
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
 
             $("#fileInput").change(function() {
-                let file = this.files[0];
-                console.log(file);
-
+                let files = this.files;
                 let previewContainer = $("#previewContainer");
+                previewContainer.html("");
 
-                if (!file) return;
+                if (!files.length) return;
 
-                let fileType = file.type;
-                let fileExt = file.name.split('.').pop().toLowerCase();
-                let reader = new FileReader();
+                Array.from(files).forEach(file => {
+                    let fileType = file.type;
+                    let fileExt = file.name.split('.').pop().toLowerCase();
+                    let reader = new FileReader();
 
-                reader.onload = function(e) {
-                    let previewHtml = '';
+                    reader.onload = function(e) {
+                        let previewHtml = "";
 
-                    if (fileType.startsWith("image/")) {
-                        previewHtml = `<img src="${e.target.result}" class="thumbnail" 
-                                style="max-width:150px; border-radius: 8px;">`;
-                    } else if (fileType.startsWith("video/")) {
-                        previewHtml = `<video class="thumbnail" controls style="max-width:150px; border-radius: 8px;">
-                                <source src="${e.target.result}" type="${fileType}">
-                              </video>`;
-                    } else if (fileType === "application/pdf") {
-                        previewHtml = `<embed src="${e.target.result}" class="thumbnail" 
-                                style="width:100px; height:100px; border-radius: 8px;">`;
-                    } else {
-                        let fileThumbnail = getFileThumbnail(fileExt);
-                        previewHtml = `<div class="file-thumbnail">
-                                <img src="${fileThumbnail}" style="width:50px; height:50px;"> 
-                                <p>${file.name}</p>
-                              </div>`;
-                    }
+                        if (fileType.startsWith("image/")) {
+                            previewHtml = `<img src="${e.target.result}" class="thumbnail" 
+                        style="max-width:150px; border-radius: 8px; margin:5px;">`;
+                        } else if (fileType.startsWith("video/")) {
+                            previewHtml = `<video class="thumbnail" controls 
+                        style="max-width:150px; border-radius: 8px; margin:5px;">
+                        <source src="${e.target.result}" type="${fileType}">
+                      </video>`;
+                        } else if (fileType === "application/pdf") {
+                            previewHtml = `<embed src="${e.target.result}" class="thumbnail" 
+                        style="width:100px; height:100px; border-radius: 8px; margin:5px;">`;
+                        } else {
+                            let fileThumbnail = getFileThumbnail(fileExt);
+                            previewHtml = `<div class="file-thumbnail" style="display:inline-block; text-align:center; margin:5px;">
+                        <img src="${fileThumbnail}" style="width:50px; height:50px;"> 
+                        <p style="font-size:12px;">${file.name}</p>
+                      </div>`;
+                        }
 
-                    previewContainer.html(previewHtml).show();
-                };
+                        previewContainer.append(previewHtml);
+                    };
 
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
+                });
+
+                previewContainer.show();
             });
+
+
+            function getFileThumbnail(ext) {
+                return `/assets/images/icons/${ext}.png`;
+            }
+
+            function removeImage() {
+                document.getElementById("imagePreview").src = "";
+                document.getElementById("previewContainer").style.display = "none";
+                document.getElementById("chatinput-form").reset();
+            }
         });
-
-        function getFileThumbnail(ext) {
-            return `/assets/images/icons/${ext}.png`;
-        }
-
-        function removeImage() {
-            document.getElementById("imagePreview").src = "";
-            document.getElementById("previewContainer").style.display = "none";
-            document.getElementById("chatinput-form").reset();
-        }
     </script>
     <script>
         $(document).ready(function() {
@@ -1069,15 +1060,8 @@
                             $('#filetofile').removeClass('col-6');
                             $('#filetofile').addClass('col-12');
 
-                            const statusElement = $('.show-status-user');
-
-                            if (response.data.status === 'online') {
-                                statusElement.html(
-                                    '<span class="text-success">Online</span>');
-                            } else {
-                                statusElement.html(
-                                    '<span class="text-danger">Offline</span>');
-                            }
+                            $('.show-status-user').attr('data-user-id', response.data
+                                .sender_id);
 
                             loadMessages(response.data.direct.id);
                             loadSentFiles(response.data.direct.id);
@@ -1090,6 +1074,7 @@
                     }
                 });
             });
+
             // Khi người dùng chọn một nhóm
             $('.private-button').click(function() {
                 currentConversationId = $(this).data('private-id');
@@ -1275,23 +1260,42 @@
                 e.preventDefault();
                 let content = $('#messageInput').val();
                 let parentId = $('#parentMessageId').val();
-                let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
                 let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
                 let formData = new FormData();
+                let messageTypes = [];
 
-                // Thêm dữ liệu tin nhắn
                 formData.append('conversation_id', currentConversationId);
                 formData.append('content', content);
                 formData.append('parent_id', parentId || '');
-                formData.append('type', type);
-                // Kiểm tra nếu có ảnh được chọn
-                let fileInput = $('#fileInput')[0].files[0];
+                
+                let fileInput = $('#fileInput')[0].files;
 
-                console.log(fileInput);
+                if (fileInput.length > 0) {
+                    for (let i = 0; i < fileInput.length; i++) {
+                        let fileType = fileInput[i].type;
 
-                if (fileInput) {
-                    formData.append('input_file', fileInput);
+                        if (fileType.startsWith('image/')) {
+                            if (!messageTypes.includes('image')) messageTypes.push('image');
+                        } else if (fileType.startsWith('video/')) {
+                            if (!messageTypes.includes('video')) messageTypes.push('video');
+                        } else if (fileType.startsWith('audio/')) {
+                            if (!messageTypes.includes('audio')) messageTypes.push('audio');
+                        } else {
+                            if (!messageTypes.includes('file')) messageTypes.push('file');
+                        }
+
+                        formData.append('input_file[]', fileInput[i]);
+                    }
                 }
+
+                let messageTypeString = messageTypes.join(',');
+
+                // Nếu không có file, tin nhắn là text
+                if (messageTypeString === '') {
+                    messageTypeString = 'text';
+                }
+
+                formData.append('type', messageTypeString);
 
                 if (currentConversationId && content || fileInput) {
 
@@ -1302,13 +1306,11 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
-                            console.log(response);
 
                             if (response.status == 'success') {
                                 $('#messageInput').val(''); // Xóa nội dung nhập
                                 $('#fileInput').val(''); // Reset input file
-                                $('#previewContainer')
-                                    .hide(); // Ẩn preview ảnh sau khi gửi 
+                                $('#previewContainer').hide(); // Ẩn preview ảnh sau khi gửi 
                                 $('#messagesList').append(renderMessage(response));
                                 scrollToBottom();
                             }
@@ -1483,6 +1485,10 @@
             }
         }
 
+        function getFileThumbnail(ext) {
+            return `/assets/images/icons/${ext}.png`;
+        }
+
         function loadMessages(conversationId) {
             $.get('http://127.0.0.1:8000/admin/chats/get-messages/' + conversationId, function(response) {
                 if (response.status === 'success') {
@@ -1496,81 +1502,80 @@
                         const messageClass = message.sender.id == userId ? 'sender' :
                             'received';
                         const time = formatTime(message.created_at);
-                        let messageContent = '';
+                        let messageContent = `<p>${message.content || ''}</p>`; // Nội dung tin nhắn
+                        let mediaPreview = ''; // Khu vực hiển thị file
+
                         try {
                             if (message.media && message.media.length > 0) {
-                                let mediaFile = message.media[0].file_path;
-                                let fileType = message.media[0].file_type;
-                                let fileExt = mediaFile.split('.').pop().toLowerCase();
-                                let mediaPreview = '';
-                                let fileSize = formatFileSize(message.media[0].file_size);
-                                let fileIcon = getFileThumbnail(fileExt);
-                                console.log(message.media[0].file_size);
+                                message.media.forEach(media => {
+                                    let mediaFile = media.file_path;
+                                    let fileType = media.file_type;
+                                    let fileExt = mediaFile.split('.').pop().toLowerCase();
+                                    let fileSize = formatFileSize(media.file_size);
+                                    let fileIcon = getFileThumbnail(fileExt);
+                                    let fileName = mediaFile.split('/').pop();
 
-                                if (fileType.startsWith('image')) {
-                                    mediaPreview = `
-                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;position:relative">
-                                         <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
-                                            <i class='bx bx-download'></i>
-                                        </a> 
-                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
-                                    </div>`;
-                                } else if (fileType.startsWith('video')) {
-                                    mediaPreview = `
-                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <video controls style="max-width:100%; border-radius: 8px;">
-                                            <source src="/storage/${mediaFile}" type="${fileType}">
-                                        </video>                                 
-                                    </div>`;
-                                } else if (fileType === 'application/pdf') {
-                                    mediaPreview = `
-                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
-                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
-                                            <i class='bx bx-download'></i>
-                                        </a>                                    
-                                    </div>`;
-                                } else {
-                                    mediaPreview = `
-                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
-                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
-                                            <div class="col-9">
-                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
-                                                <p class="text-muted">${fileSize}</p>
-                                            </div>
-                                            <div class="col-2 d-flex align-items-center justify-content-center">
-                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
-                                                    <i class='fs-4 bx bx-download'></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                                }
-
-                                messageContent = `<p>${message.content}</p> ${mediaPreview}`;
-                            } else {
-                                messageContent = `<p>${message.content}</p>`;
+                                    if (fileType.startsWith('image')) {
+                                        mediaPreview += `
+                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px; position: relative">
+                        <a href="/storage/${mediaFile}" download class="download-btn btn btn-white btn-lg mt-2" style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
+                            <i class='bx bx-download'></i>
+                        </a> 
+                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                    </div>`;
+                                    } else if (fileType.startsWith('video')) {
+                                        mediaPreview += `
+                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                        <video controls style="max-width:100%; border-radius: 8px;">
+                            <source src="/storage/${mediaFile}" type="${fileType}">
+                        </video>                                
+                    </div>`;
+                                    } else if (fileType === 'application/pdf') {
+                                        mediaPreview += `
+                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                            <i class='bx bx-download'></i>
+                        </a>                                    
+                    </div>`;
+                                    } else {
+                                        mediaPreview += `
+                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                            <div class="col-9">
+                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                                <p class="text-muted">${fileSize}</p>
+                            </div>
+                            <div class="col-2 d-flex align-items-center justify-content-center">
+                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                    <i class='fs-4 bx bx-download'></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>`;
+                                    }
+                                });
                             }
                         } catch (error) {
                             console.error("Lỗi lấy file:", error);
-                            messageContent = `<p>${message.content}</p>`;
                         }
+
                         return `
-                            <div class=" message ${messageClass} style="padding-top: 10px">
-                                <div class="message-avatar">
-                                    <img src="${message.sender.avatar}" alt="avatar">
+                        <div class="message ${messageClass}" style="padding-top: 10px">
+                            <div class="message-avatar">
+                                <img src="${message.sender.avatar}" alt="avatar">
+                            </div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <strong>${message.sender.name}</strong>
+                                    <span class="message-time">${time}</span>
                                 </div>
-                                <div class="message-content">
-                                    <div class="message-header">
-                                        <strong>${message.sender.name}</strong>
-                                        <span class="message-time">${time}</span>
-                                        </div>
-                                        <p>   
-                                             ${messageContent}
-                                            </p>
-                                        </div>
-                                </div>`;
+                                ${messageContent} 
+                                ${mediaPreview} <!-- Chứa tất cả file -->
+                            </div>
+                        </div>`;
+
                     }).join(''); // Chuyển mảng thành chuỗi HTML
 
                     $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
@@ -1586,7 +1591,7 @@
             $.get('http://127.0.0.1:8000/admin/chats/get-sent-files/' + conversationId, function(response) {
 
                 if (response.status === 'success') {
-                    $('#sentFilesList').html(''); // Xóa danh sách cũ
+                    $('#sentFilesList').html('');
 
                     if (response.files.length === 0) {
                         $('#sentFilesList').html('<p>Chưa có file nào được gửi</p>');
@@ -1600,7 +1605,7 @@
                         $('#sentFilesList').html(''); // Xóa nội dung cũ
                         $('#documentFilesList').html('');
                         $('#mediaFilesList').html('')
-                        let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
+                        let filesToShow = allFiles.slice(0, visibleImages);
                         const mediaHtml = [];
                         const documentHtml = [];
                         const filesHtml = filesToShow.map(file => {
@@ -1722,66 +1727,63 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
         function renderMessage(response) {
-
-            const messageClass = response.message.sender.id == userId ?
-                'sender' : 'received';
+            const messageClass = response.message.sender.id == userId ? 'sender' : 'received';
             const time = formatTime(response.message.created_at);
             let messageContent = '';
+            let mediaPreview = '';
 
             try {
                 if (response.message.media && response.message.media.length > 0) {
-                    let mediaFile = response.message.media[0].file_path;
-                    let fileType = response.message.media[0].file_type;
-                    let fileExt = mediaFile.split('.').pop().toLowerCase();
-                    let mediaPreview = '';
-                    let fileSize = formatFileSize(response.message.media[0].file_size);
-                    let fileIcon = getFileThumbnail(fileExt);
+                    response.message.media.forEach(media => {
+                        let mediaFile = media.file_path;
+                        let fileType = media.file_type;
+                        let fileExt = mediaFile.split('.').pop().toLowerCase();
+                        let fileSize = formatFileSize(media.file_size);
+                        let fileIcon = getFileThumbnail(fileExt);
+                        let fileName = mediaFile.split('/').pop();
 
-                    if (fileType.startsWith('image')) {
-                        mediaPreview = `
-                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
-                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
-                                    </div>`;
-                    } else if (fileType.startsWith('video')) {
-                        mediaPreview = `
-                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <video controls style="max-width:100%; border-radius: 8px;">
-                                            <source src="/storage/${mediaFile}" type="${fileType}">
-                                        </video>                                
-                                    </div>`;
-                    } else if (fileType === 'application/pdf') {
-                        mediaPreview = `
-                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
-                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
-                                            <i class='bx bx-download'></i>
-                                        </a>                                    
-                                    </div>`;
-                    } else {
-                        mediaPreview = `
-                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
-                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
-                                            <div class="col-9">
-                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
-                                                <p class="text-muted">${fileSize}</p>
-                                            </div>
-                                            <div class="col-2 d-flex align-items-center justify-content-center">
-                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
-                                                    <i class='fs-4 bx bx-download'></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                    }
-
-                    messageContent = `<p>${response.message.content}</p> ${mediaPreview}`;
-                } else {
-                    messageContent = `<p>${response.message.content}</p>`;
+                        if (fileType.startsWith('image')) {
+                            mediaPreview += `
+                        <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                            <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                        </div>`;
+                        } else if (fileType.startsWith('video')) {
+                            mediaPreview += `
+                        <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                            <video controls style="max-width:100%; border-radius: 8px;">
+                                <source src="/storage/${mediaFile}" type="${fileType}">
+                            </video>                                
+                        </div>`;
+                        } else if (fileType === 'application/pdf') {
+                            mediaPreview += `
+                        <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                            <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                            <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                                <i class='bx bx-download'></i>
+                            </a>                                    
+                        </div>`;
+                        } else {
+                            mediaPreview += `
+                        <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                            <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                            <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                <div class="col-9">
+                                    <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                                    <p class="text-muted">${fileSize}</p>
+                                </div>
+                                <div class="col-2 d-flex align-items-center justify-content-center">
+                                    <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                        <i class='fs-4 bx bx-download'></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>`;
+                        }
+                    });
                 }
             } catch (error) {
                 console.error("Lỗi lấy file:", error);
-                messageContent = `<p>${response.message.content}</p>`;
+                messageContent = `<p>${message.content}</p>`;
             }
 
             let messageHtml = `
@@ -1794,7 +1796,8 @@
                     <strong>${response.message.sender.name}</strong>
                     <span class="message-time">${time}</span>
                 </div>
-                ${messageContent}
+                ${messageContent} 
+                ${mediaPreview} <!-- Chứa tất cả file -->
             </div>
         </div>
     `;
@@ -1808,6 +1811,14 @@
             let i = Math.floor(Math.log(bytes) / Math.log(1024));
             let size = (bytes / Math.pow(1024, i)).toFixed(2);
             return `${size} ${sizes[i - 1]}`;
+        }
+
+        function updateUserStatus(userId, status) {
+            let userElement = $('.show-status-user[data-user-id="' + userId + '"]');
+
+            if (userElement.length) {
+                userElement.text(status == 'online' ? '🟢' : '🔴');
+            }
         }
     </script>
 @endpush

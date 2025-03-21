@@ -56,7 +56,7 @@ class CourseModificationResponseNotification extends Notification implements Sho
 
     public function broadcastOn()
     {
-        return new PrivateChannel('instructor.' . $this->course->user_id);
+        return new PrivateChannel('notification.' . $this->course->user_id);
     }
 
     private function getNotificationMessage()

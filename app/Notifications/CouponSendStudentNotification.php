@@ -65,7 +65,7 @@ class CouponSendStudentNotification extends Notification implements ShouldBroadc
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('member.' . $this->user->id);
+        $channel = new PrivateChannel('notification.' . $this->user->id);
         return $channel;
     }
 }
