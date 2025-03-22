@@ -16,17 +16,28 @@ class TopInstructorController extends Controller
     {
         try {
 
-            $topInstructor = User::query()->whereHas('roles', function ($query) {
-                $query->where('name', 'instructor');
-            })
-                ->where('status', 1)
-                ->whereHas('courses')
-                ->withCount('courses')
-                ->withSum('courses', 'total_student')
-                ->orderByDesc('courses_count')
-                ->orderByDesc('courses_sum_total_student')
-                ->limit(4)
+            $topInstructor = User::selectRaw("
+                    users.id, 
+                    users.name, 
+                    users.code, 
+                    users.avatar, 
+                    COUNT(DISTINCT courses.id) as courses_count, 
+                    ROUND(AVG(ratings.rate), 1) as average_rating,
+                    COUNT(DISTINCT follows.id) as followers_count
+                ")      
+                ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->where('roles.name', 'instructor')
+                ->where('users.status', 'active')
+                ->leftJoin('courses', 'users.id', '=', 'courses.user_id') 
+                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                ->leftJoin('follows', 'users.id', '=', 'follows.instructor_id')
+                ->groupBy('users.id')
+                ->orderByDesc('average_rating') 
+                ->orderByDesc('followers_count') 
+                ->limit(5)
                 ->get();
+
 
             return $this->respondOk('Top 4 giảng viên :', $topInstructor);
         } catch (\Exception $e) {

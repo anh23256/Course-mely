@@ -281,7 +281,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
-            Route::put('{id}/update-popular', [CourseController::class, 'updatePopular'])->name('updatePopular');
+
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -323,7 +323,7 @@ Route::prefix('admin')->as('admin.')
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
-
+            
         });
 
         #============================== ROUTE WITH DRAWALS =============================
@@ -371,6 +371,8 @@ Route::prefix('admin')->as('admin.')
                     ->name('unread-count');
                 Route::put('/{notificationId}', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])
                     ->name('markAsRead');
+                Route::delete('/{notification}/force-delete', [\App\Http\Controllers\Admin\NotificationController::class, 'forceDelete'])
+                    ->name('forceDelete');
             });
 
         #============================== ROUTE QA SYSTEM =============================
