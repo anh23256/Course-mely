@@ -58,7 +58,8 @@ class TransactionController extends Controller
             $transaction = Transaction::query()
                 ->with([
                     'user',
-                    'invoice.course.user',
+                    'invoice.course',
+                    'invoice.membershipPlan',
                 ])
                 ->where('transaction_code', $transactionCode)
                 ->firstOrFail();

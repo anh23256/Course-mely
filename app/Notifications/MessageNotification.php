@@ -13,7 +13,7 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
 {
     use Queueable;
 
-    public $message;
+    protected $message;
 
     /**
      * Create a new notification instance.
@@ -35,14 +35,14 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
 
     private function getUrl()
     {
-        return route('admin.chats.index');
+        return route('admin.chats.index', ['room' => base64_encode($this->message->conversation_id)]);
     }
 
     private function notificationData(object $notifiable, bool $isDatabase = false): array
     {
         $existingNotification = $notifiable->notifications()
-            ->where('read_at', '=', null)
-            ->whereJsonContains('data->conversation_id', $this->message->conversation_id)
+        ->whereNull('read_at')
+        ->where('data->conversation_id', $this->message->conversation_id)
             ->first();
 
         $count = $existingNotification ? (!empty($existingNotification->data['count']) ? $existingNotification->data['count'] + 1 : 1) : 1;
@@ -52,6 +52,7 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
             'message_id' => $this->message->id,
             'sender_id' => $this->message->sender_id,
             'conversation_id' => $this->message->conversation_id,
+            'conversation_type' => $this->message->conversation->type,
             'message_user_avatar' => $this->message->sender->avatar,
             'count' => $isDatabase ? $count : ($existingNotification->data['count'] ?? 1),
             'message' => 'Bạn có ' . ($isDatabase ? $count : ($existingNotification->data['count'] ?? 1)) . ' tin nhắn mới từ' .
@@ -70,7 +71,8 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
         $notificationData = $this->notificationData($notifiable, true);
 
         $existingNotification = $notifiable->notifications()
-            ->whereJsonContains('data->conversation_id', $this->message->conversation_id)
+            ->whereNull('read_at')
+            ->where('data->conversation_id', $this->message->conversation_id)
             ->first();
 
         if ($existingNotification) {

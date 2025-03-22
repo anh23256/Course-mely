@@ -95,8 +95,14 @@ class WalletController extends Controller
         try {
             $title = 'Chi tiết giao dịch';
 
-            $systemFund = SystemFundTransaction::query()->where('id', $id)
-                ->with(['transaction', 'user', 'course'])->first();
+            $systemFund = SystemFundTransaction::query()
+                ->where('id', $id)
+                ->with([
+                    'transaction.invoice.course',
+                    'transaction.invoice.membershipPlan',
+                    'user'
+                ])
+                ->first();
 
             if (!$systemFund) {
                 abort(404, 'Không tìm thấy giao dịch');

@@ -79,11 +79,9 @@ class UserController extends Controller
                 if ($request->hasFile('certificates')) {
                     $certificates = json_decode($profile->certificates, true);
 
-                    if (!empty($certificates)) {
-                        $this->deleteMultiple($certificates, self::FOLDER_CERTIFICATE);
-                    }
-
                     $uploadedCertificates = $this->uploadCertificates($request->file('certificates'));
+
+                    $uploadedCertificates = array_merge($certificates, $uploadedCertificates);
                 }
 
                 $profile->update([

@@ -42,4 +42,8 @@ class Invoice extends Model
         return $this->morphOne(Transaction::class, 'transactionable');
     }
 
+    public function membershipPlan()
+    {
+        return $this->belongsTo(MembershipPlan::class)->with('instructor');
+    }
 }
