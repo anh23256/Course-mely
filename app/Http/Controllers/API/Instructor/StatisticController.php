@@ -37,7 +37,7 @@ class StatisticController extends Controller
                 ->where('courses.user_id', $user->id)
                 ->count();
 
-            $totalRevenue = DB::table('invoices')->selectRaw('SUM(final_amount) as total_revenue')->where('invoices.status',  "Đã thanh toán")
+            $totalRevenue = DB::table('invoices')->selectRaw('ROUND(SUM(final_amount)*0.6, 2) as total_revenue')->where('invoices.status',  "Đã thanh toán")
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
                 ->where('courses.user_id', $user->id)
                 ->first();
@@ -79,19 +79,17 @@ class StatisticController extends Controller
                     'categories.name as name_category',
                     'categories.slug as slug_category',
                     'categories.icon as icon_category',
-                    DB::raw('SUM(invoices.final_amount) as total_revenue'),
+                    DB::raw('ROUND(SUM(invoices.final_amount)*0.6, 2) as total_revenue'),
                     DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
                 )
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
+                ->join('courses', function($join) use ($user){
+                    $join->on('invoices.course_id', '=', 'courses.id')->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
+                })
                 ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
                 ->join('categories', 'categories.id', '=', 'courses.category_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
-                ->where([
-                    'courses.user_id' => $user->id,
-                    'invoices.status' => 'Đã thanh toán',
-                    'courses.status' => 'approved'
-                ])
+                ->where('invoices.status', 'Đã thanh toán')
                 ->groupBy('courses.slug')
                 ->orderByDesc('total_revenue')
                 ->get();

@@ -23,7 +23,7 @@
 
         .transaction-card {
             border-radius: 10px;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
         }
 
         .transaction-header {
@@ -68,14 +68,14 @@
 @section('content')
     <div class="profile-foreground position-relative mx-n4 mt-n4">
         <div class="profile-wid-bg">
-            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img"/>
+            <img src="{{ asset('assets/images/profile-bg.jpg') }}" alt="" class="profile-wid-img" />
         </div>
     </div>
     <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
         <div class="row g-4">
             <div class="col-auto">
                 <div class="avatar-lg">
-                    <img src="{{ Auth::user()->avatar ?? '' }}" alt="user-img" class="img-thumbnail rounded-circle"/>
+                    <img src="{{ Auth::user()->avatar ?? '' }}" alt="user-img" class="img-thumbnail rounded-circle" />
                 </div>
             </div>
             <div class="col">
@@ -107,7 +107,8 @@
                     </div>
                     <div class="col-lg-6 col-4">
                         <div class="p-2 w-100">
-                            <a href="#" class="badge d-flex justify-content-center fs-14 bg-warning px-3 py-2 w-100 text-decoration-none">
+                            <a href="#"
+                                class="badge d-flex justify-content-center fs-14 bg-warning px-3 py-2 w-100 text-decoration-none">
                                 Rút tiền
                             </a>
                         </div>
@@ -132,7 +133,8 @@
                             <div class="col-md-6">
                                 <div class="d-flex flex-column">
                                     <span class="text-muted fs-13">Số tiền giao dịch</span>
-                                    <span class="transaction-amount {{ $systemFund->type !== 'commission_received' ? 'negative' : '' }}">
+                                    <span
+                                        class="transaction-amount {{ $systemFund->type !== 'commission_received' ? 'negative' : '' }}">
                                         {{ number_format($systemFund->total_amount ?? 0) }} VND
                                     </span>
                                 </div>
@@ -155,7 +157,8 @@
                                 <div class="d-flex flex-column">
                                     <span class="text-muted fs-13 mb-2">Thời gian giao dịch</span>
                                     <span class="fs-14">
-                                        <i class="ri-time-line me-1"></i> {{ \Carbon\Carbon::parse($systemFund->created_at)->format('H:i - d/m/Y') }}
+                                        <i class="ri-time-line me-1"></i>
+                                        {{ \Carbon\Carbon::parse($systemFund->created_at)->format('H:i - d/m/Y') }}
                                     </span>
                                 </div>
                             </div>
@@ -167,39 +170,80 @@
                             <h5 class="mb-3">Thông tin giao dịch</h5>
                             <div class="card bg-light">
                                 <div class="card-body">
-                                    @if($systemFund->type === 'commission_received')
+                                    @if ($systemFund->type === 'commission_received')
                                         <div class="transaction-detail-row row">
-                                            <div class="col-md-4 transaction-label">Mã khóa học</div>
-                                            <div class="col-md-8 transaction-value">{{ $systemFund->course->code }}</div>
+                                            <div class="col-md-4 transaction-label">
+                                                {{ $systemFund->transaction->invoice->invoice_type == 'course' &&
+                                                !empty($systemFund->transaction->invoice->course_id)
+                                                    ? 'Mã khóa học:'
+                                                    : 'Mã gói thành viên:' }}
+                                            </div>
+                                            <div class="col-md-8 transaction-value">
+                                                {{ $systemFund->transaction->invoice->invoice_type == 'course' &&
+                                                !empty($systemFund->transaction->invoice->course_id)
+                                                    ? $systemFund->transaction->invoice->course->code
+                                                    : $systemFund->transaction->invoice->membershipPlan->code }}
+                                            </div>
                                         </div>
                                         <div class="transaction-detail-row row">
-                                            <div class="col-md-4 transaction-label">Tên khóa học</div>
-                                            <div class="col-md-8 transaction-value">{{ $systemFund->course->name }}</div>
+                                            <div class="col-md-4 transaction-label">
+                                                {{ $systemFund->transaction->invoice->invoice_type == 'course' &&
+                                                !empty($systemFund->transaction->invoice->course_id)
+                                                    ? 'Tên khóa học:'
+                                                    : 'Tên gói thành viên:' }}
+                                            </div>
+                                            <div class="col-md-8 transaction-value">
+                                                {{ $systemFund->transaction->invoice->invoice_type == 'course' &&
+                                                !empty($systemFund->transaction->invoice->course_id)
+                                                    ? $systemFund->transaction->invoice->course->name
+                                                    : $systemFund->transaction->invoice->membershipPlan->name }}
+                                            </div>
                                         </div>
                                         <div class="transaction-detail-row row">
                                             <div class="col-md-4 transaction-label">Giảng viên</div>
-                                            <div class="col-md-8 transaction-value">{{ $systemFund->course->user->name }}</div>
-                                        </div>
-                                        <div class="transaction-detail-row row">
-                                            <div class="col-md-4 transaction-label">Đường dẫn</div>
                                             <div class="col-md-8 transaction-value">
-                                                <a href="{{ config('app.fe_url') . '/courses/' .$systemFund->course->slug }}" target="_blank" class="text-primary">
-                                                    {{ config('app.fe_url') . '/courses/' .$systemFund->course->slug }}
-                                                    <i class="ri-external-link-line ms-1"></i>
-                                                </a>
+                                                {{ $systemFund->transaction->invoice->invoice_type == 'course' &&
+                                                !empty($systemFund->transaction->invoice->course_id)
+                                                    ? $systemFund->transaction->invoice->course->instructor->name
+                                                    : $systemFund->transaction->invoice->membershipPlan->instructor->name }}
                                             </div>
                                         </div>
+                                        @if ($systemFund->transaction->invoice->invoice_type == 'course' && !empty($systemFund->transaction->invoice->course_id))
+                                            <div class="transaction-detail-row row">
+                                                <div class="col-md-4 transaction-label">Đường dẫn khóa học</div>
+                                                <div class="col-md-8 transaction-value">
+                                                    <a href="{{ config('app.fe_url') . 'courses/' . $systemFund->transaction->invoice->course->slug }}"
+                                                        target="_blank" class="text-primary">
+                                                        {{ config('app.fe_url') . 'courses/' . $systemFund->transaction->invoice->course->slug }}
+                                                        <i class="ri-external-link-line ms-1"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="transaction-detail-row row">
+                                                <div class="col-md-4 transaction-label">Đường dẫn gói thành viên</div>
+                                                <div class="col-md-8 transaction-value">
+                                                    <a href="{{ config('app.fe_url'). $systemFund->transaction->invoice->membershipPlan->name . '/profile/' . $systemFund->transaction->invoice->membershipPlan->instructor->code }}"
+                                                        target="_blank" class="text-primary">
+                                                        {{ config('app.fe_url'). $systemFund->transaction->invoice->membershipPlan->name . '/profile/' . $systemFund->transaction->invoice->membershipPlan->instructor->code }}
+                                                        <i class="ri-external-link-line ms-1"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endif
 
                                     <div class="transaction-detail-row row">
                                         <div class="col-md-4 transaction-label">Tổng tiền</div>
-                                        <div class="col-md-8 transaction-value fw-bold">{{ number_format($systemFund->total_amount ?? 0) }} VND</div>
+                                        <div class="col-md-8 transaction-value fw-bold">
+                                            {{ number_format($systemFund->total_amount ?? 0) }} VND</div>
                                     </div>
 
                                     @if ($systemFund->type === 'commission_received')
                                         <div class="transaction-detail-row row">
                                             <div class="col-md-4 transaction-label">Hoa hồng</div>
-                                            <div class="col-md-8 transaction-value text-success fw-bold">{{ number_format($systemFund->retained_amount ?? 0) }} VND</div>
+                                            <div class="col-md-8 transaction-value text-success fw-bold">
+                                                {{ number_format($systemFund->retained_amount ?? 0) }} VND</div>
                                         </div>
                                     @endif
                                 </div>
@@ -212,7 +256,7 @@
                                 <div class="card-body">
                                     <div class="transaction-detail-row row">
                                         <div class="col-md-4 transaction-label">
-                                            @if($systemFund->type === 'commission_received')
+                                            @if ($systemFund->type === 'commission_received')
                                                 Mã người mua
                                             @else
                                                 Mã người giao dịch
@@ -222,7 +266,7 @@
                                     </div>
                                     <div class="transaction-detail-row row">
                                         <div class="col-md-4 transaction-label">
-                                            @if($systemFund->type === 'commission_received')
+                                            @if ($systemFund->type === 'commission_received')
                                                 Tên người mua
                                             @else
                                                 Tên người giao dịch
@@ -232,7 +276,7 @@
                                     </div>
                                     <div class="transaction-detail-row row">
                                         <div class="col-md-4 transaction-label">
-                                            @if($systemFund->type === 'commission_received')
+                                            @if ($systemFund->type === 'commission_received')
                                                 Email người mua
                                             @else
                                                 Email giao dịch
@@ -240,11 +284,11 @@
                                         </div>
                                         <div class="col-md-8 transaction-value">{{ $systemFund->user->email }}</div>
                                     </div>
-                                    @if($systemFund->type === 'commission_received')
+                                    @if ($systemFund->type === 'commission_received')
                                         <div class="transaction-detail-row row">
                                             <div class="col-md-4 transaction-label">Số điện thoại</div>
                                             <div class="col-md-8 transaction-value">
-                                                {{ $systemFund->course->user->profile->phone ?? 'Chưa có thông tin' }}
+                                                {{ $systemFund->user->profile->phone ?? 'Chưa có thông tin' }}
                                             </div>
                                         </div>
                                     @endif
