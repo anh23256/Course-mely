@@ -14,7 +14,7 @@ class Course extends Model
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
-        'intermediate';
+    'intermediate';
     const LEVEL_ADVANCED = 'advanced';
 
     const STATUS_DRAFT = 'draft';
@@ -118,4 +118,8 @@ class Course extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
 }
