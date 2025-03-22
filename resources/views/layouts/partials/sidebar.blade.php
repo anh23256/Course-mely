@@ -264,14 +264,23 @@
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
                 <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>
+            {{-- <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
+                <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
+            </a> --}}
             <a class="nav-link menu-link" href="#sidebarNotification" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="sidebarNotification">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý thông báo</span>
             </a>
+
+            {{-- <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}" data-bs-toggle="collapse" role="button"
+                aria-expanded="false" aria-controls="sidebarNotification">
+                <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
+            </a> --}}
+            
             <div class="collapse menu-dropdown" id="sidebarNotification">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="{{ route('admin.notifications.index') }}" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.notifications.show') }}" class="nav-link" data-key="t-chat">
                             Danh sách thông báo </a>
                     </li>
 

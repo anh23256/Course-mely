@@ -29,6 +29,84 @@
             <div class="col-lg-12">
                 <div class="card">
 
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
+
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-success" href="">Export dữ liệu</a>
+                            <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
+                                Tìm kiếm nâng cao
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-filter-2-line"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
+                                    style="min-width: 500px;">
+                                    <form>
+                                        <div class="container">
+                                            <div class="row">
+                                                <li class="col-6">
+                                                    <div class="mb-2">
+                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
+                                                        <input type="date" class="form-control form-control-sm"
+                                                               name="startDate" id="startDate" data-filter
+                                                               value="{{ request()->input('startDate') ?? '' }}">
+                                                    </div>
+                                                </li>
+                                                <li class="col-6">
+                                                    <div class="mb-2">
+                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
+                                                        <input type="date" class="form-control form-control-sm"
+                                                               name="endDate" id="endDate" data-filter
+                                                               value="{{ request()->input('endDate') ?? '' }}">
+                                                    </div>
+                                                </li>
+                                            </div>
+                                            <li class="mt-2 d-flex gap-1">
+                                                <button class="btn btn-sm btn-success flex-grow-1" type="reset"
+                                                        id="resetFilter">Reset
+                                                </button>
+                                                <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
+                                                    dụng
+                                                </button>
+                                            </li>
+                                        </div>
+                                    </form>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="advancedSearch" class="card-header" style="display:none;">
+
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Loại thông báo</label>
+                                    <select class="form-select form-select-sm" name="id" id="statusItem"
+                                            data-advanced-filter>
+                                        <option value="">Chọn loại thông báo</option>
+                                        @foreach ($notifications as $notification)
+                                            <option
+                                                 value="{{ $notification->id }}">
+                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                  
+                                <div class="mt-3 text-end">
+                                    <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
+                                    <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+
                     <!-- end card header -->
                     <div class="card-body" id="item_List">
                         <div class="listjs-table" id="customerList">
@@ -53,18 +131,26 @@
                                 </div>
                             </div>
 
-                            <ul class="nav nav-tabs" id="notificationTabs">
+                            <ul class="nav nav-tabs">
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all">Tất cả</a>
+                                    <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
+                                        href="{{ route('admin.notifications.show', ['status' => 'all']) }}">
+                                        Tất cả
+                                    </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="unread-tab" data-bs-toggle="tab" href="#unread">Chưa đọc</a>
+                                    <a class="nav-link {{ request('status') === 'unread' ? 'active' : '' }}"
+                                        href="{{ route('admin.notifications.show', ['status' => 'unread']) }}">
+                                        Chưa đọc
+                                    </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="read-tab" data-bs-toggle="tab" href="#read">Đã đọc</a>
+                                    <a class="nav-link {{ request('status') === 'read' ? 'active' : '' }}"
+                                        href="{{ route('admin.notifications.show', ['status' => 'read']) }}">
+                                        Đã đọc
+                                    </a>
                                 </li>
                             </ul>
-
 
                             <div class="tab-content mt-3">
                                 <!-- Tab Tất cả -->
@@ -73,6 +159,9 @@
                                         <table class="table align-middle table-nowrap">
                                             <thead class="table-light">
                                                 <tr>
+                                                    <th scope="col" style="width: 50px;">
+                                                        <input type="checkbox" id="checkAll">
+                                                    </th>
                                                     <th>STT</th>
                                                     <th>Loại thông báo</th>
                                                     <th>Nội dung</th>
@@ -81,15 +170,20 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($notifications as $notification)
+                                                @foreach ($notifications as $key => $notification)
                                                     <tr>
-                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>
+                                                            <input type="checkbox" class="checkItem" name="itemID"
+                                                                value="{{ $notification->id }}">
+                                                        </td>
+                                                        <td>{{ $notifications->firstItem() + $key }}</td>
                                                         <td>
                                                             <span class="badge bg-primary">
                                                                 {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}</td>
+                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}
+                                                        </td>
                                                         <td>
                                                             @if (is_null($notification->read_at))
                                                                 <span class="badge bg-danger">Chưa đọc</span>
@@ -103,69 +197,15 @@
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <!-- Hiển thị phân trang -->
+                                    <div class="mt-3">
+                                        {{ $notifications->links() }}
+                                    </div>
+
                                 </div>
 
-                                <!-- Tab Chưa đọc -->
-                                <div class="tab-pane fade" id="unread">
-                                    <div class="table-responsive table-card">
-                                        <table class="table align-middle table-nowrap">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>STT</th>
-                                                    <th>Loại thông báo</th>
-                                                    <th>Nội dung</th>
-                                                    <th>Ngày gửi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($notifications->whereNull('read_at') as $notification)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>
-                                                            <span class="badge bg-primary">
-                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
-                                                            </span>
-                                                        </td>
-                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}
-                                                        </td>
-                                                        <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
 
-                                <!-- Tab Đã đọc -->
-                                <div class="tab-pane fade" id="read">
-                                    <div class="table-responsive table-card">
-                                        <table class="table align-middle table-nowrap">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>STT</th>
-                                                    <th>Loại thông báo</th>
-                                                    <th>Nội dung</th>
-                                                    <th>Ngày gửi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($notifications->whereNotNull('read_at') as $notification)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>
-                                                            <span class="badge bg-primary">
-                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'] ?? 'Không xác định')) }}
-                                                            </span>
-                                                        </td>
-                                                        <td>{{ $notification->data['message'] ?? 'Không có nội dung' }}
-                                                        </td>
-                                                        <td>{{ $notification->created_at->format('d/m/Y H:i') }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
                             </div>
 
                         </div>
@@ -183,6 +223,15 @@
     </div>
 @endsection
 @push('page-scripts')
+    <script>
+        var routeUrlFilter = "{{ route('admin.notifications.index') }}";
+        var routeDeleteAll = "{{ route('admin.notifications.forceDelete', ':itemID') }}";
+
+        $(document).on('click', '#resetFilter', function() {
+            window.location = routeUrlFilter;
+        });
+    </script>
+
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>
     <script src="{{ asset('assets/js/common/delete-all-selected.js') }}"></script>

@@ -40,8 +40,6 @@ class MemberShipPlanController extends Controller
             }
 
             $memberShipPlans->makeHidden([
-                'benefits',
-                'description',
                 'updated_at'
             ]);
 

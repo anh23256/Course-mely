@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
+use App\Http\Controllers\Admin\SpinController;
 use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -318,9 +319,12 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE memberships =============================
         Route::prefix('memberships')->as('memberships.')->group(function () {
             Route::get('/', [MembershipUserController::class, 'index'])->name('index');
-            
         });
 
+        Route::prefix('spins')->as('spins.')->group(function () {
+            Route::get('/', [SpinController::class, 'index'])->name('index');
+            
+        });
 
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
@@ -367,6 +371,8 @@ Route::prefix('admin')->as('admin.')
                     ->name('unread-count');
                 Route::put('/{notificationId}', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])
                     ->name('markAsRead');
+                Route::delete('/{notification}/force-delete', [\App\Http\Controllers\Admin\NotificationController::class, 'forceDelete'])
+                    ->name('forceDelete');
             });
 
         #============================== ROUTE QA SYSTEM =============================

@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -137,14 +139,35 @@ class NotificationController extends Controller
                 ]
             ];
 
-            $notifications = $user->notifications()
+            $queryNotifications = $user->notifications()
                 ->where(function ($query) use ($notification_key, $typeGroups) {
                     foreach ($typeGroups[$notification_key]['type'] as $type) {
                         $query->orWhereJsonContains('data->type', $type);
                     }
                 })
-                ->latest()
-                ->get();
+                ->latest();
+
+            $status = $request->input('status', 'all');
+
+            if ($status === 'unread') {
+                $queryNotifications->whereNull('read_at');
+            } else if ($status === 'read') {
+                $queryNotifications->whereNotNull('read_at');
+            }
+
+            if ($request->has('query') && $request->input('query')) {
+                $search = $request->input(key: 'query');
+                $queryNotifications->where('data', 'like', "%$search%");
+            }
+
+            $notifications = $queryNotifications->with('notifiable')->latest()->paginate(10);
+
+            if ($request->ajax()) {
+
+                $html = view('notifications.table', compact('notifications'))->render();
+                return response()->json(['html' => $html]);
+            }
+
 
             return view('notifications.index', compact('notifications'));
         } catch (\Exception $e) {
@@ -153,4 +176,47 @@ class NotificationController extends Controller
             return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    public function forceDelete(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            if (str_contains($id, ',')) {
+
+                $notificationID = explode(',', $id);
+
+                $this->deleteNotifications($notificationID);
+            } else {
+                $notification = DatabaseNotification::query()->findOrFail($id);
+
+                $notification->delete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Xóa thành công'
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Xóa thất bại'
+            ]);
+        }
+    }
+
+    private function deleteNotifications(array $notificationID)
+    {
+
+        DatabaseNotification::query()->whereIn('id', $notificationID)->delete();
+    }
+
+    
 }

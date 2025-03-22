@@ -12,6 +12,7 @@ use App\Http\Controllers\API\Common\FollowController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
+use App\Http\Controllers\API\Common\SpinController;
 use App\Http\Controllers\API\Common\TagController;
 use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
@@ -191,6 +192,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{wishListID}', [WishListController::class, 'destroy']);
     });
 
+    #============================== ROUTE SPIN LUCKY =============================
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::prefix('spins')->as('spins.')->group(function () {
+            // Quay vòng quay may mắn
+            Route::post('/spin', [SpinController::class, 'spin'])->name('spin');
+
+            // Lấy số lượt quay còn lại của người dùng
+            Route::get('/user/turn', [SpinController::class, 'getSpins'])->name('user.spins');
+
+            // Cập nhật membership và tặng lượt quay
+            Route::post('/user/update-membership', [SpinController::class, 'updateMembership'])->name('user.update-membership');
+
+            // Hoàn thành hồ sơ và tặng lượt quay
+            Route::post('/user/complete-profile', [SpinController::class, 'completeProfile'])->name('user.complete-profile');
+
+            // Hoàn thành khóa học và tặng lượt quay
+            Route::post('/user/complete-course', [SpinController::class, 'completeCourse'])->name('user.complete-course');
+
+            // Lấy lịch sử quay của người dùng
+            Route::get('/user/spin-history', [SpinController::class, 'getSpinHistory'])->name('user.spin-history');
+
+            // Lấy danh sách phần thưởng có thể trúng
+            Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
+        });
+    });
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -203,8 +229,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -223,7 +248,6 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
-                    
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================
@@ -485,7 +509,6 @@ Route::prefix('blogs')
                 Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
                 Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
                 Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
-
             });
     });
 
@@ -516,6 +539,3 @@ Route::get('/get-member-ship-plans/{code}', [CommonController::class, 'getMember
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
 Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
-
-
-

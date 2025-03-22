@@ -12,13 +12,15 @@ class Invoice extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'membership_plan_id',
         'code',
         'coupon_code',
         'coupon_discount',
         'amount',
         'final_amount',
         'status',
-        'payment_method'
+        'payment_method',
+        'invoice_type'
     ];
 
     protected $attributes = [

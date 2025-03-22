@@ -1097,8 +1097,19 @@
                             toastr.error(response.message, "Lỗi!");
                         }
                     },
-                    error: function() {
-                        toastr.error("Có lỗi xảy ra, vui lòng thử lại!", "Lỗi!");
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors; 
+                            let errorMessage = "\n";
+
+                            $.each(errors, function(field, messages) {
+                                errorMessage += messages.join(", ") + "\n";
+                            });
+
+                            toastr.error(errorMessage);
+                        } else {
+                            toastr.error("Có lỗi xảy ra, vui lòng thử lại!", "Lỗi!");
+                        }
                     }
                 });
             });
@@ -1329,170 +1340,172 @@
                 } else {
                     alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
-            });
+            });     
         });
-
         function kickUser(button) {
-            let groupId = button.getAttribute("data-conversation-id");
-            let userId = button.getAttribute("data-user-id");
+                let groupId = button.getAttribute("data-conversation-id");
+                let userId = button.getAttribute("data-user-id");
 
-            if (!groupId || !userId) {
-                Toastify({
-                    text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
-                    backgroundColor: "red",
-                    duration: 3000,
-                    close: true
-                }).showToast();
-                return;
-            }
-            $.ajax({
-                url: 'http://127.0.0.1:8000/admin/chats/kick-member',
-                type: 'POST',
-                data: {
-                    group_id: groupId,
-                    user_id: userId
-                },
-                success: function(response) {
-                    if (response.success) {
+                if (!groupId || !userId) {
+                    Toastify({
+                        text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+                    return;
+                }
+                if (!confirm("Bạn có chắc chắn muốn xóa người này khỏi nhóm không ?")) return;
+                $.ajax({
+                    url: 'http://127.0.0.1:8000/admin/chats/kick-member',
+                    type: 'POST',
+                    data: {
+                        group_id: groupId,
+                        user_id: userId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "green",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "red",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = "Đã có lỗi xảy ra!";
+                        if (xhr.status === 403) {
+                            errorMessage = "Bạn không có quyền kick người này!";
+                        }
+                        if (xhr.status === 422) {
+                            errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
+                        }
                         Toastify({
-                            text: response.message,
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                    } else {
-                        Toastify({
-                            text: response.message,
+                            text: errorMessage,
                             backgroundColor: "red",
                             duration: 3000,
                             close: true
                         }).showToast();
                     }
-                },
-                error: function(xhr) {
-                    let errorMessage = "Đã có lỗi xảy ra!";
-                    if (xhr.status === 403) {
-                        errorMessage = "Bạn không có quyền kick người này!";
-                    }
+                });
+            }
+
+            function dissolveGroup(a) {
+                let groupId = a.getAttribute("data-conversation-id");
+
+                if (!groupId) {
                     Toastify({
-                        text: errorMessage,
+                        text: "Lỗi: Không tìm thấy nhóm",
                         backgroundColor: "red",
                         duration: 3000,
                         close: true
                     }).showToast();
+                    return;
                 }
-            });
-        }
+                if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
 
-        function dissolveGroup(a) {
-            let groupId = a.getAttribute("data-conversation-id");
-
-            if (!groupId) {
-                Toastify({
-                    text: "Lỗi: Không tìm thấy nhóm",
-                    backgroundColor: "red",
-                    duration: 3000,
-                    close: true
-                }).showToast();
-                return;
-            }
-            if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
-
-            $.ajax({
-                url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
-                type: 'POST',
-                data: {
-                    group_id: groupId
-                },
-                success: function(response) {
-                    if (response.success) {
+                $.ajax({
+                    url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
+                    type: 'POST',
+                    data: {
+                        group_id: groupId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Toastify({
+                                text: "Nhóm đã được giải tán!",
+                                backgroundColor: "green",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                            window.location.reload();
+                        } else {
+                            Toastify({
+                                text: response.message,
+                                backgroundColor: "red",
+                                duration: 3000,
+                                close: true
+                            }).showToast();
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = "Đã có lỗi xảy ra!";
+                        if (xhr.status === 403) {
+                            errorMessage = "Bạn không có quyền giải tán nhóm!";
+                        }
                         Toastify({
-                            text: "Nhóm đã được giải tán!",
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
-                        window.location.reload();
-                    } else {
-                        Toastify({
-                            text: response.message,
+                            text: errorMessage,
                             backgroundColor: "red",
                             duration: 3000,
                             close: true
                         }).showToast();
                     }
-                },
-                error: function(xhr) {
-                    let errorMessage = "Đã có lỗi xảy ra!";
-                    if (xhr.status === 403) {
-                        errorMessage = "Bạn không có quyền giải tán nhóm!";
-                    }
-                    Toastify({
-                        text: errorMessage,
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
+                });
+            }
+
+            function deleteConversation(button) {
+                const conversationId = button.getAttribute('data-conversation-id');
+
+                if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                location
+                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        });
                 }
-            });
-        }
-
-        function deleteConversation(button) {
-            const conversationId = button.getAttribute('data-conversation-id');
-
-            if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
-                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            alert(data.message);
-                            location
-                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    });
             }
-        }
 
-        function leaveConversation(button) {
-            const conversationId = button.getAttribute('data-conversation-id');
+            function leaveConversation(button) {
+                const conversationId = button.getAttribute('data-conversation-id');
 
-            if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
-                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            alert(data.message);
-                            location
-                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    });
-            }
-        }
-
+                if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
+                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                location
+                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        });
+                }
+            } 
         function getFileThumbnail(ext) {
             return `/assets/images/icons/${ext}.png`;
         }

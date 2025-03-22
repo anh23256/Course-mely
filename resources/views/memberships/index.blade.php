@@ -80,7 +80,30 @@
 
                     </div>
 
-                    
+                    <!-- Tìm kiếm nâng cao -->
+                    <div id="advancedSearch" class="card-header" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Tên khóa học</label>
+                                <input class="form-control form-control-sm" name="course_name_approved" type="text"
+                                    value="{{ request()->input('course_name_approved') ?? '' }}" placeholder="Nhập tiêu đề..."
+                                    data-advanced-filter>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Sắp xếp theo tổng tiền</label>
+                                <select class="form-control form-control-sm" name="sort_total_spent" data-advanced-filter>
+                                    <option value="">-- Chọn sắp xếp --</option>
+                                    <option value="asc" {{ request('sort_total_spent') == 'asc' ? 'selected' : '' }}>Từ thấp đến cao</option>
+                                    <option value="desc" {{ request('sort_total_spent') == 'desc' ? 'selected' : '' }}>Từ cao đến thấp</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mt-3 text-end">
+                                <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
+                                <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- end card header -->
                     <div class="card-body" id="item_List">
@@ -130,7 +153,7 @@
                                                     <td>
                                                         <input type="checkbox" class="checkItem" value="">
                                                     </td>
-                                                    <td class="id">{{ $loop->index + 1 }}</td>
+                                                    <td class="id">{{ $loop->parent->iteration }}</td>
                                                     <td>{{ $user->name }}</td>
                                                     <td>{{ $user->email }}</td>
                                                     <td>{{ $invoice->course->name }}</td>
@@ -169,6 +192,7 @@
         $(document).on('click', '#resetFilter', function() {
             window.location = routeUrlFilter;
         });
+
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>

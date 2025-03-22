@@ -155,10 +155,10 @@ class RatingController extends Controller
 
             $ratings = Rating::where('course_id', $course->id)
                 ->whereHas('user', fn($q) => $q->where('status', 'active'))
-                ->with('user:id,name,avatar')
+                ->with('user:id,name,avatar,code')
                 ->latest()
                 ->limit(5)
-                ->get(['id', 'content', 'user_id']);
+                ->get(['id', 'content', 'user_id','created_at']);
 
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
