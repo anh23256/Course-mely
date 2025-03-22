@@ -191,6 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [WishListController::class, 'store']);
         Route::delete('/{wishListID}', [WishListController::class, 'destroy']);
     });
+
     #============================== ROUTE SPIN LUCKY =============================
     Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('spins')->as('spins.')->group(function () {

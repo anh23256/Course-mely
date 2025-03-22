@@ -103,6 +103,13 @@ class ChatController extends Controller
         try {
             DB::beginTransaction();
             $validated = $request->validated();
+            // Kiểm tra tổng số thành viên (bao gồm cả owner)
+            if (count($validated['members']) + 1 < 3) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Nhóm phải có ít nhất 3 người.',
+                ], 422);
+            }
             // Tạo nhóm chat
             $conversation = Conversation::create([
                 'name' => $validated['name'] ?? 'Nhóm ẩn danh',
@@ -531,7 +538,15 @@ class ChatController extends Controller
             if ($group->owner_id == $userToKick->id) {
                 return response()->json(['success' => false, 'message' => 'Không thể kick chủ nhóm.'], 403);
             }
+                // Kiểm tra số lượng thành viên trước khi kick
+            $currentMemberCount = $group->users()->count();
 
+            if ($currentMemberCount <= 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.'
+                ], 422);
+            }
             // Xóa người dùng khỏi nhóm
             $group->users()->detach($userToKick->id);
 

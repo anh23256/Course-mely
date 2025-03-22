@@ -33,4 +33,9 @@ class MembershipPlan extends Model
     {
         return $this->belongsToMany(Course::class, 'membership_course_access');
     }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
 }

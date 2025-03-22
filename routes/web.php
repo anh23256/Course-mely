@@ -281,6 +281,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
+
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -322,7 +323,9 @@ Route::prefix('admin')->as('admin.')
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
+            
         });
+
         #============================== ROUTE WITH DRAWALS =============================
         Route::prefix('withdrawals')
             ->as('withdrawals.')

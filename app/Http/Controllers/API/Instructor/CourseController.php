@@ -100,7 +100,9 @@ class CourseController extends Controller
                     'code',
                     'name',
                     'thumbnail',
-                    'total_student'
+                    'total_student',
+                    'price',
+                    'created_at'
                 ])
                 ->get();
 

@@ -114,7 +114,7 @@ class FilterController extends Controller
                     break;
             }
 
-            $courses = $queryCourses->paginate(9);
+            $courses = $queryCourses->paginate(12);
 
             if ($courses->isEmpty()) {
                 return $this->respondNotFound('Không có dữ liệu');

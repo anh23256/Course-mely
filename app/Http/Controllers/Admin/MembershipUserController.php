@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 
 class MembershipUserController extends Controller
 {
-    //
     use FilterTrait;
+  
     public function index(Request $request)
     {
         $title = 'Quản lý thành viên';

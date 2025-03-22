@@ -229,7 +229,8 @@ class CommonController extends Controller
                         ->where('visibility', 'public');
                 })
                 ->where([
-                    'instructor_id' => $user->id
+                    'instructor_id' => $user->id,
+                    'status' => 'active'
                 ])->get();
 
             $memberShipPlans->makeHidden([

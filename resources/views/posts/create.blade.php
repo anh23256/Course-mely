@@ -9,39 +9,48 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
         }
+
         .form-card:hover {
             box-shadow: 0 0 25px rgba(0,0,0,0.1);
         }
+
         .form-card .card-header {
             border-bottom: 1px solid rgba(0,0,0,0.05);
             padding: 15px 20px;
         }
+
         .form-card .card-body {
             padding: 20px;
         }
+
         .card-title {
             font-weight: 600;
             font-size: 16px;
         }
+
         .form-label {
             font-weight: 500;
             margin-bottom: 8px;
             color: #495057;
         }
+
         .form-control {
             border-radius: 6px;
             padding: 10px 15px;
             border: 1px solid #dee2e6;
         }
+
         .form-control:focus {
             box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
         }
+
         .btn-publish {
             padding: 10px 24px;
             font-weight: 500;
             letter-spacing: 0.3px;
             transition: all 0.3s;
         }
+
         .select2-container .select2-selection--single,
         .select2-container--default .select2-selection--multiple {
             height: 42px;
@@ -49,6 +58,7 @@
             border: 1px solid #dee2e6;
             padding: 6px 8px;
         }
+
         .thumbnail-preview-container {
             background-color: #f8f9fa;
             border: 1px dashed #ced4da;
@@ -58,17 +68,21 @@
             margin-top: 10px;
             transition: all 0.3s;
         }
+
         .thumbnail-preview-container:hover {
             background-color: #f1f3f5;
         }
+
         .ai-option {
             cursor: pointer;
             transition: all 0.2s;
             padding: 12px 16px;
         }
+
         .ai-option:hover {
             background-color: #f8f9fa;
         }
+
         .ai-badge {
             background: linear-gradient(45deg, #6366F1, #8B5CF6);
             color: white;
@@ -77,6 +91,7 @@
             font-size: 12px;
             margin-left: 10px;
         }
+
         .ai-content-area {
             background-color: #2b2d3e;
             color: #e9ecef;
@@ -87,6 +102,7 @@
             font-family: 'Courier New', monospace;
             line-height: 1.6;
         }
+
         .section-divider {
             height: 1px;
             background-color: #e9ecef;
@@ -440,6 +456,7 @@
                     },
                     success: function (response) {
                         const aiText = response.data;
+                        console.log(aiText)
                         $('#ai-progress').hide();
                         $('#ai-content').show();
 
