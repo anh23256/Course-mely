@@ -343,7 +343,7 @@ class MemberShipPlanController extends Controller
         return $query->exists();
     }
 
-    protected function checkMembershipEligibility($instructor)
+    protected function checkMembershipEligibility($instructor, $durationMonths = null)
     {
         $existingMembership = MembershipPlan::query()
             ->where('instructor_id', $instructor->id)

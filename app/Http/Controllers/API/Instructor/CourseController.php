@@ -95,6 +95,7 @@ class CourseController extends Controller
             $courses = Course::query()
                 ->where('user_id', $user->id)
                 ->where('status', 'approved')
+                ->where('is_free', 0)
                 ->select([
                     'id',
                     'code',

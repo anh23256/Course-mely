@@ -97,7 +97,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                  
+
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
                                     <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
@@ -134,19 +134,19 @@
                             <ul class="nav nav-tabs">
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.show', ['status' => 'all']) }}">
+                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'all']) }}">
                                         Tất cả
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status') === 'unread' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.show', ['status' => 'unread']) }}">
+                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'unread']) }}">
                                         Chưa đọc
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status') === 'read' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.show', ['status' => 'read']) }}">
+                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'read']) }}">
                                         Đã đọc
                                     </a>
                                 </li>
