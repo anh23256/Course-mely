@@ -413,4 +413,6 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/kick-member', [ChatController::class, 'kickUserFromGroup'])->name('kickUserFromGroup');
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
+
+            Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
     });

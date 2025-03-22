@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
@@ -35,7 +36,7 @@ class ChatController extends Controller
 
     const FOLDER = "messages";
 
-    public function index()
+    public function index(Request $request)
     {
         $data = $this->getAdminsAndChannels();
 
@@ -159,15 +160,19 @@ class ChatController extends Controller
             DB::beginTransaction();
             $validated = $request->validated();
 
+            if (!$request->has('input_file') || is_array($request->input('input_file'))) {
+                if (empty($request->input('content'))) return response()->json(['errors' => [['Bạn chưa nhập nội dung tin nhắn']]], 422);
+            }
+
             $conversation = Conversation::findOrFail($validated['conversation_id']);
 
             // Xác định người nhận: lấy tất cả người trong cuộc trò chuyện, trừ sender_id
             $received = $conversation->users()
                 ->where('user_id', '<>', auth()->id()) // Lấy người khác (không phải sender)
-                ->first(); // Vì chat 1-1 chỉ có 1 người còn lại
+                ->first();
 
             if (!$received) {
-                return response()->json(['status' => 'error', 'message' => 'Không tìm thấy người nhận']);
+                return response()->json(['errors' => [['Không tìm thấy người nhận']]], 422);
             }
             $message = Message::create([
                 'conversation_id' => $validated['conversation_id'],
@@ -219,14 +224,21 @@ class ChatController extends Controller
 
             DB::commit();
 
+            $userInChat = [];
+
             if ($message->conversation->type === 'direct') {
                 broadcast(new PrivateMessageSent($message))->toOthers();
             } else {
                 broadcast(new GroupMessageSent($message))->toOthers();
             }
 
-            $users = ConversationUser::query()->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
-                ->where('user_id', '<>', auth()->id())->pluck('user_id');
+            $onlineUsers = Cache::get("chat_room:{$validated['conversation_id']}:users", []);
+            Log::error("message", $onlineUsers);
+
+            $users = ConversationUser::query()
+                ->where(['conversation_id' => $validated['conversation_id'], 'is_blocked' => 0])
+                ->whereNotIn('user_id', $onlineUsers)
+                ->pluck('user_id');
 
             Notification::send(User::whereIn('id', $users)->get(), new MessageNotification($message));
 
@@ -279,6 +291,15 @@ class ChatController extends Controller
             $leader = User::find($group->owner_id);
             $channelId = $group->id;
 
+            /** @var User $user */
+            $user = Auth::user();
+            $notification = $user->notifications()->whereJsonContains('data->conversation_id', $groupId)->first();
+
+            if ($notification) {
+                if (!$notification->read_at) {
+                    $notification->markAsRead();
+                }
+            }
             // Trả về thông tin nhóm
             return response()->json([
                 'status' => 'success',
@@ -319,6 +340,17 @@ class ChatController extends Controller
             $avatar = $otherUser->avatar ?? url('assets/images/users/user-dummy-img.jpg');
             $memberCount = null; // Không cần hiển thị số thành viên
             // Trả về thông tin nhóm
+
+            /** @var User $user */
+            $user = Auth::user();
+            $notification = $user->notifications()
+                ->where(['data->conversation_id' => $groupId, 'data->type' => 'receive_message'])
+                ->first();
+
+            if ($notification) {
+                $notification->delete();
+            }
+
             return response()->json([
                 'status' => 'success',
                 'data' => [
@@ -593,5 +625,36 @@ class ChatController extends Controller
             Log::error('Lỗi khi giải tán nhóm', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
         }
+    }
+    public function getUserOnline(Request $request)
+    {
+        $conversationId = $request->conversation_id ?? '';
+        $userIds = collect($request->active_users)->pluck('id')->filter()->all();
+        $type = $request->type ?? '';
+
+        if (empty($conversationId) || empty($userIds) || empty($type)) return;
+
+        $cacheKey = "chat_room:$conversationId:users";
+
+        $users = Cache::get($cacheKey, []);
+
+        if ($type == 'join') {
+            $newUsers = array_diff($userIds, $users);
+            if (!empty($newUsers)) {
+                $users = array_merge($users, $newUsers);
+                Cache::put($cacheKey, $users, now()->addMinutes(60));
+            }
+        } elseif ($type == 'leave') {
+            $remainingUsers = array_diff($users, $userIds);
+            if (count($remainingUsers) !== count($users)) {
+                if (empty($remainingUsers)) {
+                    Cache::forget($cacheKey);
+                } else {
+                    Cache::put($cacheKey, $remainingUsers, now()->addMinutes(60));
+                }
+            }
+        }
+
+        return;
     }
 }

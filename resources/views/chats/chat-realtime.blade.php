@@ -785,6 +785,7 @@
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
         const userId = "{{ auth()->id() }}"; // Truyền id người dùng từ Laravel sang JavaScript
+        var COUNTWEB = 1;
         const firstChanelId = "{{ $data['firstChanel']['id'] }}";
         const firstChanelType = "{{ $data['firstChanel']['type'] }}";
 
@@ -1033,7 +1034,7 @@
                 });
             });
 
-            $('.usersList a').click(function(event) {
+            $(document).on('click', '.usersList a', function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
                 var channelId = $(this).data('private-id'); // Lấy ID của nhóm chat
@@ -1043,14 +1044,29 @@
             });
 
             // Khi người dùng chọn một nhóm
-            $('.private-button').click(function() {
+            $(document).on('click', '.private-button', function() {
+                if (window.Echo) {
+                    window.Echo.leave('private-chat.' + currentConversationId);
+                }
+                if (window.Echo) {
+                    window.Echo.leave('conversation.' + currentConversationId);
+                }
+
                 currentConversationId = $(this).data('private-id');
                 let userId = @json(auth()->id());
-                $('#showadd').hide(); // Hiển thị nút
-                console.log('Đã chọn conversation với ID:------------------------', currentConversationId);
-                window.Echo.private('private-chat.' + currentConversationId)
+                $('#showadd').hide();
+
+                window.Echo.join('private-chat.' + currentConversationId)
+                    .here(users => {
+                        sendActiveUsersToServer(users, 'join');
+                    })
+                    .joining(user => {
+                        sendActiveUsersToServer([user], 'join');
+                    })
+                    .leaving(user => {
+                        sendActiveUsersToServer([user], 'leave');
+                    })
                     .listen('PrivateMessageSent', function(event) {
-                        console.log('🔵 Sự kiện nhận được:', event);
                         $('#messagesList').append(renderMessage(event));
                         scrollToBottom();
                     });
@@ -1108,14 +1124,32 @@
             });
             // Khi người dùng chọn một nhóm
             $('.group-button').click(function() {
+                if (window.Echo) {
+                    window.Echo.leave('private-chat.' + currentConversationId);
+                }
+                if (window.Echo) {
+                    window.Echo.leave('conversation.' + currentConversationId);
+                }
                 currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
-                console.log('Đã chọn nhóm với ID:', currentConversationId);
-                $('#showadd').show(); // Hiển thị nút
-                window.Echo.private('conversation.' + currentConversationId)
+
+                $('#showadd').show();
+
+                window.Echo.join('conversation.' + currentConversationId)
+                    .here(users => {
+                        console.log('Phòng oke');
+
+                        sendActiveUsersToServer(users, 'join');
+                    })
+                    .joining(user => {
+                        console.log('Phòng oke');
+                        sendActiveUsersToServer([user], 'join');
+                    })
+                    .leaving(user => {
+                        sendActiveUsersToServer([user], 'leave');
+                    })
                     .listen('GroupMessageSent', function(event) {
                         $('#messagesList').append(renderMessage(event));
                         scrollToBottom();
-                        // alert('Đã nhận tin nhắn mới');
                     });
             });
 
@@ -1219,6 +1253,7 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
+                            console.log(response);
 
                             if (response.status == 'success') {
 
@@ -1293,6 +1328,7 @@
                         error: function(xhr) {
                             if (xhr.status === 422) {
                                 let errors = xhr.responseJSON.errors;
+
                                 Object.values(errors).forEach(err => {
                                     toastr.error(err[0]);
                                 });
@@ -1672,8 +1708,6 @@
             }
         }
 
-
-
         function formatTime(dateString) {
             const date = new Date(dateString);
 
@@ -1811,7 +1845,6 @@
                     id: channelId
                 },
                 success: function(response) {
-                    console.log(response);
                     if (response) {
 
                         // Cập nhật tên nhóm và số thành viên
@@ -1911,16 +1944,96 @@
             });
         }
 
-        if (firstChanelId && firstChanelType) {
-            currentConversationId = firstChanelId;
-            if (firstChanelType == 'group') {
-                getGroupInfo(firstChanelId);
-            } else {
-                getUserInfo(firstChanelId);
+        function sendActiveUsersToServer(users = null, type) {
+
+            $.ajax({
+                url: "{{ route('admin.getUserOnline') }}",
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    conversation_id: currentConversationId,
+                    active_users: users,
+                    type: type,
+                },
+                success: function(response) {
+                    console.log('Success:', response);
+                },
+                error: function(xhr) {
+                    console.log('Error:', xhr);
+                }
+            });
+        }
+
+        if (firstChanelId && firstChanelType && COUNTWEB == 1) {
+
+            function getUrlParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
             }
 
-            loadMessages(firstChanelId);
-            loadSentFiles(firstChanelId);
+            let roomParam = getUrlParam('conversation');
+            let decodedRoomId = null;
+
+            if (roomParam) {
+                try {
+                    decodedRoomId = atob(roomParam).trim();
+
+                    if(isNaN(decodedRoomId)) throw new Error("");
+                    if (!decodedRoomId) throw new Error("");
+                } catch (e) {
+                    decodedRoomId = null;
+                }
+            }
+
+            currentConversationId = decodedRoomId ?? firstChanelId;
+            console.log(currentConversationId);
+            
+            if (firstChanelType == 'group') {
+                getGroupInfo(firstChanelId);
+                $(document).ready(function() {
+                    $('#showadd').show();
+
+                    window.Echo.join('conversation.' + currentConversationId)
+                        .here(users => {
+                            sendActiveUsersToServer(users, 'join');
+                        })
+                        .joining(user => {
+                            sendActiveUsersToServer([user], 'join');
+                        })
+                        .leaving(user => {
+                            sendActiveUsersToServer([user], 'leave');
+                        })
+                        .listen('GroupMessageSent', function(event) {
+                            $('#messagesList').append(renderMessage(event));
+                            scrollToBottom();
+                        });
+                });
+            } else {
+                getUserInfo(firstChanelId);
+                $(document).ready(function() {
+                    $('#showadd').hide();
+
+                    window.Echo.join('private-chat.' + currentConversationId)
+                        .here(users => {
+                            sendActiveUsersToServer(users, 'join');
+                        })
+                        .joining(user => {
+                            console.log('User vừa vào:', user);
+                            sendActiveUsersToServer([user], 'join');
+                        })
+                        .leaving(user => {
+                            console.log('User vừa rời:', user);
+                            sendActiveUsersToServer([user], 'leave');
+                        })
+                        .listen('PrivateMessageSent', function(event) {
+                            $('#messagesList').append(renderMessage(event));
+                            scrollToBottom();
+                        });
+                });
+            }
+            COUNTWEB++;
         }
     </script>
 @endpush

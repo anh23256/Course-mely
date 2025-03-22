@@ -325,7 +325,8 @@
                 font-size: 16px;
             }
 
-            .info-label, .info-value {
+            .info-label,
+            .info-value {
                 width: 100%;
                 display: block;
             }
@@ -358,7 +359,8 @@
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item active"><a
-                                    href="{{ route('admin.withdrawals.index') }}">{{ $subTitle ?? 'Thông tin giao dịch' }}</a></li>
+                                    href="{{ route('admin.withdrawals.index') }}">{{ $subTitle ?? 'Thông tin giao dịch' }}</a>
+                            </li>
                         </ol>
                     </div>
 
@@ -388,8 +390,8 @@
                                         </div>
                                         <div class="summary-item-content">
                                             <div class="summary-item-label">Tổng giá trị giao dịch</div>
-                                            <div
-                                                class="summary-item-value price">{{ number_format($transaction->amount ?? 0) }}
+                                            <div class="summary-item-value price">
+                                                {{ number_format($transaction->amount ?? 0) }}
                                                 VND
                                             </div>
                                         </div>
@@ -405,16 +407,16 @@
                                             <div class="summary-item-value">
                                                 @if ($transaction->status === 'Giao dịch thành công')
                                                     <span class="status-badge status-success">
-                                                    <i class="ri-check-line me-1"></i>{{ $transaction->status }}
-                                                </span>
+                                                        <i class="ri-check-line me-1"></i>{{ $transaction->status }}
+                                                    </span>
                                                 @elseif($transaction->status === 'Chờ xử lý')
                                                     <span class="status-badge status-pending">
-                                                    <i class="ri-time-line me-1"></i>{{ $transaction->status }}
-                                                </span>
+                                                        <i class="ri-time-line me-1"></i>{{ $transaction->status }}
+                                                    </span>
                                                 @else
                                                     <span class="status-badge status-failed">
-                                                    <i class="ri-close-circle-line me-1"></i>{{ $transaction->status }}
-                                                </span>
+                                                        <i class="ri-close-circle-line me-1"></i>{{ $transaction->status }}
+                                                    </span>
                                                 @endif
                                             </div>
                                         </div>
@@ -427,8 +429,9 @@
                                         </div>
                                         <div class="summary-item-content">
                                             <div class="summary-item-label">Thời gian thực hiện</div>
-                                            <div
-                                                class="summary-item-value">{{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i') }}</div>
+                                            <div class="summary-item-value">
+                                                {{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i') }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -442,35 +445,75 @@
                                 <i class="ri-book-open-line"></i>Thông tin khóa học
                             </h5>
                             <div class="info-item">
-                                <div class="info-label">Mã khóa học:</div>
-                                <div class="info-value">{{ $transaction->invoice->course->code }}</div>
+                                <div class="info-label">
+                                    {{ $transaction->invoice->invoice_type == 'course' &&
+                                    !empty($transaction->invoice->course_id)
+                                        ? 'Mã khóa học:'
+                                        : 'Mã gói thành viên:' }}
+                                </div>
+                                <div class="info-value">
+                                    {{ $transaction->invoice->invoice_type == 'course' && !empty($transaction->invoice->course_id)
+                                        ? $transaction->invoice->course->code
+                                        : $transaction->invoice->membershipPlan->code }}
+                                </div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Tên khóa học:</div>
-                                <div class="info-value highlighted">{{ $transaction->invoice->course->name }}</div>
+                                <div class="info-label">
+                                    {{ $transaction->invoice->invoice_type == 'course' &&
+                                    !empty($transaction->invoice->course_id)
+                                        ? 'Tên khóa học:'
+                                        : 'Tên gói thành viên:' }}
+                                </div>
+                                <div class="info-value highlighted">
+                                    {{ $transaction->invoice->invoice_type == 'course' &&
+                                    !empty($transaction->invoice->course_id)
+                                        ? $transaction->invoice->course->name
+                                        : $transaction->invoice->membershipPlan->name }}
+                                </div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Giảng viên:</div>
                                 <div class="info-value">
-                                    {{ $transaction->invoice->course->user->name }}</div>
+                                    {{ $transaction->invoice->invoice_type == 'course' &&
+                                    !empty($transaction->invoice->course_id)
+                                        ? $transaction->invoice->course->instructor->name
+                                        : $transaction->invoice->membershipPlan->instructor->name }}
+                                </div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Giá khóa học:</div>
-                                <div
-                                    class="info-value price">{{ number_format($transaction->invoice->course->price ?? 0) }}
+                                <div class="info-value price">
+                                    {{ number_format(
+                                        ($transaction->invoice->invoice_type == 'course' && !empty($transaction->invoice->course_id)
+                                            ? $transaction->invoice->course->price
+                                            : $transaction->invoice->membershipPlan->price) ?? 0,
+                                    ) }}
                                     VND
                                 </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-label">Đường dẫn khóa học:</div>
-                                <div class="info-value">
-                                    <a href="{{ config('app.fe_url') }}/courses/{{ $transaction->invoice->course->slug }}" target="_blank"
-                                       class="link-hover">
-                                        {{ $transaction->invoice->course->slug }}
-                                        <i class="ri-external-link-line ms-1"></i>
-                                    </a>
+                            @if ($transaction->invoice->invoice_type == 'course' && !empty($transaction->invoice->course_id))
+                                <div class="info-item">
+                                    <div class="info-label">Đường dẫn khóa học:</div>
+                                    <div class="info-value">
+                                        <a href="{{ config('app.fe_url') . 'courses/' . $transaction->invoice->course->slug }}"
+                                            target="_blank" class="text-primary">
+                                            {{ config('app.fe_url') . 'courses/' . $transaction->invoice->course->slug }}
+                                            <i class="ri-external-link-line ms-1"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                <div class="info-item">
+                                    <div class="info-label">Đường gói thành viên:</div>
+                                    <div class="info-value">
+                                        <a href="{{ config('app.fe_url') . $transaction->invoice->membershipPlan->name . '/profile/' . $transaction->invoice->membershipPlan->instructor->code }}"
+                                            target="_blank" class="text-primary">
+                                            {{ config('app.fe_url') . $transaction->invoice->membershipPlan->name . '/profile/' . $transaction->invoice->membershipPlan->instructor->code }}
+                                            <i class="ri-external-link-line ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -493,8 +536,8 @@
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Số điện thoại:</div>
-                                <div
-                                    class="info-value">{{ $transaction->invoice->course->user->profile->phone ?? 'Chưa có thông tin' }}</div>
+                                <div class="info-value">
+                                    {{ $transaction->user->profile->phone ?? 'Chưa có thông tin' }}</div>
                             </div>
 
                             <div class="coupon-section">
@@ -506,7 +549,7 @@
                                         <div class="info-item">
                                             <div class="info-label">Mã giảm giá:</div>
                                             <div class="info-value">
-                                                @if($transaction->invoice->coupon_code)
+                                                @if ($transaction->invoice->coupon_code)
                                                     <span
                                                         class="coupon-badge">{{ $transaction->invoice->coupon_code }}</span>
                                                 @else
@@ -518,8 +561,8 @@
                                     <div class="col-md-6">
                                         <div class="info-item">
                                             <div class="info-label">Số tiền giảm:</div>
-                                            <div
-                                                class="info-value fw-bold">{{ $transaction->invoice->coupon_discount ?? '0 VND' }}</div>
+                                            <div class="info-value fw-bold">
+                                                {{ $transaction->invoice->coupon_discount ?? '0 VND' }}</div>
                                         </div>
                                     </div>
                                 </div>
