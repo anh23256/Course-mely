@@ -30,14 +30,24 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
     ->where('user_id', $user->id)
     ->first();
-    return $conversationUser ? true : false;
+
+    if ($conversationUser) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    return false;
 });
 
 Broadcast::channel('private-chat.{conversationId}', function ($user, $conversationId) {
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
     ->where('user_id', $user->id)
     ->first();
-    return $conversationUser ? true : false;
+
+    if ($conversationUser) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    return false;
 });
 
 Broadcast::channel('user-status', function ($user) {

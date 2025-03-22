@@ -336,8 +336,6 @@
                                 unread_notifications_count
                             } = response.data;
 
-                            console.log(response);
-
                             $('#messages-notifications-container').empty();
                             $('#notification-data').empty();
                             $('#approvals-notifications-container').empty();
@@ -498,8 +496,6 @@
                     return;
                 }
                 const url = `/admin/notifications/${notificationId}`;
-
-                console.log(urlRedirect, url, notificationId);
 
                 const data = {
                     read_at: readed

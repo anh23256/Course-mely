@@ -23,7 +23,7 @@ class StoreSendMessageRequest extends FormRequest
     {
         return [
             'conversation_id' => 'required|exists:conversations,id',
-            'content' => 'required|string|max:255',
+            'content' => 'nullable|string|max:255',
             'type' => 'nullable|string',
             'parent_id' => 'nullable|exists:messages,id',
             'meta_data' => 'nullable|json',

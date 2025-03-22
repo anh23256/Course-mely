@@ -26,7 +26,7 @@ class PrivateMessageSent implements ShouldBroadcast
     // Xác định kênh mà sự kiện sẽ được phát đi (Chỉ phát tới những người trong cuộc trò chuyện)
     public function broadcastOn()
     {
-        return new PrivateChannel('private-chat.' . $this->message->conversation_id);
+        return new PresenceChannel('private-chat.' . $this->message->conversation_id);
     }
 
     // Định nghĩa tên sự kiện để client bắt
