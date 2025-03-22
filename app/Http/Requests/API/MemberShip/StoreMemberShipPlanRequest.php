@@ -3,6 +3,7 @@
 namespace App\Http\Requests\API\MemberShip;
 
 use App\Http\Requests\API\Bases\BaseFormRequest;
+use App\Models\MembershipPlan;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMemberShipPlanRequest extends BaseFormRequest
@@ -24,9 +25,71 @@ class StoreMemberShipPlanRequest extends BaseFormRequest
             'description' => 'nullable|string',
             'benefits' => 'required|array',
             'benefits.*' => 'required|string',
-            'course_ids' => 'nullable|array',
+            'course_ids' => 'required|array|min:5',
             'course_ids.*' => 'exists:courses,id'
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $durationMonths = $this->input('duration_months');
+            $courseIds = $this->input('course_ids');
+
+            if (!$courseIds) {
+                return;
+            }
+
+            $existingPlan = MembershipPlan::where('duration_months', $durationMonths)->first();
+            if ($existingPlan) {
+                $validator->errors()->add(
+                    'duration_months',
+                    'Đã tồn tại một gói thành viên với thời hạn (' . $durationMonths . ' tháng). Vui lòng chọn thời hạn khác.'
+                );
+                return;
+            }
+
+            if ($durationMonths == 3) {
+                if (count($courseIds) < 5) {
+                    $validator->errors()->add('course_ids', 'Gói thành viên 3 tháng phải có tối thiểu 5 khóa học.');
+                }
+            } elseif ($durationMonths == 6) {
+                if (count($courseIds) < 10) {
+                    $validator->errors()->add('course_ids', 'Gói thành viên 6 tháng phải có tối thiểu 10 khóa học.');
+                }
+            } elseif ($durationMonths == 12) {
+                if (count($courseIds) < 10) {
+                    $validator->errors()->add('course_ids', 'Gói thành viên 12 tháng phải có tối thiểu 10 khóa học.');
+                }
+
+                $this->validateCourseUniqueness($validator, $courseIds);
+            }
+        });
+    }
+
+    protected function validateCourseUniqueness($validator, $courseIds)
+    {
+        $otherMembershipPlans = MembershipPlan::all();
+
+        foreach ($otherMembershipPlans as $plan) {
+            $planCourseIds = $plan->membershipCourseAccess()->pluck('course_id')->toArray();
+
+            if (empty($planCourseIds)) {
+                continue;
+            }
+
+            $overlap = array_intersect($courseIds, $planCourseIds);
+            $overlapCount = count($overlap);
+            $overlapPercentage = ($overlapCount / count($courseIds)) * 100;
+
+            if ($overlapPercentage >= 80) {
+                $validator->errors()->add(
+                    'course_ids',
+                    'Gói thành viên 12 tháng không được trùng trên 80% nội dung với gói "' . $plan->name . '".'
+                );
+                break;
+            }
+        }
     }
 
     public function messages()
@@ -52,7 +115,9 @@ class StoreMemberShipPlanRequest extends BaseFormRequest
             'benefits.*.required' => 'Quyền lợi thành viên không được để trống',
             'benefits.*.string' => 'Quyền lợi thành viên phải là chuỗi ký tự',
 
+            'course_ids.required' => 'Danh sách khóa học không được để trống',
             'course_ids.array' => 'Danh sách khóa học phải là một mảng.',
+            'course_ids.min' => 'Gói thành viên phải có tối thiểu 5 khóa học.',
             'course_ids.*.exists' => 'Khóa học không tồn tại.',
         ];
     }

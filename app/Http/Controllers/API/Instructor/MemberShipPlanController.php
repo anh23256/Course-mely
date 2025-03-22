@@ -330,7 +330,7 @@ class MemberShipPlanController extends Controller
         return $query->exists();
     }
 
-    protected function checkMembershipEligibility($instructor)
+    protected function checkMembershipEligibility($instructor, $durationMonths = null)
     {
         $existingMembership = MembershipPlan::query()
             ->where('instructor_id', $instructor->id)
@@ -354,14 +354,14 @@ class MemberShipPlanController extends Controller
                 'message' => 'Bạn cần có ít nhất 5 khoá học để tạo gói membership'
             ];
         }
-//
-//        $studentCount = CourseUser::query()
-//            ->whereIn('course_id', function ($query) use ($instructor) {
-//                $query->select('id')->from('courses')->where('user_id', $instructor->id);
-//            })
-//            ->distinct('user_id')
-//            ->count();
-//
+
+        $studentCount = CourseUser::query()
+            ->whereIn('course_id', function ($query) use ($instructor) {
+                $query->select('id')->from('courses')->where('user_id', $instructor->id);
+            })
+            ->distinct('user_id')
+            ->count();
+
 //        if ($studentCount < 50) {
 //            return [
 //                'eligible' => false,

@@ -119,9 +119,12 @@ class NotificationController extends Controller
     }
 
 
-    public function show(Request $request)
+    public function allNotification(Request $request)
     {
         try {
+            $title = 'Quản lý thông báo';
+            $subTitle = 'Danh sách thông báo';
+
             /** @var User $user */
             $user = Auth::user();
 
@@ -169,7 +172,7 @@ class NotificationController extends Controller
             }
 
 
-            return view('notifications.index', compact('notifications'));
+            return view('notifications.index', compact('notifications', 'title', 'subTitle'));
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -218,5 +221,5 @@ class NotificationController extends Controller
         DatabaseNotification::query()->whereIn('id', $notificationID)->delete();
     }
 
-    
+
 }

@@ -27,7 +27,8 @@ class TransactionController extends Controller
             }
 
             $courses = Course::query()
-                ->where('user_id', $user->id)->pluck('id')->toArray();
+                ->where('user_id', $user->id)
+                ->pluck('id')->toArray();
 
             if (empty($courses)) {
                 return $this->respondNotFound('Không tìm thấy khoá học');
@@ -38,7 +39,8 @@ class TransactionController extends Controller
                 ->whereIn('transactionable_id', function ($q) use ($courses) {
                     $q->select('id')
                         ->from('invoices')
-                        ->whereIn('course_id', $courses);
+                        ->whereIn('course_id', $courses)
+                        ->where('invoice_type', 'course');
                 })
                 ->with(['user', 'transactionable.course']);
 
@@ -62,6 +64,7 @@ class TransactionController extends Controller
                     'course_thumbnail' => optional($invoice->course)->thumbnail,
                     'course_name' => optional($invoice->course)->name,
                     'student_name' => $transaction->user->name ?? 'N/A',
+                    'student_avatar' => $transaction->user->avatar ?? '',
                     'amount_paid' => $transaction->amount,
                     'invoice_code' => $invoice->code,
                     'invoice_created_at' => $invoice->created_at,

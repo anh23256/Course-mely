@@ -281,7 +281,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
-
+            Route::put('{id}/update-popular', [CourseController::class, 'updatePopular'])->name('updatePopular');
         });
 
         #============================== ROUTE APPROVAL =============================
@@ -323,7 +323,7 @@ Route::prefix('admin')->as('admin.')
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
-            
+
         });
 
         #============================== ROUTE WITH DRAWALS =============================
@@ -365,8 +365,8 @@ Route::prefix('admin')->as('admin.')
             ->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])
                     ->name('index');
-                Route::get('/show', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])
-                    ->name('show');
+                Route::get('/all-notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'allNotification'])
+                    ->name('all-notifications');
                 Route::get('/unread-count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadNotificationsCount'])
                     ->name('unread-count');
                 Route::put('/{notificationId}', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])

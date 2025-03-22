@@ -45,6 +45,9 @@
             <a class="nav-link menu-link" href="{{ route('admin.approvals.instructors.index') }}">
                 <i class="las la-chalkboard-teacher"></i> <span data-key="t-authentication">Kiểm duyệt giảng viên</span>
             </a>
+            <a class="nav-link menu-link" href="{{ route('admin.approvals.courses.index') }}">
+                <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Gói thành viên</span>
+            </a>
         </li>
 
         <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Quản lý người dùng</span>
@@ -52,7 +55,7 @@
 
         <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarAuth">
+               aria-expanded="false" aria-controls="sidebarAuth">
                 <i class="ri-account-circle-line"></i> <span data-key="t-authentication">Quản lý thành viên</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarAuth">
@@ -92,7 +95,7 @@
             </div>
             @canany(['permissions.create', 'permissions.edit', 'permissions.read', 'permissions.delete'])
                 <a class="nav-link menu-link" href="#sidebarRole" data-bs-toggle="collapse" role="button"
-                    aria-expanded="false" aria-controls="sidebarRole">
+                   aria-expanded="false" aria-controls="sidebarRole">
                     <i class=" ri-shield-user-line"></i> <span data-key="t-authentication">Phân quyền</span>
                 </a>
                 <div class="collapse menu-dropdown" id="sidebarRole">
@@ -117,53 +120,53 @@
 
         <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Quản lý hệ thống</span>
         </li>
-        
+
         <li class="nav-item">
             @canany(['categories.create', 'categories.edit', 'categories.read', 'categories.delete'])
-            <a class="nav-link menu-link" href="#sidebarCategory" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarCategory">
-                <i class="ri-apps-2-line"></i> <span data-key="t-authentication">Quản lý danh mục</span>
-            </a>
-            <div class="collapse menu-dropdown" id="sidebarCategory">
-                <ul class="nav nav-sm flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.categories.index') }}" class="nav-link" data-key="t-chat">
-                            Danh sách danh mục </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.categories.create') }}" class="nav-link" data-key="t-chat">
-                            Thêm mới danh mục </a>
-                    </li>
-                </ul>
-            </div>
+                <a class="nav-link menu-link" href="#sidebarCategory" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="sidebarCategory">
+                    <i class="ri-apps-2-line"></i> <span data-key="t-authentication">Quản lý danh mục</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarCategory">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.categories.index') }}" class="nav-link" data-key="t-chat">
+                                Danh sách danh mục </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.categories.create') }}" class="nav-link" data-key="t-chat">
+                                Thêm mới danh mục </a>
+                        </li>
+                    </ul>
+                </div>
             @endcanany
             @canany(['banner.create', 'banner.edit', 'banner.read', 'banner.delete'])
-            <a class="nav-link menu-link" href="#sidebarBanner" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarBanner">
-                <i class=" las la-image"></i> <span data-key="t-authentication">Quản lý banners</span>
-            </a>
-            <div class="collapse menu-dropdown" id="sidebarBanner">
-                <ul class="nav nav-sm flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.banners.index') }}" class="nav-link" data-key="t-chat">
-                            Danh sách banners </a>
-                    </li>
-                    {{-- @can('') --}}
-                    <li class="nav-item">
-                        <a href="{{ route('admin.banners.create') }}" class="nav-link" data-key="t-chat">
-                            Thêm mới banner </a>
-                    </li>
-                    {{-- @endcan --}}
+                <a class="nav-link menu-link" href="#sidebarBanner" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="sidebarBanner">
+                    <i class=" las la-image"></i> <span data-key="t-authentication">Quản lý banners</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarBanner">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.banners.index') }}" class="nav-link" data-key="t-chat">
+                                Danh sách banners </a>
+                        </li>
+                        {{-- @can('') --}}
+                        <li class="nav-item">
+                            <a href="{{ route('admin.banners.create') }}" class="nav-link" data-key="t-chat">
+                                Thêm mới banner </a>
+                        </li>
+                        {{-- @endcan --}}
 
-                    <li class="nav-item">
-                        <a href="{{ route('admin.banners.deleted') }}" class="nav-link" data-key="t-chat">
-                            Danh sách banner đã xóa </a>
-                    </li>
-                </ul>
-            </div>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.banners.deleted') }}" class="nav-link" data-key="t-chat">
+                                Danh sách banner đã xóa </a>
+                        </li>
+                    </ul>
+                </div>
             @endcanany
             <a class="nav-link menu-link" href="#sidebarPost" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarPost">
+               aria-expanded="false" aria-controls="sidebarPost">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý bài viết</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarPost">
@@ -183,10 +186,10 @@
                 </ul>
             </div>
             @canany(['coupon.create', 'coupon.edit', 'coupon.read', 'coupon.delete'])
-            <a class="nav-link menu-link" href="#sidebarCoupon" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarCoupon">
-                <i class=" ri-coupon-line"></i> <span data-key="t-authentication">Quản lý mã giảm giá</span>
-            </a>
+                <a class="nav-link menu-link" href="#sidebarCoupon" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="sidebarCoupon">
+                    <i class=" ri-coupon-line"></i> <span data-key="t-authentication">Quản lý mã giảm giá</span>
+                </a>
             @endcanany
             <div class="collapse menu-dropdown" id="sidebarCoupon">
                 <ul class="nav nav-sm flex-column">
@@ -206,7 +209,7 @@
             </div>
 
             <a class="nav-link menu-link" href="#sidebarComment" data-bs-toggle="collapse" role="button"
-            aria-expanded="false" aria-controls="sidebarComment">
+               aria-expanded="false" aria-controls="sidebarComment">
                 <i class="las la-comment"></i> <span data-key="t-authentication">Quản lý bình luận</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarComment">
@@ -220,7 +223,7 @@
                 </ul>
             </div>
             <a class="nav-link menu-link" href="#sidebarCourse" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarCourse">
+               aria-expanded="false" aria-controls="sidebarCourse">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý khóa học</span>
             </a>
             <div class="collapse menu-dropdown" id="sidebarCourse">
@@ -234,59 +237,42 @@
                 </ul>
             </div>
             @canany(['setting.create', 'setting.edit', 'setting.read', 'setting.delete'])
-            <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarSetting">
-                <i class=" ri-settings-3-line"></i> <span data-key="t-authentication">Quản lý settings</span>
-            </a>
-            <div class="collapse menu-dropdown" id="sidebarSetting">
-                <ul class="nav nav-sm flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.settings.index') }}" class="nav-link" data-key="t-chat">
-                            Danh sách settings </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.settings.create') }}" class="nav-link" data-key="t-chat">
-                            Thêm mới settings </a>
-                    </li>
-                </ul>
-            </div>
+                <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" aria-controls="sidebarSetting">
+                    <i class=" ri-settings-3-line"></i> <span data-key="t-authentication">Quản lý settings</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarSetting">
+                    <ul class="nav nav-sm flex-column">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.settings.index') }}" class="nav-link" data-key="t-chat">
+                                Danh sách settings </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.settings.create') }}" class="nav-link" data-key="t-chat">
+                                Thêm mới settings </a>
+                        </li>
+                    </ul>
+                </div>
             @endcanany
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
-            <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
-                <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
-            </a>
+                <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
+                    <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
+                </a>
             @endcanany
             @canany(['qa_system.create', 'qa_system.edit', 'qa_system.read', 'qa_system.delete'])
-            <a class="nav-link menu-link" href="{{ route('admin.qa-systems.index') }}">
-                <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
-            </a>
+                <a class="nav-link menu-link" href="{{ route('admin.qa-systems.index') }}">
+                    <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
+                </a>
             @endcanany
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
                 <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>
-            {{-- <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
-                <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
-            </a> --}}
-            <a class="nav-link menu-link" href="#sidebarNotification" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarNotification">
-                <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý thông báo</span>
+            <a class="nav-link menu-link" href="{{ route('admin.notifications.all-notifications') }}">
+                <i class="bx bx-bell "></i> <span data-key="t-authentication">Thông báo</span>
             </a>
-
-            {{-- <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarNotification">
+            <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
-            </a> --}}
-            
-            <div class="collapse menu-dropdown" id="sidebarNotification">
-                <ul class="nav nav-sm flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.notifications.show') }}" class="nav-link" data-key="t-chat">
-                            Danh sách thông báo </a>
-                    </li>
-
-
-                </ul>
-            </div>
+            </a>
         </li>
 
     </ul>

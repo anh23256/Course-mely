@@ -157,6 +157,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/', [\App\Http\Controllers\API\Common\NotificationController::class, 'getNotifications']);
                 Route::put('/{id}/read', [\App\Http\Controllers\API\Common\NotificationController::class, 'markAsRead']);
             });
+
+        #============================== ROUTE MEMBERSHIP =============================
+        Route::prefix('memberships')->group(function () {
+            Route::get('/', [UserController::class, 'getMembershipPlanList']);
+        });
     });
 
     #============================== ROUTE LEARNING =============================
@@ -229,7 +234,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {});
+        ->group(function () {
+        });
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);

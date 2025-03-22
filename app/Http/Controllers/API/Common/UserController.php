@@ -17,6 +17,7 @@ use App\Models\CourseUser;
 use App\Models\Invoice;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\MembershipSubscription;
 use App\Models\Profile;
 use App\Models\Rating;
 use App\Models\User;
@@ -236,7 +237,38 @@ class UserController extends Controller
                 ->get()
                 ->keyBy('course_id');
 
-            $result = $courses->map(function ($course) use ($courseRatings) {
+            $totalCompletedLessons = 0;
+            $totalLessons = $courses->sum('lessons_count');
+
+            $completedCoursesCount = 0;
+
+            $totalProgressPercent = 0;
+
+            foreach ($courses as $course) {
+                $lessonIds = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->pluck('id');
+                });
+
+                $completedCount = LessonProgress::where('user_id', $user->id)
+                    ->whereIn('lesson_id', $lessonIds)
+                    ->where('is_completed', 1)
+                    ->count();
+
+                $totalCompletedLessons += $completedCount;
+
+                $progress = $course->courseUsers->where('user_id', $user->id)->first();
+                if ($progress) {
+                    $totalProgressPercent += $progress->progress_percent;
+
+                    if ($progress->progress_percent == 100) {
+                        $completedCoursesCount++;
+                    }
+                }
+            }
+
+            $averageProgress = $courses->count() > 0 ? $totalProgressPercent / $courses->count() : 0;
+
+            $result = $courses->map(function ($course) use ($courseRatings, $user) {
                 $videoLessons = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->where('lessonable_type', Video::class);
                 });
@@ -248,7 +280,7 @@ class UserController extends Controller
                 $ratingInfo = $courseRatings->get($course->id);
 
                 $lessonProgress = LessonProgress::query()
-                    ->where('user_id', Auth::id())
+                    ->where('user_id', $user->id)
                     ->whereHas('lesson', function ($query) use ($course) {
                         $lessonIds = $course->chapters->flatMap(function ($chapter) {
                             return $chapter->lessons->pluck('id');
@@ -289,7 +321,7 @@ class UserController extends Controller
                     ],
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers
-                            ->where('user_id', Auth::id())->first()
+                            ->where('user_id', $user->id)->first()
                             ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
                     'category' => [
@@ -305,7 +337,17 @@ class UserController extends Controller
                 ];
             });
 
-            return $this->respondOk('Danh sách khoá học của người dùng aa: ' . $user->name, $result);
+            $summary = [
+                'total_courses' => $courses->count(),
+                'completed_lessons' => $totalCompletedLessons . '/' . $totalLessons,
+                'average_progress' => round($averageProgress, 1),
+                'completed_courses' => $completedCoursesCount
+            ];
+
+            return $this->respondOk('Danh sách khoá học của người dùng: ' . $user->name, [
+                'courses' => $result,
+                'summary' => $summary
+            ]);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -359,6 +401,7 @@ class UserController extends Controller
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
                     'status'
                 )
+                ->where('invoice_type', 'course')
                 ->get();
 
             return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
@@ -380,6 +423,7 @@ class UserController extends Controller
                     }
                 ])
                 ->where('user_id', $user->id)
+                ->where('invoice_type', 'course')
                 ->select('id', 'course_id', 'code', 'coupon_code', 'coupon_discount', 'amount', 'created_at',
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
                 ->select(
@@ -866,6 +910,159 @@ class UserController extends Controller
             return $this->respondOk('Xóa thông tin ngân hàng thành công', $updatedBankingInfos);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getMembershipPlanList(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lý đăng nhập');
+            }
+
+            $membershipSubscriptions = MembershipSubscription::query()
+                ->with([
+                    'membershipPlan' => function($query) {
+                        $query->with([
+                            'membershipCourseAccess' => function($courseQuery) {
+                                $courseQuery->select(['courses.id', 'name', 'slug', 'thumbnail'])
+                                    ->withCount('lessons');
+                            }
+                        ]);
+                    }
+                ])
+                ->where('user_id', $user->id)
+                ->get();
+
+            if ($membershipSubscriptions->isEmpty()) {
+                return $this->respondNotFound('Bạn chưa mua gói thành viên nào');
+            }
+
+            $allCourseIds = $membershipSubscriptions->flatMap(function($subscription) {
+                if ($subscription->membershipPlan && $subscription->membershipPlan->membershipCourseAccess) {
+                    return $subscription->membershipPlan->membershipCourseAccess->pluck('id');
+                }
+                return [];
+            })->unique();
+
+            $courseDurations = [];
+            if ($allCourseIds->isNotEmpty()) {
+                $courseVideos = DB::table('chapters')
+                    ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+                    ->join('videos', 'lessons.lessonable_id', '=', 'videos.id')
+                    ->whereIn('chapters.course_id', $allCourseIds)
+                    ->where('lessons.lessonable_type', 'App\\Models\\Video')
+                    ->select('chapters.course_id', DB::raw('SUM(videos.duration) as total_duration'))
+                    ->groupBy('chapters.course_id')
+                    ->get();
+
+                foreach ($courseVideos as $course) {
+                    $courseDurations[$course->course_id] = $course->total_duration;
+                }
+            }
+
+            $currentLessons = [];
+            if ($allCourseIds->isNotEmpty()) {
+                $courseLessons = DB::table('chapters')
+                    ->join('lessons', 'chapters.id', '=', 'lessons.chapter_id')
+                    ->whereIn('chapters.course_id', $allCourseIds)
+                    ->select('chapters.course_id', 'lessons.id as lesson_id', 'lessons.title')
+                    ->get()
+                    ->groupBy('course_id');
+
+                $lessonProgresses = DB::table('lesson_progress')
+                    ->where('user_id', $user->id)
+                    ->select('lesson_id', 'updated_at')
+                    ->orderBy('updated_at', 'desc')
+                    ->get()
+                    ->keyBy('lesson_id');
+
+                foreach ($allCourseIds as $courseId) {
+                    $courseLessonIds = $courseLessons->get($courseId, collect())->pluck('lesson_id')->toArray();
+
+                    if (!empty($courseLessonIds)) {
+                        $latestLessonProgress = null;
+                        $latestLesson = null;
+
+                        foreach ($courseLessonIds as $lessonId) {
+                            if (isset($lessonProgresses[$lessonId])) {
+                                if ($latestLessonProgress === null ||
+                                    $lessonProgresses[$lessonId]->updated_at > $latestLessonProgress->updated_at) {
+                                    $latestLessonProgress = $lessonProgresses[$lessonId];
+                                    $latestLesson = $courseLessons->get($courseId)
+                                        ->firstWhere('lesson_id', $lessonId);
+                                }
+                            }
+                        }
+
+                        if ($latestLesson === null) {
+                            $firstLesson = $courseLessons->get($courseId)->first();
+                            if ($firstLesson) {
+                                $currentLessons[$courseId] = [
+                                    'id' => $firstLesson->lesson_id,
+                                    'title' => $firstLesson->title
+                                ];
+                            }
+                        } else {
+                            $currentLessons[$courseId] = [
+                                'id' => $latestLesson->lesson_id,
+                                'title' => $latestLesson->title
+                            ];
+                        }
+                    }
+                }
+            }
+
+            $result = $membershipSubscriptions->map(function($subscription) use ($courseDurations, $currentLessons) {
+                $courses = collect();
+
+                if ($subscription->membershipPlan && $subscription->membershipPlan->membershipCourseAccess) {
+                    $courses = $subscription->membershipPlan->membershipCourseAccess->map(function($course) use ($courseDurations, $currentLessons) {
+                        return [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                            'slug' => $course->slug,
+                            'thumbnail' => $course->thumbnail,
+                            'lessons_count' => $course->lessons_count,
+                            'total_duration' => $courseDurations[$course->id] ?? 0,
+                            'current_lesson' => $currentLessons[$course->id] ?? null
+                        ];
+                    });
+                }
+
+                return [
+                    'id' => $subscription->id,
+                    'membership_plan_id' => $subscription->membership_plan_id,
+                    'user_id' => $subscription->user_id,
+                    'start_date' => $subscription->start_date,
+                    'end_date' => $subscription->end_date,
+                    'status' => $subscription->status,
+                    'created_at' => $subscription->created_at,
+                    'updated_at' => $subscription->updated_at,
+                    'membership_plan' => [
+                        'id' => $subscription->membershipPlan->id,
+                        'instructor_id' => $subscription->membershipPlan->instructor_id,
+                        'code' => $subscription->membershipPlan->code,
+                        'name' => $subscription->membershipPlan->name,
+                        'description' => $subscription->membershipPlan->description,
+                        'price' => $subscription->membershipPlan->price,
+                        'duration_months' => $subscription->membershipPlan->duration_months,
+                        'benefits' => $subscription->membershipPlan->benefits,
+                        'status' => $subscription->membershipPlan->status,
+                        'created_at' => $subscription->membershipPlan->created_at,
+                        'updated_at' => $subscription->membershipPlan->updated_at,
+                        'courses' => $courses
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách gói thành viên đã mua của: ' . $user->name, $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
 
             return $this->respondServerError();
         }
