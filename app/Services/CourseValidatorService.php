@@ -19,8 +19,14 @@ class CourseValidatorService
         $errors = [];
 
         $errors = array_merge($errors, $validator->validateBasicInfo($course));
-        $errors = array_merge($errors, $validator->checkCurriculum($course));
-        $errors = array_merge($errors, $validator->validateTotalDuration($course));
+
+        if ($course->is_practical_course) {
+            $errors = array_merge($errors, $validator->checkPracticalCurriculum($course));
+        } else {
+            $errors = array_merge($errors, $validator->checkCurriculum($course));
+            $errors = array_merge($errors, $validator->validateTotalDuration($course));
+        }
+
 
         return $errors;
     }
@@ -71,6 +77,74 @@ class CourseValidatorService
         $errors = [];
         $chapters = $course->chapters()->get();
         $errors = array_merge($errors, $this->validateChapters($chapters));
+        return $errors;
+    }
+
+    private function checkPracticalCurriculum(Course $course): array
+    {
+        $errors = [];
+        $chapters = $course->chapters()->get();
+
+        $errors = array_merge($errors, $this->validatePracticalChapters($chapters));
+
+        return $errors;
+    }
+
+    private function validatePracticalChapters($chapters): array
+    {
+        $errors = [];
+
+        if ($chapters->count() == 0) {
+            $errors[] = "Khóa học thực hành phải có ít nhất 1 chương học.";
+        }
+
+        foreach ($chapters as $chapter) {
+            if (!$chapter->title) {
+                $errors[] = "Chương học ID {$chapter->id} không có tiêu đề.";
+            }
+
+            $errors = array_merge($errors, $this->validatePracticalLessons($chapter));
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalLessons($chapter): array
+    {
+        $errors = [];
+        $lessons = $chapter->lessons()->get();
+        $hasQuiz = false;
+
+        foreach ($lessons as $lesson) {
+            if (empty($lesson->title)) {
+                $errors[] = "Bài học ID {$lesson->id} trong chương '{$chapter->title}' thiếu tiêu đề.";
+            }
+
+            if ($lesson->lessonable_type == Quiz::class) {
+                $hasQuiz = true;
+                $errors = array_merge($errors, $this->validatePracticalQuiz($lesson, $chapter));
+            }
+        }
+
+        if (!$hasQuiz && $lessons->count() > 0) {
+            $errors[] = "Chương học '{$chapter->title}' cần có ít nhất một bài kiểm tra (quiz).";
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalQuiz($lesson, $chapter)
+    {
+        $errors = [];
+        $quiz = Quiz::query()->find($lesson->lessonable_id);
+
+        if ($quiz) {
+            $questions = Question::query()->where('quiz_id', $quiz->id)->get();
+            if ($questions->count() < 10 || $questions->count() > 50) {
+                $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương '{$chapter->title}' phải có từ 10 đến 50 câu hỏi. Hiện tại có {$questions->count()} câu.";
+            }
+        }
+
         return $errors;
     }
 
