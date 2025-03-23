@@ -30,11 +30,11 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
                 Rule::unique('membership_plans', 'name')->ignore(optional($membershipPlan)->id)
             ],
             'price' => 'sometimes|required|numeric|min:0',
-            'duration_months' => 'sometimes|required|integer|between:1,12',
+            'duration_months' => 'sometimes|required|integer|in:3,6,12',
             'description' => 'sometimes|nullable|string',
             'benefits' => 'sometimes|required|array',
             'benefits.*' => 'required|string',
-            'course_ids' => 'sometimes|required|array|min:5',
+            'course_ids' => 'sometimes|required|array',
             'course_ids.*' => 'exists:courses,id'
         ];
     }
@@ -49,9 +49,12 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
                 return;
             }
 
+            $instructorId = auth()->id();
             $membershipPlan = MembershipPlan::query()->where('code', $this->route('code'))->first();
 
-            $existingPlan = MembershipPlan::query()->where('duration_months', $durationMonths)
+            $existingPlan = MembershipPlan::query()
+                ->where('duration_months', $durationMonths)
+                ->where('instructor_id', $instructorId)
                 ->where('id', '!=', $membershipPlan->id)
                 ->first();
 
@@ -75,15 +78,19 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
                 if (count($courseIds) < 10) {
                     $validator->errors()->add('course_ids', 'Gói thành viên 12 tháng phải có tối thiểu 10 khóa học.');
                 }
-
-                $this->validateCourseUniqueness($validator, $courseIds, $membershipPlan->id);
             }
+
+            $this->validateCourseUniqueness($validator, $courseIds, $instructorId, $durationMonths, $membershipPlan->id);
         });
     }
 
-    protected function validateCourseUniqueness($validator, $courseIds, $currentPlanId)
+    protected function validateCourseUniqueness($validator, $courseIds, $instructorId, $currentDuration, $currentPlanId)
     {
-        $otherMembershipPlans = MembershipPlan::where('id', '!=', $currentPlanId)->get();
+        $otherMembershipPlans = MembershipPlan::query()
+            ->where('instructor_id', $instructorId)
+            ->where('duration_months', '!=', $currentDuration)
+            ->where('id', '!=', $currentPlanId)
+            ->get();
 
         foreach ($otherMembershipPlans as $plan) {
             $planCourseIds = $plan->membershipCourseAccess()->pluck('course_id')->toArray();
@@ -94,12 +101,17 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
 
             $overlap = array_intersect($courseIds, $planCourseIds);
             $overlapCount = count($overlap);
-            $overlapPercentage = ($overlapCount / count($courseIds)) * 100;
 
-            if ($overlapPercentage >= 80) {
+            $overlapPercentage = ($overlapCount / count($courseIds)) * 100;
+            $reverseOverlapPercentage = ($overlapCount / count($planCourseIds)) * 100;
+
+            $maxOverlapPercentage = max($overlapPercentage, $reverseOverlapPercentage);
+
+            if ($maxOverlapPercentage >= 80) {
                 $validator->errors()->add(
                     'course_ids',
-                    'Gói thành viên 12 tháng không được trùng trên 80% nội dung với gói "' . $plan->name . '".'
+                    'Gói thành viên ' . $currentDuration . ' tháng không được trùng trên 80% nội dung với gói "' .
+                    $plan->name . '" (' . $plan->duration_months . ' tháng).'
                 );
                 break;
             }
@@ -122,7 +134,7 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
 
             'duration_months.required' => 'Thời hạn gói thành viên không được để trống',
             'duration_months.integer' => 'Thời hạn gói thành viên phải là số nguyên',
-            'duration_months.between' => 'Thời hạn gói thành viên phải từ 1 đến 12 tháng',
+            'duration_months.in' => 'Thời hạn gói thành viên chỉ được chọn 3, 6 hoặc 12 tháng',
 
             'benefits.required' => 'Quyền lợi thành viên không được để trống',
             'benefits.array' => 'Quyền lợi thành viên phải là danh sách',
@@ -131,7 +143,6 @@ class UpdateMemberShipPlanRequest extends BaseFormRequest
 
             'course_ids.required' => 'Danh sách khóa học không được để trống',
             'course_ids.array' => 'Danh sách khóa học phải là một mảng.',
-            'course_ids.min' => 'Gói thành viên phải có tối thiểu 5 khóa học.',
             'course_ids.*.exists' => 'Khóa học không tồn tại.',
         ];
     }

@@ -25,6 +25,7 @@ class InvoiceController extends Controller
                     'course',
                     'user'
                 ])
+                ->where('invoice_type', 'course')
                 ->latest('id')
                 ->where('status', 'Đã thanh toán');
 

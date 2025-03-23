@@ -15,6 +15,8 @@ class CourseUser extends Model
         'progress_percent',
         'enrolled_at',
         'completed_at',
+        'source',
+        'access_status'
     ];
 
     protected $casts = [
@@ -35,6 +37,7 @@ class CourseUser extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
     public function rating()
     {
         return $this->hasOne(Rating::class, 'user_id', 'user_id');
