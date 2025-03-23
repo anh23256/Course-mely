@@ -91,7 +91,7 @@ class ApprovalCourseController extends Controller
                     'approvable.chapters.lessons.lessonable'
                 ])
                 ->latest('created_at')
-                ->findOrFail($id);
+                ->find($id);
 
             $title = 'Kiểm duyệt khoá học';
             $subTitle = 'Thông tin khoá học: ' . $approval->course->name;
@@ -104,9 +104,9 @@ class ApprovalCourseController extends Controller
                 return $lesson->lessonable->duration ?? 0;
             });
             $videos = $approval->approvable->chapters
-            ->flatMap(fn($chapter) => $chapter->lessons)
-            ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
-            ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
+                ->flatMap(fn($chapter) => $chapter->lessons)
+                ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
+                ->mapToGroups(fn($lesson) => [$lesson->id => $lesson->lessonable]);
             // dd($videos->toArray());
 
             $documents = $approval->approvable->chapters->flatMap(function ($chapter) {
@@ -114,15 +114,15 @@ class ApprovalCourseController extends Controller
             })->filter(function ($lesson) {
                 return $lesson->lessonable_type == Document::class;
             })->mapToGroups(function ($lesson) {
-                return [$lesson->id => $lesson->lessonable]  ?? null;
+                return [$lesson->id => $lesson->lessonable] ?? null;
             });
 
-            $quizzes = $approval->approvable->chapters->flatMap(function ($chapter){
+            $quizzes = $approval->approvable->chapters->flatMap(function ($chapter) {
                 return $chapter->lessons;
-            })->filter(function ($lesson){
+            })->filter(function ($lesson) {
                 return $lesson->lessonable_type == Quiz::class;
-            })->mapToGroups(function ($lesson){
-                
+            })->mapToGroups(function ($lesson) {
+
                 return [$lesson->id => $lesson->lessonable->load('questions.answers')] ?? null;
             });
 
@@ -159,7 +159,7 @@ class ApprovalCourseController extends Controller
         try {
             DB::beginTransaction();
 
-            $approval = Approvable::query()->findOrFail($id);
+            $approval = Approvable::query()->find($id);
 
             $approval->status = $status;
             $approval->note = $note;
@@ -199,7 +199,7 @@ class ApprovalCourseController extends Controller
             $note = 'Yêu cầu sửa đổi nội dung khóa học bị từ chối';
             $status = 'modify_request_rejected';
 
-            $approval = Approvable::query()->findOrFail($id);
+            $approval = Approvable::query()->find($id);
             $user = $approval->course->user;
             $approval->status = 'approved';
             $approval->content_modification = false;
@@ -238,7 +238,7 @@ class ApprovalCourseController extends Controller
             $note = 'Yêu cầu sửa đổi nội dung khóa học được duyệt';
             $status = 'modify_request_approved';
 
-            $approval = Approvable::query()->findOrFail($id);
+            $approval = Approvable::query()->find($id);
             $user = $approval->course->user;
 
             $studentIds = DB::table('course_users')

@@ -14,6 +14,7 @@ use App\Models\CourseUser;
 use App\Models\Invoice;
 use App\Models\MembershipPlan;
 use App\Models\MembershipSubscription;
+use App\Models\Spin;
 use App\Models\SystemFund;
 use App\Models\SystemFundTransaction;
 use App\Models\Transaction;
@@ -22,6 +23,7 @@ use App\Models\Wallet;
 use App\Notifications\InstructorNotificationForCoursePurchase;
 use App\Notifications\InstructorNotificationForMembershipPurchase;
 use App\Notifications\JoiFreeCourseNotification;
+use App\Notifications\SpinReceivedNotification;
 use App\Notifications\UserBuyCourseNotification;
 use App\Notifications\UserBuyMembershipNotification;
 use App\Traits\ApiResponseTrait;
@@ -397,23 +399,62 @@ class TransactionController extends Controller
 
                 $duration = $memberShipPlan->duration_months;
 
+                $courses = $memberShipPlan->membershipCourseAccess()->pluck('course_id')->toArray();
+
                 $existingMembership = MembershipSubscription::query()
                     ->where('user_id', $userId)
                     ->where('membership_plan_id', $itemId)
                     ->first();
 
-                if ($existingMembership && $existingMembership->end_date > now()) {
+                if ($existingMembership && $existingMembership->status === 'expired') {
+                    $oldEndDate = $existingMembership->end_date;
+
+                    if ($existingMembership->end_date > now()) {
+                        $newEndDate = Carbon::parse($existingMembership->end_date)->addMonths($duration);
+                    } else {
+                        $newEndDate = now()->addMonths($duration);
+                    }
+
                     $existingMembership->update([
-                        'end_date' => Carbon::parse($existingMembership->end_date)->addDays($duration),
-                        'status' => 'active'
+                        'status' => 'active',
+                        'start_date' => now(),
+                        'end_date' => $newEndDate
                     ]);
+
+                    $existingMembership->addLog(
+                        'renewed',
+                        'Đã gia hạn gói thành viên',
+                        [
+                            'old_end_date' => $oldEndDate->toDateTimeString(),
+                            'new_end_date' => $newEndDate->toDateTimeString(),
+                            'transaction_id' => $inputData['vnp_TxnRef'],
+                            'amount' => $inputData['vnp_Amount'] / 100,
+                            'invoice_id' => $invoice->id
+                        ]
+                    );
                 } else {
+                    $newEndDate = now()->addMonths($duration);
+
                     MembershipSubscription::query()->create([
                         'membership_plan_id' => $itemId,
                         'user_id' => $userId,
                         'start_date' => now(),
-                        'end_date' => now()->addMonths($duration),
-                        'status' => 'active'
+                        'end_date' => $newEndDate,
+                        'status' => 'active',
+                        'activity_logs' => [
+                            [
+                                'action' => 'created',
+                                'details' => 'Đã mua gói thành viên',
+                                'data' => [
+                                    'start_date' => now()->toDateTimeString(),
+                                    'end_date' => $newEndDate->toDateTimeString(),
+                                    'transaction_id' => $inputData['vnp_TxnRef'],
+                                    'amount' => $inputData['vnp_Amount'] / 100,
+                                    'invoice_id' => $invoice->id
+                                ],
+                                'timestamp' => now()->toDateTimeString(),
+                            ]
+                        ]
                     ]);
                 }
 
@@ -427,12 +468,47 @@ class TransactionController extends Controller
                     'type' => 'invoice',
                 ]);
 
+                foreach ($courses as $courseId) {
+                    CourseUser::query()->updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'course_id' => $courseId
+                        ],
+                        [
+                            'enrolled_at' => now(),
+                            'access_status' => 'active',
+                            'source' => 'membership'
+                        ]
+                    );
+                }
+
+                CourseUser::query()
+                    ->where('user_id', $userId)
+                    ->where('source', 'membership')
+                    ->where('access_status', '!=', 'active')
+                    ->update(['access_status' => 'active']);
+
+                $spin = Spin::query()->create([
+                    'user_id' => $userId,
+                    'spin_count' => 1,
+                    'received_at' => now(),
+                    'expires_at' => now()->addDays(7),
+                ]);
+
+//                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+
                 $this->finalBuyMembership(
                     $userId,
                     $memberShipPlan,
                     $transaction,
                     $invoice,
                     $finalAmount
+                );
+
+                $student = User::query()->find($userId);
+
+                Mail::to($student->email)->send(
+                    new MembershipPurchaseMail($student, $memberShipPlan, $transaction, $invoice)
                 );
 
                 DB::commit();
@@ -769,12 +845,6 @@ class TransactionController extends Controller
                 $memberShipPlan,
                 $transaction
             )
-        );
-
-        $student = User::query()->find($userId);
-
-        Mail::to($student->email)->send(
-            new MembershipPurchaseMail($student, $memberShipPlan, $transaction, $invoice)
         );
     }
 

@@ -47,10 +47,11 @@ class LearningPathController extends Controller
                 $userPurchaseCourse = CourseUser::query()
                     ->where('user_id', $user->id)
                     ->where('course_id', $course->id)
+                    ->where('access_status', 'active')
                     ->exists();
 
                 if (!$userPurchaseCourse) {
-                    return $this->respondForbidden('Bạn chưa mua khoá học này');
+                    return $this->respondForbidden('Bạn chưa mua khoá học này hoặc quyền truy cập đã bị vô hiệu hóa');
                 }
             }
 
@@ -162,10 +163,11 @@ class LearningPathController extends Controller
                 $userPurchaseCourse = CourseUser::query()
                     ->where('user_id', $user->id)
                     ->where('course_id', $course->id)
+                    ->where('access_status', 'active')
                     ->exists();
 
                 if (!$userPurchaseCourse) {
-                    return $this->respondForbidden('Bạn chưa mua khoá học này');
+                    return $this->respondForbidden('Bạn chưa mua khoá học này hoặc quyền truy cập đã bị vô hiệu hóa');
                 }
             }
 
@@ -621,7 +623,7 @@ class LearningPathController extends Controller
 
             $course = Course::query()
                 ->where('slug', $slug)
-                ->where('status', '=' , 'draft')
+                ->where('status', '=', 'draft')
                 ->first();
 
             if (!$course) {
@@ -691,7 +693,7 @@ class LearningPathController extends Controller
                             if ($lesson->lessonable_type === Coding::class) {
                                 $coding = $lesson->lessonable;
                                 $lessonData['sample_code'] = $coding->sample_code;
-                                $lessonData['hints'] = $coding->hints ;
+                                $lessonData['hints'] = $coding->hints;
                                 $lessonData['instruct'] = $coding->instruction;
                                 $lessonData['language'] = $coding->language;
                             }

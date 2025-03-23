@@ -269,18 +269,13 @@ class MemberShipPlanController extends Controller
             }
 
             $courseCount = $memberShipPlan->membershipCourseAccess->count();
-            $benefits = $this->decodeJson($memberShipPlan->benefits);
 
             if (empty($memberShipPlan->name) || strlen($memberShipPlan->name) < 5) {
                 return $this->respondError("Gói thành viên phải có tên với tối thiểu 5 ký tự.");
             }
 
-            if (empty($memberShipPlan->description) || strlen($memberShipPlan->description) < 100) {
-                return $this->respondError("Mô tả gói thành viên phải có tối thiểu 100 ký tự.");
-            }
-
-            if (count($benefits) < 4 || count($benefits) > 10) {
-                return $this->respondError('Lợi ích gói thành viên phải có từ 4 đến 10 mục.');
+            if (empty($memberShipPlan->description) || strlen($memberShipPlan->description) < 10) {
+                return $this->respondError("Mô tả gói thành viên phải có tối thiểu 10 ký tự.");
             }
 
             if ($courseCount < 5) {
@@ -368,19 +363,19 @@ class MemberShipPlanController extends Controller
             ];
         }
 
-        $studentCount = CourseUser::query()
-            ->whereIn('course_id', function ($query) use ($instructor) {
-                $query->select('id')->from('courses')->where('user_id', $instructor->id);
-            })
-            ->distinct('user_id')
-            ->count();
-
-        if ($studentCount < 50) {
-            return [
-                'eligible' => false,
-                'message' => 'Bạn cần có ít nhất 50 học viên đăng ký khoá học'
-            ];
-        }
+//        $studentCount = CourseUser::query()
+//            ->whereIn('course_id', function ($query) use ($instructor) {
+//                $query->select('id')->from('courses')->where('user_id', $instructor->id);
+//            })
+//            ->distinct('user_id')
+//            ->count();
+//
+//        if ($studentCount < 50) {
+//            return [
+//                'eligible' => false,
+//                'message' => 'Bạn cần có ít nhất 50 học viên đăng ký khoá học'
+//            ];
+//        }
 
         $avgRatings = Rating::query()
             ->whereIn('course_id', function ($query) use ($instructor) {

@@ -209,10 +209,10 @@ class UserController extends Controller
                     'thumbnail', 'level',
                 ])
                 ->whereHas('courseUsers', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
+                    $query->where('user_id', $user->id)->where('access_status', 'active');
                 })
                 ->with([
-                    'courseUsers:id,user_id,course_id,progress_percent',
+                    'courseUsers:id,user_id,course_id,progress_percent,source',
                     'category:id,name,slug',
                     'user:id,name,avatar',
                 ])
@@ -322,6 +322,7 @@ class UserController extends Controller
                             ->where('user_id', $user->id)->first()
                             ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
+                    'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
                     'category' => [
                         'id' => $course->category->id ?? null,
                         'name' => $course->category->name ?? null,
@@ -924,9 +925,9 @@ class UserController extends Controller
 
             $membershipSubscriptions = MembershipSubscription::query()
                 ->with([
-                    'membershipPlan' => function($query) {
+                    'membershipPlan' => function ($query) {
                         $query->with([
-                            'membershipCourseAccess' => function($courseQuery) {
+                            'membershipCourseAccess' => function ($courseQuery) {
                                 $courseQuery->select(['courses.id', 'name', 'slug', 'thumbnail'])
                                     ->withCount('lessons');
                             }
@@ -940,7 +941,7 @@ class UserController extends Controller
                 return $this->respondNotFound('Bạn chưa mua gói thành viên nào');
             }
 
-            $allCourseIds = $membershipSubscriptions->flatMap(function($subscription) {
+            $allCourseIds = $membershipSubscriptions->flatMap(function ($subscription) {
                 if ($subscription->membershipPlan && $subscription->membershipPlan->membershipCourseAccess) {
                     return $subscription->membershipPlan->membershipCourseAccess->pluck('id');
                 }
@@ -1015,11 +1016,11 @@ class UserController extends Controller
                 }
             }
 
-            $result = $membershipSubscriptions->map(function($subscription) use ($courseDurations, $currentLessons) {
+            $result = $membershipSubscriptions->map(function ($subscription) use ($courseDurations, $currentLessons) {
                 $courses = collect();
 
                 if ($subscription->membershipPlan && $subscription->membershipPlan->membershipCourseAccess) {
-                    $courses = $subscription->membershipPlan->membershipCourseAccess->map(function($course) use ($courseDurations, $currentLessons) {
+                    $courses = $subscription->membershipPlan->membershipCourseAccess->map(function ($course) use ($courseDurations, $currentLessons) {
                         return [
                             'id' => $course->id,
                             'name' => $course->name,
