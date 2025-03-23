@@ -14,7 +14,7 @@ class Course extends Model
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
-    'intermediate';
+        'intermediate';
     const LEVEL_ADVANCED = 'advanced';
 
     const STATUS_DRAFT = 'draft';
@@ -45,7 +45,8 @@ class Course extends Model
         'visibility',
         'modification_request',
         'accepted',
-        'views'
+        'views',
+        'is_practical_course'
     ];
 
     public $attributes = [

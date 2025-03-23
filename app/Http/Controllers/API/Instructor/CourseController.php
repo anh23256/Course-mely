@@ -39,10 +39,18 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = $request->input('q');
+            $type = $request->input('type');
 
             $courses = Course::query()
                 ->where('user_id', Auth::id())
+                ->when($type, function ($query, $type) {
+                    if ($type === 'practical-course') {
+                        return $query->where('is_practical_course', true);
+                    } else if ($type === 'course') {
+                        return $query->where('is_practical_course', false);
+                    }
+                    return $query;
+                })
                 ->select([
                     'id',
                     'category_id',
@@ -59,10 +67,7 @@ class CourseController extends Controller
                 ])
                 ->with([
                     'category:id,name,slug,parent_id',
-                    'chapters:id,course_id,title,order',
-                    'chapters.lessons:id,chapter_id,title,slug,order'
                 ])
-                ->search($query)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -220,6 +225,8 @@ class CourseController extends Controller
     public function store(StoreCourseRequest $request)
     {
         try {
+            DB::beginTransaction();
+
             $data = $request->validated();
 
             $data['user_id'] = Auth::id();
@@ -247,13 +254,22 @@ class CourseController extends Controller
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),
+                'is_practical_course' => $data['isPracticalCourse'] ?? false
             ]);
 
-            return $this->respondCreated(
-                'Tạo khoá học thành công',
-                $course->load('category')
-            );
+            if (!empty($data['isPracticalCourse']) && $data['isPracticalCourse'] == true) {
+                $course->chapters()->create([
+                    'title' => $course->name,
+                    'order' => 1
+                ]);
+            }
+
+            DB::commit();
+
+            return $this->respondCreated('Tạo khoá học thành công', $course);
         } catch (\Exception $e) {
+            DB::rollBack();
+
             $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -676,11 +692,18 @@ class CourseController extends Controller
 
     private function getCourseCompletionStatus(Course $course): array
     {
-        return [
+        $commonValidations = [
             'course_overview' => $this->checkCourseOverView($course),
             'course_objectives' => $this->checkCourseObjectives($course),
-            'course_curriculum' => $this->checkCurriculum($course),
         ];
+
+        if (!$course->is_practical_course) {
+            $commonValidations['course_curriculum'] = $this->checkCurriculum($course);
+        } else {
+            $commonValidations['practice_exercise'] = $this->checkPracticeExercise($course);
+        }
+
+        return $commonValidations;
     }
 
     private function checkCourseOverView(Course $course)
@@ -772,6 +795,67 @@ class CourseController extends Controller
             $pass[] = "Khóa học phải có nội dung học tập";
             $errors = array_merge($errors, $validateChapter["error"]);
             $pass = array_merge($pass, $validateChapter["pass"]);
+        }
+
+        return [
+            'status' => empty($errors),
+            'errors' => $errors,
+            'pass' => array_keys(array_flip($pass))
+        ];
+    }
+
+    private function checkPracticeExercise(Course $course)
+    {
+        $errors = [];
+        $pass = [];
+
+        $chapters = $course->chapters()->get();
+
+        if ($chapters->count() === 0) {
+            $errors[] = "Bài thực hành phải có ít nhất 1 chương";
+        } else {
+            $pass[] = "Bài thực hành có chương học";
+
+            foreach ($chapters as $chapter) {
+                if (empty($chapter->title)) {
+                    $errors[] = "Chương học ID {$chapter->id} không có tiêu đề";
+                }
+
+                $lessons = $chapter->lessons()->get();
+
+                if ($lessons->count() === 0) {
+                    $errors[] = "Chương '{$chapter->title}' phải có ít nhất 1 bài kiểm tra";
+                } else {
+                    $hasQuiz = false;
+
+                    foreach ($lessons as $lesson) {
+                        if ($lesson->lessonable_type === Quiz::class) {
+                            $hasQuiz = true;
+
+                            $quiz = Quiz::query()->find($lesson->lessonable_id);
+                            if ($quiz) {
+                                $questions = Question::query()->where('quiz_id', $quiz->id)->get();
+
+                                if ($questions->count() < 10) {
+                                    $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' phải có ít nhất 10 câu hỏi";
+                                } elseif ($questions->count() > 50) {
+                                    $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' không được vượt quá 50 câu hỏi";
+                                } else {
+                                    $pass[] = "Bài kiểm tra có số lượng câu hỏi hợp lệ";
+                                }
+                            } else {
+                                $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' không tồn tại";
+                            }
+                        }
+                    }
+
+                    if (!$hasQuiz) {
+                        $errors[] = "Chương '{$chapter->title}' phải có ít nhất 1 bài kiểm tra";
+                    } else {
+                        $pass[] = "Chương có bài kiểm tra";
+                    }
+                }
+            }
         }
 
         return [

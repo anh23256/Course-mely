@@ -355,6 +355,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::prefix('quiz')
                                 ->group(function () {
                                     Route::get('download-quiz-form', [\App\Http\Controllers\API\Instructor\QuizController::class, 'downloadQuizForm']);
+                                    Route::get('export-quiz/{quiz}', [\App\Http\Controllers\API\Instructor\QuizController::class, 'exportQuiz']);
                                     Route::get('{quiz}/show-quiz', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuiz']);
                                     Route::get('{question}/show-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuestion']);
                                     Route::put('{question}/update-quiz-content', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateContentQuiz']);
@@ -362,6 +363,7 @@ Route::middleware('auth:sanctum')->group(function () {
                                     Route::post('{quiz}/store-quiz-question-single', [\App\Http\Controllers\API\Instructor\QuizController::class, 'storeQuestionSingle']);
                                     Route::post('{quiz}/import-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'importQuiz']);
                                     Route::put('{question}/update-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateQuestion']);
+                                    Route::put('{quiz}/update-order', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateOrderQuestion']);
                                     Route::delete('{question}/delete-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'deleteQuestion']);
                                 });
 
