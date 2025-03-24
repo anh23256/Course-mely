@@ -43,7 +43,7 @@ class QuizExport implements FromCollection, WithHeadings
             $exportData[] = array_merge([
                 'stt' => $index + 1,
                 'question' => $question['question'],
-                'image' => null,
+                'image' => $question['image'] ? 'http://127.0.0.1:8000/storage/' . $question['image'] : null,
                 'answer_type' => $question['answer_type'] ?? 'single_choice',
                 'description' => $question['description'],
             ], $answers, [
