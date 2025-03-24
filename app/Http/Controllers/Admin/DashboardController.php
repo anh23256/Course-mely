@@ -136,7 +136,6 @@ class DashboardController extends Controller
             ]));
         } catch (\Throwable $e) {
             $this->logError($e);
-            dd($e->getMessage());
 
             return redirect()->back()->with('error', 'Lấy dữ liệu không thành công vui lòng thử lại');
         }
@@ -385,7 +384,7 @@ class DashboardController extends Controller
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
+            ->select('courses.name', 'users.name as instructor_name',  'users.avatar as instructor_avatar', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
             ->join('users', function ($join) {
                 $join->on('users.id', '=', 'courses.user_id')->where('courses.status', 'approved');
             })
@@ -483,7 +482,7 @@ class DashboardController extends Controller
             )
             ->selectRaw('ROUND(SUM(final_amount * ?),0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
-            SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
+            SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
             SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
             SUM(CASE WHEN payment_method = "credit_card" THEN 1 ELSE 0 END) as total_payment_method_credit_card', [self::RATE])
@@ -503,9 +502,9 @@ class DashboardController extends Controller
     private function getTotalByPaymentMethodAndInvoiceType()
     {
         return DB::table('invoices')
-            ->selectRaw(' 
+            ->selectRaw('
                 SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
-                SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
+                SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
                 SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
                 SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
                 SUM(CASE WHEN payment_method = "credit_card" THEN 1 ELSE 0 END) as total_payment_method_credit_card,
