@@ -547,3 +547,5 @@ Route::get('/get-member-ship-plans/{code}', [CommonController::class, 'getMember
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
 Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
+
+Route::get('/get-posts', [\App\Http\Controllers\API\Common\PostController::class, 'getPost']);
