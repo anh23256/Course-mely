@@ -10,7 +10,9 @@ use App\Models\SpinConfig;
 use App\Models\SpinHistory;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -168,21 +170,21 @@ class SpinController extends Controller
                 // Quyết định ngẫu nhiên loại mã: fixed hoặc percentage
                 $discountType = rand(0, 1) ? 'fixed' : 'percentage';
         
-                $fixedValues = [20000, 50000, 100000];
+                $fixedValues = [10000, 20000, 50000];
                 $percentValues = [10, 20, 30];
                 $discountValue = $discountType === 'fixed' 
                     ? $fixedValues[array_rand($fixedValues)] 
                     : $percentValues[array_rand($percentValues)];
         
-                // Nếu là percentage, đặt giá trị tối đa (ví dụ: tối đa 500k)
-                $discountMaxValue = $discountType === 'percentage' ? 50000 : 0.00;
+                $steps = [10000, 20000, 30000, 40000, 50000];
+                $discountMaxValue = $discountType === 'percentage' ? $steps[array_rand($steps)] : 0.00;
         
                 // Tạo mã coupon ngẫu nhiên
-                $couponCode = 'LUCKYWHEEL'.'-'. Str::upper(Str::random(6));
+                $couponCode = 'LUCKYWHEEL'. Str::upper(Str::random(6));
         
                 // Kiểm tra mã trùng
                 while (DB::table('coupons')->where('code', $couponCode)->exists()) {
-                    $couponCode = 'LUCKYWHEEL'.'-'. Str::upper(Str::random(6));
+                    $couponCode = 'LUCKYWHEEL'. Str::upper(Str::random(6));
                 }
         
                 // Tính ngày hết hạn (7 ngày từ hiện tại)
@@ -194,9 +196,18 @@ class SpinController extends Controller
                     : "Giảm " . $discountValue . "% (Tối đa " . number_format($discountMaxValue) . " VNĐ)";
         
                 try {
+                    $admin = User::whereHas('roles', function ($query) {
+                        $query->where('name', 'admin');
+                    })->first();
+                    
+                    if (!$admin) {
+                        throw new Exception('Không tìm thấy admin trong hệ thống.');
+                    }
+                    
+                    $adminId = $admin->id;
                     // Lưu vào bảng coupons
                     $couponId = DB::table('coupons')->insertGetId([
-                        'user_id' => 13, // Gắn với user
+                        'user_id' => $adminId,
                         'code' => $couponCode,
                         'name' => $couponName,
                         'discount_type' => $discountType,
