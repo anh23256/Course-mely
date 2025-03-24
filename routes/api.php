@@ -133,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
+        
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
@@ -150,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         #============================== ROUTE CERTIFICATES =============================
         Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
+        Route::delete('/remove-certificates', [UserController::class, 'removeCertificate']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
@@ -254,6 +256,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
+                    
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================

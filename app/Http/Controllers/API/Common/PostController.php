@@ -16,30 +16,26 @@ class PostController extends Controller
     public function getPost()
     {
         try {
-            $post = Post::selectRaw("
+            $posts = Post::selectRaw("
             posts.id,
             posts.title,
             posts.thumbnail,
             posts.created_at,
-            users.name as author,
-            categories.name as category,
-            posts.views,
-            COUNT(DISTINCT comments.id) as total_comments
+            users.name as author_name,
+            users.code as author_code,
+            categories.name as category_name,
+            categories.slug as category_slug,
+            posts.views
         ")
-                ->leftJoin('users', 'posts.user_id', '=', 'users.id')
-                ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
-                ->leftJoin('comments', function ($join) {
-                    $join->on('posts.id', '=', 'comments.commentable_id')
-                        ->whereRaw("comments.commentable_type = ?", [Post::class])
-                        ->whereNull('comments.parent_id');
-                })
-                ->where('posts.status', 'published')
-                ->groupBy('posts.id', 'users.name', 'categories.name')
-                ->orderByDesc('posts.created_at')
-                ->limit(5)
-                ->get();
+            ->leftJoin('users', 'posts.user_id', '=', 'users.id')
+            ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
+            ->where('posts.status', 'published')
+            ->groupBy('posts.id', 'users.name', 'users.code', 'categories.name', 'categories.slug')
+            ->orderByDesc('posts.views')
+            ->limit(3)
+            ->get();
 
-            return $this->respondOk('Danh sách bài viết', $post);
+            return $this->respondOk('Danh sách bài viết', $posts);
         } catch (\Exception $e) {
 
             $this->logError($e);
