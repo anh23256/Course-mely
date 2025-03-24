@@ -19,4 +19,8 @@ class SpinHistory extends Model
     {
         return $this->belongsTo(Gift::class, 'reward_id');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

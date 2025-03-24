@@ -6,105 +6,62 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Gift;
 use App\Models\Spin;
+use App\Models\SpinConfig;
 use App\Models\SpinHistory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SpinController extends Controller
 {
     // Lấy danh sách phần thưởng từ coupons, gifts và thêm phần thưởng mặc định
     private function getAllRewards()
-    {
-        $rewards = [];
+{
+    // Lấy từ SpinConfig và chia "Mã giảm giá ngẫu nhiên" thành 4 ô
+    $rewards = SpinConfig::all()->flatMap(function ($config) {
+        if ($config->name === 'Mã giảm giá ngẫu nhiên') {
+            $couponProbability = $config->probability / 4; // Chia đều cho 4 ô
+            $couponRewards = [];
+            for ($i = 1; $i <= 4; $i++) {
+                $couponRewards[] = [
+                    'type' => 'coupon',
+                    'id' => null,
+                    'name' => "Mã giảm giá ngẫu nhiên $i",
+                    'probability' => $couponProbability,
+                ];
+            }
+            return $couponRewards;
+        }
 
-        // Phần thưởng mặc định 1: Chúc bạn may mắn lần sau
-        $rewards[] = [
-            'type' => 'no_reward',
+        return [[
+            'type' => $config->type,
             'id' => null,
-            'name' => 'Chúc bạn may mắn lần sau',
-            'probability' => 31,
-        ];
+            'name' => $config->name,
+            'probability' => $config->probability,
+        ]];
+    })->toArray();
 
-        // Phần thưởng mặc định 2: Tặng thêm 1 lượt quay
+    // Lấy từ bảng gifts (chỉ lấy nếu còn hàng)
+    $gifts = Gift::where('stock', '>', 0)
+        ->where('is_selected', 1)
+        ->where('is_active', 1)
+        ->limit(2)
+        ->get();
+    foreach ($gifts as $gift) {
         $rewards[] = [
-            'type' => 'spin',
-            'id' => null,
-            'name' => 'Tặng thêm 1 lượt quay',
-            'probability' => 20,
+            'type' => 'gift',
+            'id' => $gift->id,
+            'name' => $gift->name,
+            'probability' => $gift->probability,
+            'stock' => $gift->stock,
         ];
-
-        // Lấy từ bảng coupons
-        $coupons = Coupon::limit(4)->get();
-        foreach ($coupons as $coupon) {
-            $rewards[] = [
-                'type' => 'coupon',
-                'id' => $coupon->id,
-                'name' => $coupon->name,
-                'probability' => $coupon->probability,
-            ];
-        }
-
-        // Lấy từ bảng gifts (chỉ lấy nếu còn hàng)
-        $gifts = Gift::where('stock', '>', 0)->limit(2)->get();
-        foreach ($gifts as $gift) {
-            $rewards[] = [
-                'type' => 'gift',
-                'id' => $gift->id,
-                'name' => $gift->name,
-                'probability' => $gift->probability,
-            ];
-        }
-        // Tính tổng tỷ lệ hiện tại
-        $totalProbability = array_sum(array_column($rewards, 'probability'));
-
-        // Nếu tổng tỷ lệ không đạt 100%, phân bổ lại
-        if ($totalProbability < 100) {
-            $remainingProbability = 100 - $totalProbability;
-            $nonGiftRewards = array_filter($rewards, function ($reward) {
-                return $reward['type'] !== 'gift'; // Chỉ lấy các phần thưởng không phải quà hiện vật
-            });
-
-            if (!empty($nonGiftRewards)) {
-                $nonGiftCount = count($nonGiftRewards);
-                $additionalProbability = $remainingProbability / $nonGiftCount;
-
-                // Phân bổ lại tỷ lệ cho các phần thưởng không phải quà hiện vật
-                foreach ($rewards as &$reward) {
-                    if ($reward['type'] !== 'gift') {
-                        $reward['probability'] += $additionalProbability;
-                        // Làm tròn thành số nguyên
-                        $reward['probability'] = round($reward['probability']);
-                    }
-                }
-            }
-        }
-
-        // Kiểm tra lại tổng tỷ lệ và điều chỉnh nếu cần
-        $totalProbability = array_sum(array_column($rewards, 'probability'));
-        if ($totalProbability > 100) {
-            // Giảm tỷ lệ của "Chúc bạn may mắn lần sau" để bù lại
-            $excess = $totalProbability - 100;
-            foreach ($rewards as &$reward) {
-                if ($reward['name'] === 'Chúc bạn may mắn lần sau') {
-                    $reward['probability'] -= $excess;
-                    break;
-                }
-            }
-        } elseif ($totalProbability < 100) {
-            // Tăng tỷ lệ của "Chúc bạn may mắn lần sau" để bù lại
-            $shortfall = 100 - $totalProbability;
-            foreach ($rewards as &$reward) {
-                if ($reward['name'] === 'Chúc bạn may mắn lần sau') {
-                    $reward['probability'] += $shortfall;
-                    break;
-                }
-            }
-        }
-        return $rewards;
     }
 
+    return $rewards;
+}
     // Thuật toán Weighted Random Selection
     private function getRandomReward()
     {
@@ -205,23 +162,79 @@ class SpinController extends Controller
             ]);
         }
 
-        // Nếu trúng coupon, trả về mã code
         $response = ['reward' => $reward['name']];
-        if ($reward['type'] === 'coupon') {
-            $coupon = Coupon::find($reward['id']);
-            // Lưu vào bảng
-            DB::table('coupon_uses')->insert([
-                'user_id' => $user->id,
-                'coupon_id' => $coupon->id,
-                'status' => 'unused', // Ban đầu chưa sử dụng
-                'applied_at' => now(),
-                'expired_at' => $coupon->expire_date, // Hạn 7 ngày, có thể đổi
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $response['coupon_code'] = $coupon->code;
-            $response['expired_at'] = $coupon->expire_date;
-        }
+            // Nếu trúng mã giảm giá ngẫu nhiên
+            if ($reward['type'] === 'coupon' && strpos($reward['name'], 'Mã giảm giá ngẫu nhiên') !== false) {
+                // Quyết định ngẫu nhiên loại mã: fixed hoặc percentage
+                $discountType = rand(0, 1) ? 'fixed' : 'percentage';
+        
+                $fixedValues = [20000, 50000, 100000];
+                $percentValues = [10, 20, 30];
+                $discountValue = $discountType === 'fixed' 
+                    ? $fixedValues[array_rand($fixedValues)] 
+                    : $percentValues[array_rand($percentValues)];
+        
+                // Nếu là percentage, đặt giá trị tối đa (ví dụ: tối đa 500k)
+                $discountMaxValue = $discountType === 'percentage' ? 50000 : 0.00;
+        
+                // Tạo mã coupon ngẫu nhiên
+                $couponCode = 'LUCKYWHEEL'.'-'. Str::upper(Str::random(6));
+        
+                // Kiểm tra mã trùng
+                while (DB::table('coupons')->where('code', $couponCode)->exists()) {
+                    $couponCode = 'LUCKYWHEEL'.'-'. Str::upper(Str::random(6));
+                }
+        
+                // Tính ngày hết hạn (7 ngày từ hiện tại)
+                $expireDate = now()->addDays(7);
+        
+                // Tạo tên coupon
+                $couponName = $discountType === 'fixed' 
+                    ? "Giảm " . number_format($discountValue) . " VNĐ" 
+                    : "Giảm " . $discountValue . "% (Tối đa " . number_format($discountMaxValue) . " VNĐ)";
+        
+                try {
+                    // Lưu vào bảng coupons
+                    $couponId = DB::table('coupons')->insertGetId([
+                        'user_id' => 13, // Gắn với user
+                        'code' => $couponCode,
+                        'name' => $couponName,
+                        'discount_type' => $discountType,
+                        'discount_value' => $discountValue,
+                        'discount_max_value' => $discountMaxValue,
+                        'start_date' => now(),
+                        'expire_date' => $expireDate,
+                        'description' => 'Mã giảm giá tự động tạo khi quay thưởng',
+                        'max_usage' => 1, // Mỗi mã chỉ dùng được 1 lần
+                        'used_count' => 0,
+                        'status' => 1, // Active
+                        'specific_course' => 0, // Không áp dụng cho khóa học cụ thể
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+        
+                    // Lưu vào bảng coupon_uses
+                    DB::table('coupon_uses')->insert([
+                        'user_id' => $user->id,
+                        'coupon_id' => $couponId,
+                        'status' => 'unused',
+                        'applied_at' => now(),
+                        'expired_at' => $expireDate,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+        
+                } catch (\Exception $e) {
+                    return response()->json(['error' => 'Có lỗi xảy ra khi tạo mã giảm giá.'], 500);
+                }
+        
+                // Cập nhật response với thông tin mã giảm giá
+                $response['coupon_code'] = $couponCode;
+                $response['type'] = $discountType;
+                $response['value'] = $discountValue;
+                $response['max_value'] = $discountMaxValue;
+                $response['expired_at'] = $expireDate;
+            }
 
         return response()->json($response);
     }
