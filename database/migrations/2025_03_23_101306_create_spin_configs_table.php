@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('type')->unique();
             $table->string('name');
-            $table->decimal('probability', 5, 5)->default(0);
+            $table->decimal('probability', 5, 2)->default(0);
             $table->timestamps();
         });
     }

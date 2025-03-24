@@ -14,19 +14,11 @@ return new class extends Migration
         Schema::table('gifts', function (Blueprint $table) {
             $table->boolean('is_selected')->default(false)->nullable();
         });
-
-        Schema::table('coupons', function (Blueprint $table) {
-            $table->boolean('is_selected')->default(false)->nullable();
-        });
     }
 
     public function down()
     {
         Schema::table('gifts', function (Blueprint $table) {
-            $table->dropColumn('is_selected');
-        });
-
-        Schema::table('coupons', function (Blueprint $table) {
             $table->dropColumn('is_selected');
         });
     }
