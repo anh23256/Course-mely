@@ -31,6 +31,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -205,8 +206,14 @@ class UserController extends Controller
 
             $courses = Course::query()
                 ->select([
-                    'id', 'user_id', 'name', 'slug', 'category_id', 'status',
-                    'thumbnail', 'level',
+                    'id',
+                    'user_id',
+                    'name',
+                    'slug',
+                    'category_id',
+                    'status',
+                    'thumbnail',
+                    'level',
                 ])
                 ->whereHas('courseUsers', function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('access_status', 'active');
@@ -319,8 +326,8 @@ class UserController extends Controller
                     ],
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers
-                            ->where('user_id', $user->id)->first()
-                            ->progress_percent ?? 0,
+                        ->where('user_id', $user->id)->first()
+                        ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
                     'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
                     'category' => [
@@ -391,8 +398,13 @@ class UserController extends Controller
 
             $orders = Invoice::where('user_id', $user->id)
                 ->with('course:id,name')
-                ->select('id', 'course_id', 'created_at',
-                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->select(
                     'id',
                     'course_id',
@@ -423,8 +435,17 @@ class UserController extends Controller
                 ])
                 ->where('user_id', $user->id)
                 ->where('invoice_type', 'course')
-                ->select('id', 'course_id', 'code', 'coupon_code', 'coupon_discount', 'amount', 'created_at',
-                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'), 'status')
+                ->select(
+                    'id',
+                    'course_id',
+                    'code',
+                    'coupon_code',
+                    'coupon_discount',
+                    'amount',
+                    'created_at',
+                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
+                    'status'
+                )
                 ->select(
                     'id',
                     'course_id',
@@ -728,7 +749,8 @@ class UserController extends Controller
                 'banking_info' => $bankingInfos
             ]);
 
-            return $this->respondCreated('Thêm thông tin ngân hàng thành công',
+            return $this->respondCreated(
+                'Thêm thông tin ngân hàng thành công',
                 $bankingInfos
             );
         } catch (\Exception $e) {
@@ -989,8 +1011,10 @@ class UserController extends Controller
 
                         foreach ($courseLessonIds as $lessonId) {
                             if (isset($lessonProgresses[$lessonId])) {
-                                if ($latestLessonProgress === null ||
-                                    $lessonProgresses[$lessonId]->updated_at > $latestLessonProgress->updated_at) {
+                                if (
+                                    $latestLessonProgress === null ||
+                                    $lessonProgresses[$lessonId]->updated_at > $latestLessonProgress->updated_at
+                                ) {
                                     $latestLessonProgress = $lessonProgresses[$lessonId];
                                     $latestLesson = $courseLessons->get($courseId)
                                         ->firstWhere('lesson_id', $lessonId);
@@ -1060,6 +1084,51 @@ class UserController extends Controller
             });
 
             return $this->respondOk('Danh sách gói thành viên đã mua của: ' . $user->name, $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function removeCertificate(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $profile = Profile::where('user_id', $user->id)->first();
+
+            if (!$profile) {
+                return $this->respondForbidden('Không tìm thấy hồ sơ');
+            }
+
+            $certificates = json_decode($profile->certificates, true);
+            if (!is_array($certificates)) {
+                $certificates = [];
+            }
+
+            $certificatePath = $request->certificate;
+
+            if (!in_array($certificatePath, $certificates)) {
+                return $this->respondForbidden('Không tìm thấy chứng chỉ trong danh sách');
+            }
+
+            $certificates = array_values(array_diff($certificates, [$certificatePath]));
+            $profile->certificates = json_encode($certificates);
+            $profile->save();
+
+            // Kiểm tra xem file có tồn tại trong storage không rồi mới xóa
+            if (Storage::disk('public')->exists($certificatePath)) {
+                Storage::disk('public')->delete($certificatePath);
+            }
+
+            return $this->respondOk('Xóa chứng chỉ thành công');
+            
         } catch (\Exception $e) {
             $this->logError($e);
 
