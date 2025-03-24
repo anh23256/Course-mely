@@ -21,7 +21,7 @@ class CourseValidatorService
         $errors = array_merge($errors, $validator->validateBasicInfo($course));
 
         if ($course->is_practical_course) {
-            $errors = array_merge($errors, $validator->checkPracticalCurriculum($course));
+            $errors = array_merge($errors, $validator->checkPracticalLessons($course));
         } else {
             $errors = array_merge($errors, $validator->checkCurriculum($course));
             $errors = array_merge($errors, $validator->validateTotalDuration($course));
@@ -77,6 +77,45 @@ class CourseValidatorService
         $errors = [];
         $chapters = $course->chapters()->get();
         $errors = array_merge($errors, $this->validateChapters($chapters));
+        return $errors;
+    }
+
+    private function checkPracticalLessons(Course $course)
+    {
+        $errors = [];
+        $lessons = $course->lessons()->where('lessonable_type', Quiz::class)->get();
+
+        if ($lessons->count() < 3) {
+            $errors[] = "Khóa học thực hành phải có ít nhất 3 bài kiểm tra. Hiện tại có {$lessons->count()} bài.";
+        }
+
+        foreach ($lessons as $lesson) {
+            $errors = array_merge($errors, $this->validatePracticalQuizLesson($lesson));
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalQuizLesson(Lesson $lesson)
+    {
+        $errors = [];
+
+        if (empty($lesson->title)) {
+            $errors[] = "Bài kiểm tra ID {$lesson->id} thiếu tiêu đề.";
+        } elseif (strlen($lesson->title) < 5) {
+            $errors[] = "Bài kiểm tra '{$lesson->title}' phải có tiêu đề ít nhất 5 ký tự.";
+        }
+
+        $quiz = Quiz::query()->find($lesson->lessonable_id);
+        if ($quiz) {
+            $questionsCount = Question::where('quiz_id', $quiz->id)->count();
+            if ($questionsCount < 10 || $questionsCount > 50) {
+                $errors[] = "Bài kiểm tra '{$lesson->title}' phải có từ 10 đến 50 câu hỏi. Hiện tại có {$questionsCount} câu.";
+            }
+        } else {
+            $errors[] = "Bài kiểm tra '{$lesson->title}' không tồn tại dữ liệu quiz.";
+        }
+
         return $errors;
     }
 

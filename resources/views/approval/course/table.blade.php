@@ -8,9 +8,9 @@
                     <th>Giảng viên</th>
                     <th>Hình ảnh</th>
                     <th>Giá</th>
-                    <th>Ngày gửi yêu cầu</th>
                     <th>Trạng thái</th>
                     <th>Người kiểm duyệt</th>
+                    <th>Ngày gửi yêu cầu</th>
                     <th>Ngày kiểm duyệt</th>
                     <th>Hành động</th>
                 </tr>
@@ -26,7 +26,6 @@
                                 alt="" class="w-100 object-fit-cover">
                         </td>
                         <td>{{ number_format($approval->course->price ?? 0) ?? '' }}</td>
-                        <td>{!!  $approval->request_date ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
                         <td>
                             @if ($approval->status == 'pending')
                                 <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
@@ -37,8 +36,9 @@
                             @endif
                         </td>
                         <td>
-                            {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}
+                            {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
                         </td>
+                        <td>{!!  $approval->request_date ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
                         <td>
                             {!! $approval->approved_at ?\Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}
                         </td>

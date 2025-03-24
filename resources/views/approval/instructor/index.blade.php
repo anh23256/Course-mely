@@ -221,7 +221,7 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-warning">Hệ thống đã xử lý</span>' !!}
+                                                    {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
                                                 </td>
                                                 <td>
                                                     {!! $approval->approved_at

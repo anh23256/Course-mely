@@ -25,6 +25,7 @@ class ApprovalInstructorController extends Controller
                     'approver',
                     'user',
                 ])
+                ->orderBy('id', 'desc')
                 ->where('approvable_type', User::class);
 
             $approvalCount = Approvable::query()

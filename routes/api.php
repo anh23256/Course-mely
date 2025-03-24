@@ -482,6 +482,7 @@ Route::prefix('courses')
         Route::get('/discounted', [CommonCourseController::class, 'getDiscountedCourses']);
         Route::get('/free', [CommonCourseController::class, 'getFreeCourses']);
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
+        Route::get('/practice-exercises',[CommonCourseController::class, 'getPracticeExercises']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
         Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);

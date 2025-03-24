@@ -247,7 +247,7 @@
                                             </td>
                                             <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí'  }}</td>
                                             <td>
-                                                {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-warning">Hệ thống đã check</span>' !!}
+                                                {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
                                             </td>
                                             <td>
                                                 @if ($approval->status == 'pending')

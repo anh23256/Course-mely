@@ -71,10 +71,6 @@ class CourseController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            if ($courses->isEmpty()) {
-                return $this->respondNotFound('Không tìm thấy khoá học');
-            }
-
             return $this->respondOk(
                 'Danh sách khoá học của: ' . Auth::user()->name,
                 $courses
@@ -809,52 +805,44 @@ class CourseController extends Controller
         $errors = [];
         $pass = [];
 
-        $chapters = $course->chapters()->get();
+        $lessons = $course->lessons()->get();
 
-        if ($chapters->count() === 0) {
-            $errors[] = "Bài thực hành phải có ít nhất 1 chương";
+        if ($lessons->count() < 3) {
+            $errors[] = "Bài thực hành phải có ít nhất 3 bài kiểm tra. Hiện tại có {$lessons->count()} bài.";
         } else {
-            $pass[] = "Bài thực hành có chương học";
+            $pass[] = "Bài thực hành có đủ số lượng bài kiểm tra";
 
-            foreach ($chapters as $chapter) {
-                if (empty($chapter->title)) {
-                    $errors[] = "Chương học ID {$chapter->id} không có tiêu đề";
+            $hasQuiz = false;
+
+            foreach ($lessons as $lesson) {
+                if (empty($lesson->title)) {
+                    $errors[] = "Bài kiểm tra ID {$lesson->id} không có tiêu đề";
                 }
 
-                $lessons = $chapter->lessons()->get();
+                if ($lesson->lessonable_type === Quiz::class) {
+                    $hasQuiz = true;
 
-                if ($lessons->count() === 0) {
-                    $errors[] = "Chương '{$chapter->title}' phải có ít nhất 1 bài kiểm tra";
-                } else {
-                    $hasQuiz = false;
+                    $quiz = Quiz::query()->find($lesson->lessonable_id);
+                    if ($quiz) {
+                        $questions = Question::query()->where('quiz_id', $quiz->id)->get();
 
-                    foreach ($lessons as $lesson) {
-                        if ($lesson->lessonable_type === Quiz::class) {
-                            $hasQuiz = true;
-
-                            $quiz = Quiz::query()->find($lesson->lessonable_id);
-                            if ($quiz) {
-                                $questions = Question::query()->where('quiz_id', $quiz->id)->get();
-
-                                if ($questions->count() < 10) {
-                                    $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' phải có ít nhất 10 câu hỏi";
-                                } elseif ($questions->count() > 50) {
-                                    $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' không được vượt quá 50 câu hỏi";
-                                } else {
-                                    $pass[] = "Bài kiểm tra có số lượng câu hỏi hợp lệ";
-                                }
-                            } else {
-                                $errors[] = "Bài kiểm tra '{$lesson->title}' trong chương '{$chapter->title}' không tồn tại";
-                            }
+                        if ($questions->count() < 10) {
+                            $errors[] = "Bài kiểm tra '{$lesson->title}' phải có ít nhất 10 câu hỏi";
+                        } elseif ($questions->count() > 50) {
+                            $errors[] = "Bài kiểm tra '{$lesson->title}' không được vượt quá 50 câu hỏi";
+                        } else {
+                            $pass[] = "Bài kiểm tra có số lượng câu hỏi hợp lệ";
                         }
-                    }
-
-                    if (!$hasQuiz) {
-                        $errors[] = "Chương '{$chapter->title}' phải có ít nhất 1 bài kiểm tra";
                     } else {
-                        $pass[] = "Chương có bài kiểm tra";
+                        $errors[] = "Bài kiểm tra '{$lesson->title}' không tồn tại";
                     }
                 }
+            }
+
+            if (!$hasQuiz) {
+                $errors[] = "Bài thực hành phải có ít nhất 1 bài kiểm tra";
+            } else {
+                $pass[] = "Bài thực hành có bài kiểm tra";
             }
         }
 

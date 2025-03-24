@@ -77,7 +77,7 @@
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item active"><a
-                                    href="{{ route('admin.transactions.index') }}">{{ $subTitle }}</a></li>
+                                    href="{{ route('admin.transactions.index') }}">{{ $subTitle ?? '' }}</a></li>
                         </ol>
                     </div>
 

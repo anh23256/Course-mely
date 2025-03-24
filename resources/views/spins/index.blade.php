@@ -1,11 +1,7 @@
 @extends('layouts.app')
 
 @push('page-css')
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
     <style>
-        .container { margin-top: 20px; }
         .card { margin-bottom: 20px; }
         .table { font-size: 14px; }
         .form-control-sm { max-width: 100px; }
@@ -19,7 +15,23 @@
 @endphp
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{{ $title ?? '' }}</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active"><a
+                                    href="{{ route('admin.transactions.index') }}">{{ $title ?? '' }}</a></li>
+                        </ol>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <!-- Toast Container -->
         <div class="toast-container">
             <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -32,7 +44,6 @@
                 </div>
             </div>
         </div>
-        <h1 class="mb-4">{{ $title }}</h1>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -63,66 +74,66 @@
                 </div>
                 <table class="table table-striped">
                     <thead>
-                        <tr>
-                            <th>Loại</th>
-                            <th>Tên</th>
-                            <th>Tỷ lệ (%)</th>
-                            <th>Hành động</th>
-                            <th>Chọn</th>
-                        </tr>
+                    <tr>
+                        <th>Loại</th>
+                        <th>Tên</th>
+                        <th>Tỷ lệ (%)</th>
+                        <th>Hành động</th>
+                        <th>Chọn</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <!-- Spin Configs -->
-                        @foreach ($spinConfigs as $config)
-                            <tr>
-                                <td>{{ $config->type }}</td>
-                                <td>{{ $config->name }}</td>
-                                <td>{{ $config->probability }}</td>
-                                <td>
-                                    <form action="{{ route('admin.spins.spin-config.update', $config->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="number" name="probability" value="{{ $config->probability }}" step="0.01" min="0" max="100" class="form-control form-control-sm d-inline" required>
-                                        <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <input type="checkbox" checked disabled>
-                                </td>
-                            </tr>
-                        @endforeach
-                        <!-- Gifts -->
-                        @foreach ($gifts as $gift)
-                            <tr>
-                                <td>Gift</td>
-                                <td>{{ $gift->name }}</td>
-                                <td>{{ $gift->probability }}</td>
-                                <td>
-                                    <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="number" name="probability" value="{{ $gift->probability }}" step="0.01" min="0" max="100" class="form-control form-control-sm d-inline" required>
-                                        <input type="hidden" name="name" value="{{ $gift->name }}">
-                                        <input type="hidden" name="stock" value="{{ $gift->stock }}">
-                                        <input type="hidden" name="description" value="{{ $gift->description }}">
-                                        <input type="hidden" name="image_url" value="{{ $gift->image_url }}">
-                                        <input type="hidden" name="is_active" value="{{ $gift->is_active }}">
-                                        <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
-                                    </form>
-                                    <form action="{{ route('admin.spins.gift.delete', $gift->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form action="{{ route('admin.spins.toggle-selection', ['type' => 'gift', 'id' => $gift->id]) }}" method="POST" class="toggle-selection-form">
-                                        @csrf
-                                        <input type="checkbox" name="is_selected" onchange="this.form.submit()" {{ $gift->is_selected ? 'checked' : '' }}>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
+                    <!-- Spin Configs -->
+                    @foreach ($spinConfigs as $config)
+                        <tr>
+                            <td>{{ $config->type }}</td>
+                            <td>{{ $config->name }}</td>
+                            <td>{{ $config->probability }}</td>
+                            <td>
+                                <form action="{{ route('admin.spins.spin-config.update', $config->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="number" name="probability" value="{{ $config->probability }}" step="0.01" min="0" max="100" class="form-control form-control-sm d-inline" required>
+                                    <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
+                                </form>
+                            </td>
+                            <td>
+                                <input type="checkbox" checked disabled>
+                            </td>
+                        </tr>
+                    @endforeach
+                    <!-- Gifts -->
+                    @foreach ($gifts as $gift)
+                        <tr>
+                            <td>Gift</td>
+                            <td>{{ $gift->name }}</td>
+                            <td>{{ $gift->probability }}</td>
+                            <td>
+                                <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="number" name="probability" value="{{ $gift->probability }}" step="0.01" min="0" max="100" class="form-control form-control-sm d-inline" required>
+                                    <input type="hidden" name="name" value="{{ $gift->name }}">
+                                    <input type="hidden" name="stock" value="{{ $gift->stock }}">
+                                    <input type="hidden" name="description" value="{{ $gift->description }}">
+                                    <input type="hidden" name="image_url" value="{{ $gift->image_url }}">
+                                    <input type="hidden" name="is_active" value="{{ $gift->is_active }}">
+                                    <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
+                                </form>
+                                <form action="{{ route('admin.spins.gift.delete', $gift->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="{{ route('admin.spins.toggle-selection', ['type' => 'gift', 'id' => $gift->id]) }}" method="POST" class="toggle-selection-form">
+                                    @csrf
+                                    <input type="checkbox" name="is_selected" onchange="this.form.submit()" {{ $gift->is_selected ? 'checked' : '' }}>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
 
@@ -143,7 +154,7 @@
                         <input type="url" name="image_url" value="{{ old('image_url') }}" class="form-control" placeholder="URL ảnh">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-success w-100">Thêm quà</button>
+                        <button type="submit" class="btn btn-primary w-100">Thêm quà</button>
                     </div>
                     <div class="col-12">
                         <textarea name="description" class="form-control" placeholder="Mô tả">{{ old('description') }}</textarea>
@@ -166,22 +177,22 @@
                         @else
                             <table class="table table-striped">
                                 <thead>
-                                    <tr>
-                                        <th>Tên quà</th>
-                                        <th>Tỷ lệ (%)</th>
-                                        <th>Hành động</th>
-                                    </tr>
+                                <tr>
+                                    <th>Tên quà</th>
+                                    <th>Tỷ lệ (%)</th>
+                                    <th>Hành động</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($availableGifts as $gift)
-                                        <tr>
-                                            <td>{{ $gift->name }}</td>
-                                            <td>{{ $gift->probability }}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-primary btn-sm select-reward" data-type="gift" data-id="{{ $gift->id }}">Chọn</button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                                @foreach ($availableGifts as $gift)
+                                    <tr>
+                                        <td>{{ $gift->name }}</td>
+                                        <td>{{ $gift->probability }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm select-reward" data-type="gift" data-id="{{ $gift->id }}">Chọn</button>
+                                        </td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         @endif
@@ -232,20 +243,20 @@
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
-                        <tr>
-                            <th>Tên người dùng</th>
-                            <th>Quà trúng</th>
-                            <th>Thời gian</th>
-                        </tr>
+                    <tr>
+                        <th>Tên người dùng</th>
+                        <th>Quà trúng</th>
+                        <th>Thời gian</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach ($giftWinners as $winner)
-                            <tr>
-                                <td>{{ $winner->user->name ?? 'Không xác định' }}</td>
-                                <td>{{ $winner->reward_name }}</td>
-                                <td>{{ $winner->spun_at }}</td>
-                            </tr>
-                        @endforeach
+                    @foreach ($giftWinners as $winner)
+                        <tr>
+                            <td>{{ $winner->user->name ?? 'Không xác định' }}</td>
+                            <td>{{ $winner->reward_name }}</td>
+                            <td>{{ $winner->spun_at }}</td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>
@@ -369,31 +380,31 @@
                     },
                     body: JSON.stringify({})
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Đóng modal
-                        setTimeout(() => {
-                            forceCloseModal(modal);
-                        }, 100);
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Đóng modal
+                            setTimeout(() => {
+                                forceCloseModal(modal);
+                            }, 100);
 
-                        // Hiển thị toast
-                        const toastElement = document.getElementById('successToast');
-                        if (toastElement) {
-                            const toast = new bootstrap.Toast(toastElement, {
-                                autohide: true,
-                                delay: 3000
-                            });
-                            toast.show();
-                        } else {
-                            console.error('Không tìm thấy toast element');
-                            alert('Đã thêm thành công!');
-                        }
+                            // Hiển thị toast
+                            const toastElement = document.getElementById('successToast');
+                            if (toastElement) {
+                                const toast = new bootstrap.Toast(toastElement, {
+                                    autohide: true,
+                                    delay: 3000
+                                });
+                                toast.show();
+                            } else {
+                                console.error('Không tìm thấy toast element');
+                                alert('Đã thêm thành công!');
+                            }
 
-                        // Thêm phần thưởng vào bảng
-                        const tbody = document.querySelector('table.table-striped tbody');
-                        const newRow = document.createElement('tr');
-                        newRow.innerHTML = `
+                            // Thêm phần thưởng vào bảng
+                            const tbody = document.querySelector('table.table-striped tbody');
+                            const newRow = document.createElement('tr');
+                            newRow.innerHTML = `
                             <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
                             <td>${name}</td>
                             <td>${probability}</td>
@@ -424,24 +435,24 @@
                                 </form>
                             </td>
                         `;
-                        tbody.appendChild(newRow);
+                            tbody.appendChild(newRow);
 
-                        // Xóa hàng khỏi modal
-                        row.remove();
+                            // Xóa hàng khỏi modal
+                            row.remove();
 
-                        // Cập nhật tổng tỷ lệ trúng
-                        const totalProbabilityElement = document.querySelector('.card-header h3');
-                        const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
-                        const newTotal = currentTotal + parseFloat(probability);
-                        totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
-                    } else {
-                        alert(data.message || 'Có lỗi xảy ra');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi xảy ra, vui lòng thử lại');
-                });
+                            // Cập nhật tổng tỷ lệ trúng
+                            const totalProbabilityElement = document.querySelector('.card-header h3');
+                            const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
+                            const newTotal = currentTotal + parseFloat(probability);
+                            totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
+                        } else {
+                            alert(data.message || 'Có lỗi xảy ra');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra, vui lòng thử lại');
+                    });
             });
         });
 
@@ -460,26 +471,26 @@
                     },
                     body: JSON.stringify({})
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const row = form.closest('tr');
-                        const probability = parseFloat(row.cells[2].textContent);
-                        row.remove();
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const row = form.closest('tr');
+                            const probability = parseFloat(row.cells[2].textContent);
+                            row.remove();
 
-                        // Cập nhật tổng tỷ lệ trúng
-                        const totalProbabilityElement = document.querySelector('.card-header h3');
-                        const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
-                        const newTotal = currentTotal - probability;
-                        totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
-                    } else {
-                        alert(data.message || 'Có lỗi xảy ra');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi xảy ra, vui lòng thử lại');
-                });
+                            // Cập nhật tổng tỷ lệ trúng
+                            const totalProbabilityElement = document.querySelector('.card-header h3');
+                            const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
+                            const newTotal = currentTotal - probability;
+                            totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
+                        } else {
+                            alert(data.message || 'Có lỗi xảy ra');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra, vui lòng thử lại');
+                    });
             });
         });
     </script>
