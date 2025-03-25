@@ -32,6 +32,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -188,7 +189,8 @@ class TransactionController extends Controller
                     ->where('user_id', $user->id)
                     ->where('membership_plan_id', $itemId)
                     ->where('end_date', '>', now())
-                    ->exists()) {
+                    ->exists()
+                ) {
                     return $this->respondError('Bạn đã đăng ký gói membership này rồi');
                 }
 
@@ -517,7 +519,7 @@ class TransactionController extends Controller
                     'expires_at' => now()->addDays(7),
                 ]);
 
-//                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
 
                 $this->finalBuyMembership(
                     $userId,
@@ -918,88 +920,59 @@ class TransactionController extends Controller
         }
     }
 
-    private function checkCoupon(?string $code, float $amount, $courseId = null)
+    private function checkCoupon(string $code, float $amount, ?int $courseId = null)
     {
-        if (empty($code)) {
-            return [
-                'original_amount' => $amount,
-                'discount_amount' => 0,
-                'final_amount' => $amount,
-            ];
+        $cacheKey = "coupon_lock" . Auth::id() . ":" . $code;
+        if (!Cache::add($cacheKey, 'processing', 10)) {
+            return $this->respondError('Mã giảm giá đang được sử dụng. Vui lòng đợi');
         }
 
-        $coupon = Coupon::query()
-            ->where('code', $code)
-            ->where('status', '1')
-            ->first();
-
+        $coupon = Coupon::where('code', $code)->where('status', '1')->first();
         if (!$coupon) {
-            return $this->respondNotFound('Mã giảm giá không hợp lệ');
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ');
         }
 
-        $couponAssigned = CouponUse::query()
-            ->where('user_id', Auth::id())
-            ->where('coupon_id', $coupon->id)
-            ->first();
-
-        if (!$couponAssigned) {
-            return $this->respondError('Mã giảm giá không áp dụng cho tài khoản của bạn');
-        }
-
-        if ($couponAssigned->expired_at && now()->greaterThan($couponAssigned->expired_at)) {
-            return $this->respondError('Mã giảm giá đã hết hạn');
-        }
-
-        if ($couponAssigned->status === 'used') {
-            return $this->respondError('Bạn đã sử dụng mã giảm giá này');
-        }
-
-        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
-            return $this->respondError('Mã giảm giá đã hết số lượt sử dụng');
+        $couponAssigned = CouponUse::where('user_id', Auth::id())->where('coupon_id', $coupon->id)->first();
+        if (!$couponAssigned || $couponAssigned->status === 'used' || ($couponAssigned->expired_at && now()->greaterThan($couponAssigned->expired_at))) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ hoặc đã hết hạn');
         }
 
         if ($coupon->start_date && now()->lessThan($coupon->start_date)) {
-            return $this->respondError('Mã giảm giá chưa được kích hoạt');
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá chưa được kích hoạt');
         }
 
-        if ($coupon->specific_course) {
-            if (is_null($courseId)) {
-                return $this->respondError('Mã giảm giá này chỉ áp dụng cho khóa học cụ thể. Vui lòng cung cấp ID khóa học');
-            }
-
-            $isApplicable = $coupon->couponCourses()->where('course_id', $courseId)->exists();
-            if (!$isApplicable) {
-                return $this->respondError('Mã giảm giá này không áp dụng cho khóa học này');
-            }
+        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá đã hết số lượt sử dụng');
         }
 
-        return DB::transaction(function () use ($coupon, $couponAssigned, $amount) {
-            $coupon = Coupon::query()->where('id', $coupon->id)->lockForUpdate()->first();
-            $couponAssigned = CouponUse::query()->where('id', $couponAssigned->id)->lockForUpdate()->first();
+        if ($coupon->specific_course && (!$courseId || !$coupon->couponCourses()->where('course_id', $courseId)->exists())) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không áp dụng cho khóa học này');
+        }
+
+        return DB::transaction(function () use ($coupon, $couponAssigned, $amount, $cacheKey) {
+            $coupon = Coupon::where('id', $coupon->id)->lockForUpdate()->first();
+            $couponAssigned = CouponUse::where('id', $couponAssigned->id)->lockForUpdate()->first();
 
             if (!$coupon || !$couponAssigned) {
-                return $this->respondError('Mã giảm giá không hợp lệ hoặc đã được sử dụng');
+                return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ hoặc đã được sử dụng');
             }
 
-            $discountAmount = 0;
-
-            if ($coupon->discount_type === 'percentage') {
-                $discountAmount = ($amount * $coupon->discount_value) / 100;
-                if (!empty($coupon->discount_max_value)) {
-                    $discountAmount = min($discountAmount, $coupon->discount_max_value);
-                }
-            } elseif ($coupon->discount_type === 'fixed') {
-                $discountAmount = min($coupon->discount_value, $amount);
-            }
-
-            $finalAmount = max($amount - $discountAmount, 0);
+            $discountAmount = $coupon->discount_type === 'percentage'
+                ? min(($amount * $coupon->discount_value) / 100, $coupon->discount_max_value ?? PHP_INT_MAX)
+                : min($coupon->discount_value, $amount);
 
             return $this->respondOk('Áp dụng mã giảm giá thành công', [
                 'original_amount' => $amount,
                 'discount_amount' => $discountAmount,
-                'final_amount' => $finalAmount
+                'final_amount' => max($amount - $discountAmount, 0)
             ]);
         });
+    }
+
+    private function invalidateCacheAndRespond(string $cacheKey, string $message)
+    {
+        Cache::forget($cacheKey);
+        return $this->respondError($message);
     }
 
     private function execPostRequest($url, $data)
@@ -1008,9 +981,13 @@ class TransactionController extends Controller
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array(
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($data))
+                'Content-Length: ' . strlen($data)
+            )
         );
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);

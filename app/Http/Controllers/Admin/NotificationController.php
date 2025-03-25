@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
+use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait;
+    use LoggableTrait, ApiResponseTrait, FilterTrait;
 
     public function index(Request $request)
     {
@@ -143,12 +144,18 @@ class NotificationController extends Controller
             ];
 
             $queryNotifications = $user->notifications()
-                ->where(function ($query) use ($notification_key, $typeGroups) {
-                    foreach ($typeGroups[$notification_key]['type'] as $type) {
-                        $query->orWhereJsonContains('data->type', $type);
-                    }
-                })
-                ->latest();
+            ->where(function ($query) use ($notification_key, $typeGroups) {
+                if (!isset($typeGroups[$notification_key]['type']) || !is_array($typeGroups[$notification_key]['type'])) {
+                    return;
+                }
+
+                foreach ($typeGroups[$notification_key]['type'] as $type) {
+                    $query->orWhereRaw("json_unquote(json_extract(data, '$.type')) = ?", [$type]);
+                }
+            })
+            ->latest();
+
+            // dd($request->all()); 
 
             $status = $request->input('status', 'all');
 
@@ -158,9 +165,17 @@ class NotificationController extends Controller
                 $queryNotifications->whereNotNull('read_at');
             }
 
-            if ($request->has('query') && $request->input('query')) {
-                $search = $request->input(key: 'query');
-                $queryNotifications->where('data', 'like', "%$search%");
+            if ($request->has('search_full')) {
+
+                $queryNotifications = $this->searchNotifications($request->search_full, $queryNotifications);
+            }
+
+            if ($request->has('notification_type')) {
+                $queryNotifications = $this->filterType($request, $queryNotifications);
+            }
+
+            if($request->hasAny(['created_at', 'updated_at'])){
+                $queryNotifications = $this->filter($request, $queryNotifications);
             }
 
             $notifications = $queryNotifications->with('notifiable')->latest()->paginate(10);
@@ -173,12 +188,49 @@ class NotificationController extends Controller
 
 
             return view('notifications.index', compact('notifications', 'title', 'subTitle'));
+            
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
             return $this->respondError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    private function searchNotifications($searchTerm, $query)
+    {
+        if (!empty($searchTerm)) {
+            return $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw("json_unquote(json_extract(data, '$.message')) LIKE ?", ["%{$searchTerm}%"]);
+            });
+        }
+
+        return $query; // Trả về query gốc nếu không có tìm kiếm
+    }
+
+    private function filterType(Request $request, $query)
+    {
+        if ($request->has('notification_type')) {
+            $type = $request->input('notification_type');
+
+            $query->whereRaw("json_unquote(json_extract(data, '$.type')) LIKE ?", ["%{$type}%"]);
+        }
+
+        return $query;
+    }
+
+    private function filter($request, $query)
+    {
+        $filters = [
+            'created_at' => ['queryWhere' => '>='],
+            'updated_at' => ['queryWhere' => '<='],
+            
+        ];
+
+        $query = $this->filterTrait($filters, $request,$query);
+
+        return $query;
+    }
+
 
     public function forceDelete(string $id)
     {
@@ -217,9 +269,6 @@ class NotificationController extends Controller
 
     private function deleteNotifications(array $notificationID)
     {
-
         DatabaseNotification::query()->whereIn('id', $notificationID)->delete();
     }
-
-
 }
