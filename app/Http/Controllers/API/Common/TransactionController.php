@@ -188,7 +188,8 @@ class TransactionController extends Controller
                     ->where('user_id', $user->id)
                     ->where('membership_plan_id', $itemId)
                     ->where('end_date', '>', now())
-                    ->exists()) {
+                    ->exists()
+                ) {
                     return $this->respondError('Bạn đã đăng ký gói membership này rồi');
                 }
 
@@ -201,6 +202,55 @@ class TransactionController extends Controller
 
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
+
+            DB::beginTransaction();
+
+            $coupon = Coupon::query()
+                ->where('code', $couponCode)
+                ->where('status', '1')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$coupon) {
+                return $this->respondError('Mã giảm giá không hợp lệ.');
+            }
+
+            if ($coupon->max_usage != NULL && $coupon->max_usage <= 0) {
+                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
+            }
+
+            if ($coupon->max_usage != NULL && $coupon->max_usage > 0) {
+                $updated = Coupon::where('id', $coupon->id)
+                ->where('max_usage', '>', 0)
+                ->update([
+                    'max_usage' => DB::raw('CASE WHEN max_usage > 0 THEN max_usage - 1 ELSE 0 END'),
+                    'user_count' => DB::raw('user_count + 1')
+                ]);            
+            } elseif ($coupon->max_usage == NULL) {
+                $updated = true;
+            }
+
+            if (!$updated) {
+                DB::rollBack();
+                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
+            }
+
+            $couponUse = CouponUse::where('user_id', auth()->id())
+                ->where('coupon_id', $coupon->id)
+                ->where(['status' => 'unused', 'applied_at' => NULL, 'expired_at' => NULL])
+                ->lockForUpdate()
+                ->first();
+
+            if (!$couponUse) {
+                return $this->respondError('Mã giảm giá đã hết hạn hoặc đã được sử dụng.');
+            }
+
+            $couponUse->update([
+                'status' => 'used',
+                'applied_at' => now()
+            ]);
+
+            DB::commit();
 
             return match ($validated['payment_method']) {
                 'momo' => $this->createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
@@ -292,7 +342,6 @@ class TransactionController extends Controller
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            // Nếu thanh toán không thành công
             if ($inputData['vnp_ResponseCode'] != '00') {
                 return redirect()->away($frontendUrl . "?status=failed");
             }
@@ -495,7 +544,7 @@ class TransactionController extends Controller
                     'expires_at' => now()->addDays(7),
                 ]);
 
-//                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
 
                 $this->finalBuyMembership(
                     $userId,
@@ -702,6 +751,9 @@ class TransactionController extends Controller
 
     private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
+        $course->refresh();
+        $course->increment('total_student');
+
         if ($discount) {
             $discount->refresh();
             $discount->increment('used_count');
@@ -719,9 +771,6 @@ class TransactionController extends Controller
                 'status' => 'used',
             ]);
         }
-
-        $course->refresh();
-        $course->increment('total_student');
 
         $walletInstructor = Wallet::query()
             ->firstOrCreate([
@@ -950,9 +999,13 @@ class TransactionController extends Controller
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array(
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($data))
+                'Content-Length: ' . strlen($data)
+            )
         );
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);

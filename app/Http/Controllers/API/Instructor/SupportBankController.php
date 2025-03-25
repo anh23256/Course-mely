@@ -18,7 +18,7 @@ class SupportBankController extends Controller
     public function index()
     {
         try {
-            $banks = SupportedBank::query()->get();
+            $banks = SupportedBank::query()->where('status',1)->get();
 
             if ($banks->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy ngân hàng nào');

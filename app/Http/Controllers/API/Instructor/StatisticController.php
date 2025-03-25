@@ -83,10 +83,12 @@ class StatisticController extends Controller
                     DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
                     DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
                 )
-                ->join('courses', function($join) use ($user){
+                ->join('courses', function ($join) use ($user) {
                     $join->on('invoices.course_id', '=', 'courses.id')->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
                 })
-                ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
+                ->leftJoin('course_users', function ($join) {
+                    $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
+                })
                 ->join('categories', 'categories.id', '=', 'courses.category_id')
                 ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
                 ->where('invoices.status', 'Đã thanh toán')
@@ -116,11 +118,10 @@ class StatisticController extends Controller
 
             $monthlyRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where([
-                    'invoices.status' => 'Đã thanh toán',
-                    'courses.user_id' => $user->id
-                ])
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('invoices.course_id', '=', 'courses.id')->where('courses.user_id', $user->id);
+                })
+                ->where('invoices.status', 'Đã thanh toán')
                 ->whereYear('invoices.created_at', $year)
                 ->groupBy('month')
                 ->pluck('revenue', 'month')
@@ -193,11 +194,10 @@ class StatisticController extends Controller
 
             $monthlyPurchases = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, COUNT(invoices.id) as total_purchases')
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where([
-                    'invoices.status' => 'Đã thanh toán',
-                    'courses.user_id' => $user->id
-                ])
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('invoices.course_id', '=', 'courses.id')->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
+                })
+                ->where('invoices.status', 'Đã thanh toán',)
                 ->whereYear('invoices.created_at', $year)
                 ->groupBy('month')
                 ->pluck('total_purchases', 'month')
@@ -205,8 +205,10 @@ class StatisticController extends Controller
 
             $monthlyStudents = DB::table('course_users')
                 ->selectRaw('MONTH(course_users.created_at) as month, COUNT(DISTINCT course_users.user_id) as total_students')
-                ->join('courses', 'course_users.course_id', '=', 'courses.id')
-                ->where('courses.user_id', $user->id)
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('course_users.course_id', '=', 'courses.id')->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
+                })
+                ->where(['source' => 'purchase', 'access_status' => 'active'])
                 ->whereYear('course_users.created_at', $year)
                 ->groupBy('month')
                 ->pluck('total_students', 'month')
@@ -243,8 +245,9 @@ class StatisticController extends Controller
             $totalMembership = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, 
                     SUM(CASE WHEN invoices.invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership')
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where('courses.user_id', $user->id)
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('invoices.course_id', '=', 'courses.id')->where('courses.user_id', $user->id);
+                })
                 ->whereYear('invoices.created_at', $year)
                 ->groupBy('month')
                 ->pluck('total_membership', 'month')
@@ -253,8 +256,9 @@ class StatisticController extends Controller
             $totalCourse = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, 
                     SUM(CASE WHEN invoices.invoice_type = "course" THEN 1 ELSE 0 END) as total_course')
-                ->join('courses', 'invoices.course_id', '=', 'courses.id')
-                ->where('courses.user_id', $user->id)
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('invoices.course_id', '=', 'courses.id')->where('courses.user_id', $user->id);
+                })
                 ->whereYear('invoices.created_at', $year)
                 ->groupBy('month')
                 ->pluck('total_course', 'month')
@@ -271,7 +275,6 @@ class StatisticController extends Controller
             }
 
             return $this->respondOk('Thống kê lượt mua và học viên theo tháng', $monthlySales);
-
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

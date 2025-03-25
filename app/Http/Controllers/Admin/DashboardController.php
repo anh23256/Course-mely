@@ -320,7 +320,7 @@ class DashboardController extends Controller
     private function getTotalCourse()
     {
         return Course::query()
-            ->where('status', 'approved');
+            ->where('status', 'approved')->pluck('id');
     }
 
     private function getTotalInstructor()
@@ -328,7 +328,7 @@ class DashboardController extends Controller
         return User::query()
             ->whereHas('roles', function ($query) {
                 $query->where('name', 'instructor');
-            });
+            })->pluck('id');
     }
 
     private function getTotalAmount()
@@ -385,10 +385,15 @@ class DashboardController extends Controller
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
-            ->join('users', function ($join) {
-                $join->on('users.id', '=', 'courses.user_id')->where('courses.status', 'approved');
-            })
+            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id') 
+            ->leftJoinSub(
+                DB::table('users')
+                    ->select('id', 'name'),
+                'users',
+                function ($join) {
+                    $join->on('users.id', '=', 'courses.user_id');
+                }
+            )
             ->limit(10);
     }
 
@@ -405,10 +410,18 @@ class DashboardController extends Controller
     {
         return DB::table('users')
             ->join('courses', 'users.id', '=', 'courses.user_id')
-            ->leftJoin('invoices', function ($join) {
-                $join->on('courses.id', '=', 'invoices.course_id')->where('invoices.status', 'Đã thanh toán');
+            ->leftJoinSub(
+                DB::table('invoices')
+                    ->select('id', 'final_amount', 'course_id', 'created_at')
+                    ->where('invoices.status', 'Đã thanh toán'),
+                'invoices',
+                function ($join) {
+                    $join->on('courses.id', '=', 'invoices.course_id');
+                }
+            )
+            ->leftJoin('course_users', function ($join) {
+                $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
             })
-            ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
             ->join('model_has_roles', function ($join) {
                 $join->on('model_has_roles.model_id', '=', 'users.id')->where('model_has_roles.model_type', User::class);
             })
@@ -422,7 +435,7 @@ class DashboardController extends Controller
                 'users.avatar',
                 'users.created_at',
                 DB::raw('SUM(invoices.final_amount) as total_revenue'),
-                DB::raw('COUNT(courses.id) as total_courses'),
+                DB::raw('COUNT(DISTINCT courses.id) as total_courses'),
                 DB::raw('COUNT(DISTINCT course_users.user_id) as total_enrolled_students'),
             )
             ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar', 'users.created_at')
@@ -436,7 +449,9 @@ class DashboardController extends Controller
             ->leftJoin('invoices', function ($join) {
                 $join->on('courses.id', '=', 'invoices.course_id')->where('invoices.status', 'Đã thanh toán');
             })
-            ->leftJoin('course_users', 'courses.id', '=', 'course_users.course_id')
+            ->leftJoin('course_users', function ($join) {
+                $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
+            })
             ->select(
                 'courses.id',
                 'courses.name',
@@ -457,7 +472,9 @@ class DashboardController extends Controller
             ->leftJoin('invoices', function ($join) {
                 $join->on('users.id', '=', 'invoices.user_id')->where('invoices.status', 'Đã thanh toán');
             })
-            ->leftJoin('course_users', 'users.id', '=', 'course_users.user_id')
+            ->leftJoin('course_users', function ($join) {
+                $join->on('users.id', '=', 'course_users.user_id')->where(['source' => 'purchase', 'access_status' => 'active']);
+            })
             ->select(
                 'users.id',
                 'users.name',
@@ -485,8 +502,7 @@ class DashboardController extends Controller
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
             SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
-            SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
-            SUM(CASE WHEN payment_method = "credit_card" THEN 1 ELSE 0 END) as total_payment_method_credit_card', [self::RATE])
+            SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay', [self::RATE])
             ->where('status', 'Đã thanh toán')
             ->groupBy(DB::raw('MONTH(created_at), YEAR(created_at)'))
             ->orderBy('year')->orderBy('month');
@@ -508,7 +524,6 @@ class DashboardController extends Controller
                 SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
                 SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
                 SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
-                SUM(CASE WHEN payment_method = "credit_card" THEN 1 ELSE 0 END) as total_payment_method_credit_card,
                 COUNT(*) as total_invoice')
             ->where('status', 'Đã thanh toán');
     }

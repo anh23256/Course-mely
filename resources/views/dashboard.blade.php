@@ -3,7 +3,6 @@
 @push('page-css')
     <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
@@ -589,7 +588,7 @@
                                                 <img src="{{ $getTopViewCourse->thumbnail }}"
                                                     alt="{{ $getTopViewCourse->name }}"
                                                     class="img-fluid card-img-top explore-img"
-                                                    style="height: 30vh; width: 100vw; object-fit: cover;">
+                                                    style="max-height: 190px; width: 100%; object-fit: cover;">
                                                 <div class="bg-overlay bg-dark opacity-25"></div>
 
                                                 <div class="position-absolute bottom-0 start-0 w-100 p-3">
@@ -648,7 +647,7 @@
 
                                             <div class="card-footer bg-light p-3 border-top">
                                                 <div class="d-grid gap-2">
-                                                    <a href="{{ config('app.fe_url') }}courses/{{$getTopViewCourse->slug}}"
+                                                    <a href="{{ config('app.fe_url') }}courses/{{ $getTopViewCourse->slug }}"
                                                         target="_blank" class="btn btn-primary btn-sm">
                                                         <i class="ri-eye-line align-bottom me-1"></i>
                                                         Xem chi tiết
@@ -927,7 +926,7 @@
                     y: {
                         formatter: function(value) {
                             return value.toLocaleString("vi-VN").replace(/\./g,
-                                ",") + 'VND';
+                                ",");
                         }
                     }
                 }
@@ -1518,100 +1517,232 @@
             chartTopCompletedCourses.render();
         }
 
-        $(document).on('click', '#pagination-links-courses a', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('href').split('page=')[1];
-            loadCoursesContent({
-                page: page
+        $(document).ready(function() {
+            $(document).on('click', '#pagination-links-courses a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+
+                loadCoursesContent({
+                    page: page
+                });
+            });
+
+            $(document).on('click', '#pagination-links-instructors a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadInstructorsContent({
+                    page: page
+                });
+            });
+
+            $(document).on('click', '#pagination-links-users a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadUsersContent({
+                    page: page
+                });
+            });
+
+            function loadCoursesContent(dataFilter) {
+                dataFilter.type = "courses";
+                $.ajax({
+                    url: "{{ route('admin.dashboard') }}",
+                    type: "GET",
+                    data: dataFilter,
+                    dataType: "json",
+                    success: function(data) {
+                        $('#table-courses tbody').html(data.top_courses_table);
+                        $('#pagination-links-courses').html(data.pagination_links_courses);
+                        topCourse = data.topCourses;
+                        if ($('#bestSellingCourses').is(':visible')) renderBestSellingCourses(
+                            topCourse);
+                    }
+                });
+            }
+
+            function loadInstructorsContent(dataFilter) {
+                dataFilter.type = 'instructors';
+                $.ajax({
+                    url: "{{ route('admin.dashboard') }}",
+                    type: "GET",
+                    data: dataFilter,
+                    dataType: "json",
+                    success: function(data) {
+                        $('#table-instructors tbody').html(data.top_instructors_table);
+                        $('#pagination-links-instructors').html(data.pagination_links_instructors);
+                        topInstructor = data.topInstructors;
+                        if ($('#renderTopInstructorsChart').is(':visible')) renderTopInstructorsChart(
+                            topInstructor);
+                    }
+                });
+            }
+
+            function loadUsersContent(dataFilter) {
+                dataFilter.type = 'user';
+                $.ajax({
+                    url: "{{ route('admin.dashboard') }}",
+                    type: "GET",
+                    data: dataFilter,
+                    dataType: "json",
+                    success: function(data) {
+                        $('#table-students tbody').html(data.top_users_table);
+                        $('#pagination-links-users').html(data.pagination_links_users);
+                        topStudent = data.topUsers;
+                        if ($('#renderTopStudentsChart').is(':visible')) renderTopStudentsChart(
+                            topStudent);
+                    }
+                });
+            }
+
+            function getSelectedDateRange() {
+                let button = $(".dateRangePicker");
+                return {
+                    startDate: button.attr("data-start"),
+                    endDate: button.attr("data-end")
+                };
+            }
+
+            $(document).on('click', '#showBestSellingCoursesButton', function(e) {
+                e.preventDefault();
+                let tableDiv = $('#table-courses').closest('.table-responsive');
+                let chartDiv = $('#bestSellingCourses');
+                let button = $(this);
+
+                if (tableDiv.is(':visible')) {
+                    tableDiv.hide();
+                    if (chartDiv.length === 0) {
+                        $('#showBestSellingCoursesDiv').append(
+                            '<div id="bestSellingCourses" class="apex-charts"></div>');
+                        renderBestSellingCourses(topCourse);
+                    } else chartDiv.show();
+                    button.text('Xem bảng');
+                } else {
+                    if (chartBestSellingCourses) chartBestSellingCourses.destroy();
+                    $('#bestSellingCourses').remove();
+                    tableDiv.show();
+                    button.text('Xem biểu đồ');
+                }
+            });
+
+            $(document).on('click', '#showTopInstructorButton', function(e) {
+                e.preventDefault();
+                let tableDiv = $('#table-instructors').closest('.table-responsive');
+                let chartDiv = $('#renderTopInstructorsChart');
+                let button = $(this);
+
+                if (tableDiv.is(':visible')) {
+                    tableDiv.hide();
+                    if (chartDiv.length === 0) {
+                        $('#showTopInstructorDiv').append(
+                            '<div id="renderTopInstructorsChart" class="apex-charts"></div>');
+                        renderTopInstructorsChart(topInstructor);
+                    } else chartDiv.show();
+                    button.text('Xem bảng');
+                } else {
+                    if (chartTopInstructors) chartTopInstructors.destroy();
+                    $('#renderTopInstructorsChart').remove();
+                    tableDiv.show();
+                    button.text('Xem biểu đồ');
+                }
+            });
+
+            $(document).on('click', '#showRenderTopStudentsButton', function(e) {
+                e.preventDefault();
+                let tableDiv = $('#table-students').closest('.table-responsive');
+                let chartDiv = $('#renderTopStudentsChart');
+                let button = $(this);
+
+                if (tableDiv.is(':visible')) {
+                    tableDiv.hide();
+                    if (chartDiv.length === 0) {
+                        $('#showRenderTopStudentsDiv').append(
+                            '<div id="renderTopStudentsChart" class="apex-charts"></div>');
+                        renderTopStudentsChart(topStudent);
+                    } else chartDiv.show();
+                    button.text('Xem bảng');
+                } else {
+                    if (chartTopStudents) chartTopStudents.destroy();
+                    $('#renderTopStudentsChart').remove();
+                    tableDiv.show();
+                    button.text('Xem biểu đồ');
+                }
+            });
+
+            $(document).on('click', '.course-filter', function(e) {
+                e.preventDefault();
+
+                let data_type = $(this).data('filter-course');
+                console.log(data_type);
+
+                $.ajax({
+                    url: "{{ route('admin.dashboard') }}",
+                    method: 'GET',
+                    data: {
+                        orderby_course: data_type
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log(data);
+
+                        $('#top-course-view').empty();
+                        $('#top-course-view').html(data.getTopViewCourses);
+                    }
+                })
+            })
+
+            $(document).on('click', '.dowloadExcel', function() {
+                let type_export = $(this).data('type');
+                let data_export;
+
+                if (type_export == 'top_instructor') {
+                    data_export = topInstructor.data;
+                } else if (type_export == 'top_course') {
+                    data_export = topCourse.data;
+                } else if (type_export == 'top_student') {
+                    data_export = topStudent.data;
+                } else if (type_export == 'top_category') {
+                    data_export = topCategory;
+                } else {
+                    return;
+                }
+
+                if (!data_export || !Array.isArray(data_export)) {
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('admin.dashboard.export') }}",
+                    method: 'POST',
+                    data: {
+                        type: type_export,
+                        data: data_export,
+                    },
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function(response, status, xhr) {
+                        let filename = `${type_export}_export.xlsx`;
+                        const disposition = xhr.getResponseHeader('Content-Disposition');
+
+                        if (disposition && disposition.indexOf('attachment') !== -1) {
+                            const matches = /filename="([^"]*)"/.exec(disposition);
+                            if (matches != null && matches[1]) filename = matches[1];
+                        }
+
+                        const blob = new Blob([response]);
+                        const url = window.URL.createObjectURL(blob);
+                        const tempLink = document.createElement('a');
+                        tempLink.style.display = 'none';
+                        tempLink.href = url;
+                        tempLink.setAttribute('download', filename);
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(tempLink);
+                    }
+                });
             });
         });
-
-        $(document).on('click', '#pagination-links-instructors a', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('href').split('page=')[1];
-            loadInstructorsContent({
-                page: page
-            });
-        });
-
-        $(document).on('click', '#pagination-links-users a', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('href').split('page=')[1];
-            loadUsersContent({
-                page: page
-            });
-        });
-
-        function loadCoursesContent(dataFilter) {
-            dataFilter.type = "courses";
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: dataFilter,
-                dataType: "json",
-                success: function(data) {
-                    $('#table-courses tbody').html(data.top_courses_table);
-                    $('#pagination-links-courses').html(data.pagination_links_courses);
-                    topCourse = data.topCourses;
-                    if ($('#bestSellingCourses').is(':visible')) renderBestSellingCourses(topCourse);
-                }
-            });
-        }
-
-        function loadInstructorsContent(dataFilter) {
-            dataFilter.type = 'instructors';
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: dataFilter,
-                dataType: "json",
-                success: function(data) {
-                    $('#table-instructors tbody').html(data.top_instructors_table);
-                    $('#pagination-links-instructors').html(data.pagination_links_instructors);
-                    topInstructor = data.topInstructors;
-                    if ($('#renderTopInstructorsChart').is(':visible')) renderTopInstructorsChart(
-                        topInstructor);
-                }
-            });
-        }
-
-        function loadUsersContent(dataFilter) {
-            dataFilter.type = 'user';
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: dataFilter,
-                dataType: "json",
-                success: function(data) {
-                    $('#table-students tbody').html(data.top_users_table);
-                    $('#pagination-links-users').html(data.pagination_links_users);
-                    topStudent = data.topUsers;
-                    if ($('#renderTopStudentsChart').is(':visible')) renderTopStudentsChart(topStudent);
-                }
-            });
-        }
-
-        function loadApexCharts(filterData) {
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: filterData,
-                success: function(response) {
-                    updateChart(response.apexCharts);
-                }
-            });
-        }
-
-        function loadCourseRatingCharts(filterData) {
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: filterData,
-                success: function(response) {
-                    updatePieChart(response.course_rating);
-                }
-            });
-        }
 
         function loadAll(filterData) {
             $.ajax({
@@ -1644,25 +1775,29 @@
                     renderPaymentMethodChart(response.system_Funds);
                     updateCategoryRevenueChart(response.categoryStats);
 
-                    $('.counter-value[data-target="totalRevenue"]').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalAmount.total_revenue || 0));
+                    $('.counter-value[data-target="totalRevenue"]').text(new Intl.NumberFormat(
+                        'vi-VN', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(response.totalAmount.total_revenue || 0));
 
-                    $('.counter-value[data-target="totalProfit"]').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalAmount.total_profit || 0));
+                    $('.counter-value[data-target="totalProfit"]').text(new Intl.NumberFormat(
+                        'vi-VN', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(response.totalAmount.total_profit || 0));
 
-                    $('.counter-value[data-target="totalCourse"]').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalCourse || 0));
+                    $('.counter-value[data-target="totalCourse"]').text(new Intl.NumberFormat(
+                        'vi-VN', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(response.totalCourse || 0));
 
-                    $('.counter-value[data-target="totalInstructor"]').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalInstructor || 0));
+                    $('.counter-value[data-target="totalInstructor"]').text(new Intl.NumberFormat(
+                        'vi-VN', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(response.totalInstructor || 0));
 
                     $('.counter-value-revenue').text(new Intl.NumberFormat('vi-VN', {
                         minimumFractionDigits: 0,
@@ -1674,160 +1809,29 @@
                         maximumFractionDigits: 0
                     }).format(response.totalAmount.total_profit || 0));
 
-                    if ($('#bestSellingCourses').is(':visible')) renderBestSellingCourses(topCourse);
+                    if ($('#bestSellingCourses').is(':visible')) renderBestSellingCourses(
+                        topCourse);
                     if ($('#renderTopInstructorsChart').is(':visible')) renderTopInstructorsChart(
                         topInstructor);
-                    if ($('#renderTopStudentsChart').is(':visible')) renderTopStudentsChart(topStudent);
+                    if ($('#renderTopStudentsChart').is(':visible')) renderTopStudentsChart(
+                        topStudent);
+
+                    swiper.update();
                 }
             });
         }
 
-        function getSelectedDateRange() {
-            let button = $(".dateRangePicker");
-            return {
-                startDate: button.attr("data-start"),
-                endDate: button.attr("data-end")
-            };
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterItems = document.querySelectorAll('.course-filter');
 
-        $(document).on('click', '#showBestSellingCoursesButton', function(e) {
-            e.preventDefault();
-            let tableDiv = $('#table-courses').closest('.table-responsive');
-            let chartDiv = $('#bestSellingCourses');
-            let button = $(this);
+            filterItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
 
-            if (tableDiv.is(':visible')) {
-                tableDiv.hide();
-                if (chartDiv.length === 0) {
-                    $('#showBestSellingCoursesDiv').append(
-                        '<div id="bestSellingCourses" class="apex-charts"></div>');
-                    renderBestSellingCourses(topCourse);
-                } else chartDiv.show();
-                button.text('Xem bảng');
-            } else {
-                if (chartBestSellingCourses) chartBestSellingCourses.destroy();
-                $('#bestSellingCourses').remove();
-                tableDiv.show();
-                button.text('Xem biểu đồ');
-            }
-        });
+                    filterItems.forEach(i => i.classList.remove('active'));
 
-        $(document).on('click', '#showTopInstructorButton', function(e) {
-            e.preventDefault();
-            let tableDiv = $('#table-instructors').closest('.table-responsive');
-            let chartDiv = $('#renderTopInstructorsChart');
-            let button = $(this);
-
-            if (tableDiv.is(':visible')) {
-                tableDiv.hide();
-                if (chartDiv.length === 0) {
-                    $('#showTopInstructorDiv').append(
-                        '<div id="renderTopInstructorsChart" class="apex-charts"></div>');
-                    renderTopInstructorsChart(topInstructor);
-                } else chartDiv.show();
-                button.text('Xem bảng');
-            } else {
-                if (chartTopInstructors) chartTopInstructors.destroy();
-                $('#renderTopInstructorsChart').remove();
-                tableDiv.show();
-                button.text('Xem biểu đồ');
-            }
-        });
-
-        $(document).on('click', '#showRenderTopStudentsButton', function(e) {
-            e.preventDefault();
-            let tableDiv = $('#table-students').closest('.table-responsive');
-            let chartDiv = $('#renderTopStudentsChart');
-            let button = $(this);
-
-            if (tableDiv.is(':visible')) {
-                tableDiv.hide();
-                if (chartDiv.length === 0) {
-                    $('#showRenderTopStudentsDiv').append(
-                        '<div id="renderTopStudentsChart" class="apex-charts"></div>');
-                    renderTopStudentsChart(topStudent);
-                } else chartDiv.show();
-                button.text('Xem bảng');
-            } else {
-                if (chartTopStudents) chartTopStudents.destroy();
-                $('#renderTopStudentsChart').remove();
-                tableDiv.show();
-                button.text('Xem biểu đồ');
-            }
-        });
-
-        $(document).on('click', '.course-filter', function(e) {
-            e.preventDefault();
-
-            let data_type = $(this).data('filter-course');
-            console.log(data_type);
-
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                method: 'GET',
-                data: {
-                    orderby_course: data_type
-                },
-                dataType: 'json',
-                success: function(data) {
-                    console.log(data);
-
-                    $('#top-course-view').empty();
-                    $('#top-course-view').html(data.getTopViewCourses);
-                }
-            })
-        })
-
-        $(document).on('click', '.dowloadExcel', function() {
-            let type_export = $(this).data('type');
-            let data_export;
-
-            if (type_export == 'top_instructor') {
-                data_export = topInstructor.data;
-            } else if (type_export == 'top_course') {
-                data_export = topCourse.data;
-            } else if (type_export == 'top_student') {
-                data_export = topStudent.data;
-            } else if (type_export == 'top_category') {
-                data_export = topCategory;
-            } else {
-                return;
-            }
-
-            if (!data_export || !Array.isArray(data_export)) {
-                return;
-            }
-
-            $.ajax({
-                url: "{{ route('admin.dashboard.export') }}",
-                method: 'POST',
-                data: {
-                    type: type_export,
-                    data: data_export,
-                },
-                xhrFields: {
-                    responseType: 'blob'
-                },
-                success: function(response, status, xhr) {
-                    let filename = `${type_export}_export.xlsx`;
-                    const disposition = xhr.getResponseHeader('Content-Disposition');
-
-                    if (disposition && disposition.indexOf('attachment') !== -1) {
-                        const matches = /filename="([^"]*)"/.exec(disposition);
-                        if (matches != null && matches[1]) filename = matches[1];
-                    }
-
-                    const blob = new Blob([response]);
-                    const url = window.URL.createObjectURL(blob);
-                    const tempLink = document.createElement('a');
-                    tempLink.style.display = 'none';
-                    tempLink.href = url;
-                    tempLink.setAttribute('download', filename);
-                    document.body.appendChild(tempLink);
-                    tempLink.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(tempLink);
-                }
+                    this.classList.add('active');
+                });
             });
         });
 
@@ -1839,7 +1843,7 @@
         renderPaymentMethodChart(system_Funds);
         updateCategoryRevenueChart(topCategory);
 
-        new Swiper('.marketplace-swiper', {
+        var swiper = new Swiper('.marketplace-swiper', {
             slidesPerView: 4,
             spaceBetween: 20,
             navigation: {
