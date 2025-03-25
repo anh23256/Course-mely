@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Instructor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Posts\StorePostRequest;
 use App\Http\Requests\Admin\Posts\UpdatePostRequest;
+use App\Models\Approvable;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
@@ -54,7 +55,7 @@ class PostController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $request->except('thumbnail');
+            $data = $request->except('thumbnail', 'published_at');
 
             if ($request->hasFile('thumbnail')) {
                 $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
@@ -64,14 +65,28 @@ class PostController extends Controller
 
             $data['category_id'] = $request->input('category_id');
 
-            $data['published_at'] = $request->input('published_at') ?? now();
+            $data['status'] = 'pending';
 
             $data['slug'] = !empty($data['title'])
                 ? Str::slug($data['title']) . '-' . Str::uuid()
                 : Str::uuid();
 
             $post = Post::query()->create($data);
-
+            // Tạo bản ghi trong Approvable để chờ kiểm duyệt
+            Approvable::query()->create([
+                'approver_id' => null, // Chưa có người kiểm duyệt, để null
+                'status' => 'pending', // Trạng thái ban đầu là pending
+                'note' => null, // Chưa có ghi chú
+                'reason' => null, // Chưa có lý do chỉnh sửa
+                'content_modification' => 0, // Không yêu cầu chỉnh sửa nội dung (theo yêu cầu của bạn)
+                'approvable_type' => Post::class, // Loại đối tượng là Post
+                'approvable_id' => $post->id, // ID của bài viết
+                'request_date' => now(), // Ngày yêu cầu kiểm duyệt là thời điểm hiện tại
+                'approved_at' => null, // Chưa được duyệt
+                'rejected_at' => null, // Chưa bị từ chối
+                'created_at' => now(), // Thời gian tạo bản ghi
+                'updated_at' => now(), // Thời gian cập nhật bản ghi
+            ]);
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::query()->firstOrCreate([
@@ -85,7 +100,7 @@ class PostController extends Controller
 
             DB::commit();
 
-            return $this->respondCreated('Tạo bài viết thành công', $post);
+            return $this->respondCreated('Tạo bài viết thành công, đang chờ kiểm duyệt', $post);
         } catch (\Exception $e) {
 
             DB::rollBack();
@@ -134,7 +149,7 @@ class PostController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $request->except('thumbnail', 'category_id');
+            $data = $request->except('thumbnail', 'category_id', 'published_at');
 
             $post = Post::query()
                 ->with(['tags'])
@@ -157,9 +172,24 @@ class PostController extends Controller
             $data['slug'] = !empty($data['title'])
                 ? Str::slug($data['title'])
                 : $post->slug;
-
+            // Nếu bài viết đã bị từ chối (status = pending), gửi lại để kiểm duyệt
+            if ($post->status === 'pending') {
+                Approvable::query()->create([
+                    'approver_id' => null, // Chưa có người kiểm duyệt
+                    'status' => 'pending', // Trạng thái ban đầu là pending
+                    'note' => null, // Chưa có ghi chú
+                    'reason' => null, // Chưa có lý do chỉnh sửa
+                    'content_modification' => 0, // Không yêu cầu chỉnh sửa nội dung
+                    'approvable_type' => Post::class, // Loại đối tượng là Post
+                    'approvable_id' => $post->id, // ID của bài viết
+                    'request_date' => now(), // Ngày yêu cầu kiểm duyệt
+                    'approved_at' => null, // Chưa được duyệt
+                    'rejected_at' => null, // Chưa bị từ chối
+                    'created_at' => now(), // Thời gian tạo bản ghi
+                    'updated_at' => now(), // Thời gian cập nhật bản ghi
+                ]);
+            }
             $post->update($data);
-
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::firstOrCreate([
@@ -175,7 +205,7 @@ class PostController extends Controller
 
             DB::commit();
 
-            return $this->respondOk('Cập nhật bài viết thành công', $post);
+            return $this->respondOk('Cập nhật bài viết thành công, đang chờ kiểm duyệt', $post);
         } catch (\Exception $e) {
             DB::rollBack();
 
