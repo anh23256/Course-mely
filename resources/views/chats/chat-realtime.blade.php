@@ -86,7 +86,7 @@
                         <!-- Modal -->
                         <div class="modal fade" id="addChatPrivateModal" tabindex="-1" aria-labelledby="addGroupModalLabel"
                             aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content rounded-3 shadow-lg border-0">
                                     <!-- Header -->
                                     <div class="modal-header bg-primary text-white rounded-top">
