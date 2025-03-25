@@ -21,22 +21,22 @@ class TopInstructorController extends Controller
                     users.name, 
                     users.code, 
                     users.avatar, 
-                    COUNT(DISTINCT courses.id) as courses_count, 
-                    ROUND(AVG(ratings.rate), 1) as average_rating,
-                    COUNT(DISTINCT follows.id) as followers_count
+                    COUNT(DISTINCT courses.id) as total_courses, 
+                    ROUND(AVG(ratings.rate), 1) as avg_rating,
+                    COUNT(DISTINCT follows.id) as total_followers
                 ")      
-                ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                ->where('roles.name', 'instructor')
-                ->where('users.status', 'active')
-                ->leftJoin('courses', 'users.id', '=', 'courses.user_id') 
-                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
-                ->leftJoin('follows', 'users.id', '=', 'follows.instructor_id')
-                ->groupBy('users.id')
-                ->orderByDesc('average_rating') 
-                ->orderByDesc('followers_count') 
-                ->limit(5)
-                ->get();
+                    ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                    ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                    ->where('roles.name', 'instructor')
+                    ->where('users.status', 'active')
+                    ->leftJoin('courses', 'users.id', '=', 'courses.user_id') 
+                    ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
+                    ->leftJoin('follows', 'users.id', '=', 'follows.instructor_id')
+                    ->groupBy('users.id')
+                    ->orderByDesc('avg_rating') 
+                    ->orderByDesc('total_followers') 
+                    ->limit(5)
+                    ->get();
 
 
             return $this->respondOk('Top 4 giảng viên :', $topInstructor);

@@ -19,7 +19,6 @@
                             <li class="breadcrumb-item active"><a>{{ $title ?? '' }}</a></li>
                         </ol>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -62,7 +61,7 @@
         </div>
         <!-- End social-customer -->
 
-        <!-- List-customer -->
+        <!-- List-posts -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -93,25 +92,6 @@
                                     style="min-width: 500px;">
                                     <form>
                                         <div class="container">
-                                            <li>
-                                                <label for="amountRange" class="form-label">Số tiền</label>
-
-                                                <div class="d-flex justify-content-between">
-                                                    <span id="amountMin">10,000 VND</span>
-                                                    <span id="amountMax">99,999,999 VND</span>
-                                                </div>
-
-                                                <div class="d-flex justify-content-between">
-                                                    <input type="range" class="form-range w-50" id="amountMinRange"
-                                                           name="amount_min" min="10000" max="49990000" step="10000"
-                                                           value="{{ request()->input('amount_min') ?? 10000 }}"
-                                                           oninput="updateRange()" data-filter>
-                                                    <input type="range" class="form-range w-50" id="amountMaxRange"
-                                                           name="amount_max" min="50000000" max="99990000" step="10000"
-                                                           value="{{ request()->input('amount_max') ?? 99990000 }}"
-                                                           oninput="updateRange()" data-filter>
-                                                </div>
-                                            </li>
                                             <div class="row">
                                                 <li class="col-6">
                                                     <div class="mb-2">
@@ -174,23 +154,23 @@
                         <form>
                             <div class="row">
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên khóa học</label>
-                                    <input class="form-control form-control-sm" name="course_name_approved" type="text"
-                                           placeholder="Nhập tên khóa học..."
-                                           value="{{ request()->input('account_holder') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Tiêu đề bài viết</label>
+                                    <input class="form-control form-control-sm" name="post_title_approved" type="text"
+                                           placeholder="Nhập tiêu đề bài viết..."
+                                           value="{{ request()->input('post_title_approved') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên giảng viên</label>
+                                    <label class="form-label">Tên tác giả</label>
                                     <input class="form-control form-control-sm" name="user_name_approved" type="text"
-                                           placeholder="Nhập tên giảng viên..."
-                                           value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                           placeholder="Nhập tên tác giả..."
+                                           value="{{ request()->input('user_name_approved') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Tên người kiểm duyệt</label>
                                     <input class="form-control form-control-sm" name="approver_name_approved"
                                            type="text"
                                            placeholder="Nhập tên người kiểm duyệt..."
-                                           value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                           value="{{ request()->input('approver_name_approved') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="statusItem" class="form-label">Trạng thái kiểm duyệt</label>
@@ -218,16 +198,15 @@
 
                     <!-- end card header -->
                     <div class="card-body" id="item_List">
-                        <div class="listjs-table" id="customerList">
+                        <div class="listjs-table" id="postList">
                             <div class="table-responsive table-card mt-3 mb-1">
-                                <table class="table align-middle table-nowrap" id="customerTable">
+                                <table class="table align-middle table-nowrap" id="postTable">
                                     <thead class="table-light">
                                     <tr>
                                         <th>STT</th>
-                                        <th>Tên khoá học</th>
-                                        <th>Giảng viên</th>
+                                        <th>Tiêu đề bài viết</th>
+                                        <th>Tác giả</th>
                                         <th>Hình ảnh</th>
-                                        <th>Giá</th>
                                         <th>Người kiểm duyệt</th>
                                         <th>Trạng thái</th>
                                         <th>Ngày gửi yêu cầu</th>
@@ -236,31 +215,28 @@
                                     </tr>
                                     </thead>
                                     <tbody class="list">
-                                    @foreach ($approvals as $approval)
+                                        @forelse ($approvals as $approval)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 50) }}</td>
-                                            <td>{{ $approval->course->user->name ?? '' }}</td>
+                                            <td>{{ $approval->approvable ? \Illuminate\Support\Str::limit($approval->approvable->title ?? 'Không có tiêu đề', 50) : 'Không có bài viết' }}</td>
+                                            <td>{{ $approval->approvable && $approval->approvable->user ? $approval->approvable->user->name : '' }}</td>
                                             <td>
-                                                <img style="height: 80px" src="{{ $approval->course->thumbnail }}"
+                                                <img style="height: 80px" src="{{ $approval->approvable && $approval->approvable->thumbnail ? $approval->approvable->thumbnail : asset('assets/images/no-photo.jpg') }}"
                                                      alt="" class="w-100 object-fit-cover">
                                             </td>
-                                            <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí'  }}</td>
                                             <td>
-                                                {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
+                                                {!! $approval->approver ? $approval->approver->name : '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
                                             </td>
                                             <td>
                                                 @if ($approval->status == 'pending')
                                                     <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
                                                 @elseif($approval->status == 'approved')
                                                     <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
-                                                @elseif($approval->status == 'modify_request')
-                                                    <span class="btn btn-sm btn-soft-warning">Sửa đổi nội dung</span>
                                                 @else
                                                     <span class="btn btn-sm btn-soft-danger">Từ chối</span>
                                                 @endif
                                             </td>
-                                            <td>{!!  $approval->request_date ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
+                                            <td>{!! $approval->request_date ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
                                             <td>
                                                 @if($approval->approved_at)
                                                     {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}
@@ -271,14 +247,18 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('admin.approvals.courses.show', $approval->id) }}">
+                                                <a href="{{ route('admin.approvals.posts.show', $approval->id) }}">
                                                     <button class="btn btn-sm btn-info edit-item-btn">
                                                         <span class="ri-eye-line"></span>
                                                     </button>
                                                 </a>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center">Không có bài viết nào để kiểm duyệt.</td>
+                                        </tr>
+                                    @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -293,26 +273,13 @@
             </div>
             <!-- end col -->
         </div>
-        <!-- end List-customer -->
+        <!-- end List-posts -->
     </div>
 @endsection
 
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
-
-        function updateRange() {
-            var minValue = $('#amountMinRange').val();
-            var maxValue = $('#amountMaxRange').val();
-            document.getElementById('amountMin').textContent = formatCurrency(minValue) + ' VND';
-            document.getElementById('amountMax').textContent = formatCurrency(maxValue) + ' VND';
-        }
-
-        function formatCurrency(value) {
-            return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        updateRange();
+        var routeUrlFilter = "{{ route('admin.approvals.posts.index') }}";
 
         $(document).on('click', '#resetFilter', function () {
             window.location = routeUrlFilter;

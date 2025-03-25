@@ -61,7 +61,8 @@
 
                                             <!-- Chọn thành viên -->
                                             <div class="mb-3">
-                                                <label for="groupMembers" class="fw-semibold mb-2">Thêm Thành Viên</label>
+                                                <label for="groupMembers" class="fw-semibold mb-2">Thêm Thành
+                                                    Viên</label>
                                                 <select id="groupMembers" name="members[]" class="form-select shadow-sm"
                                                     multiple="multiple">
                                                     @foreach ($data['admins'] as $admin)
@@ -86,7 +87,7 @@
                         <!-- Modal -->
                         <div class="modal fade" id="addChatPrivateModal" tabindex="-1" aria-labelledby="addGroupModalLabel"
                             aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content rounded-3 shadow-lg border-0">
                                     <!-- Header -->
                                     <div class="modal-header bg-primary text-white rounded-top">
@@ -359,15 +360,18 @@
                                                                                             </a>
                                                                                             <ul
                                                                                                 class="dropdown-menu dropdown-menu-end">
-                                                                                                <li><a class="dropdown-item"
+                                                                                                <li>
+                                                                                                    <a class="dropdown-item"
                                                                                                         href="javascript:void(0);"><i
                                                                                                             class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a>
                                                                                                 </li>
-                                                                                                <li><a class="dropdown-item"
+                                                                                                <li>
+                                                                                                    <a class="dropdown-item"
                                                                                                         href="javascript:void(0);"><i
                                                                                                             class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a>
                                                                                                 </li>
-                                                                                                <li><a class="dropdown-item"
+                                                                                                <li>
+                                                                                                    <a class="dropdown-item"
                                                                                                         href="javascript:void(0);"><i
                                                                                                             class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a>
                                                                                                 </li>
@@ -579,18 +583,20 @@
                                                                 <div class="modal-dialog">
                                                                     <div class="modal-content">
                                                                         <div class="modal-header">
-                                                                            <h5 class="modal-title" id="myModalLabel">Thêm
+                                                                            <h5 class="modal-title" id="myModalLabel">
+                                                                                Thêm
                                                                                 thành viên</h5>
                                                                             <button type="button" class="btn-close"
                                                                                 data-bs-dismiss="modal"
-                                                                                aria-label="Close"> </button>
+                                                                                aria-label="Close"></button>
                                                                         </div>
                                                                         <div class="modal-body">
                                                                             <form>
                                                                                 @csrf
                                                                                 <div class="form-group mb-3">
                                                                                     <label for="groupMembers"
-                                                                                        class="font-weight-bold">Chọn thành
+                                                                                        class="font-weight-bold">Chọn
+                                                                                        thành
                                                                                         viên</label>
                                                                                     <select tabindex="-1" id="addMembers"
                                                                                         name="members[]"
@@ -605,17 +611,20 @@
                                                                                         @endforeach
                                                                                     </select>
                                                                                 </div>
-
+                                                                                <div class="modal-footer">
+                                                                                    <button type="button"
+                                                                                        class="btn btn-light"
+                                                                                        data-bs-dismiss="modal">
+                                                                                        Close
+                                                                                    </button>
+                                                                                    <button type="submit"
+                                                                                        class="btn btn-primary getID"
+                                                                                        id="addMembersButton"
+                                                                                        data-conversation-id="">Thêm
+                                                                                    </button>
+                                                                                </div>
+                                                                            </form>
                                                                         </div>
-                                                                        <div class="modal-footer">
-                                                                            <button type="button" class="btn btn-light"
-                                                                                data-bs-dismiss="modal">Close</button>
-                                                                            <button type="submit"
-                                                                                class="btn btn-primary getID"
-                                                                                id="addMembersButton"
-                                                                                data-conversation-id="">Thêm</button>
-                                                                        </div>
-                                                                        </form>
                                                                     </div><!-- /.modal-content -->
                                                                 </div><!-- /.modal-dialog -->
                                                             </div><!-- /.modal -->
@@ -842,6 +851,7 @@
                 });
             });
         }
+
         initIcons();
 
         $(document).ready(function() {
@@ -866,20 +876,20 @@
                         let previewHtml = "";
 
                         if (fileType.startsWith("image/")) {
-                            previewHtml = `<img src="${e.target.result}" class="thumbnail" 
+                            previewHtml = `<img src="${e.target.result}" class="thumbnail"
                         style="max-width:150px; border-radius: 8px; margin:5px;">`;
                         } else if (fileType.startsWith("video/")) {
-                            previewHtml = `<video class="thumbnail" controls 
+                            previewHtml = `<video class="thumbnail" controls
                         style="max-width:150px; border-radius: 8px; margin:5px;">
                         <source src="${e.target.result}" type="${fileType}">
                       </video>`;
                         } else if (fileType === "application/pdf") {
-                            previewHtml = `<embed src="${e.target.result}" class="thumbnail" 
+                            previewHtml = `<embed src="${e.target.result}" class="thumbnail"
                         style="width:100px; height:100px; border-radius: 8px; margin:5px;">`;
                         } else {
                             let fileThumbnail = getFileThumbnail(fileExt);
                             previewHtml = `<div class="file-thumbnail" style="display:inline-block; text-align:center; margin:5px;">
-                        <img src="${fileThumbnail}" style="width:50px; height:50px;"> 
+                        <img src="${fileThumbnail}" style="width:50px; height:50px;">
                         <p style="font-size:12px;">${file.name}</p>
                       </div>`;
                         }
@@ -1046,7 +1056,7 @@
             // Khi người dùng chọn một nhóm
             $(document).on('click', '.private-button', function() {
                 if (window.Echo) {
-                    window.Echo.leave('private-chat.' + currentConversationId);
+                    window.Echo.leave('conversation.' + currentConversationId);
                 }
                 if (window.Echo) {
                     window.Echo.leave('conversation.' + currentConversationId);
@@ -1056,8 +1066,9 @@
                 let userId = @json(auth()->id());
                 $('#showadd').hide();
 
-                window.Echo.join('private-chat.' + currentConversationId)
+                window.Echo.join('conversation.' + currentConversationId)
                     .here(users => {
+                        console.log(users)
                         sendActiveUsersToServer(users, 'join');
                     })
                     .joining(user => {
@@ -1066,7 +1077,8 @@
                     .leaving(user => {
                         sendActiveUsersToServer([user], 'leave');
                     })
-                    .listen('PrivateMessageSent', function(event) {
+                    .listen('.MessageSent', function(event) {
+                        console.log(event)
                         $('#messagesList').append(renderMessage(event));
                         scrollToBottom();
                     });
@@ -1099,7 +1111,7 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            let errors = xhr.responseJSON.errors; 
+                            let errors = xhr.responseJSON.errors;
                             let errorMessage = "\n";
 
                             $.each(errors, function(field, messages) {
@@ -1125,7 +1137,7 @@
             // Khi người dùng chọn một nhóm
             $('.group-button').click(function() {
                 if (window.Echo) {
-                    window.Echo.leave('private-chat.' + currentConversationId);
+                    window.Echo.leave('conversation.' + currentConversationId);
                 }
                 if (window.Echo) {
                     window.Echo.leave('conversation.' + currentConversationId);
@@ -1283,10 +1295,10 @@
                                                 mediaHtml.push(`
                                                     <div class="gallery-item">
                                                         <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; position: relative">
-                                                            <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                                            <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2"
                                                                 style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
                                                                 <i class='bx bx-download'></i>
-                                                            </a> 
+                                                            </a>
                                                             <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; height:100%; border-radius: 8px; object-fit:cover;">
                                                         </div>
                                                     </div>`);
@@ -1296,7 +1308,7 @@
                                                         <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
                                                             <video controls style="max-width:100%; height:200px; border-radius: 8px;">
                                                                 <source src="${storagePath}" type="${fileType}">
-                                                            </video>                                
+                                                            </video>
                                                         </div>
                                                     </div>`);
                                             } else {
@@ -1340,172 +1352,174 @@
                 } else {
                     alert("Vui lòng nhập tin nhắn hoặc chọn ảnh!");
                 }
-            });     
+            });
         });
+
         function kickUser(button) {
-                let groupId = button.getAttribute("data-conversation-id");
-                let userId = button.getAttribute("data-user-id");
+            let groupId = button.getAttribute("data-conversation-id");
+            let userId = button.getAttribute("data-user-id");
 
-                if (!groupId || !userId) {
-                    Toastify({
-                        text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
-                    return;
-                }
-                if (!confirm("Bạn có chắc chắn muốn xóa người này khỏi nhóm không ?")) return;
-                $.ajax({
-                    url: 'http://127.0.0.1:8000/admin/chats/kick-member',
-                    type: 'POST',
-                    data: {
-                        group_id: groupId,
-                        user_id: userId
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Toastify({
-                                text: response.message,
-                                backgroundColor: "green",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
-                        } else {
-                            Toastify({
-                                text: response.message,
-                                backgroundColor: "red",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = "Đã có lỗi xảy ra!";
-                        if (xhr.status === 403) {
-                            errorMessage = "Bạn không có quyền kick người này!";
-                        }
-                        if (xhr.status === 422) {
-                            errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
-                        }
+            if (!groupId || !userId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy ID nhóm hoặc ID người dùng.",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            if (!confirm("Bạn có chắc chắn muốn xóa người này khỏi nhóm không ?")) return;
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/kick-member',
+                type: 'POST',
+                data: {
+                    group_id: groupId,
+                    user_id: userId
+                },
+                success: function(response) {
+                    if (response.success) {
                         Toastify({
-                            text: errorMessage,
+                            text: response.message,
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                    } else {
+                        Toastify({
+                            text: response.message,
                             backgroundColor: "red",
                             duration: 3000,
                             close: true
                         }).showToast();
                     }
-                });
-            }
-
-            function dissolveGroup(a) {
-                let groupId = a.getAttribute("data-conversation-id");
-
-                if (!groupId) {
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền kick người này!";
+                    }
+                    if (xhr.status === 422) {
+                        errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
+                    }
                     Toastify({
-                        text: "Lỗi: Không tìm thấy nhóm",
+                        text: errorMessage,
                         backgroundColor: "red",
                         duration: 3000,
                         close: true
                     }).showToast();
-                    return;
                 }
-                if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
+            });
+        }
 
-                $.ajax({
-                    url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
-                    type: 'POST',
-                    data: {
-                        group_id: groupId
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Toastify({
-                                text: "Nhóm đã được giải tán!",
-                                backgroundColor: "green",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
-                            window.location.reload();
-                        } else {
-                            Toastify({
-                                text: response.message,
-                                backgroundColor: "red",
-                                duration: 3000,
-                                close: true
-                            }).showToast();
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = "Đã có lỗi xảy ra!";
-                        if (xhr.status === 403) {
-                            errorMessage = "Bạn không có quyền giải tán nhóm!";
-                        }
+        function dissolveGroup(a) {
+            let groupId = a.getAttribute("data-conversation-id");
+
+            if (!groupId) {
+                Toastify({
+                    text: "Lỗi: Không tìm thấy nhóm",
+                    backgroundColor: "red",
+                    duration: 3000,
+                    close: true
+                }).showToast();
+                return;
+            }
+            if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này?")) return;
+
+            $.ajax({
+                url: 'http://127.0.0.1:8000/admin/chats/dissolve-group',
+                type: 'POST',
+                data: {
+                    group_id: groupId
+                },
+                success: function(response) {
+                    if (response.success) {
                         Toastify({
-                            text: errorMessage,
+                            text: "Nhóm đã được giải tán!",
+                            backgroundColor: "green",
+                            duration: 3000,
+                            close: true
+                        }).showToast();
+                        window.location.reload();
+                    } else {
+                        Toastify({
+                            text: response.message,
                             backgroundColor: "red",
                             duration: 3000,
                             close: true
                         }).showToast();
                     }
-                });
-            }
-
-            function deleteConversation(button) {
-                const conversationId = button.getAttribute('data-conversation-id');
-
-                if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
-                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                    'content')
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                alert(data.message);
-                                location
-                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                            } else {
-                                alert(data.message);
-                            }
-                        })
-                        .catch(error => {
-                            alert('Có lỗi xảy ra, vui lòng thử lại!');
-                        });
+                },
+                error: function(xhr) {
+                    let errorMessage = "Đã có lỗi xảy ra!";
+                    if (xhr.status === 403) {
+                        errorMessage = "Bạn không có quyền giải tán nhóm!";
+                    }
+                    Toastify({
+                        text: errorMessage,
+                        backgroundColor: "red",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
                 }
+            });
+        }
+
+        function deleteConversation(button) {
+            const conversationId = button.getAttribute('data-conversation-id');
+
+            if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/delete/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            location
+                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                    });
             }
+        }
 
-            function leaveConversation(button) {
-                const conversationId = button.getAttribute('data-conversation-id');
+        function leaveConversation(button) {
+            const conversationId = button.getAttribute('data-conversation-id');
 
-                if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
-                    fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                    'content')
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                alert(data.message);
-                                location
-                                    .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
-                            } else {
-                                alert(data.message);
-                            }
-                        })
-                        .catch(error => {
-                            alert('Có lỗi xảy ra, vui lòng thử lại!');
-                        });
-                }
-            } 
+            if (confirm("Bạn có chắc chắn muốn rời nhóm này?")) {
+                fetch(`http://127.0.0.1:8000/admin/chats/conversation/${conversationId}/leave/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            location
+                                .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                    });
+            }
+        }
+
         function getFileThumbnail(ext) {
             return `/assets/images/icons/${ext}.png`;
         }
@@ -1524,7 +1538,7 @@
                         const time = formatTime(message.created_at);
                         const messageContent = `<p>${message.content || ''}</p>`;
 
-                        const mediaPreview = (message.meta_data || []).map(media => {
+                        const mediaPreview = (message?.meta_data || []).map(media => {
                             const {
                                 file_name: fileName,
                                 file_path: filePath,
@@ -1539,10 +1553,10 @@
                             if (fileType.startsWith('image')) {
                                 return `
                                 <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px; position: relative">
-                                    <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                    <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2"
                                         style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
                                         <i class='bx bx-download'></i>
-                                    </a> 
+                                    </a>
                                     <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
                                 </div>`;
                             }
@@ -1551,13 +1565,13 @@
                                 <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
                                     <video controls style="max-width:100%; border-radius: 8px;">
                                         <source src="${storagePath}" type="${fileType}">
-                                    </video>                                
+                                    </video>
                                 </div>`;
                             }
                             if (fileType === 'application/pdf') {
                                 return `
                                 <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
-                                    <embed src="${storagePath}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">                               
+                                    <embed src="${storagePath}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
                                 </div>`;
                             }
                             return `
@@ -1587,8 +1601,8 @@
                                         <strong>${message.sender.name}</strong>
                                         <span class="message-time">${time}</span>
                                     </div>
-                                    ${messageContent} 
-                                    ${mediaPreview} 
+                                    ${messageContent}
+                                    ${mediaPreview}
                                 </div>
                             </div>`;
                     }).join('');
@@ -1638,10 +1652,10 @@
                                 mediaHtml.push(`
                         <div class="gallery-item">
                             <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; position: relative">
-                                <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2" 
+                                <a href="${storagePath}" download class="download-btn btn btn-white btn-lg mt-2"
                                     style="position: absolute; top: 10px; right: 15px; border-radius: 5px; padding: 5px 10px;">
                                     <i class='bx bx-download'></i>
-                                </a> 
+                                </a>
                                 <img src="${storagePath}" alt="Hình ảnh" style="max-width:100%; height:100%; border-radius: 8px; object-fit:cover;">
                             </div>
                         </div>`);
@@ -1651,7 +1665,7 @@
                             <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
                                 <video controls style="max-width:100%; height:200px; border-radius: 8px;">
                                     <source src="${storagePath}" type="${fileType}">
-                                </video>                                
+                                </video>
                             </div>
                         </div>`);
                             } else {
@@ -1750,8 +1764,8 @@
             let mediaPreview = '';
 
             try {
-                if (response.message.meta_data && response.message.meta_data.length > 0) {
-                    response.message.meta_data.forEach(media => {
+                if (response?.message.meta_data && response?.message.meta_data.length > 0) {
+                    response?.message.meta_data.forEach(media => {
                         let fileName = media.file_name;
                         let mediaFile = media.file_path;
                         let fileType = media.file_type;
@@ -1769,7 +1783,7 @@
                         <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
                             <video controls style="max-width:100%; border-radius: 8px;">
                                 <source src="/storage/${mediaFile}" type="${fileType}">
-                            </video>                                
+                            </video>
                         </div>`;
                         } else if (fileType === 'application/pdf') {
                             mediaPreview += `
@@ -1777,7 +1791,7 @@
                             <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
                             <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
                                 <i class='bx bx-download'></i>
-                            </a>                                    
+                            </a>
                         </div>`;
                         } else {
                             mediaPreview += `
@@ -1812,7 +1826,7 @@
                     <strong>${response.message.sender.name}</strong>
                     <span class="message-time">${time}</span>
                 </div>
-                ${messageContent} 
+                ${messageContent}
                 ${mediaPreview} <!-- Chứa tất cả file -->
             </div>
         </div>
@@ -1980,7 +1994,7 @@
                 try {
                     decodedRoomId = atob(roomParam).trim();
 
-                    if(isNaN(decodedRoomId)) throw new Error("");
+                    if (isNaN(decodedRoomId)) throw new Error("");
                     if (!decodedRoomId) throw new Error("");
                 } catch (e) {
                     decodedRoomId = null;
@@ -1989,7 +2003,7 @@
 
             currentConversationId = decodedRoomId ?? firstChanelId;
             console.log(currentConversationId);
-            
+
             if (firstChanelType == 'group') {
                 getGroupInfo(firstChanelId);
                 $(document).ready(function() {
@@ -2015,8 +2029,9 @@
                 $(document).ready(function() {
                     $('#showadd').hide();
 
-                    window.Echo.join('private-chat.' + currentConversationId)
+                    window.Echo.join('conversation.' + currentConversationId)
                         .here(users => {
+                            console.log(users)
                             sendActiveUsersToServer(users, 'join');
                         })
                         .joining(user => {
@@ -2027,7 +2042,8 @@
                             console.log('User vừa rời:', user);
                             sendActiveUsersToServer([user], 'leave');
                         })
-                        .listen('PrivateMessageSent', function(event) {
+                        .listen('.MessageSent', function(event) {
+                            console.log(event)
                             $('#messagesList').append(renderMessage(event));
                             scrollToBottom();
                         });

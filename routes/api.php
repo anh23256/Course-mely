@@ -133,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
+
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
@@ -150,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         #============================== ROUTE CERTIFICATES =============================
         Route::get('/certificate/{slug}', [CertificateController::class, 'generateCertificate']);
+        Route::delete('/remove-certificates', [UserController::class, 'removeCertificate']);
 
         #============================== ROUTE NOTIFICATION =============================
         Route::prefix('notifications')
@@ -254,6 +256,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
+
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================
@@ -355,6 +358,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::prefix('quiz')
                                 ->group(function () {
                                     Route::get('download-quiz-form', [\App\Http\Controllers\API\Instructor\QuizController::class, 'downloadQuizForm']);
+                                    Route::get('export-quiz/{quiz}', [\App\Http\Controllers\API\Instructor\QuizController::class, 'exportQuiz']);
                                     Route::get('{quiz}/show-quiz', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuiz']);
                                     Route::get('{question}/show-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'showQuestion']);
                                     Route::put('{question}/update-quiz-content', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateContentQuiz']);
@@ -362,6 +366,7 @@ Route::middleware('auth:sanctum')->group(function () {
                                     Route::post('{quiz}/store-quiz-question-single', [\App\Http\Controllers\API\Instructor\QuizController::class, 'storeQuestionSingle']);
                                     Route::post('{quiz}/import-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'importQuiz']);
                                     Route::put('{question}/update-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateQuestion']);
+                                    Route::put('{quiz}/update-order', [\App\Http\Controllers\API\Instructor\QuizController::class, 'updateOrderQuestion']);
                                     Route::delete('{question}/delete-quiz-question', [\App\Http\Controllers\API\Instructor\QuizController::class, 'deleteQuestion']);
                                 });
 
@@ -480,6 +485,7 @@ Route::prefix('courses')
         Route::get('/discounted', [CommonCourseController::class, 'getDiscountedCourses']);
         Route::get('/free', [CommonCourseController::class, 'getFreeCourses']);
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
+        Route::get('/practice-exercises',[CommonCourseController::class, 'getPracticeExercises']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
         Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);
@@ -545,3 +551,5 @@ Route::get('/get-member-ship-plans/{code}', [CommonController::class, 'getMember
 Route::get('/get-ratings', [RatingController::class, 'getLastRatings']);
 
 Route::get('/get-course-ratings/{slug}', [RatingController::class, 'getCourseRatings']);
+
+Route::get('/get-posts', [\App\Http\Controllers\API\Common\PostController::class, 'getPost']);

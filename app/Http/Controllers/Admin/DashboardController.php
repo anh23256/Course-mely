@@ -136,7 +136,6 @@ class DashboardController extends Controller
             ]));
         } catch (\Throwable $e) {
             $this->logError($e);
-            dd($e->getMessage());
 
             return redirect()->back()->with('error', 'Lấy dữ liệu không thành công vui lòng thử lại');
         }
@@ -500,7 +499,7 @@ class DashboardController extends Controller
             )
             ->selectRaw('ROUND(SUM(final_amount * ?),0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
-            SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
+            SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
             SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay', [self::RATE])
             ->where('status', 'Đã thanh toán')
@@ -519,9 +518,9 @@ class DashboardController extends Controller
     private function getTotalByPaymentMethodAndInvoiceType()
     {
         return DB::table('invoices')
-            ->selectRaw(' 
+            ->selectRaw('
                 SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
-                SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales, 
+                SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
                 SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
                 SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
                 COUNT(*) as total_invoice')

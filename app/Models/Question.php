@@ -14,7 +14,8 @@ class Question extends Model
         'question',
         'image',
         'answer_type',
-        'description'
+        'description',
+        'order'
     ];
 
     public function quiz()

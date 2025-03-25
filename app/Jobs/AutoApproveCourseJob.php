@@ -59,6 +59,8 @@ class AutoApproveCourseJob implements ShouldQueue
 
             $errors = CourseValidatorService::validateCourse($course);
 
+            Log::error($errors);
+
             if (!empty($errors)) {
                 DB::transaction(function () use ($approval, $course) {
                     $approval->update([

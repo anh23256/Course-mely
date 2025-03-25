@@ -176,7 +176,7 @@ class BannerController extends Controller
                 $this->deleteImage($banner->image,  self::FOLDER);
             }
             Banner::where('order', '>', $banner->order)
-            ->decrement('order');
+                ->decrement('order');
             DB::commit();
 
             return response()->json([
@@ -203,14 +203,14 @@ class BannerController extends Controller
             $search = $request->input('search_full');
             $queryBanners = $queryBanners->where('title', 'LIKE', "%$search%");
         }
-        if ($request->hasAny(['title', 'id', 'status', 'start_deleted', 'end_deleted' ])) {
+        if ($request->hasAny(['title', 'id', 'status', 'start_deleted', 'end_deleted'])) {
             $queryBanners = $this->filter($request, $queryBanners);
         }
 
         $banners = $queryBanners->paginate(10);
 
         if ($request->ajax()) {
-            $html = view('banners.table', compact(['banners','banner_deleted_at']))->render();
+            $html = view('banners.table', compact(['banners', 'banner_deleted_at']))->render();
             return response()->json(['html' => $html]);
         }
 
@@ -328,19 +328,18 @@ class BannerController extends Controller
             'deleted_at' => ['attribute' => ['start_deleted' => '>=', 'end_deleted' => '<=',]],
         ];
 
-        $query = $this->filterTrait($filters, $request,$query);
+        $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
     }
     public function updateOrder(Request $request)
-{
-    $data = $request->input('orderData'); // Nhận dữ liệu sắp xếp từ phía client
+    {
+        $data = $request->input('orderData'); // Nhận dữ liệu sắp xếp từ phía client
 
-    foreach ($data as $order => $id) {
-        Banner::where('id', $id)->update(['order' => $order]);
+        foreach ($data as $order => $id) {
+            Banner::where('id', $id)->update(['order' => $order]);
+        }
+
+        return response()->json(['status' => 'success']);
     }
-
-    return response()->json(['status' => 'success']);
-}
-
 }

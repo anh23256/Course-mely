@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\WithDrawalsRequestController;
 use App\Http\Controllers\Admin\ApprovalCourseController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\AnalyticController;
+use App\Http\Controllers\Admin\ApprovalPostController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
@@ -307,6 +308,14 @@ Route::prefix('admin')->as('admin.')
                         Route::put('/{instructor}', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'approve'])->name('approve');
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject');
                     });
+                Route::prefix('posts')
+                ->as('posts.')
+                ->group(function () {
+                    Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
+                    Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
+                    Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
+                    Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
+                });
             });
 
         #============================== ROUTE INVOICE =============================
@@ -323,7 +332,11 @@ Route::prefix('admin')->as('admin.')
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
-
+            Route::put('/spin-configs/{id}', [SpinController::class, 'updateSpinConfig'])->name('spin-config.update');
+            Route::post('/gifts', [SpinController::class, 'addGift'])->name('gift.store');
+            Route::put('/gifts/{id}', [SpinController::class, 'updateGift'])->name('gift.update');
+            Route::delete('/gifts/{id}', [SpinController::class, 'deleteGift'])->name('gift.delete');
+            Route::post('/spin/toggle-selection/{type}/{id}', [SpinController::class, 'toggleSelection'])->name('toggle-selection');
         });
 
         #============================== ROUTE WITH DRAWALS =============================

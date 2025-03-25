@@ -35,7 +35,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="row g-4">
+        <div class="row g-4 cursor-pointer">
             <!-- Tổng doanh thu -->
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
@@ -104,7 +104,7 @@
                 <div class="card card-animate">
                     <div class="card-body p-4"
                         style="background: linear-gradient(135deg, #e9e9ff, #dcdbff); border-radius: 12px;">
-                        <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Người hướng dẫn</p>
+                        <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng số giảng viên </p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
                                 <span
