@@ -232,6 +232,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/apply-coupon', [TransactionController::class, 'applyCoupon']);
         Route::post('/buyCourse', [TransactionController::class, 'buyCourse']);
         Route::post('/enroll-free-course', [TransactionController::class, 'enrollFreeCourse']);
+        Route::delete('/delete-apply-coupon', [TransactionController::class, 'deleteApplyCoupon']);
     });
 
     #============================== ROUTE LEARNING =============================
@@ -444,8 +445,9 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
-                    Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
+
+                Route::get('/group/get-group-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
 
             Route::prefix('direct')
                 ->group(function () {

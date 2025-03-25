@@ -185,6 +185,7 @@ class ChatController extends Controller
                 'meta_data' => $validated['meta_data'] ?? null,
             ]);
 
+            $mediaData = [];
             if ($request->hasFile('input_file')) {
                 $files = $request->file('input_file');
                 $filePaths = $this->uploadMultiple($files, self::FOLDER);
@@ -217,12 +218,6 @@ class ChatController extends Controller
                         'file_size' => $file_size,
                     ];
                 }
-
-            }else{
-                $mediaData = [
-                    'read' => false,
-                    'send_at' => now()
-                ];
             }
 
             $message->update(['meta_data' => $mediaData]);
