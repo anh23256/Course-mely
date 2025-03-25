@@ -32,7 +32,6 @@ class Approvable extends Model
     {
         return $this->morphTo();
     }
-
     public function approver()
     {
         return $this->belongsTo(User::class, 'approver_id');

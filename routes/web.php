@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\WithDrawalsRequestController;
 use App\Http\Controllers\Admin\ApprovalCourseController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\AnalyticController;
+use App\Http\Controllers\Admin\ApprovalPostController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
@@ -307,6 +308,14 @@ Route::prefix('admin')->as('admin.')
                         Route::put('/{instructor}', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'approve'])->name('approve');
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject');
                     });
+                Route::prefix('posts')
+                ->as('posts.')
+                ->group(function () {
+                    Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
+                    Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
+                    Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
+                    Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
+                });
             });
 
         #============================== ROUTE INVOICE =============================
