@@ -33,13 +33,13 @@
                         <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
 
                         <div class="d-flex gap-2">
-                            <a class="btn btn-sm btn-success" href="">Export dữ liệu</a>
+                            
                             <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-filter-2-line"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
@@ -51,22 +51,22 @@
                                                     <div class="mb-2">
                                                         <label for="startDate" class="form-label">Ngày bắt đầu</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="startDate" id="startDate" data-filter
-                                                               value="{{ request()->input('startDate') ?? '' }}">
+                                                            name="created_at" id="startDate" data-filter
+                                                            value="{{ request()->input('startDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
                                                     <div class="mb-2">
                                                         <label for="endDate" class="form-label">Ngày kết thúc</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="endDate" id="endDate" data-filter
-                                                               value="{{ request()->input('endDate') ?? '' }}">
+                                                            name="updated_at" id="endDate" data-filter
+                                                            value="{{ request()->input('endDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                             </div>
                                             <li class="mt-2 d-flex gap-1">
                                                 <button class="btn btn-sm btn-success flex-grow-1" type="reset"
-                                                        id="resetFilter">Reset
+                                                    id="resetFilter">Reset
                                                 </button>
                                                 <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
                                                     dụng
@@ -86,12 +86,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Loại thông báo</label>
-                                    <select class="form-select form-select-sm" name="id" id="statusItem"
-                                            data-advanced-filter>
+                                    <select class="form-select form-select-sm" name="notification_type" id="statusItem"
+                                        data-advanced-filter>
                                         <option value="">Chọn loại thông báo</option>
-                                        @foreach ($notifications as $notification)
-                                            <option
-                                                 value="{{ $notification->id }}">
+                                        @foreach ($notifications->unique(fn($n) => $n->data['type']) as $notification)
+                                            <option value="{{ $notification->data['type'] }}">
                                                 {{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}
                                             </option>
                                         @endforeach
@@ -131,6 +130,7 @@
                                 </div>
                             </div>
 
+                            
                             <ul class="nav nav-tabs">
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
@@ -224,7 +224,7 @@
 @endsection
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.notifications.index') }}";
+        var routeUrlFilter = "{{ route('admin.notifications.all-notifications') }}";
         var routeDeleteAll = "{{ route('admin.notifications.forceDelete', ':itemID') }}";
 
         $(document).on('click', '#resetFilter', function() {

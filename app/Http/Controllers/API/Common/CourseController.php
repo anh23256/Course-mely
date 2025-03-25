@@ -36,6 +36,7 @@ class CourseController
                 ->where('price_sale', '>', 0)
                 ->where('visibility', '=', 'public')
                 ->where('status', '=', 'approved')
+                ->where('is_practical_course', false)
                 ->orderBy('total_student', 'desc')
                 ->limit(10)
                 ->get();
@@ -206,6 +207,7 @@ class CourseController
                 ->where('is_popular', '=', 1)
                 ->where('visibility', '=', 'public')
                 ->where('status', '=', 'approved')
+                ->where('is_practical_course', false)
                 ->orderBy('total_student', 'desc')
                 ->limit(10)
                 ->get();
@@ -274,67 +276,143 @@ class CourseController
     }
 
     public function getTopCategoriesWithMostCourses()
-{
-    try {
-        $categories = Category::query()
-            ->select('id', 'name', 'slug', 'parent_id')
-            ->with([
-                'courses' => function ($query) {
-                    $query->select(
-                        'courses.id',
-                        'courses.user_id',
-                        'courses.name',
-                        'courses.code',
-                        'courses.category_id',
-                        'courses.slug',
-                        'courses.thumbnail',
-                        'courses.price',
-                        'courses.price_sale',
-                        'courses.is_free',
-                        'courses.total_student',
-                        DB::raw('COUNT(lessons.id) as total_lesson'),
-                        DB::raw('SUM(videos.duration) as total_duration'),
-                        DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
-                        DB::raw('COUNT(DISTINCT ratings.rate) as total_rating')
-                    )
-                    ->join('chapters', 'chapters.course_id', '=', 'courses.id')
-                    ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
-                    ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
-                    ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
-                    ->leftJoin('users', 'users.id', '=', 'courses.user_id')
-                    ->addSelect('users.code as creator_code', 'users.name as creator_name', 'users.email as creator_email','users.avatar as creator_avatar')
-                    ->where('courses.visibility', '=', 'public')
-                    ->where('courses.status', '=', 'approved')
-                    ->whereRaw('courses.id IN (
+    {
+        try {
+            $categories = Category::query()
+                ->select('id', 'name', 'slug', 'parent_id')
+                ->with([
+                    'courses' => function ($query) {
+                        $query->select(
+                            'courses.id',
+                            'courses.user_id',
+                            'courses.name',
+                            'courses.code',
+                            'courses.category_id',
+                            'courses.slug',
+                            'courses.thumbnail',
+                            'courses.price',
+                            'courses.price_sale',
+                            'courses.is_free',
+                            'courses.total_student',
+                            DB::raw('COUNT(lessons.id) as total_lesson'),
+                            DB::raw('SUM(videos.duration) as total_duration'),
+                            DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
+                            DB::raw('COUNT(DISTINCT ratings.rate) as total_rating')
+                        )
+                            ->join('chapters', 'chapters.course_id', '=', 'courses.id')
+                            ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
+                            ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
+                            ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
+                            ->leftJoin('users', 'users.id', '=', 'courses.user_id')
+                            ->addSelect('users.code as creator_code', 'users.name as creator_name', 'users.email as creator_email', 'users.avatar as creator_avatar')
+                            ->where('courses.visibility', '=', 'public')
+                            ->where('courses.status', '=', 'approved')
+                            ->where('courses.is_practical_course', false)
+                            ->whereRaw('courses.id IN (
                         SELECT id FROM (
                             SELECT id, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_student DESC) as row_num
                             FROM courses
                             WHERE visibility = "public" AND status = "approved"
                         ) as ranked WHERE row_num <= 7
                     )')
-                    ->groupBy('courses.name', 'courses.slug', 'courses.code', 'courses.is_free','users.code', 'users.name', 'users.email','users.avatar');
-                },
-            ])
-            ->whereHas('courses', function ($query) {
-                $query->where('visibility', '=', 'public')
-                    ->where('status', '=', 'approved');
-            })
-            ->withCount('courses')
-            ->orderBy('courses_count', 'desc')
-            ->limit(3)
-            ->get();
+                            ->groupBy('courses.name', 'courses.slug', 'courses.code', 'courses.is_free', 'users.code', 'users.name', 'users.email', 'users.avatar');
+                    },
+                ])
+                ->whereHas('courses', function ($query) {
+                    $query->where('visibility', '=', 'public')
+                        ->where('status', '=', 'approved');
+                })
+                ->withCount('courses')
+                ->orderBy('courses_count', 'desc')
+                ->limit(3)
+                ->get();
 
-        if ($categories->isEmpty()) {
-            return $this->respondNotFound('Không có dữ liệu');
+            if ($categories->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            return $this->respondOk('Danh sách danh mục', $categories);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
         }
-
-        return $this->respondOk('Danh sách danh mục', $categories);
-    } catch (\Exception $e) {
-        $this->logError($e);
-
-        return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
     }
-}
+
+    public function getPracticeExercises()
+    {
+        try {
+            $courses = Course::query()
+                ->select([
+                    'id', 'category_id', 'user_id', 'name', 'slug', 'thumbnail',
+                    'price', 'price_sale', 'is_free',
+                ])
+                ->with([
+                    'category:id,name,slug',
+                    'user:id,name,avatar,code',
+                ])
+                ->withCount([
+                    'lessons'
+                ])
+                ->where('visibility', '=', 'public')
+                ->where('status', '=', 'approved')
+                ->where('is_practical_course', true)
+                ->orderBy('total_student', 'desc')
+                ->limit(10)
+                ->get();
+
+            $courseRatings = Rating::query()
+                ->whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
+
+            if ($courses->isEmpty()) {
+                return $this->respondNotFound('Không có dữ liệu');
+            }
+
+            $result = $courses->map(function ($course) use ($courseRatings) {
+                $ratingInfo = $courseRatings->get($course->id);
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'is_free' => $course->is_free,
+                    'price' => $course->price,
+                    'price_sale' => $course->price_sale,
+                    'lessons_count' => $course->lessons_count,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách câu hỏi ôn tập ', $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
 
     public function getCourseDetail(Request $request, string $slug)
     {
@@ -452,6 +530,7 @@ class CourseController
                 ->where('id', '!=', $currentCourse->id)
                 ->where('visibility', 'public')
                 ->where('status', 'approved')
+                ->where('is_practical_course', false)
                 ->select([
                     'id',
                     'name',

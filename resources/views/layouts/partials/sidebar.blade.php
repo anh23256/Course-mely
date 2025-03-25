@@ -254,25 +254,26 @@
                     </ul>
                 </div>
             @endcanany
+            <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
+                <i class=" bx bx-gift"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
+            </a>
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
                 <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                     <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
                 </a>
             @endcanany
-            @canany(['qa_system.create', 'qa_system.edit', 'qa_system.read', 'qa_system.delete'])
-                <a class="nav-link menu-link" href="{{ route('admin.qa-systems.index') }}">
-                    <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
-                </a>
-            @endcanany
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
                 <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>
+                @canany(['qa_system.create', 'qa_system.edit', 'qa_system.read', 'qa_system.delete'])
+                    <a class="nav-link menu-link" href="{{ route('admin.qa-systems.index') }}">
+                        <i class="ri-question-line"></i> <span data-key="t-authentication">QA System</span>
+                    </a>
+                @endcanany
             <a class="nav-link menu-link" href="{{ route('admin.notifications.all-notifications') }}">
                 <i class="bx bx-bell "></i> <span data-key="t-authentication">Thông báo</span>
             </a>
-            <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
-                <i class="lab la-blogger"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
-            </a>
+
         </li>
 
     </ul>
