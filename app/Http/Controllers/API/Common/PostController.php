@@ -21,14 +21,17 @@ class PostController extends Controller
             posts.title,
             posts.thumbnail,
             posts.created_at,
-            users.name as author_name,
-            users.code as author_code,
-            categories.name as category_name,
-            categories.slug as category_slug,
+            COUNT(comments.id) as total_comments,
+            JSON_OBJECT('name', users.name, 'code', users.code) as author,
+            JSON_OBJECT('name', categories.name, 'slug', categories.slug) as category,
             posts.views
         ")
             ->leftJoin('users', 'posts.user_id', '=', 'users.id')
             ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
+            ->leftJoin('comments', function ($join) {
+                $join->on('posts.id', '=', 'comments.commentable_id')
+                    ->whereRaw("comments.commentable_type = ?", [Post::class]);
+            })
             ->where('posts.status', 'published')
             ->groupBy('posts.id', 'users.name', 'users.code', 'categories.name', 'categories.slug')
             ->orderByDesc('posts.views')
@@ -36,6 +39,7 @@ class PostController extends Controller
             ->get();
 
             return $this->respondOk('Danh sách bài viết', $posts);
+
         } catch (\Exception $e) {
 
             $this->logError($e);
