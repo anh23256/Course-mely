@@ -183,6 +183,7 @@ class TransactionController extends Controller
                 if (!$item) {
                     return $this->respondError('Không tìm thấy khóa học');
                 }
+                
                 $originalAmount = $item->price_sale > 0 ? $item->price_sale : $item->price;
             } else {
                 if (MembershipSubscription::query()
@@ -203,55 +204,6 @@ class TransactionController extends Controller
 
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
-
-            DB::beginTransaction();
-
-            $coupon = Coupon::query()
-                ->where('code', $couponCode)
-                ->where('status', '1')
-                ->lockForUpdate()
-                ->first();
-
-            if (!$coupon) {
-                return $this->respondError('Mã giảm giá không hợp lệ.');
-            }
-
-            if ($coupon->max_usage != NULL && $coupon->max_usage <= 0) {
-                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
-            }
-
-            if ($coupon->max_usage != NULL && $coupon->max_usage > 0) {
-                $updated = Coupon::where('id', $coupon->id)
-                ->where('max_usage', '>', 0)
-                ->update([
-                    'max_usage' => DB::raw('CASE WHEN max_usage > 0 THEN max_usage - 1 ELSE 0 END'),
-                    'user_count' => DB::raw('user_count + 1')
-                ]);            
-            } elseif ($coupon->max_usage == NULL) {
-                $updated = true;
-            }
-
-            if (!$updated) {
-                DB::rollBack();
-                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
-            }
-
-            $couponUse = CouponUse::where('user_id', auth()->id())
-                ->where('coupon_id', $coupon->id)
-                ->where(['status' => 'unused', 'applied_at' => NULL, 'expired_at' => NULL])
-                ->lockForUpdate()
-                ->first();
-
-            if (!$couponUse) {
-                return $this->respondError('Mã giảm giá đã hết hạn hoặc đã được sử dụng.');
-            }
-
-            $couponUse->update([
-                'status' => 'used',
-                'applied_at' => now()
-            ]);
-
-            DB::commit();
 
             return match ($validated['payment_method']) {
                 'momo' => $this->createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
@@ -809,11 +761,13 @@ class TransactionController extends Controller
                 $couponUse = CouponUse::query()->where([
                     'coupon_id' => $discount->id,
                     'user_id' => $userID
-                ]);
+                ])->lockForUpdate();
 
                 $couponUse->update([
                     'status' => 'used',
                 ]);
+
+                $this->clearCouponCache($userID, $discount->code);
             }
 
             $course->refresh();
@@ -968,11 +922,31 @@ class TransactionController extends Controller
         }
     }
 
+    public function deleteApplyCoupon(Request $request) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+    
+            $data = $request->validate([
+                'code' => 'required|string',
+            ]);
+    
+            $this->clearCouponCache($user->id, $data['code']);
+    
+            return $this->respondOk('Hủy mã giảm giá thành công');
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+            return $this->respondServerError();
+        }
+    }
+
     private function checkCoupon(string $code, float $amount, ?int $courseId = null)
     {
         $cacheKey = "coupon_lock" . Auth::id() . ":" . $code;
-        if (!Cache::add($cacheKey, 'processing', 10)) {
-            return $this->respondError('Mã giảm giá đang được sử dụng. Vui lòng đợi');
+        if (!Cache::add($cacheKey, 'processing', 60)) {
+            return $this->respondError('Mã giảm giá đang được sử dụng.');
         }
 
         $coupon = Coupon::where('code', $code)->where('status', '1')->first();
@@ -998,8 +972,16 @@ class TransactionController extends Controller
         }
 
         return DB::transaction(function () use ($coupon, $couponAssigned, $amount, $cacheKey) {
-            $coupon = Coupon::where('id', $coupon->id)->lockForUpdate()->first();
-            $couponAssigned = CouponUse::where('id', $couponAssigned->id)->lockForUpdate()->first();
+            $coupon = Coupon::query()
+                ->where('code', $coupon->code)
+                ->where('status', '1')
+                ->lockForUpdate()
+                ->first();
+            $couponAssigned = CouponUse::query()
+                ->where('user_id', Auth::id())
+                ->where('coupon_id', $coupon->id)
+                ->lockForUpdate()
+                ->first();
 
             if (!$coupon || !$couponAssigned) {
                 return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ hoặc đã được sử dụng');
@@ -1012,7 +994,8 @@ class TransactionController extends Controller
             return $this->respondOk('Áp dụng mã giảm giá thành công', [
                 'original_amount' => $amount,
                 'discount_amount' => $discountAmount,
-                'final_amount' => max($amount - $discountAmount, 0)
+                'final_amount' => max($amount - $discountAmount, 0),
+                'ttl' => 60000,
             ]);
         });
     }
@@ -1021,6 +1004,14 @@ class TransactionController extends Controller
     {
         Cache::forget($cacheKey);
         return $this->respondError($message);
+    }
+
+    private function clearCouponCache($userId, $couponCode)
+    {
+        if ($userId && $couponCode) {
+            $cacheKey = "coupon_lock" . $userId . ":" . $couponCode;
+            Cache::forget($cacheKey);
+        }
     }
 
     private function execPostRequest($url, $data)
