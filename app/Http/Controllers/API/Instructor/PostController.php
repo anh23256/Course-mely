@@ -38,7 +38,7 @@ class PostController extends Controller
                 ->where('user_id', $user->id)
                 ->get();
 
-            if (!$posts) {
+            if ($posts->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào');
             }
 

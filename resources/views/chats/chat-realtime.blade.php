@@ -1058,9 +1058,6 @@
                 if (window.Echo) {
                     window.Echo.leave('conversation.' + currentConversationId);
                 }
-                if (window.Echo) {
-                    window.Echo.leave('conversation.' + currentConversationId);
-                }
 
                 currentConversationId = $(this).data('private-id');
                 let userId = @json(auth()->id());
@@ -1078,8 +1075,7 @@
                         sendActiveUsersToServer([user], 'leave');
                     })
                     .listen('.MessageSent', function(event) {
-                        console.log(event)
-                        $('#messagesList').append(renderMessage(event));
+                        $('#messagesList').append(renderMessageRealTime(event));
                         scrollToBottom();
                     });
             });
@@ -1139,9 +1135,6 @@
                 if (window.Echo) {
                     window.Echo.leave('conversation.' + currentConversationId);
                 }
-                if (window.Echo) {
-                    window.Echo.leave('conversation.' + currentConversationId);
-                }
                 currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
 
                 $('#showadd').show();
@@ -1159,8 +1152,8 @@
                     .leaving(user => {
                         sendActiveUsersToServer([user], 'leave');
                     })
-                    .listen('GroupMessageSent', function(event) {
-                        $('#messagesList').append(renderMessage(event));
+                    .listen('.GroupMessageSent', function(event) {
+                        $('#messagesList').append(renderMessageRealTime(event));
                         scrollToBottom();
                     });
             });
@@ -1537,7 +1530,11 @@
                         const messageClass = message.sender.id == userId ? 'sender' : 'received';
                         const time = formatTime(message.created_at);
                         const messageContent = `<p>${message.content || ''}</p>`;
-
+                        if (typeof message?.meta_data === 'object' &&
+                            'read' in message.meta_data &&
+                            'send_at' in message.meta_data) {
+                            message.meta_data = [];
+                        }
                         const mediaPreview = (message?.meta_data || []).map(media => {
                             const {
                                 file_name: fileName,
@@ -1606,7 +1603,6 @@
                                 </div>
                             </div>`;
                     }).join('');
-
 
                     $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
                     $('#messagesList').append(messagesHtml); // Thêm tin nhắn vào danh sách
@@ -1758,6 +1754,7 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
         function renderMessage(response) {
+
             const messageClass = response.message.sender.id == userId ? 'sender' : 'received';
             const time = formatTime(response.message.created_at);
             let messageContent = `<p>${response.message.content || ''}</p>`;
@@ -1831,6 +1828,92 @@
             </div>
         </div>
     `;
+
+            return messageHtml;
+        }
+
+        function renderMessageRealTime(response) {
+
+            const messageClass = response.sender.id == userId ? 'sender' : 'received';
+            const time = formatTime(response.created_at);
+            let messageContent = `<p>${response.content || ''}</p>`;
+            let mediaPreview = '';
+
+            try {
+                if (response?.meta_data && response?.meta_data.length > 0) {
+
+                    if (typeof response?.meta_data === 'object' &&
+                            'read' in response.meta_data &&
+                            'send_at' in response.meta_data) {
+                                return;
+                        }
+
+                    response?.meta_data.forEach(media => {
+                        let fileName = media.file_name;
+                        let mediaFile = media.file_path;
+                        let fileType = media.file_type;
+                        let fileExt = fileName.split('.').pop().toLowerCase();
+                        let fileSize = formatFileSize(media.file_size);
+                        let fileIcon = getFileThumbnail(fileExt);
+
+                        if (fileType.startsWith('image')) {
+                            mediaPreview += `
+            <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+            </div>`;
+                        } else if (fileType.startsWith('video')) {
+                            mediaPreview += `
+            <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                <video controls style="max-width:100%; border-radius: 8px;">
+                    <source src="/storage/${mediaFile}" type="${fileType}">
+                </video>
+            </div>`;
+                        } else if (fileType === 'application/pdf') {
+                            mediaPreview += `
+            <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                    <i class='bx bx-download'></i>
+                </a>
+            </div>`;
+                        } else {
+                            mediaPreview += `
+            <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                    <div class="col-9">
+                        <p class="mb-1 small text-truncate" style="max-width: 250px;">${fileName}</p>
+                        <p class="text-muted">${fileSize}</p>
+                    </div>
+                    <div class="col-2 d-flex align-items-center justify-content-center">
+                        <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                            <i class='fs-4 bx bx-download'></i>
+                        </a>
+                    </div>
+                </div>
+            </div>`;
+                        }
+                    });
+                }
+            } catch (error) {
+                messageContent = `<p>${response.content}</p>`;
+            }
+
+            let messageHtml = `
+<div class="message ${messageClass}" style="padding-top: 10px">
+<div class="message-avatar">
+    <img src="${response.sender.avatar}" alt="avatar">
+</div>
+<div class="message-content">
+    <div class="message-header">
+        <strong>${response.sender.name}</strong>
+        <span class="message-time">${time}</span>
+    </div>
+    ${messageContent}
+    ${mediaPreview} <!-- Chứa tất cả file -->
+</div>
+</div>
+`;
 
             return messageHtml;
         }
@@ -2005,7 +2088,7 @@
             console.log(currentConversationId);
 
             if (firstChanelType == 'group') {
-                getGroupInfo(firstChanelId);
+                getGroupInfo(currentConversationId);
                 $(document).ready(function() {
                     $('#showadd').show();
 
@@ -2019,13 +2102,13 @@
                         .leaving(user => {
                             sendActiveUsersToServer([user], 'leave');
                         })
-                        .listen('GroupMessageSent', function(event) {
-                            $('#messagesList').append(renderMessage(event));
+                        .listen('.GroupMessageSent', function(event) {
+                            $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
                         });
                 });
             } else {
-                getUserInfo(firstChanelId);
+                getUserInfo(currentConversationId);
                 $(document).ready(function() {
                     $('#showadd').hide();
 
@@ -2043,8 +2126,7 @@
                             sendActiveUsersToServer([user], 'leave');
                         })
                         .listen('.MessageSent', function(event) {
-                            console.log(event)
-                            $('#messagesList').append(renderMessage(event));
+                            $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
                         });
                 });

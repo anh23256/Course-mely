@@ -40,7 +40,7 @@ class CouponController extends Controller
             $coupons = $query->latest()->get();
 
             if ($coupons->isEmpty()) {
-                return $this->respondForbidden('Không có mã giảm giá nào!');
+                return $this->respondNotFound('Không có mã giảm giá nào!');
             }
 
             return $this->respondOk('Danh sách mã giảm giá', $coupons);

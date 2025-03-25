@@ -30,7 +30,8 @@ class WalletController extends Controller
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
-            $wallet = Wallet::query()
+            $wallet = DB::table('wallets')
+                ->select('balance', 'status')
                 ->where('user_id', $user->id)
                 ->where('status', 1)
                 ->first();

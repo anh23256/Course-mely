@@ -204,6 +204,55 @@ class TransactionController extends Controller
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
 
+            DB::beginTransaction();
+
+            $coupon = Coupon::query()
+                ->where('code', $couponCode)
+                ->where('status', '1')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$coupon) {
+                return $this->respondError('Mã giảm giá không hợp lệ.');
+            }
+
+            if ($coupon->max_usage != NULL && $coupon->max_usage <= 0) {
+                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
+            }
+
+            if ($coupon->max_usage != NULL && $coupon->max_usage > 0) {
+                $updated = Coupon::where('id', $coupon->id)
+                ->where('max_usage', '>', 0)
+                ->update([
+                    'max_usage' => DB::raw('CASE WHEN max_usage > 0 THEN max_usage - 1 ELSE 0 END'),
+                    'user_count' => DB::raw('user_count + 1')
+                ]);            
+            } elseif ($coupon->max_usage == NULL) {
+                $updated = true;
+            }
+
+            if (!$updated) {
+                DB::rollBack();
+                return $this->respondError('Mã giảm giá đã hết lượt sử dụng.');
+            }
+
+            $couponUse = CouponUse::where('user_id', auth()->id())
+                ->where('coupon_id', $coupon->id)
+                ->where(['status' => 'unused', 'applied_at' => NULL, 'expired_at' => NULL])
+                ->lockForUpdate()
+                ->first();
+
+            if (!$couponUse) {
+                return $this->respondError('Mã giảm giá đã hết hạn hoặc đã được sử dụng.');
+            }
+
+            $couponUse->update([
+                'status' => 'used',
+                'applied_at' => now()
+            ]);
+
+            DB::commit();
+
             return match ($validated['payment_method']) {
                 'momo' => $this->createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
                 'vnpay' => $this->createVnPayPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
@@ -294,7 +343,6 @@ class TransactionController extends Controller
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            // Nếu thanh toán không thành công
             if ($inputData['vnp_ResponseCode'] != '00') {
                 return redirect()->away($frontendUrl . "?status=failed");
             }

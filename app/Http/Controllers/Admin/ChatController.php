@@ -218,8 +218,14 @@ class ChatController extends Controller
                     ];
                 }
 
-                $message->update(['meta_data' => $mediaData]);
+            }else{
+                $mediaData = [
+                    'read' => false,
+                    'send_at' => now()
+                ];
             }
+
+            $message->update(['meta_data' => $mediaData]);
 
             $message->load(['sender', 'media']);
 
@@ -230,7 +236,7 @@ class ChatController extends Controller
             if ($message->conversation->type === 'direct') {
                 broadcast(new MessageSentEvent($message, $conversation))->toOthers();
             } else {
-                broadcast(new GroupMessageSent($message))->toOthers();
+                broadcast(new GroupMessageSent($message, $conversation))->toOthers();
             }
 
             $onlineUsers = Cache::get("chat_room:{$validated['conversation_id']}:users", []);
@@ -426,9 +432,17 @@ class ChatController extends Controller
     {
         try {
             $files = Message::where('conversation_id', $conversationId)
-                ->whereNotNull('meta_data')
-                ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
-                ->orderBy('created_at', 'desc')->get();
+            ->whereNotNull('meta_data')
+            ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
+            ->whereRaw("
+                NOT (
+                    JSON_CONTAINS_PATH(meta_data, 'one', '$.send_at') AND 
+                    JSON_CONTAINS_PATH(meta_data, 'one', '$.read') AND
+                    JSON_LENGTH(meta_data) = 2
+                )
+            ")
+            ->orderBy('created_at', 'desc')
+            ->get();        
 
             return response()->json([
                 'status' => 'success',
