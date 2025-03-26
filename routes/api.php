@@ -133,7 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
         Route::get('/courses/{slug}/certificate', [UserController::class, 'downloadCertificate']);
         Route::get('/certificates', [UserController::class, 'getCertificate']);
-        
+
         Route::put('follow/{intructorCode}', [FollowController::class, 'follow']);
 
         Route::get('/get-banking-info', [UserController::class, 'getBankingInfos']);
@@ -232,6 +232,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/apply-coupon', [TransactionController::class, 'applyCoupon']);
         Route::post('/buyCourse', [TransactionController::class, 'buyCourse']);
         Route::post('/enroll-free-course', [TransactionController::class, 'enrollFreeCourse']);
+        Route::delete('/delete-apply-coupon', [TransactionController::class, 'deleteApplyCoupon']);
     });
 
     #============================== ROUTE LEARNING =============================
@@ -256,7 +257,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
-                    
+
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================
@@ -444,8 +445,9 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
-                    Route::get('/get-group-chats-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
                 });
+
+                Route::get('/group/get-group-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
 
             Route::prefix('direct')
                 ->group(function () {

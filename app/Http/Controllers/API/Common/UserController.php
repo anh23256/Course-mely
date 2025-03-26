@@ -85,8 +85,15 @@ class UserController extends Controller
                     $uploadedCertificates = array_merge($certificates, $uploadedCertificates);
                 }
 
+                $data['about_me'] = $request->about_me;
+                if ($data['about_me'] === null) {
+                    $data['about_me'] = '';
+                } else {
+                    $data['about_me'] = $request->about_me ?? $profile->about_me;
+                }
+
                 $profile->update([
-                    'about_me' => $request->about_me ?? $profile->about_me,
+                    'about_me' => $data['about_me'],
                     'phone' => $request->phone ?? $profile->phone,
                     'address' => $request->address ?? $profile->address,
                     'experience' => $request->experience ?? $profile->experience,
@@ -326,8 +333,8 @@ class UserController extends Controller
                     ],
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers
-                        ->where('user_id', $user->id)->first()
-                        ->progress_percent ?? 0,
+                            ->where('user_id', $user->id)->first()
+                            ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
                     'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
                     'category' => [
@@ -1128,7 +1135,7 @@ class UserController extends Controller
             }
 
             return $this->respondOk('Xóa chứng chỉ thành công');
-            
+
         } catch (\Exception $e) {
             $this->logError($e);
 

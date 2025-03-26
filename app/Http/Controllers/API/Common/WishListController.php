@@ -41,10 +41,6 @@ class WishListController extends Controller
                 })
                 ->get();
 
-            if ($courses->isEmpty()) {
-                return $this->respondNotFound('Không có dữ liệu');
-            }
-
             return $this->respondOk('Danh sách khoá học yêu thích của người dùng:' . $user->name, $courses);
         } catch (\Exception $e) {
             $this->logError($e);

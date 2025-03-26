@@ -32,6 +32,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -182,13 +183,15 @@ class TransactionController extends Controller
                 if (!$item) {
                     return $this->respondError('Không tìm thấy khóa học');
                 }
+                
                 $originalAmount = $item->price_sale > 0 ? $item->price_sale : $item->price;
             } else {
                 if (MembershipSubscription::query()
                     ->where('user_id', $user->id)
                     ->where('membership_plan_id', $itemId)
                     ->where('end_date', '>', now())
-                    ->exists()) {
+                    ->exists()
+                ) {
                     return $this->respondError('Bạn đã đăng ký gói membership này rồi');
                 }
 
@@ -292,7 +295,6 @@ class TransactionController extends Controller
                 return redirect()->away($frontendUrl . "?status=error");
             }
 
-            // Nếu thanh toán không thành công
             if ($inputData['vnp_ResponseCode'] != '00') {
                 return redirect()->away($frontendUrl . "?status=failed");
             }
@@ -340,7 +342,29 @@ class TransactionController extends Controller
                 if (!empty($couponCode)) {
                     $discount = Coupon::query()
                         ->where(['code' => $couponCode, 'status' => '1'])
+                        ->lockForUpdate()
                         ->first();
+
+                    if (!$discount) {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
+
+                    if (!is_null($discount->max_usage) && $discount->used_count >= $discount->max_usage) {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
+
+                    $couponUse = CouponUse::query()
+                        ->where('coupon_id', $discount->id)
+                        ->where('user_id', $userId)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($couponUse && $couponUse->status === 'used') {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
                 }
 
                 $invoice = Invoice::create([
@@ -495,7 +519,7 @@ class TransactionController extends Controller
                     'expires_at' => now()->addDays(7),
                 ]);
 
-//                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
 
                 $this->finalBuyMembership(
                     $userId,
@@ -648,7 +672,29 @@ class TransactionController extends Controller
                 if (!empty($couponCode)) {
                     $discount = Coupon::query()
                         ->where(['code' => $couponCode, 'status' => '1'])
+                        ->lockForUpdate()
                         ->first();
+
+                    if (!$discount) {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
+
+                    if (!is_null($discount->max_usage) && $discount->used_count >= $discount->max_usage) {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
+
+                    $couponUse = CouponUse::query()
+                        ->where('coupon_id', $discount->id)
+                        ->where('user_id', $userId)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($couponUse && $couponUse->status === 'used') {
+                        DB::rollBack();
+                        return redirect()->away($frontendUrl . "?status=error");
+                    }
                 }
 
                 $invoice = Invoice::create([
@@ -702,89 +748,94 @@ class TransactionController extends Controller
 
     private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
     {
-        if ($discount) {
-            $discount->refresh();
-            $discount->increment('used_count');
+        DB::transaction(function () use ($userID, $course, $transaction, $invoice, $discount, $finalAmount) {
 
-            if ($discount->max_usage > 0) {
-                $discount->decrement('max_usage');
+            if ($discount) {
+                $discount->refresh();
+                $discount->increment('used_count');
+
+                if ($discount->max_usage > 0) {
+                    $discount->decrement('max_usage');
+                }
+
+                $couponUse = CouponUse::query()->where([
+                    'coupon_id' => $discount->id,
+                    'user_id' => $userID
+                ])->lockForUpdate();
+
+                $couponUse->update([
+                    'status' => 'used',
+                ]);
+
+                $this->clearCouponCache($userID, $discount->code);
             }
 
-            $couponUse = CouponUse::query()->where([
-                'coupon_id' => $discount->id,
-                'user_id' => $userID
+            $course->refresh();
+            $course->increment('total_student');
+
+            $walletInstructor = Wallet::query()
+                ->firstOrCreate([
+                    'user_id' => $course->user_id
+                ]);
+
+            $walletInstructor->balance += $finalAmount * self::instructorRate;
+
+            $walletInstructor->save();
+
+            $walletWeb = Wallet::query()
+                ->firstOrCreate([
+                    'user_id' => User::where('email', self::walletMail)
+                        ->value('id'),
+                ]);
+
+            $walletWeb->balance += $finalAmount * self::adminRate;
+            $walletWeb->save();
+
+            $systemFund = SystemFund::query()->first();
+
+            if ($systemFund) {
+                $systemFund->balance += $finalAmount * self::adminRate;
+                $systemFund->pending_balance += $finalAmount * self::instructorRate;
+                $systemFund->save();
+            } else {
+                SystemFund::query()->create([
+                    'balance' => $finalAmount * self::adminRate,
+                    'pending_balance' => $finalAmount * self::instructorRate
+                ]);
+            }
+
+            SystemFundTransaction::query()->create([
+                'transaction_id' => $transaction->id,
+                'user_id' => $userID,
+                'total_amount' => $finalAmount,
+                'retained_amount' => $finalAmount * self::adminRate,
+                'type' => 'commission_received',
+                'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: ' . $course->name,
             ]);
 
-            $couponUse->update([
-                'status' => 'used',
-            ]);
-        }
+            $instructor = $course->user;
 
-        $course->refresh();
-        $course->increment('total_student');
+            User::query()->whereHas('roles', function ($query) {
+                $query->where('name', 'admin');
+            })
+                ->each(fn($manager) => $manager->notify(
+                    new UserBuyCourseNotification(User::find($userID), $course->load('invoices.transaction'))
+                ));
 
-        $walletInstructor = Wallet::query()
-            ->firstOrCreate([
-                'user_id' => $course->user_id
-            ]);
+            $instructor->notify(
+                new InstructorNotificationForCoursePurchase(
+                    User::query()->find($userID),
+                    $course,
+                    $transaction
+                )
+            );
 
-        $walletInstructor->balance += $finalAmount * self::instructorRate;
+            $student = User::query()->find($userID);
 
-        $walletInstructor->save();
-
-        $walletWeb = Wallet::query()
-            ->firstOrCreate([
-                'user_id' => User::where('email', self::walletMail)
-                    ->value('id'),
-            ]);
-
-        $walletWeb->balance += $finalAmount * self::adminRate;
-        $walletWeb->save();
-
-        $systemFund = SystemFund::query()->first();
-
-        if ($systemFund) {
-            $systemFund->balance += $finalAmount * self::adminRate;
-            $systemFund->pending_balance += $finalAmount * self::instructorRate;
-            $systemFund->save();
-        } else {
-            SystemFund::query()->create([
-                'balance' => $finalAmount * self::adminRate,
-                'pending_balance' => $finalAmount * self::instructorRate
-            ]);
-        }
-
-        SystemFundTransaction::query()->create([
-            'transaction_id' => $transaction->id,
-            'user_id' => $userID,
-            'total_amount' => $finalAmount,
-            'retained_amount' => $finalAmount * self::adminRate,
-            'type' => 'commission_received',
-            'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: ' . $course->name,
-        ]);
-
-        $instructor = $course->user;
-
-        User::query()->whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
-        })
-            ->each(fn($manager) => $manager->notify(
-                new UserBuyCourseNotification(User::find($userID), $course->load('invoices.transaction'))
-            ));
-
-        $instructor->notify(
-            new InstructorNotificationForCoursePurchase(
-                User::query()->find($userID),
-                $course,
-                $transaction
-            )
-        );
-
-        $student = User::query()->find($userID);
-
-        Mail::to($student->email)->send(
-            new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
-        );
+            Mail::to($student->email)->send(
+                new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)
+            );
+        });
     }
 
     private function finalBuyMembership($userId, $memberShipPlan, $transaction, $invoice, $finalAmount)
@@ -871,77 +922,96 @@ class TransactionController extends Controller
         }
     }
 
-    private function checkCoupon(?string $code, float $amount, $courseId = null)
+    public function deleteApplyCoupon(Request $request) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+    
+            $data = $request->validate([
+                'code' => 'required|string',
+            ]);
+    
+            $this->clearCouponCache($user->id, $data['code']);
+    
+            return $this->respondOk('Hủy mã giảm giá thành công');
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+            return $this->respondServerError();
+        }
+    }
+
+    private function checkCoupon(string $code, float $amount, ?int $courseId = null)
     {
-        if (empty($code)) {
-            return [
-                'original_amount' => $amount,
-                'discount_amount' => 0,
-                'final_amount' => $amount,
-            ];
+        $cacheKey = "coupon_lock" . Auth::id() . ":" . $code;
+        if (!Cache::add($cacheKey, 'processing', 60)) {
+            return $this->respondError('Mã giảm giá đang được sử dụng.');
         }
 
-        $coupon = Coupon::query()
-            ->where('code', $code)
-            ->where('status', '1')->first();
-
+        $coupon = Coupon::where('code', $code)->where('status', '1')->first();
         if (!$coupon) {
-            return $this->respondNotFound('Mã giảm giá không hợp lệ');
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ');
         }
 
-        $couponAssigned = CouponUse::query()
-            ->where('user_id', Auth::id())
-            ->where('coupon_id', $coupon->id)
-            ->first();
-
-        if (!$couponAssigned) {
-            return $this->respondError('Mã giảm giá không áp dụng cho tài khoản của bạn');
-        }
-
-        if ($couponAssigned->status === 'used') {
-            return $this->respondError('Bạn đã sử dụng mã giảm giá này');
-        }
-
-        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
-            return $this->respondError('Mã giảm giá đã hết số lượt sử dụng');
+        $couponAssigned = CouponUse::where('user_id', Auth::id())->where('coupon_id', $coupon->id)->first();
+        if (!$couponAssigned || $couponAssigned->status === 'used' || ($couponAssigned->expired_at && now()->greaterThan($couponAssigned->expired_at))) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ hoặc đã hết hạn');
         }
 
         if ($coupon->start_date && now()->lessThan($coupon->start_date)) {
-            return $this->respondError('Mã giảm giá chưa được kích hoạt');
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá chưa được kích hoạt');
         }
 
-        if ($coupon->specific_course) {
-            if (is_null($courseId)) {
-                return $this->respondError('Mã giảm giá này chỉ áp dụng cho khóa học cụ thể. Vui lòng cung cấp ID khóa học');
-            }
-
-            $isApplicable = $coupon
-                ->couponCourses()
-                ->where('course_id', $courseId)->exists();
-            if (!$isApplicable) {
-                return $this->respondError('Mã giảm giá này không áp dụng cho khóa học này');
-            }
+        if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá đã hết số lượt sử dụng');
         }
 
-        $discountAmount = 0;
-
-        if ($coupon->discount_type === 'percentage') {
-            $discountAmount = ($amount * $coupon->discount_value) / 100;
-
-            if (!empty($coupon->discount_max_value)) {
-                $discountAmount = min($discountAmount, $coupon->discount_max_value);
-            }
-        } elseif ($coupon->discount_type === 'fixed') {
-            $discountAmount = min($coupon->discount_value, $amount);
+        if ($coupon->specific_course && (!$courseId || !$coupon->couponCourses()->where('course_id', $courseId)->exists())) {
+            return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không áp dụng cho khóa học này');
         }
 
-        $finalAmount = max($amount - $discountAmount, 0);
+        return DB::transaction(function () use ($coupon, $couponAssigned, $amount, $cacheKey) {
+            $coupon = Coupon::query()
+                ->where('code', $coupon->code)
+                ->where('status', '1')
+                ->lockForUpdate()
+                ->first();
+            $couponAssigned = CouponUse::query()
+                ->where('user_id', Auth::id())
+                ->where('coupon_id', $coupon->id)
+                ->lockForUpdate()
+                ->first();
 
-        return $this->respondOk('Áp dụng mã giảm giá thành công', [
-            'original_amount' => $amount,
-            'discount_amount' => $discountAmount,
-            'final_amount' => $finalAmount
-        ]);
+            if (!$coupon || !$couponAssigned) {
+                return $this->invalidateCacheAndRespond($cacheKey, 'Mã giảm giá không hợp lệ hoặc đã được sử dụng');
+            }
+
+            $discountAmount = $coupon->discount_type === 'percentage'
+                ? min(($amount * $coupon->discount_value) / 100, $coupon->discount_max_value ?? PHP_INT_MAX)
+                : min($coupon->discount_value, $amount);
+
+            return $this->respondOk('Áp dụng mã giảm giá thành công', [
+                'original_amount' => $amount,
+                'discount_amount' => $discountAmount,
+                'final_amount' => max($amount - $discountAmount, 0),
+                'ttl' => 60000,
+            ]);
+        });
+    }
+
+    private function invalidateCacheAndRespond(string $cacheKey, string $message)
+    {
+        Cache::forget($cacheKey);
+        return $this->respondError($message);
+    }
+
+    private function clearCouponCache($userId, $couponCode)
+    {
+        if ($userId && $couponCode) {
+            $cacheKey = "coupon_lock" . $userId . ":" . $couponCode;
+            Cache::forget($cacheKey);
+        }
     }
 
     private function execPostRequest($url, $data)
@@ -950,9 +1020,13 @@ class TransactionController extends Controller
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array(
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($data))
+                'Content-Length: ' . strlen($data)
+            )
         );
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);

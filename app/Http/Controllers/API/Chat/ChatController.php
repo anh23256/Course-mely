@@ -11,6 +11,7 @@ use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\Client\MessageNotification;
+use App\Notifications\UserAddedToGroupChatNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToLocalTrait;
@@ -256,6 +257,8 @@ class ChatController extends Controller
 
             $conversation->users()->attach($validMembers);
 
+            $this->sendAddedToGroupNotifications($conversation, $validMembers);
+
             return $this->respondOk('Thêm thành viên vào nhóm thành công', $conversation);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
@@ -425,10 +428,9 @@ class ChatController extends Controller
                 'content' => 'nullable|string|max:255',
                 'type' => 'required|in:text,image,file,video,audio',
                 'parent_id' => 'nullable|exists:messages,id',
-                'file' => 'nullable|file|max:10240',
+                'files' => 'nullable|array',
+                'files.*' => 'file|max:10240',
             ]);
-
-            Log::info('Message request received', $request->all());
 
             DB::beginTransaction();
 
@@ -444,38 +446,59 @@ class ChatController extends Controller
                 return $this->respondError('Bạn không thuộc cuộc trò chuyện này');
             }
 
-            $metaData = [
-                'read' => false,
-                'send_at' => now()
-            ];
-
             $message = Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => Auth::id(),
                 'parent_id' => $data['parent_id'] ?? null,
                 'content' => $data['content'] ?? null,
                 'type' => $data['type'],
-                'meta_data' => $metaData,
+                'meta_data' => $metaData ?? null,
             ]);
 
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $filePath = $this->uploadToLocal($file, self::FOLDER_NAME);
+            $mediaData = [];
+            if ($request->hasFile('files')) {
+                $files = $request->file('files');
+                $filePaths = $this->uploadMultiple($files, self::FOLDER_NAME);
 
-                $media = Media::create([
-                    'file_path' => $filePath,
-                    'file_type' => $file->getClientMimeType(),
-                    'file_size' => $file->getSize(),
-                    'message_id' => $message->id,
-                ]);
+                if (!$filePaths) {
+                    return $this->respondBadRequest('Có lỗi xảy ra khi tải lên tệp tin');
+                }
 
-                $message->update([
-                    'meta_data' => [
+                foreach ($files as $index => $file) {
+                    if (!isset($filePaths[$index])) {
+                        continue;
+                    }
+
+                    $file_path = $filePaths[$index];
+                    $file_type = $file->getClientMimeType();
+                    $file_size = $file->getSize();
+                    $file_name = $file->getClientOriginalName();
+
+                    $media = Media::create([
+                        'file_path' => $file_path,
+                        'file_type' => $file_type,
+                        'file_size' => $file_size,
+                        'message_id' => $message->id,
+                    ]);
+
+                    $media = Media::create([
+                        'file_path' => $file_path,
+                        'file_type' => $file_type,
+                        'file_size' => $file_size,
+                        'message_id' => $message->id,
+                    ]);
+
+                    $mediaData[] = [
                         'media_id' => $media->id,
-                        'file_path' => $media->file_path
-                    ]
-                ]);
+                        'file_name' => $file_name,
+                        'file_path' => $file_path,
+                        'file_type' => $file_type,
+                        'file_size' => $file_size,
+                    ];
+                }
             }
+
+            $message->update(['meta_data' => $mediaData]);
 
             $recipient = $conversation->users->filter(function ($user) {
                 return $user->id !== Auth::id();
@@ -485,15 +508,15 @@ class ChatController extends Controller
                 return $this->respondError('Không có người nhận trong cuộc trò chuyện này');
             }
 
-//            if ($this->isUserOnlineInConversation($recipient->id, $conversation->id)) {
+            //            if ($this->isUserOnlineInConversation($recipient->id, $conversation->id)) {
             broadcast(new \App\Events\MessageSentEvent($message, $conversation))->toOthers();
-//            } else {
-//                $recipient->notify(new MessageNotification($message, $conversation));
-//            }
+            //            } else {
+            //                $recipient->notify(new MessageNotification($message, $conversation));
+            //            }
 
             DB::commit();
 
-//            $this->notifyConversationMembers($conversation, $message);
+            //            $this->notifyConversationMembers($conversation, $message);
 
             return $this->respondOk('Gửi tin nhắn thành công', $message);
         } catch (\Exception $e) {
@@ -718,6 +741,15 @@ class ChatController extends Controller
         }
 
         return $conversation;
+    }
+
+    private function sendAddedToGroupNotifications($conversation, array $memberIds)
+    {
+        $newMembers = User::query()->whereIn('id', $memberIds)->get();
+
+        foreach ($newMembers as $member) {
+            $member->notify(new UserAddedToGroupChatNotification($conversation));
+        }
     }
 
     protected function checkAccess(?string $role = null)

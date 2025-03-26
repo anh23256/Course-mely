@@ -45,6 +45,9 @@
             <a class="nav-link menu-link" href="{{ route('admin.approvals.instructors.index') }}">
                 <i class="las la-chalkboard-teacher"></i> <span data-key="t-authentication">Kiểm duyệt giảng viên</span>
             </a>
+            <a class="nav-link menu-link" href="{{ route('admin.approvals.posts.index') }}">
+                <i class="las la-chalkboard-teacher"></i> <span data-key="t-authentication">Kiểm duyệt bài viết</span>
+            </a>
             <a class="nav-link menu-link" href="{{ route('admin.approvals.courses.index') }}">
                 <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Gói thành viên</span>
             </a>

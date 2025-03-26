@@ -11,21 +11,15 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class GroupMessageSent implements ShouldBroadcast
+class GroupMessageSent extends MessageSentEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $message;
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(Message $message)
-    {
-        $this->message = $message;
-    }
 
     public function broadcastOn()
     {
         return new PresenceChannel('conversation.'. $this->message->conversation_id);
+    }
+    public function broadcastAs()
+    {
+        return 'GroupMessageSent';
     }
 }

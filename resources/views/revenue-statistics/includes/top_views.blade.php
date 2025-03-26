@@ -22,7 +22,7 @@
             <img src="{{ $getTopViewCourse->thumbnail }}"
                 alt="{{ $getTopViewCourse->name }}"
                 class="img-fluid card-img-top explore-img"
-                style="height: 30vh; width: 100vw; object-fit: cover;">
+                style="max-height: 190px; width: 100%; object-fit: cover;">
             <div class="bg-overlay bg-dark opacity-25"></div>
 
             <div class="position-absolute bottom-0 start-0 w-100 p-3">
@@ -81,7 +81,7 @@
 
         <div class="card-footer bg-light p-3 border-top">
             <div class="d-grid gap-2">
-                <a href="{{ config('app.fe_url' . '/courses/' . $getTopViewCourse->slug) }}"
+                <a href="{{ config('app.fe_url') }}courses/{{ $getTopViewCourse->slug }}"
                     target="_blank" class="btn btn-primary btn-sm">
                     <i class="ri-eye-line align-bottom me-1"></i>
                     Xem chi tiết

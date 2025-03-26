@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\GroupMessageSent;
+use App\Events\MessageSentEvent;
 use App\Events\PrivateMessageSent;
 use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
@@ -47,6 +48,7 @@ class ChatController extends Controller
             ]
         );
     }
+
     public function createPrivateChat(Request $request)
     {
         try {
@@ -178,12 +180,12 @@ class ChatController extends Controller
                 'conversation_id' => $validated['conversation_id'],
                 'sender_id' => auth()->id(),
                 'parent_id' => $validated['parent_id'] ?? null,
-
                 'content' => $validated['content'] ?? null,
                 'type' => $validated['type'],
                 'meta_data' => $validated['meta_data'] ?? null,
             ]);
 
+            $mediaData = [];
             if ($request->hasFile('input_file')) {
                 $files = $request->file('input_file');
                 $filePaths = $this->uploadMultiple($files, self::FOLDER);
@@ -216,9 +218,9 @@ class ChatController extends Controller
                         'file_size' => $file_size,
                     ];
                 }
-
-                $message->update(['meta_data' => $mediaData]);
             }
+
+            $message->update(['meta_data' => $mediaData]);
 
             $message->load(['sender', 'media']);
 
@@ -227,9 +229,9 @@ class ChatController extends Controller
             $userInChat = [];
 
             if ($message->conversation->type === 'direct') {
-                broadcast(new PrivateMessageSent($message))->toOthers();
+                broadcast(new MessageSentEvent($message, $conversation))->toOthers();
             } else {
-                broadcast(new GroupMessageSent($message))->toOthers();
+                broadcast(new GroupMessageSent($message, $conversation))->toOthers();
             }
 
             $onlineUsers = Cache::get("chat_room:{$validated['conversation_id']}:users", []);
@@ -280,6 +282,7 @@ class ChatController extends Controller
             'firstChanel' => $firstChanel
         ];
     }
+
     public function getGroupInfo(Request $request)
     {
         try {
@@ -322,6 +325,7 @@ class ChatController extends Controller
             ]);
         }
     }
+
     public function getUserInfo(Request $request)
     {
         try {
@@ -371,20 +375,22 @@ class ChatController extends Controller
             ]);
         }
     }
+
     public function getGroupMessages($conversationId)
     {
-        $messages =  Message::where('conversation_id', $conversationId)
+        $messages = Message::where('conversation_id', $conversationId)
             ->with('sender', 'media')
             ->latest()
             ->limit(80)->get()->sortBy('created_at')->values()->toArray();
 
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
+
     public function addMembersToGroup(Request $request)
     {
         $validated = $request->validate([
             'members' => 'required|array',
-            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
+            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users
         ]);
 
         // Lấy group_id và members
@@ -416,13 +422,22 @@ class ChatController extends Controller
             'message' => 'Thành viên đã được thêm vào nhóm.',
         ]);
     }
+
     public function getSentFiles($conversationId)
     {
         try {
             $files = Message::where('conversation_id', $conversationId)
-                ->whereNotNull('meta_data')
-                ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
-                ->orderBy('created_at', 'desc')->get();
+            ->whereNotNull('meta_data')
+            ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
+            ->whereRaw("
+                NOT (
+                    JSON_CONTAINS_PATH(meta_data, 'one', '$.send_at') AND 
+                    JSON_CONTAINS_PATH(meta_data, 'one', '$.read') AND
+                    JSON_LENGTH(meta_data) = 2
+                )
+            ")
+            ->orderBy('created_at', 'desc')
+            ->get();        
 
             return response()->json([
                 'status' => 'success',
@@ -432,6 +447,7 @@ class ChatController extends Controller
             $this->logError($e);
         }
     }
+
     public function leaveConversation($conversationId)
     {
         try {
@@ -542,6 +558,7 @@ class ChatController extends Controller
             return;
         }
     }
+
     public function kickUserFromGroup(Request $request)
     {
         try {
@@ -570,7 +587,7 @@ class ChatController extends Controller
             if ($group->owner_id == $userToKick->id) {
                 return response()->json(['success' => false, 'message' => 'Không thể kick chủ nhóm.'], 403);
             }
-                // Kiểm tra số lượng thành viên trước khi kick
+            // Kiểm tra số lượng thành viên trước khi kick
             $currentMemberCount = $group->users()->count();
 
             if ($currentMemberCount <= 2) {
@@ -590,6 +607,7 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
         }
     }
+
     public function dissolveGroup(Request $request)
     {
         try {
@@ -626,6 +644,7 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'], 500);
         }
     }
+
     public function getUserOnline(Request $request)
     {
         $conversationId = $request->conversation_id ?? '';
