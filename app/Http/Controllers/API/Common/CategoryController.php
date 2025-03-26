@@ -19,7 +19,7 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::query()
-                ->select('name', 'slug')
+                ->select('id', 'name', 'slug')
                 ->where([
                     'parent_id' => null,
                     'status' => 1
@@ -33,5 +33,4 @@ class CategoryController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
 }

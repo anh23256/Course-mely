@@ -61,6 +61,7 @@
                             <div class="p-lg-5 p-4">
                                 <div>
                                     <h5 class="">{{ $title ?? '' }}</h5>
+                                    <p class="text-muted">Vui lòng đăng nhập để truy cập trang quản trị</p>
                                 </div>
 
                                 <div class="mt-4">
@@ -91,9 +92,7 @@
                                                     Vui lòng nhập mật khẩu
                                                 </div>
                                             </div>
-                                            <div class="float-end my-2">
-                                                <a href="{{route('admin.forgot-password')}}" class="text-danger">Quên mật khẩu?</a>
-                                            </div>
+                                            
                                         </div>
 
                                         <div class="mt-4">
@@ -101,9 +100,6 @@
                                         </div>
 
                                     </form>
-                                </div>
-                                <div class="mt-5 text-center">
-                                    <p class="mb-0">Bạn chưa có tài khoản ? <a href="{{route('admin.signup')}}" class="fw-semibold text-primary text-decoration-underline"> Đăng kí ngay</a> </p>
                                 </div>
                             </div>
                         </div>
