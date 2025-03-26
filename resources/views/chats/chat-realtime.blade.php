@@ -1371,12 +1371,8 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        Toastify({
-                            text: response.message,
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
+                        Message = "Xóa thành công";
+                        showToast('success',Message);
                     } else {
                         Toastify({
                             text: response.message,
@@ -1394,12 +1390,7 @@
                     if (xhr.status === 422) {
                         errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
                     }
-                    Toastify({
-                        text: errorMessage,
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
+                    showToast('error',errorMessage);
                 }
             });
         }
@@ -1426,33 +1417,20 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        Toastify({
-                            text: "Nhóm đã được giải tán!",
-                            backgroundColor: "green",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
+                        message = "Giải tán nhóm thành công";
+                        showToast('success',message);
                         window.location.reload();
                     } else {
-                        Toastify({
-                            text: response.message,
-                            backgroundColor: "red",
-                            duration: 3000,
-                            close: true
-                        }).showToast();
+                        errorMessage = "Giải tán nhóm thất bại";
+                        showToast('error',errorMessage);
                     }
                 },
                 error: function(xhr) {
                     let errorMessage = "Đã có lỗi xảy ra!";
                     if (xhr.status === 403) {
                         errorMessage = "Bạn không có quyền giải tán nhóm!";
+                        showToast('error',errorMessage);
                     }
-                    Toastify({
-                        text: errorMessage,
-                        backgroundColor: "red",
-                        duration: 3000,
-                        close: true
-                    }).showToast();
                 }
             });
         }
@@ -1472,7 +1450,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            alert(data.message);
+                            message = "Xóa cuộc trò chuyện thành công";
+                            showToast('success',message);
                             location
                                 .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
@@ -1480,7 +1459,8 @@
                         }
                     })
                     .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        errormessage = "Có lỗi xảy ra, vui lòng thử lại";
+                        showToast('error',errormessage);
                     });
             }
         }
@@ -1500,15 +1480,18 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            alert(data.message);
+                            message = "Rời nhóm thành công";
+                            showToast('success',message);
                             location
                                 .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
-                            alert(data.message);
+                            errormessage = "Có lỗi xảy ra, vui lòng thử lại";
+                            showToast('error',errormessage);
                         }
                     })
                     .catch(error => {
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                        errormessage = "Có lỗi xảy ra, vui lòng thử lại";
+                        showToast('error',errormessage);
                     });
             }
         }

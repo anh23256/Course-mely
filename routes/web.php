@@ -332,10 +332,12 @@ Route::prefix('admin')->as('admin.')
 
         Route::prefix('spins')->as('spins.')->group(function () {
             Route::get('/', [SpinController::class, 'index'])->name('index');
+            Route::post('/spin-config/store', [SpinController::class, 'storeSpinConfig'])->name('spin-config.store');
             Route::put('/spin-configs/{id}', [SpinController::class, 'updateSpinConfig'])->name('spin-config.update');
             Route::post('/gifts', [SpinController::class, 'addGift'])->name('gift.store');
             Route::put('/gifts/{id}', [SpinController::class, 'updateGift'])->name('gift.update');
             Route::delete('/gifts/{id}', [SpinController::class, 'deleteGift'])->name('gift.delete');
+            Route::delete('/spin-config/delete/{id}', [SpinController::class, 'deleteSpinConfig'])->name('deleteSpinConfig');
             Route::post('/spin/toggle-selection/{type}/{id}', [SpinController::class, 'toggleSelection'])->name('toggle-selection');
         });
 

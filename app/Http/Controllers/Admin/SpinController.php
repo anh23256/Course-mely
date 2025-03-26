@@ -21,7 +21,8 @@ class SpinController extends Controller
     {
         // Cấu hình tỷ lệ trúng
         $spinConfigs = SpinConfig::all();
-        $gifts = Gift::all()->where('is_selected',1);
+        $gifts = Gift::all()->where('is_selected', 1);
+        $giftsAll = Gift::all();
         $totalProbability = $spinConfigs->sum('probability') + $gifts->sum('probability');
         // Lấy danh sách quà hiện vật và mã giảm giá chưa được chọn để hiển thị trong modal
         $availableGifts = Gift::where('is_selected', 0)->get();
@@ -55,6 +56,7 @@ class SpinController extends Controller
         return view('spins.index', compact(
             'spinConfigs',
             'gifts',
+            'giftsAll',
             'availableGifts',
             'totalProbability',
             'spinStatsDay',
@@ -62,6 +64,22 @@ class SpinController extends Controller
             'spinStatsYear',
             'giftWinners'
         ));
+    }
+    public function storeSpinConfig(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|string',
+            'name' => 'required|string',
+            'probability' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $spinConfig = SpinConfig::create([
+            'type' => $request->type,
+            'name' => $request->name,
+            'probability' => $request->probability,
+        ]);
+
+        return redirect()->back()->with('success', 'Thêm ô quà thành công!');
     }
     public function toggleSelection(Request $request, $type, $id)
     {
@@ -75,7 +93,7 @@ class SpinController extends Controller
         $item->save();
 
         Log::info("Admin toggled selection for $type", ['admin_id' => $request->user()->id, 'item_id' => $id, 'is_selected' => $item->is_selected]);
-        return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái chọn thành công']);
+        return redirect()->back()->with('success', 'Thêm quà hiện vật vào vòng quay thành công!');
     }
     // Cập nhật cấu hình tỷ lệ trúng (SpinConfig)
     public function updateSpinConfig(Request $request, $id)
@@ -146,4 +164,11 @@ class SpinController extends Controller
         Log::info('Admin deleted gift', ['admin_id' => request()->user()->id, 'gift_id' => $id]);
         return redirect()->back()->with('success', 'Xóa quà thành công');
     }
+    public function deleteSpinConfig($id)
+{
+    $spinConfig = SpinConfig::findOrFail($id);
+    $spinConfig->delete();
+
+    return response()->json(['success' => true, 'message' => 'Xóa ô quà thành công!']);
+}
 }
