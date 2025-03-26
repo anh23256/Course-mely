@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes, HasRoles, Searchable;
+    use HasFactory, SoftDeletes, HasRoles;
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
-    'intermediate';
+        'intermediate';
     const LEVEL_ADVANCED = 'advanced';
 
     const STATUS_DRAFT = 'draft';
@@ -123,23 +122,5 @@ class Course extends Model
     public function ratings()
     {
         return $this->hasMany(Rating::class);
-    }
-
-    public function toSearchableArray()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'slug' => $this->slug,
-            'qa' => $this->qa,
-            'requirements' => $this->requirements,
-            'benefits' => $this->benefits,
-            'total_student' => $this->total_student,
-            'price' => $this->price,
-            'price_sale' => $this->price_sale,
-            'level' => $this->level,
-            'code' => $this->code,
-        ];
     }
 }
