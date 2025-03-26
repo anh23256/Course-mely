@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreSpinRequest;
 use App\Models\Coupon;
 use App\Models\Gift;
 use App\Models\Spin;
@@ -21,6 +22,21 @@ class SpinController extends Controller
     {
         // Cấu hình tỷ lệ trúng
         $spinConfigs = SpinConfig::all();
+        // Kiểm tra số lượng phần thưởng theo loại (no_reward, coupon, spin)
+        $requiredTypes = ['no_reward', 'coupon', 'spin'];
+        $spinConfigTypes = $spinConfigs->pluck('type')->unique()->toArray();
+        $missingTypes = array_diff($requiredTypes, $spinConfigTypes);
+        $hasEnoughSpinConfigTypes = count($missingTypes) === 0;
+
+        // Lấy danh sách quà hiện vật được chọn
+        $selectedGifts = Gift::where('is_selected', 1)->get();
+        $requiredGifts = 2; // Số lượng quà hiện vật yêu cầu
+        $currentSelectedGiftsCount = $selectedGifts->count();
+        $hasEnoughGifts = $currentSelectedGiftsCount === $requiredGifts;
+
+        // Kiểm tra xem có đủ điều kiện để tiếp tục hay không
+        $isConfigValid = $hasEnoughSpinConfigTypes && $hasEnoughGifts;
+        $showConfigWarning = !$isConfigValid;
         $gifts = Gift::all()->where('is_selected', 1);
         $giftsAll = Gift::all();
         $totalProbability = $spinConfigs->sum('probability') + $gifts->sum('probability');
@@ -52,7 +68,41 @@ class SpinController extends Controller
             ->with('user') // Giả sử có quan hệ user trong SpinHistory
             ->orderBy('spun_at', 'desc')
             ->get();
+        // Thống kê số lượng quà đã trúng theo TÊN phần thưởng
+        // Lấy tất cả phần thưởng đã trúng
+        $winners = SpinHistory::select('reward_name', 'reward_type')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('reward_name', 'reward_type')
+            ->get();
 
+        // Gộp dữ liệu theo nhóm
+        $groupedWinners = [
+            'Mã giảm giá' => 0,
+            'Quà hiện vật' => 0,
+        ];
+
+        foreach ($winners as $winner) {
+            $rewardName = $winner->reward_name;
+            $rewardType = $winner->reward_type;
+            $count = $winner->total;
+
+            // Phân loại mã giảm giá
+            if ($rewardType === 'coupon' || stripos($rewardName, 'Mã giảm giá') !== false) {
+                $groupedWinners['Mã giảm giá'] += $count;
+            }
+            // Phân loại quà hiện vật
+            elseif ($rewardType === 'gift') {
+                $groupedWinners['Quà hiện vật'] += $count;
+            }
+            // Các phần thưởng khác (giữ nguyên)
+            else {
+                $groupedWinners[$rewardName] = $count;
+            }
+        }
+
+        $totalSpins = SpinHistory::count(); // Tổng số lượt quay
+        $totalWinners = SpinHistory::whereNotIn('reward_type', ['no_reward', 'spin'])->count();
+        $winRate = $totalSpins > 0 ? ($totalWinners / $totalSpins) * 100 : 0;
         return view('spins.index', compact(
             'spinConfigs',
             'gifts',
@@ -62,16 +112,24 @@ class SpinController extends Controller
             'spinStatsDay',
             'spinStatsMonth',
             'spinStatsYear',
-            'giftWinners'
+            'giftWinners',
+            'groupedWinners',
+            'totalSpins',
+            'totalWinners',
+            'winRate',
+            'spinConfigs',
+            'selectedGifts',
+            'hasEnoughSpinConfigTypes',
+            'missingTypes',
+            'hasEnoughGifts',
+            'requiredGifts',
+            'currentSelectedGiftsCount',
+            'showConfigWarning'
         ));
     }
-    public function storeSpinConfig(Request $request)
+    public function storeSpinConfig(StoreSpinRequest $request)
     {
-        $request->validate([
-            'type' => 'required|string',
-            'name' => 'required|string',
-            'probability' => 'required|numeric|min:0|max:100',
-        ]);
+        $request->validated();
 
         $spinConfig = SpinConfig::create([
             'type' => $request->type,
@@ -85,6 +143,15 @@ class SpinController extends Controller
     {
         if ($type === 'gift') {
             $item = Gift::findOrFail($id);
+            if (!$item->is_selected) {
+                // Đếm số lượng quà hiện vật đã được chọn
+                $selectedGiftsCount = Gift::where('is_selected', 1)->count();
+
+                // Nếu đã có 2 quà hiện vật được chọn, không cho phép thêm
+                if ($selectedGiftsCount >= 2) {
+                    return redirect()->back()->with('error', 'Chỉ được phép thêm tối đa 2 quà hiện vật vào vòng quay!');
+                }
+            }
         } else {
             return redirect()->back()->with('error', 'Loại phần thưởng không hợp lệ');
         }
@@ -92,8 +159,11 @@ class SpinController extends Controller
         $item->is_selected = !$item->is_selected;
         $item->save();
 
-        Log::info("Admin toggled selection for $type", ['admin_id' => $request->user()->id, 'item_id' => $id, 'is_selected' => $item->is_selected]);
-        return redirect()->back()->with('success', 'Thêm quà hiện vật vào vòng quay thành công!');
+        // Log::info("Admin toggled selection for $type", ['admin_id' => $request->user()->id, 'item_id' => $id, 'is_selected' => $item->is_selected]);
+        $message = $item->is_selected
+            ? 'Thêm quà hiện vật vào vòng quay thành công!'
+            : 'Bỏ quà hiện vật khỏi vòng quay thành công!';
+        return redirect()->back()->with('success', $message);
     }
     // Cập nhật cấu hình tỷ lệ trúng (SpinConfig)
     public function updateSpinConfig(Request $request, $id)
@@ -165,10 +235,10 @@ class SpinController extends Controller
         return redirect()->back()->with('success', 'Xóa quà thành công');
     }
     public function deleteSpinConfig($id)
-{
-    $spinConfig = SpinConfig::findOrFail($id);
-    $spinConfig->delete();
+    {
+        $spinConfig = SpinConfig::findOrFail($id);
+        $spinConfig->delete();
 
-    return response()->json(['success' => true, 'message' => 'Xóa ô quà thành công!']);
-}
+        return response()->json(['success' => true, 'message' => 'Xóa ô quà thành công!']);
+    }
 }
