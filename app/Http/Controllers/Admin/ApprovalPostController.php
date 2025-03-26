@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Approvable;
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\PostApprovalNotification;
+use App\Notifications\PostSubmittedForApprovalNotification;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -133,7 +135,9 @@ class ApprovalPostController extends Controller
                     'status' => 'pending',
                 ]);
             }
-
+                // Gửi thông báo đến giảng viên
+            $user = $approval->approvable->user;
+            $user->notify(new PostApprovalNotification($approval->approvable, $status, $note));
             DB::commit();
 
             return redirect()->back()->with('success', "Bài viết đã được $status");

@@ -426,6 +426,10 @@
                     title = notification.data.user_name || 'Giảng viên';
                     thumbnail =
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+                } else if (type === 'post_submitted') {
+                    title = notification.data.user_name || 'Giảng viên';
+                    thumbnail =
+                        'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
 
                 const isChecked = notification.read_at ? 'checked' : '';
@@ -451,7 +455,7 @@
         </div>
     `;
 
-                if (type === 'register_course' || type === 'register_instructor' || type === 'withdrawal') {
+                if (type === 'register_course' || type === 'register_instructor' || type === 'withdrawal' || type === 'post_submitted') {
                     if (isRealTime) {
                         $('#approvals-notifications-container').prepend(notificationItem);
                     } else {

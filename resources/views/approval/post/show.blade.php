@@ -240,7 +240,7 @@
                     type: 'POST',
                     url: $('#rejectForm').attr('action'),
                     data: {
-                        _method: 'POST',
+                        _method: 'PUT',
                         note,
                     },
                     success: function(response) {
