@@ -172,7 +172,8 @@
                                                 <td>{{ $loop->index + 1 }}</td>
                                                 <td>{{ $invoice->code ?? '' }}</td>
                                                 <td><span
-                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
+                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span><br>
+                                                        {{ $invoice->user->email }}
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">

@@ -4,6 +4,15 @@
     <style>
         .card {
             margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .card-header {
+            border-radius: 10px 10px 0 0;
+        }
+
+        .card-body {
+            padding: 20px;
         }
 
         .table {
@@ -18,27 +27,20 @@
             max-width: 100%;
         }
 
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-        }
-
         .row-flex {
             display: flex;
             flex-wrap: wrap;
         }
 
         .col-70 {
-            flex: 0 0 70%;
-            max-width: 70%;
+            flex: 0 0 65%;
+            max-width: 65%;
             padding: 0 10px;
         }
 
         .col-30 {
-            flex: 0 0 30%;
-            max-width: 30%;
+            flex: 0 0 35%;
+            max-width: 35%;
             padding: 0 10px;
         }
 
@@ -46,26 +48,21 @@
             margin-bottom: 15px;
         }
 
-        .stats-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        .text-muted {
+            color: #6c757d !important;
         }
 
-        .stats-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #405189;
-            margin-bottom: 8px;
+        .list-group-item {
+            border-radius: 5px;
+            margin-bottom: 5px;
         }
 
-        .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        .fs-4 {
+            font-size: 1.5rem;
         }
     </style>
 @endpush
@@ -90,34 +87,40 @@
                 </div>
             </div>
         </div>
-
-        <div class="row cursor-pointer">
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">{{ $totalSpins ?? 0 }}</div>
-                    <div class="stats-label">Tổng lượt quay</div>
+            <!-- Modal cảnh báo không đủ phần thưởng hoặc quà hiện vật -->
+            @if ($showConfigWarning)
+            <div class="modal fade" id="configWarningModal" tabindex="-1" aria-labelledby="configWarningModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="configWarningModalLabel">Cảnh báo: Cấu hình không hợp lệ</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if (!$hasEnoughSpinConfigTypes)
+                                <p>Vòng quay chưa đủ 3 loại phần thưởng (no_reward, coupon, spin). Hiện tại thiếu:</p>
+                                <ul>
+                                    @foreach ($missingTypes as $type)
+                                        <li>{{ ucfirst($type) }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                            @if (!$hasEnoughGifts)
+                                <p>Vòng quay chưa đủ 2 quà hiện vật. Hiện tại chỉ có {{ $currentSelectedGiftsCount }}
+                                    quà hiện vật được chọn, cần thêm {{ $requiredGifts - $currentSelectedGiftsCount }}
+                                    quà nữa.</p>
+                            @endif
+                            <p>Vui lòng hoàn thiện cấu hình trước khi tiếp tục.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">{{ $totalGifts ?? 0 }}</div>
-                    <div class="stats-label">Tổng quà tặng</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">{{ $totalWinners ?? 0 }}</div>
-                    <div class="stats-label">Người trúng thưởng</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">{{ $totalProbability }}%</div>
-                    <div class="stats-label">Tỷ lệ trúng</div>
-                </div>
-            </div>
-        </div>
-
+        @endif
         <!-- Cấu hình tỷ lệ trúng và Danh sách quà hiện vật -->
         <div class="row row-flex">
             <!-- Cấu hình tỷ lệ trúng -->
@@ -134,8 +137,9 @@
                                 Thêm ô quà trong vòng quay
                             </button>
                         </div>
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table align-middle table-nowrap"
+                            style="border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Loại</th>
                                     <th>Tên</th>
@@ -163,8 +167,11 @@
                                                 method="POST" class="d-inline delete-spin-config-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="btn btn-danger btn-sm delete-spin-config"
-                                                    onclick="return confirm('Bạn chắc chắn muốn xóa ô quà này?')">Xóa</button>
+                                                <button type="button" class="sweet-confirm btn btn-danger btn-sm delete-spin-config">
+                                                    <span class="ri-delete-bin-7-line"></span>
+                                                </button>
+
+
                                             </form>
                                         </td>
                                     </tr>
@@ -204,7 +211,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Danh sách quà hiện vật -->
             <div class="col-30">
                 <div class="card">
@@ -215,17 +221,19 @@
                         <div class="mb-3">
                             <!-- Nút thêm quà hiện vật -->
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#addGiftModal">
+                                data-bs-target="#addGiftModal" {{ $showConfigWarning ? 'disabled' : '' }}>
                                 Thêm quà hiện vật
                             </button>
                         </div>
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table align-middle"
+                            style="border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Tên quà</th>
                                     <th>Số lượng</th>
                                     <th>Hình ảnh</th>
                                     <th>Kích hoạt</th>
+                                    <th>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -246,9 +254,19 @@
                                                 action="{{ route('admin.spins.toggle-selection', ['type' => 'gift', 'id' => $gift->id]) }}"
                                                 method="POST" class="toggle-selection-form">
                                                 @csrf
-                                                <input type="checkbox" name="is_selected" onchange="this.form.submit()"
-                                                    {{ $gift->is_selected ? 'checked' : '' }}>
+                                                <div class="form-check form-switch form-switch-warning">
+                                                    <input class="form-check-input popular-course-toggle" role="switch"
+                                                        type="checkbox" name="is_selected" onchange="this.form.submit()"
+                                                        {{ $gift->is_selected ? 'checked' : '' }}>
+                                                </div>
                                             </form>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.spins.deleteSpinConfig', $config->id) }}"
+                                                class="sweet-confirm btn btn-sm btn-danger delete-gift-form"
+                                                data-id="{{ $config->id }}">
+                                                 <span class="ri-delete-bin-7-line"></span>
+                                             </a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -322,8 +340,12 @@
                             @csrf
                             <div class="col-md-12">
                                 <label for="type" class="form-label">Loại</label>
-                                <input type="text" name="type" value="{{ old('type') }}" class="form-control"
-                                    placeholder="Loại (ví dụ: coupon, message)" required>
+                                <select name="type" value="{{ old('type') }}" class="form-select">
+                                    <option value="">Chọn loại quà</option>
+                                    <option value="no_reward">Không trúng</option>
+                                    <option value="coupon">Mã giảm giá</option>
+                                    <option value="spin">Thêm 1 lượt quay</option>
+                                </select>
                             </div>
                             <div class="col-md-12">
                                 <label for="name" class="form-label">Tên</label>
@@ -351,58 +373,116 @@
         <!-- Tổng số lượt quay và Danh sách người trúng -->
         <div class="row row-flex">
             <!-- Tổng số lượt quay -->
+            <!-- Tổng số lượt quay -->
             <div class="col-70">
                 <div class="card">
-                    <div class="card-header">
-                        <h3>Tổng số lượt quay</h3>
+                    <div class="card-header text-white">
+                        <h3 class="mb-0">Thống kê tổng quan</h3>
                     </div>
                     <div class="card-body">
                         <!-- Bộ lọc -->
-                        <form method="GET" action="{{ route('admin.spins.index') }}" class="filter-form row g-3">
-                            <div class="col-md-4">
-                                <label for="filter_type" class="form-label">Loại lọc</label>
-                                <select name="filter_type" id="filter_type" class="form-control"
-                                    onchange="this.form.submit()">
-                                    <option value="day"
-                                        {{ request('filter_type', 'day') === 'day' ? 'selected' : '' }}>Theo ngày</option>
-                                    <option value="month" {{ request('filter_type') === 'month' ? 'selected' : '' }}>Theo
-                                        tháng</option>
-                                    <option value="year" {{ request('filter_type') === 'year' ? 'selected' : '' }}>Theo
-                                        năm</option>
-                                </select>
+                        <div class="row">
+                            <!-- Thống kê tổng quan -->
+                            <div class="col-md-4 mb-4">
+                                <div class="d-flex flex-column"> <!-- Thay đổi từ 'row' thành 'd-flex flex-column' -->
+                                    <div class="mb-3">
+                                        <!-- Thay 'col-md-3' bằng 'mb-3' để thêm khoảng cách giữa các thẻ -->
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Tổng số lượt quay</h6>
+                                                <p class="card-text fs-4">{{ $totalSpins }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Tổng số lượt trúng</h6>
+                                                <p class="card-text fs-4">{{ $totalWinners }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Tỷ lệ trúng thưởng</h6>
+                                                <p class="card-text fs-4">{{ number_format($winRate, 2) }}%</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            @if (request('filter_type', 'day') === 'day')
-                                <div class="col-md-4">
-                                    <label for="filter_date" class="form-label">Chọn ngày</label>
-                                    <input type="date" name="filter_date"
-                                        value="{{ request('filter_date', now()->format('Y-m-d')) }}" class="form-control"
-                                        onchange="this.form.submit()">
+                            <!-- Biểu đồ phân bố quà trúng -->
+                            <div class="col-md-8 mb-4">
+                                <h5 class="text-muted">Phân bố quà đã trúng</h5>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <canvas id="winDistributionChart"></canvas>
+                                    </div>
                                 </div>
-                            @elseif (request('filter_type') === 'month')
-                                <div class="col-md-4">
-                                    <label for="filter_month" class="form-label">Chọn tháng</label>
-                                    <input type="month" name="filter_month"
-                                        value="{{ request('filter_month', now()->format('Y-m')) }}" class="form-control"
-                                        onchange="this.form.submit()">
-                                </div>
-                            @elseif (request('filter_type') === 'year')
-                                <div class="col-md-4">
-                                    <label for="filter_year" class="form-label">Chọn năm</label>
-                                    <select name="filter_year" class="form-control" onchange="this.form.submit()">
-                                        @for ($year = now()->year; $year >= now()->year - 5; $year--)
-                                            <option value="{{ $year }}"
-                                                {{ request('filter_year', now()->year) == $year ? 'selected' : '' }}>
-                                                {{ $year }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            @endif
-                        </form>
+                            </div>
+                        </div>
 
-                        <div class="tab-content mt-3">
-                            <div class="tab-pane fade show active">
-                                <canvas id="spinChart"></canvas>
+                        <!-- Biểu đồ -->
+                        <div class="row">
+                            <!-- Biểu đồ số lượt quay -->
+                            <div class="mb-4">
+                                <h5 class="text-muted">Bộ lọc</h5>
+                                <form method="GET" action="{{ route('admin.spins.index') }}"
+                                    class="filter-form row g-3">
+                                    <div class="col-md-3">
+                                        <label for="filter_type" class="form-label">Loại lọc</label>
+                                        <select name="filter_type" id="filter_type" class="form-control"
+                                            onchange="this.form.submit()">
+                                            <option value="day"
+                                                {{ request('filter_type', 'day') === 'day' ? 'selected' : '' }}>Theo ngày
+                                            </option>
+                                            <option value="month"
+                                                {{ request('filter_type') === 'month' ? 'selected' : '' }}>Theo tháng
+                                            </option>
+                                            <option value="year"
+                                                {{ request('filter_type') === 'year' ? 'selected' : '' }}>Theo năm</option>
+                                        </select>
+                                    </div>
+                                    @if (request('filter_type', 'day') === 'day')
+                                        <div class="col-md-3">
+                                            <label for="filter_date" class="form-label">Chọn ngày</label>
+                                            <input type="date" name="filter_date"
+                                                value="{{ request('filter_date', now()->format('Y-m-d')) }}"
+                                                class="form-control" onchange="this.form.submit()">
+                                        </div>
+                                    @elseif (request('filter_type') === 'month')
+                                        <div class="col-md-3">
+                                            <label for="filter_month" class="form-label">Chọn tháng</label>
+                                            <input type="month" name="filter_month"
+                                                value="{{ request('filter_month', now()->format('Y-m')) }}"
+                                                class="form-control" onchange="this.form.submit()">
+                                        </div>
+                                    @elseif (request('filter_type') === 'year')
+                                        <div class="col-md-3">
+                                            <label for="filter_year" class="form-label">Chọn năm</label>
+                                            <select name="filter_year" class="form-control"
+                                                onchange="this.form.submit()">
+                                                @for ($year = now()->year; $year >= now()->year - 5; $year--)
+                                                    <option value="{{ $year }}"
+                                                        {{ request('filter_year', now()->year) == $year ? 'selected' : '' }}>
+                                                        {{ $year }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    @endif
+                                </form>
                             </div>
+                            <div class="">
+                                <h5 class="text-muted">Số lượt quay theo thời gian</h5>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <canvas id="spinChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -446,6 +526,15 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if ($showConfigWarning)
+                const configWarningModal = new bootstrap.Modal(document.getElementById('configWarningModal'), {
+                    backdrop: 'static', // Không cho phép đóng modal bằng cách nhấp ra ngoài
+                    keyboard: false // Không cho phép đóng modal bằng phím Esc
+                });
+                configWarningModal.show();
+            @endif
+        });
         // Hàm đóng modal thủ công
         function forceCloseModal(modal) {
             try {
@@ -530,142 +619,154 @@
                 }
             }
         });
-
-        // Xử lý toggle-selection (kích hoạt quà hiện vật cho vòng quay)
-        // document.querySelectorAll('.toggle-selection-form input[type="checkbox"]').forEach(checkbox => {
-        //     checkbox.addEventListener('change', function () {
-        //         const form = this.closest('form');
-        //         const type = form.action.match(/toggle-selection\/(\w+)\//)[1];
-        //         const id = form.action.match(/toggle-selection\/\w+\/(\d+)/)[1];
-        //         const row = form.closest('tr');
-        //         const name = row.cells[0].textContent;
-        //         const probability = parseFloat(row.cells[2].textContent);
-
-        //         fetch(form.action, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/json',
-        //                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        //             },
-        //             body: JSON.stringify({})
-        //         })
-        //             .then(response => response.json())
-        //             .then(data => {
-        //                 if (data.success) {
-        //                     const tbody = document.querySelector('.table-striped tbody');
-        //                     if (this.checked) {
-        //                         // Thêm vào bảng "Cấu hình tỷ lệ trúng"
-        //                         const newRow = document.createElement('tr');
-        //                         newRow.setAttribute('data-id', id);
-        //                         newRow.setAttribute('data-type', type);
-        //                         newRow.innerHTML = `
-    //                             <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
-    //                             <td>${name}</td>
-    //                             <td>${probability}</td>
-    //                             <td>
-    //                                 <form action="/admin/spins/gifts/${id}" method="POST" class="d-inline">
-    //                                     <input type="hidden" name="_method" value="PUT">
-    //                                     <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-    //                                     <input type="number" name="probability" value="${probability}" step="0.01" min="0" max="100" class="form-control form-control-sm d-inline" required>
-    //                                     <input type="hidden" name="name" value="${name}">
-    //                                     <input type="hidden" name="stock" value="0">
-    //                                     <input type="hidden" name="description" value="">
-    //                                     <input type="hidden" name="image_url" value="">
-    //                                     <input type="hidden" name="is_active" value="1">
-    //                                     <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
-    //                                 </form>
-    //                                 <form action="/admin/spins/gifts/${id}" method="POST" class="d-inline">
-    //                                     <input type="hidden" name="_method" value="DELETE">
-    //                                     <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-    //                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
-    //                                 </form>
-    //                             </td>
-    //                             <td>
-    //                                 <form action="/admin/spins/spin/toggle-selection/${type}/${id}" method="POST" class="toggle-selection-form">
-    //                                     <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-    //                                     <input type="checkbox" name="is_selected" onchange="this.form.submit()" checked>
-    //                                 </form>
-    //                             </td>
-    //                         `;
-        //                         tbody.appendChild(newRow);
-
-        //                         // Cập nhật tổng tỷ lệ trúng
-        //                         const totalProbabilityElement = document.querySelector('.card-header h3');
-        //                         const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
-        //                         const newTotal = currentTotal + probability;
-        //                         totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
-
-        //                         showToast('succes','Thêm quà hiện vật vào vòng quay thành công');
-        //                     } else {
-        //                         // Xóa khỏi bảng "Cấu hình tỷ lệ trúng"
-        //                         const rows = tbody.querySelectorAll('tr');
-        //                         rows.forEach(row => {
-        //                             if (row.getAttribute('data-id') === id && row.getAttribute('data-type') === type) {
-        //                                 row.remove();
-        //                             }
-        //                         });
-
-        //                         // Cập nhật tổng tỷ lệ trúng
-        //                         const totalProbabilityElement = document.querySelector('.card-header h3');
-        //                         const currentTotal = parseFloat(totalProbabilityElement.textContent.match(/Tổng: ([\d.]+)%/)[1]);
-        //                         const newTotal = currentTotal - probability;
-        //                         totalProbabilityElement.textContent = `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
-        //                     }
-        //                 } else {
-        //                     showToast('error','Có lỗi xảy ra');
-        //                 }
-        //             })
-        //             .catch(error => {
-        //                 console.error('Error:', error);
-        //                 alert('Có lỗi xảy ra, vui lòng thử lại');
-        //             });
-        //     });
-        // });
-
-        // Xử lý xóa ô quà trong vòng quay
-        document.querySelectorAll('.delete-spin-config').forEach(button => {
-            button.addEventListener('click', function() {
-                const form = this.closest('.delete-spin-config-form');
-                const row = this.closest('tr');
-                const probability = parseFloat(row.cells[2].textContent);
-                const id = row.getAttribute('data-id');
-
-                fetch(form.action, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                .getAttribute('content')
-                        },
-                        body: JSON.stringify({})
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToast('success', 'Xóa ô quà khỏi vòng quay thành công');
-                            // Xóa hàng khỏi bảng
-                            row.remove();
-
-                            // Cập nhật tổng tỷ lệ trúng
-                            const totalProbabilityElement = document.querySelector('.card-header h3');
-                            const currentTotal = parseFloat(totalProbabilityElement.textContent.match(
-                                /Tổng: ([\d.]+)%/)[1]);
-                            const newTotal = currentTotal - probability;
-                            totalProbabilityElement.textContent =
-                                `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`;
-
-                            // Hiển thị toast
-                            showToast();
-
-                        } else {
-                            showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+        // Biểu đồ phân bố quà trúng
+        const winDistributionLabels = [
+            @foreach ($groupedWinners as $type => $count)
+                "{{ ucfirst($type) }}",
+            @endforeach
+        ];
+        const winDistributionData = [
+            @foreach ($groupedWinners as $type => $count)
+                {{ $count }},
+            @endforeach
+        ];
+        const winDistributionChart = new Chart(document.getElementById('winDistributionChart'), {
+            type: 'pie',
+            data: {
+                labels: winDistributionLabels.map(label => `${label}`),
+                datasets: [{
+                    label: 'Phân bố quà trúng',
+                    data: winDistributionData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        align: 'center',
+                        labels: {
+                            boxWidth: 20,
+                            padding: 15
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
-                    });
-            });
+                    }
+                }
+            }
+
         });
+
+
+        $('.delete-gift-form').on('submit', function(e) {
+                e.preventDefault(); // Ngăn form submit mặc định
+
+                const form = $(this);
+                const url = form.attr('action'); // Lấy URL từ action của form
+                const row = form.closest('tr'); // Lấy hàng trong bảng
+
+                // Hiển thị SweetAlert để xác nhận
+                Swal.fire({
+                    title: 'Bạn có chắc chắn?',
+                    text: 'Bạn có muốn xóa quà hiện vật này không?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gửi yêu cầu AJAX
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Hiển thị thông báo thành công
+                                    showToast('success', response.message || 'Xóa quà hiện vật thành công!');
+
+                                    // Xóa hàng khỏi bảng
+                                    row.remove();
+                                } else {
+                                    // Hiển thị thông báo lỗi
+                                    showToast('error', response.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error:', error);
+                                showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Xử lý xóa phần thưởng trong vòng quay (delete-spin-config)
+            $('.delete-spin-config').on('click', function(e) {
+                e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
+
+                const button = $(this);
+                const url = button.attr('href'); // Lấy URL từ href
+                const row = button.closest('tr'); // Lấy hàng trong bảng
+                const probability = parseFloat(row.find('td:eq(2)').text()); // Lấy tỷ lệ trúng từ cột thứ 3
+                const id = button.data('id'); // Lấy ID từ data-id
+
+                // Hiển thị SweetAlert để xác nhận
+                Swal.fire({
+                    title: 'Bạn có chắc chắn?',
+                    text: 'Bạn có muốn xóa ô quà này khỏi vòng quay không?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gửi yêu cầu AJAX
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Hiển thị thông báo thành công
+                                    showToast('success', response.message || 'Xóa ô quà khỏi vòng quay thành công!');
+
+                                    // Xóa hàng khỏi bảng
+                                    row.remove();
+
+                                    // Cập nhật tổng tỷ lệ trúng
+                                    const totalProbabilityElement = $('.card-header h3');
+                                    const currentTotal = parseFloat(totalProbabilityElement.text().match(/Tổng: ([\d.]+)%/)[1]);
+                                    const newTotal = currentTotal - probability;
+                                    totalProbabilityElement.text(`Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`);
+                                } else {
+                                    // Hiển thị thông báo lỗi
+                                    showToast('error', response.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error:', error);
+                                showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                            }
+                        });
+                    }
+                });
+            });
     </script>
 @endpush
