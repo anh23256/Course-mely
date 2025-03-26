@@ -26,34 +26,38 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
+        <div class="row  cursor-pointer">
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
+                <div class="card stats-card total-card">
+                    <div class="card-body text-center">
+                        <i class="ri-file-list-3-line card-icon"></i>
                         <h5 class="card-title">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        <p class="card-text ">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
+                <div class="card stats-card approved-card">
+                    <div class="card-body text-center">
+                        <i class="ri-file-list-3-line card-icon"></i>
                         <h5 class="card-title">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        <p class="card-text">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
+                <div class="card stats-card pending-card">
+                    <div class="card-body card-body text-center">
+                        <i class="ri-time-line card-icon"></i>
                         <h5 class="card-title">Yêu cầu chờ xử lý</h5>
                         <p class="card-text fs-4 text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
+                <div class="card stats-card rejected-card">
+                    <div class="card-body card-body text-center">
+                        <i class="ri-close-circle-line card-icon"></i>
                         <h5 class="card-title">Yêu cầu bị từ chối</h5>
                         <p class="card-text fs-4 text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
@@ -118,8 +122,7 @@
                                                         <label for="approval_start_date" class="form-label">Ngày bắt đầu
                                                             kiểm duyệt</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                            name="approval_start_date" id="approval_start_date"
-                                                            data-filter
+                                                            name="approval_start_date" id="approval_start_date" data-filter
                                                             value="{{ request()->input('approval_start_date') ?? '' }}">
                                                     </div>
                                                 </li>
@@ -157,8 +160,8 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Email</label>
-                                    <input class="form-control form-control-sm" name="user_email_approved"
-                                        type="text" placeholder="Nhập email..."
+                                    <input class="form-control form-control-sm" name="user_email_approved" type="text"
+                                        placeholder="Nhập email..."
                                         value="{{ request()->input('account_holder') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
@@ -206,7 +209,9 @@
                                         @foreach ($approvals as $approval)
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $approval->user->name ?? '' }}</td>
+                                                <td>
+                                                    <img src="{{$approval->user->avatar ?? '' }}" alt="Avatar" class="user-avatar me-3">
+                                                    {{ $approval->user->name ?? '' }}</td>
                                                 <td>{{ $approval->user->email ?? '' }}</td>
                                                 <td>{!! $approval->request_date
                                                     ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y')

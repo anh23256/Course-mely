@@ -285,7 +285,7 @@
                 $('#ai-content').html('Đang chờ AI...').show();
 
                 $.ajax({
-                    url: 'http://127.0.0.1:8000/api/v1/ai/generate-text',
+                    url: 'http://127.0.0.1:8000/api/v1/cloudflare/generate-text',
                     method: 'POST',
                     data: {
                         type,

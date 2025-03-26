@@ -56,9 +56,34 @@
             margin-bottom: 8px;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 0.15rem rgba(59, 130, 246, 0.25);
+        }
+
+        .flatpickr-months .flatpickr-month {
+            background: #3F508C;
+            color: white;
+        }
+
+        .flatpickr-current-month input.cur-year {
+            color: white !important;
+        }
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            color: white !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: #3F508C;
+            background: #3F508C;
+            color: white;
+        }
+
+        .flatpickr-day.selected {
+            background: #3F508C !important;
+            color: white !important;
         }
     </style>
 @endpush
@@ -97,62 +122,63 @@
                             <div class="form-section">
                                 <div class="section-title">Thông tin cơ bản</div>
                                 <div class="row">
+
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Tên mã giảm giá <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-tag-outline"></i></span>
-                                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                                   value="{{ old('name') }}" placeholder="Nhập tên mã giảm giá">
-                                        </div>
+
+                                        <input type="text" name="name"
+                                            class="form-control @error('name') is-invalid @enderror"
+                                            value="{{ old('name') }}" placeholder="Nhập tên mã giảm giá">
                                         @error('name')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Mã giảm giá <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-barcode"></i></span>
-                                            <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" id="couponCode"
-                                                   value="{{ old('code') }}" placeholder="Nhập mã giảm giá">
-                                        </div>
+
+                                        <input type="text" name="code"
+                                            class="form-control @error('code') is-invalid @enderror" id="couponCode"
+                                            value="{{ old('code') }}" placeholder="Nhập mã giảm giá">
+
                                         <div id="suggestCode" class="mt-2" style="display: none;"></div>
                                         @error('code')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-calendar-start"></i></span>
-                                            <input type="text" name="start_date" class="form-control flatpickr-date @error('start_date') is-invalid @enderror"
-                                                   value="{{ old('start_date') }}" placeholder="Chọn ngày bắt đầu">
-                                        </div>
+
+                                        <input type="text" name="start_date"
+                                            class="form-control flatpickr-date @error('start_date') is-invalid @enderror"
+                                            value="{{ old('start_date') }}" placeholder="Chọn ngày bắt đầu">
+
                                         @error('start_date')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-calendar-end"></i></span>
-                                            <input type="text" name="expire_date" class="form-control flatpickr-date @error('expire_date') is-invalid @enderror"
-                                                   value="{{ old('expire_date') }}" placeholder="Chọn ngày kết thúc">
-                                        </div>
+
+                                        <input type="text" name="expire_date"
+                                            class="form-control flatpickr-date @error('expire_date') is-invalid @enderror"
+                                            value="{{ old('expire_date') }}" placeholder="Chọn ngày kết thúc">
+
                                         @error('expire_date')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Số lượng sử dụng <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-numeric"></i></span>
-                                            <input type="number" name="max_usage" class="form-control @error('max_usage') is-invalid @enderror"
-                                                   value="{{ old('max_usage') }}" placeholder="Nhập số lượng sử dụng">
-                                        </div>
+                                        <label class="form-label">Số lượng sử dụng <span
+                                                class="text-danger">*</span></label>
+
+                                        <input type="number" name="max_usage"
+                                            class="form-control @error('max_usage') is-invalid @enderror"
+                                            value="{{ old('max_usage') }}" placeholder="Nhập số lượng sử dụng">
+
                                         @error('max_usage')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
@@ -161,54 +187,62 @@
                             <div class="form-section">
                                 <div class="section-title">Cấu hình giảm giá</div>
                                 <div class="row">
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Loại giảm giá <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-percent"></i></span>
-                                            <select name="discount_type" id="discount_type" class="form-select @error('discount_type') is-invalid @enderror">
-                                                <option value="">Chọn loại giảm giá</option>
-                                                <option value="fixed" {{ old('discount_type') == 'fixed' ? 'selected' : '' }}>Cố định (VNĐ)</option>
-                                                <option value="percentage" {{ old('discount_type') == 'percentage' ? 'selected' : '' }}>Phần trăm (%)</option>
-                                            </select>
-                                        </div>
+
+                                        <select name="discount_type" id="discount_type"
+                                            class="form-select @error('discount_type') is-invalid @enderror">
+                                            <option value="">Chọn loại giảm giá</option>
+                                            <option value="fixed" {{ old('discount_type') == 'fixed' ? 'selected' : '' }}>
+                                                Cố định (VNĐ)
+                                            </option>
+                                            <option value="percentage"
+                                                {{ old('discount_type') == 'percentage' ? 'selected' : '' }}>Phần trăm
+                                                (%)</option>
+                                        </select>
+
                                         @error('discount_type')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="col-md-4 mb-3 discount-fields" style="display: none;">
-                                        <label class="form-label">Giá trị giảm giá <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-currency-usd"></i></span>
-                                            <input type="number" name="discount_value" class="form-control @error('discount_value') is-invalid @enderror"
-                                                   value="{{ old('discount_value') }}" placeholder="Nhập giá trị giảm giá">
-                                        </div>
+                                    <div class="col-md-6 mb-3 discount-fields" style="display: none;">
+                                        <label class="form-label">Giá trị giảm giá <span
+                                                class="text-danger">*</span></label>
+
+                                        <input type="number" name="discount_value"
+                                            class="form-control @error('discount_value') is-invalid @enderror"
+                                            value="{{ old('discount_value') }}" placeholder="Nhập giá trị giảm giá">
+
                                         @error('discount_value')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="col-md-4 mb-3" id="discount_max_value_field" style="display: none;">
-                                        <label class="form-label">Giảm giá tối đa <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-currency-usd"></i></span>
-                                            <input type="number" name="discount_max_value" class="form-control @error('discount_max_value') is-invalid @enderror"
-                                                   value="{{ old('discount_max_value') }}" placeholder="Nhập giá trị giảm giá tối đa">
-                                        </div>
+                                    <div class="col-md-6 mb-3" id="discount_max_value_field" style="display: none;">
+                                        <label class="form-label">Giảm giá tối đa <span
+                                                class="text-danger">*</span></label>
+
+                                        <input type="number" name="discount_max_value"
+                                            class="form-control @error('discount_max_value') is-invalid @enderror"
+                                            value="{{ old('discount_max_value') }}"
+                                            placeholder="Nhập giá trị giảm giá tối đa">
+
                                         @error('discount_max_value')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="mdi mdi-toggle-switch"></i></span>
-                                            <select name="status" class="form-select @error('status') is-invalid @enderror">
-                                                <option value="">Chọn trạng thái</option>
-                                                <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Hoạt động</option>
-                                                <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Không hoạt động</option>
-                                            </select>
-                                        </div>
+
+                                        <select name="status" class="form-select @error('status') is-invalid @enderror">
+                                            <option value="">Chọn trạng thái</option>
+                                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Hoạt
+                                                động</option>
+                                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Không
+                                                hoạt động</option>
+                                        </select>
+
                                         @error('status')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
@@ -219,9 +253,9 @@
                                 <div class="row">
                                     <div class="col-12 mb-3">
                                         <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="4"
-                                                  placeholder="Nhập mô tả về mã giảm giá">{{ old('description') }}</textarea>
+                                            placeholder="Nhập mô tả về mã giảm giá">{{ old('description') }}</textarea>
                                         @error('description')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                            <div class="text-danger mt-1 small">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
@@ -234,7 +268,8 @@
                                     </a>
                                 </div>
                                 <div>
-                                    <button type="reset" class="btn btn-info waves-effect waves-light" onclick="resetFilters()">
+                                    <button type="reset" class="btn btn-info waves-effect waves-light"
+                                        onclick="resetFilters()">
                                         <i class="mdi mdi-refresh me-1"></i> Làm mới
                                     </button>
                                     <button type="submit" class="btn btn-primary btn-submit ms-2">

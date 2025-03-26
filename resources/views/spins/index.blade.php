@@ -170,6 +170,8 @@
                                                 <button type="button" class="sweet-confirm btn btn-danger btn-sm delete-spin-config">
                                                     <span class="ri-delete-bin-7-line"></span>
                                                 </button>
+
+
                                             </form>
                                         </td>
                                     </tr>
@@ -194,6 +196,14 @@
                                                 <input type="hidden" name="is_active" value="{{ $gift->is_active }}">
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
                                             </form>
+                                            <form action="{{ route('admin.spins.gift.delete', $gift->id) }}" method="POST"
+                                                class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -284,12 +294,12 @@
                                 <input type="text" name="name" value="{{ old('name') }}" class="form-control"
                                     placeholder="Tên quà" required>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label for="stock" class="form-label">Số lượng</label>
                                 <input type="number" name="stock" value="{{ old('stock') }}" class="form-control"
                                     placeholder="Số lượng" min="0" required>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label for="probability" class="form-label">Tỷ lệ (%)</label>
                                 <input type="number" name="probability" value="{{ old('probability') }}"
                                     class="form-control" placeholder="Tỷ lệ (%)" step="0.01" min="0"
@@ -609,7 +619,6 @@
                 }
             }
         });
-
         // Biểu đồ phân bố quà trúng
         const winDistributionLabels = [
             @foreach ($groupedWinners as $type => $count)
@@ -657,6 +666,7 @@
                     }
                 }
             }
+
         });
 
 

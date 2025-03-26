@@ -135,19 +135,19 @@
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
                                         href="{{ route('admin.notifications.all-notifications', ['status' => 'all']) }}">
-                                        Tất cả
+                                        <i class="ri-list-check me-1"></i> Tất cả
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status') === 'unread' ? 'active' : '' }}"
                                         href="{{ route('admin.notifications.all-notifications', ['status' => 'unread']) }}">
-                                        Chưa đọc
+                                        <i class="ri-mail-unread-line me-1"></i> Chưa đọc
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {{ request('status') === 'read' ? 'active' : '' }}"
                                         href="{{ route('admin.notifications.all-notifications', ['status' => 'read']) }}">
-                                        Đã đọc
+                                        <i class="ri-mail-open-line me-1"></i> Đã đọc
                                     </a>
                                 </li>
                             </ul>
