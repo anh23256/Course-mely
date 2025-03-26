@@ -9,6 +9,8 @@ use App\Models\Approvable;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
+use App\Notifications\PostSubmittedForApprovalNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
@@ -72,21 +74,8 @@ class PostController extends Controller
                 : Str::uuid();
 
             $post = Post::query()->create($data);
-            // Tạo bản ghi trong Approvable để chờ kiểm duyệt
-            Approvable::query()->create([
-                'approver_id' => null, // Chưa có người kiểm duyệt, để null
-                'status' => 'pending', // Trạng thái ban đầu là pending
-                'note' => null, // Chưa có ghi chú
-                'reason' => null, // Chưa có lý do chỉnh sửa
-                'content_modification' => 0, // Không yêu cầu chỉnh sửa nội dung (theo yêu cầu của bạn)
-                'approvable_type' => Post::class, // Loại đối tượng là Post
-                'approvable_id' => $post->id, // ID của bài viết
-                'request_date' => now(), // Ngày yêu cầu kiểm duyệt là thời điểm hiện tại
-                'approved_at' => null, // Chưa được duyệt
-                'rejected_at' => null, // Chưa bị từ chối
-                'created_at' => now(), // Thời gian tạo bản ghi
-                'updated_at' => now(), // Thời gian cập nhật bản ghi
-            ]);
+
+
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::query()->firstOrCreate([
@@ -97,19 +86,42 @@ class PostController extends Controller
 
                 $post->tags()->sync($tags->pluck('id'));
             }
+            // Tạo yêu cầu kiểm duyệt
+            $approvable = Approvable::query()->create([
+                'approver_id' => null,
+                'status' => 'pending',
+                'note' => null,
+                'reason' => null,
+                'content_modification' => 0,
+                'approvable_type' => Post::class,
+                'approvable_id' => $post->id,
+                'request_date' => now(),
+                'approved_at' => null,
+                'rejected_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Gửi thông báo đến admin và employee
+            $roleUser = ['employee', 'admin'];
+            $admins = User::whereHas('roles', function ($query) use ($roleUser) {
+                $query->whereIn('name', $roleUser);
+            })->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new PostSubmittedForApprovalNotification($post));
+            }
 
             DB::commit();
 
             return $this->respondCreated('Tạo bài viết thành công, đang chờ kiểm duyệt', $post);
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             if (
-                !empty($data['thumbnail'])
-                && filter_var($data['thumbnail'], FILTER_VALIDATE_URL)
+                !empty($data['thumbnail']) &&
+                filter_var($data['thumbnail'], FILTER_VALIDATE_URL)
             ) {
-                $this->deleteImage($data['thumbnail'], 'posts');
+                $this->deleteImage($data['thumbnail'], self::FOLDER);
             }
 
             $this->logError($e, $request->all());
