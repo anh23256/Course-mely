@@ -19,7 +19,19 @@
                 @foreach ($withdrawals as $withdrawal)
                     <tr>
                         <td>{{ $loop->index + 1 }}</td>
-                        <td>{{ \Illuminate\Support\Str::limit($withdrawal->bank_name ?? 'Không có thông tin', 40) }}
+                        <td >
+                            @php
+                                $bank = $supportedBank->firstWhere(
+                                    'short_name',
+                                    $withdrawal->bank_name,
+                                );
+                            @endphp
+                            @if ($bank)
+                                <img src="{{ $bank->logo_rounded }}" alt="Bank Logo" class="me-2" style="width: 24px; height: 24px; object-fit: contain;"/>
+                                {{ $bank->short_name }}
+                            @else
+                                {{ $withdrawal->bank_name ?? 'Không có thông tin' }}
+                            @endif
                         </td>
                         <td>{{ $withdrawal->account_holder ?? 'Không có thông tin' }}</td>
                         <td><span

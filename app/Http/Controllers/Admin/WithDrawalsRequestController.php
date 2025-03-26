@@ -47,10 +47,10 @@ class WithDrawalsRequestController extends Controller
                 $queryWithdrawals = $this->search($request, $queryWithdrawals);
 
             $withdrawals = $queryWithdrawals->paginate(10);
-            $supportedBank = SupportedBank::query()->select('short_name', 'name', 'logo', 'code')->get();
+            $supportedBank = SupportedBank::query()->select('short_name', 'name',  'logo_rounded')->get();
 
             if ($request->ajax()) {
-                $html = view('withdrawals.table', compact('withdrawals'))->render();
+                $html = view('withdrawals.table', compact('withdrawals', 'supportedBank'))->render();
                 return response()->json(['html' => $html]);
             }
 

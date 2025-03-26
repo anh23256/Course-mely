@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Search\SearchRequest;
+use App\Models\Course;
+use App\Models\Post;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
@@ -23,34 +26,29 @@ class SearchController extends Controller
 
             $results = [];
 
-            $courses = DB::table('courses')
-                ->select('id', 'name', 'slug', 'thumbnail')
+            $courses = Course::search($query)
                 ->where('status', 'approved')
-                ->whereRaw("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", [$query])
-                ->limit(5)
+                ->where('visibility', 'public')
+                ->orderBy('total_student', 'desc')
+                ->take(5)
                 ->get();
-
             if ($courses->isNotEmpty()) {
                 $results['courses'] = $courses;
             }
 
-            $posts = DB::table('posts')
-                ->select('id', 'title', 'slug', 'thumbnail')
+            $posts =  Post::search($query)
                 ->where('status', 'published')
-                ->whereRaw("MATCH(title, content, description) AGAINST(? IN BOOLEAN MODE)", [$query])
-                ->limit(5)
-                ->get();
-
+                ->take(5)->get();
             if ($posts->isNotEmpty()) {
                 $results['posts'] = $posts;
             }
 
-            $instructors = DB::table('users')
-                ->select('id', 'name', 'email', 'avatar')
-                ->whereRaw("MATCH(name, email) AGAINST(? IN BOOLEAN MODE)", [$query])
-                ->limit(5)
-                ->get();
-
+            $instructors = User::search($query)
+                ->get()
+                ->filter(function ($user) {
+                    return $user->hasRole('instructor') && $user->status === 'active';
+                })
+                ->take(5);
             if ($instructors->isNotEmpty()) {
                 $results['instructors'] = $instructors;
             }
