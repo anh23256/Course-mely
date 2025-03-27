@@ -793,7 +793,8 @@
                 success: function(response) {
                     console.log(response);
                     if (response.data) {
-                        let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;
+                        let progress = parseFloat(response.data.progress) || 0;
+                        progress = Number.isInteger(progress) ? progress : progress.toFixed(2);
                         $('#progressCourse').html(progress + '%');
                         $('#progressCourseStyle').css('width', progress + '%');
                         $('#progressCourseStyle').attr('aria-valuenow', progress);

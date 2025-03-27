@@ -27,34 +27,38 @@
         <!-- social-customer -->
         <div class="row mb-2">
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
+                <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
-                        <h5 class="card-title">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        <i class="bx bx-list-check text-primary fs-1"></i>
+                        <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
+                        <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
+                <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
-                        <h5 class="card-title">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        <i class="bx bx-check-circle text-success fs-1"></i>
+                        <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
+                        <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
+                <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
-                        <h5 class="card-title">Yêu cầu chờ xử lý</h5>
-                        <p class="card-text fs-4 text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+                        <i class="bx bx-time-five text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
+                        <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
+                <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
-                        <h5 class="card-title">Yêu cầu bị từ chối</h5>
-                        <p class="card-text fs-4 text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+                        <i class="bx bx-x-circle text-danger fs-1"></i>
+                        <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
+                        <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -225,25 +229,31 @@
                                                      alt="" class="w-100 object-fit-cover">
                                             </td>
                                             <td>
-                                                {!! $approval->approver ? $approval->approver->name : '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
+                                                {!! !empty($approval->approver->name)
+                                                    ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>' 
+                                                    : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
                                             </td>
                                             <td>
                                                 @if ($approval->status == 'pending')
-                                                    <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
+                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time-five"></i> Chờ xử lý</span>
                                                 @elseif($approval->status == 'approved')
-                                                    <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
+                                                    <span class="badge bg-success text-white"><i class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
                                                 @else
-                                                    <span class="btn btn-sm btn-soft-danger">Từ chối</span>
+                                                    <span class="badge bg-danger text-white"><i class="bx bx-x-circle"></i> Từ chối</span>
                                                 @endif
                                             </td>
-                                            <td>{!! $approval->request_date ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
+                                            <td>
+                                                {!! $approval->request_date 
+                                                    ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' . \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') . '</span>'
+                                                    : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
+                                            </td>
                                             <td>
                                                 @if($approval->approved_at)
-                                                    {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}
+                                                    <span class="badge bg-success text-white"><i class="bx bx-calendar-check"></i> {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
                                                 @elseif($approval->rejected_at)
-                                                    {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}
+                                                    <span class="badge bg-danger text-white"><i class="bx bx-calendar-x"></i> {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
                                                 @else
-                                                    <span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>
+                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>
                                                 @endif
                                             </td>
                                             <td>

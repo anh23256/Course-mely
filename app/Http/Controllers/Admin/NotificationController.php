@@ -12,6 +12,7 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -27,15 +28,15 @@ class NotificationController extends Controller
 
             $typeGroups = [
                 'approval' => [
-                    'type' => ['register_course', 'register_instructor', "withdrawal"],
+                    'type' => ['register_course', 'register_instructor', "withdrawal", 'post_submitted'],
                     'count' => 10
                 ],
                 'message' => [
-                    'type' => ['user_buy_course'],
+                    'type' => ['receive_message'],
                     'count' => 10
                 ],
                 'buycourse' => [
-                    'type' => ['receive_message'],
+                    'type' => ['user_buy_course'],
                     'count' => 10
                 ]
             ];
@@ -48,26 +49,25 @@ class NotificationController extends Controller
                 }
             }
 
-            $notifications = collect();
+            $notifications = collect();   
 
             foreach ($typeGroups as $key => $group) {
-                $groupedNotifications = $user->notifications()
-                    ->where(function ($query) use ($group) {
-                        foreach ($group['type'] as $type) {
-                            $query->orWhereJsonContains('data->type', $type);
-                        }
-                    })
-                    ->latest()
-                    ->take($group['count'] ?? 10)
-                    ->get();
-                $notifications = $notifications->merge($groupedNotifications);
+                if (!empty($group['type'])) {
+                    $groupedNotifications = $user->notifications()
+                        ->whereIn('data->type', $group['type'])
+                        ->latest()
+                        ->take($group['count'] ?? 10)
+                        ->get();
+
+                    $notifications = $notifications->merge($groupedNotifications);
+                }
             }
 
             $unreadNotificationsCount = $user->unreadNotifications()->count();
 
             return $this->respondOk('Danh sách thông báo', [
                 'notifications' => $notifications,
-                'unread_notifications_count' => $unreadNotificationsCount
+                'unread_notifications_count' => $unreadNotificationsCount,
             ]);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
@@ -133,27 +133,24 @@ class NotificationController extends Controller
 
             $typeGroups = [
                 'approval' => [
-                    'type' => ['register_course', 'register_instructor', "withdrawal"],
+                    'type' => ['register_course', 'register_instructor', "withdrawal", 'post_submitted']
                 ],
                 'message' => [
-                    'type' => ['user_buy_course'],
+                    'type' => ['receive_message']
                 ],
                 'buycourse' => [
-                    'type' => ['receive_message'],
+                    'type' => ['user_buy_course']
                 ]
             ];
 
             $queryNotifications = $user->notifications()
-            ->where(function ($query) use ($notification_key, $typeGroups) {
-                if (!isset($typeGroups[$notification_key]['type']) || !is_array($typeGroups[$notification_key]['type'])) {
-                    return;
-                }
+                ->where(function ($query) use ($notification_key, $typeGroups) {
+                    if (!isset($typeGroups[$notification_key]['type']) || !is_array($typeGroups[$notification_key]['type'])) {
+                        return;
+                    }
 
-                foreach ($typeGroups[$notification_key]['type'] as $type) {
-                    $query->orWhereRaw("json_unquote(json_extract(data, '$.type')) = ?", [$type]);
-                }
-            })
-            ->latest();
+                    $query->whereIn('data->type', $typeGroups[$notification_key]['type']);
+                });
 
             // dd($request->all()); 
 
@@ -174,7 +171,7 @@ class NotificationController extends Controller
                 $queryNotifications = $this->filterType($request, $queryNotifications);
             }
 
-            if($request->hasAny(['created_at', 'updated_at'])){
+            if ($request->hasAny(['created_at', 'updated_at'])) {
                 $queryNotifications = $this->filter($request, $queryNotifications);
             }
 
@@ -188,7 +185,6 @@ class NotificationController extends Controller
 
 
             return view('notifications.index', compact('notifications', 'title', 'subTitle'));
-            
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -223,10 +219,10 @@ class NotificationController extends Controller
         $filters = [
             'created_at' => ['queryWhere' => '>='],
             'updated_at' => ['queryWhere' => '<='],
-            
+
         ];
 
-        $query = $this->filterTrait($filters, $request,$query);
+        $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
     }
