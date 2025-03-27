@@ -64,6 +64,43 @@
         .fs-4 {
             font-size: 1.5rem;
         }
+
+        .table-scrollable {
+            max-height: 425px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .table-scrollable table {
+            margin-bottom: 0;
+        }
+
+        .table-scrollable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
+        }
+
+        .table-scrollable::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .table-scrollable::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .table-scrollable::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .table-scrollable::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 @endpush
 
@@ -81,41 +118,65 @@
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item active"><a
-                                    href="{{ route('admin.transactions.index') }}">{{ $title ?? '' }}</a></li>
+                                    href="{{ route('admin.spins.index') }}">{{ $title ?? '' }}</a></li>
                         </ol>
                     </div>
                 </div>
             </div>
         </div>
-            <!-- Modal cảnh báo không đủ phần thưởng hoặc quà hiện vật -->
-            @if ($showConfigWarning)
+        <!-- Modal cảnh báo không đủ phần thưởng hoặc quà hiện vật -->
+        @if ($showConfigWarning)
             <div class="modal fade" id="configWarningModal" tabindex="-1" aria-labelledby="configWarningModalLabel"
                 aria-hidden="true">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title" id="configWarningModalLabel">Cảnh báo: Cấu hình không hợp lệ</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            <h5 class="modal-title fw-bold" id="configWarningModalLabel">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Cảnh báo: Cấu hình không hợp lệ
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            @if (!$hasEnoughSpinConfigTypes)
-                                <p>Vòng quay chưa đủ 3 loại phần thưởng (no_reward, coupon, spin). Hiện tại thiếu:</p>
-                                <ul>
-                                    @foreach ($missingTypes as $type)
-                                        <li>{{ ucfirst($type) }}</li>
-                                    @endforeach
+                            <div class="alert alert-warning mb-3" role="alert">
+                                <ul class="list-unstyled mb-0">
+                                    @if (!$hasEnoughSpinConfigTypes)
+                                        <li class="mb-2">
+                                            <i class="bi bi-dash-circle text-danger me-2"></i>
+                                            Vòng quay chưa đủ 3 loại phần thưởng (no_reward, coupon, spin). Thiếu:
+                                            <ul class="list-group list-group-flush mt-1">
+                                                @foreach ($missingTypes as $type)
+                                                    <li class="list-group-item border-0 ps-4">{{ ucfirst($type) }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </li>
+                                    @endif
+                                    @if (!$hasEnoughGifts)
+                                        <li class="mb-2">
+                                            <i class="bi bi-dash-circle text-danger me-2"></i>
+                                            Số lượng quà hiện vật chưa đủ:
+                                            <span class="badge bg-info ms-1">{{ $currentSelectedGiftsCount }}</span> /
+                                            <span class="badge bg-success">{{ $requiredGifts }}</span>
+                                            (Cần thêm {{ $requiredGifts - $currentSelectedGiftsCount }} quà)
+                                        </li>
+                                    @endif
+                                    @if (!$isProbabilityValid)
+                                        <li class="mb-2">
+                                            <i class="bi bi-dash-circle text-danger me-2"></i>
+                                            Tổng tỷ lệ trúng thưởng hiện tại:
+                                            <span class="badge bg-danger">{{ number_format($totalProbability, 2) }}%</span>
+                                            (Yêu cầu: 100%)
+                                        </li>
+                                    @endif
                                 </ul>
-                            @endif
-                            @if (!$hasEnoughGifts)
-                                <p>Vòng quay chưa đủ 2 quà hiện vật. Hiện tại chỉ có {{ $currentSelectedGiftsCount }}
-                                    quà hiện vật được chọn, cần thêm {{ $requiredGifts - $currentSelectedGiftsCount }}
-                                    quà nữa.</p>
-                            @endif
-                            <p>Vui lòng hoàn thiện cấu hình trước khi tiếp tục.</p>
+                            </div>
+                            <p class="text-muted fst-italic">Vui lòng hoàn thiện cấu hình để vòng quay hoạt động bình
+                                thường.</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Đóng
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -163,13 +224,10 @@
                                                     class="form-control form-control-sm d-inline" required>
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
                                             </form>
-                                            <form action="{{ route('admin.spins.deleteSpinConfig', $config->id) }}"
-                                                method="POST" class="d-inline delete-spin-config-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="sweet-confirm btn btn-danger btn-sm delete-spin-config">
-                                                    <span class="ri-delete-bin-7-line"></span>
-                                                </button>
+                                            <a href="{{ route('admin.spins.deleteSpinConfig', $config->id) }}"
+                                                type="button" class="btn btn-danger btn-sm delete-spin-config">
+                                                <span class="ri-delete-bin-7-line"></span>
+                                            </a>
 
 
                                             </form>
@@ -196,13 +254,6 @@
                                                 <input type="hidden" name="is_active" value="{{ $gift->is_active }}">
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
                                             </form>
-                                            <form action="{{ route('admin.spins.gift.delete', $gift->id) }}" method="POST"
-                                                class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm"
-                                                    onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
-                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -221,7 +272,7 @@
                         <div class="mb-3">
                             <!-- Nút thêm quà hiện vật -->
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#addGiftModal" {{ $showConfigWarning ? 'disabled' : '' }}>
+                                data-bs-target="#addGiftModal">
                                 Thêm quà hiện vật
                             </button>
                         </div>
@@ -242,9 +293,9 @@
                                         <td>{{ $gift->name }}</td>
                                         <td>{{ $gift->stock }}</td>
                                         <td>
-                                            @if ($gift->image_url)
-                                                <img src="{{ $gift->image_url }}" alt="{{ $gift->name }}"
-                                                    style="max-width: 50px;">
+                                            @if ($gift->thumbnail)
+                                                <img src="{{ Storage::url($gift->thumbnail) }}"
+                                                    alt="{{ $gift->name }}" style="max-width: 50px;">
                                             @else
                                                 Không có ảnh
                                             @endif
@@ -262,11 +313,11 @@
                                             </form>
                                         </td>
                                         <td>
-                                            <a href="{{ route('admin.spins.deleteSpinConfig', $config->id) }}"
-                                                class="sweet-confirm btn btn-sm btn-danger delete-gift-form"
-                                                data-id="{{ $config->id }}">
-                                                 <span class="ri-delete-bin-7-line"></span>
-                                             </a>
+                                            <a href="{{ route('admin.spins.gift.delete', $gift->id) }}" type="button"
+                                                class="btn btn-sm btn-danger delete-gift-form"
+                                                data-id="{{ $gift->id }}">
+                                                <span class="ri-delete-bin-7-line"></span>
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -287,7 +338,8 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="{{ route('admin.spins.gift.store') }}" method="POST" class="row g-3">
+                        <form action="{{ route('admin.spins.gift.store') }}" method="POST" class="row g-3"
+                            enctype="multipart/form-data">
                             @csrf
                             <div class="col-md-12">
                                 <label for="name" class="form-label">Tên quà</label>
@@ -306,9 +358,12 @@
                                     max="100" required>
                             </div>
                             <div class="col-md-12">
-                                <label for="image_url" class="form-label">URL ảnh</label>
-                                <input type="url" name="image_url" value="{{ old('image_url') }}"
-                                    class="form-control" placeholder="URL ảnh">
+                                <label for="image_url" class="form-label">Ảnh</label>
+                                <input type="file" name="image" class="form-control"
+                                    placeholder="chọn ảnh hiện vật" id="imageInput">
+                            </div>
+                            <div class="image-preview-container" style="display:none;">
+                                <img id="imagePreview" src="" alt="Image preview" class="img-fluid mt-2 w-25" />
                             </div>
                             <div class="col-md-12">
                                 <label for="description" class="form-label">Mô tả</label>
@@ -515,6 +570,83 @@
                         </table>
                     </div>
                 </div>
+                <!-- Ô Lịch sử quay của người chơi (mới) -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Lịch sử quay của người chơi</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Form tìm kiếm -->
+                        <form method="GET" action="{{ route('admin.spins.index') }}" class="mb-3">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control"
+                                    placeholder="Tìm kiếm theo tên người chơi hoặc phần thưởng..."
+                                    value="{{ request('search') }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Tìm kiếm
+                                </button>
+                                @if (request('search'))
+                                    <a href="{{ route('spins.index') }}" class="btn btn-secondary ms-2">
+                                        <i class="bi bi-x"></i> Xóa bộ lọc
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+
+                        <!-- Bảng lịch sử quay -->
+                        @if ($spinHistories->isEmpty())
+                            <p class="text-muted">Chưa có lịch sử quay.</p>
+                        @else
+                            <div class="table-responsive table-card table-scrollable">
+                                <table class="table align-middle table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>STT</th>
+                                            <th>Thời gian</th>
+                                            <th>Người chơi</th>
+                                            <th>Loại phần thưởng</th>
+                                            <th>Phần thưởng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($spinHistories as $index => $history)
+                                            <tr>
+                                                <td>{{ $index + 1 }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($history->spun_at)->format('d/m/Y H:i:s') }}
+                                                </td>
+                                                <td>{{ $history->user ? $history->user->name : 'N/A' }}</td>
+                                                <td>
+                                                    @switch($history->reward_type)
+                                                        @case('gift')
+                                                            <span class="badge bg-success">Quà hiện vật</span>
+                                                        @break
+
+                                                        @case('coupon')
+                                                            <span class="badge bg-info">Mã giảm giá</span>
+                                                        @break
+
+                                                        @case('spin')
+                                                            <span class="badge bg-warning">Lượt quay</span>
+                                                        @break
+
+                                                        @case('no_reward')
+                                                            <span class="badge bg-secondary">Không trúng</span>
+                                                        @break
+
+                                                        @default
+                                                            <span class="badge bg-secondary">{{ $history->reward_type }}</span>
+                                                    @endswitch
+                                                </td>
+                                                <td>{{ $history->reward_name }}</td>
+
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -526,7 +658,31 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        // Lắng nghe sự kiện thay đổi khi người dùng chọn tệp
+        document.getElementById("imageInput").addEventListener("change", function(event) {
+            const file = event.target.files[0]; // Lấy tệp đã chọn
+
+            if (file) {
+                // Tạo URL cho tệp được chọn
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Lấy URL của ảnh
+                    const imageUrl = e.target.result;
+
+                    // Cập nhật ảnh xem trước
+                    const imagePreview = document.getElementById("imagePreview");
+                    imagePreview.src = imageUrl;
+
+                    // Hiển thị phần tử ảnh xem trước
+                    document.querySelector(".image-preview-container").style.display = "block";
+                };
+                reader.readAsDataURL(file); // Đọc tệp ảnh dưới dạng URL
+            } else {
+                // Nếu không có tệp nào được chọn, ẩn ảnh xem trước
+                document.querySelector(".image-preview-container").style.display = "none";
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
             @if ($showConfigWarning)
                 const configWarningModal = new bootstrap.Modal(document.getElementById('configWarningModal'), {
                     backdrop: 'static', // Không cho phép đóng modal bằng cách nhấp ra ngoài
@@ -670,103 +826,118 @@
         });
 
 
-        $('.delete-gift-form').on('submit', function(e) {
-                e.preventDefault(); // Ngăn form submit mặc định
+        $('.delete-gift-form').on('click', function(e) {
+            e.preventDefault(); // Ngăn form submit mặc định
 
-                const form = $(this);
-                const url = form.attr('action'); // Lấy URL từ action của form
-                const row = form.closest('tr'); // Lấy hàng trong bảng
+            const button = $(this);
+            const url = button.attr('href'); // Lấy URL từ href
+            const row = button.closest('tr'); // Lấy hàng trong bảng
+            const id = button.data('id'); // Lấy ID từ data-id
 
-                // Hiển thị SweetAlert để xác nhận
-                Swal.fire({
-                    title: 'Bạn có chắc chắn?',
-                    text: 'Bạn có muốn xóa quà hiện vật này không?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xóa',
-                    cancelButtonText: 'Hủy'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Gửi yêu cầu AJAX
-                        $.ajax({
-                            url: url,
-                            type: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    // Hiển thị thông báo thành công
-                                    showToast('success', response.message || 'Xóa quà hiện vật thành công!');
-
-                                    // Xóa hàng khỏi bảng
-                                    row.remove();
-                                } else {
-                                    // Hiển thị thông báo lỗi
-                                    showToast('error', response.message || 'Có lỗi xảy ra, vui lòng thử lại');
-                                }
-                            },
-                            error: function(xhr, status, error) {
-                                console.error('Error:', error);
-                                showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+            // Hiển thị SweetAlert để xác nhận
+            Swal.fire({
+                title: 'Bạn có chắc chắn?',
+                text: 'Bạn có muốn xóa quà hiện vật này không?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gửi yêu cầu AJAX
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Hiển thị thông báo thành công
+                                showToast('success', response.message ||
+                                    'Xóa quà hiện vật thành công!');
+                                row.remove();
+                            } else {
+                                // Hiển thị thông báo lỗi từ server (nếu success: false)
+                                showToast('error', response.message ||
+                                    'Có lỗi xảy ra, vui lòng thử lại');
                             }
-                        });
-                    }
-                });
+                        },
+                        error: function(xhr, status, error) {
+                            // Lấy thông điệp lỗi từ phản hồi của server
+                            const errorMessage = xhr.responseJSON && xhr.responseJSON.message ?
+                                xhr.responseJSON.message :
+                                'Có lỗi xảy ra, vui lòng thử lại';
+
+                            // Hiển thị thông báo lỗi
+                            showToast('error', errorMessage);
+
+                            // Ghi log để debug (tùy chọn)
+                            console.error('Error:', error);
+                            console.error('Status:', status);
+                            console.error('Response:', xhr.responseJSON);
+                        }
+                    });
+                }
             });
+        });
 
-            // Xử lý xóa phần thưởng trong vòng quay (delete-spin-config)
-            $('.delete-spin-config').on('click', function(e) {
-                e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
+        // Xử lý xóa phần thưởng trong vòng quay (delete-spin-config)
+        $('.delete-spin-config').on('click', function(e) {
+            e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
 
-                const button = $(this);
-                const url = button.attr('href'); // Lấy URL từ href
-                const row = button.closest('tr'); // Lấy hàng trong bảng
-                const probability = parseFloat(row.find('td:eq(2)').text()); // Lấy tỷ lệ trúng từ cột thứ 3
-                const id = button.data('id'); // Lấy ID từ data-id
+            const button = $(this);
+            const url = button.attr('href'); // Lấy URL từ href
+            const row = button.closest('tr'); // Lấy hàng trong bảng
+            const probability = parseFloat(row.find('td:eq(2)').text()); // Lấy tỷ lệ trúng từ cột thứ 3
+            const id = button.data('id'); // Lấy ID từ data-id
 
-                // Hiển thị SweetAlert để xác nhận
-                Swal.fire({
-                    title: 'Bạn có chắc chắn?',
-                    text: 'Bạn có muốn xóa ô quà này khỏi vòng quay không?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Xóa',
-                    cancelButtonText: 'Hủy'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Gửi yêu cầu AJAX
-                        $.ajax({
-                            url: url,
-                            type: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    // Hiển thị thông báo thành công
-                                    showToast('success', response.message || 'Xóa ô quà khỏi vòng quay thành công!');
+            // Hiển thị SweetAlert để xác nhận
+            Swal.fire({
+                title: 'Bạn có chắc chắn?',
+                text: 'Bạn có muốn xóa ô quà này khỏi vòng quay không?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gửi yêu cầu AJAX
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Hiển thị thông báo thành công
+                                showToast('success', response.message ||
+                                    'Xóa ô quà khỏi vòng quay thành công!');
 
-                                    // Xóa hàng khỏi bảng
-                                    row.remove();
+                                // Xóa hàng khỏi bảng
+                                row.remove();
 
-                                    // Cập nhật tổng tỷ lệ trúng
-                                    const totalProbabilityElement = $('.card-header h3');
-                                    const currentTotal = parseFloat(totalProbabilityElement.text().match(/Tổng: ([\d.]+)%/)[1]);
-                                    const newTotal = currentTotal - probability;
-                                    totalProbabilityElement.text(`Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`);
-                                } else {
-                                    // Hiển thị thông báo lỗi
-                                    showToast('error', response.message || 'Có lỗi xảy ra, vui lòng thử lại');
-                                }
-                            },
-                            error: function(xhr, status, error) {
-                                console.error('Error:', error);
-                                showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                                // Cập nhật tổng tỷ lệ trúng
+                                const totalProbabilityElement = $('.card-header h3');
+                                const currentTotal = parseFloat(totalProbabilityElement.text()
+                                    .match(/Tổng: ([\d.]+)%/)[1]);
+                                const newTotal = currentTotal - probability;
+                                totalProbabilityElement.text(
+                                    `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`);
+                            } else {
+                                // Hiển thị thông báo lỗi
+                                showToast('error', response.message ||
+                                    'Có lỗi xảy ra, vui lòng thử lại');
                             }
-                        });
-                    }
-                });
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error:', error);
+                            showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                        }
+                    });
+                }
             });
+        });
     </script>
 @endpush
