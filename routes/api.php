@@ -172,6 +172,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
         Route::put('/lesson/{lessonId}/update-last-time-video', [\App\Http\Controllers\API\Common\LearningPathController::class, 'updateLastTimeVideo']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
+        Route::patch('/lesson/{lessonId}/complete-practice-exercise', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completePracticeExercise']);
         Route::get('/{lesson}/get-chapter-from-lesson', [LessonController::class, 'getChapterFromLesson']);
         Route::get('/lesson/{lessonId}/get-quiz-submission/{submissionQuizId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getQuizSubmission']);
         Route::get('/lesson/{lessonId}/get-coding-submission/{submissionCodingId}/', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getCodingSubmission']);
@@ -237,8 +238,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     #============================== ROUTE LEARNING =============================
     Route::prefix('learning-path')
-        ->group(function () {
-        });
+        ->group(function () {});
 
     Route::prefix('support-banks')->group(function () {
         Route::get('/', [SupportBankController::class, 'index']);
@@ -257,7 +257,6 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-monthly-course-statistics', [StatisticController::class, 'getMonthlyCourseStatistics']);
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
-
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================
@@ -447,7 +446,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
                 });
 
-                Route::get('/group/get-group-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
+            Route::get('/group/get-group-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
 
             Route::prefix('direct')
                 ->group(function () {
@@ -487,7 +486,7 @@ Route::prefix('courses')
         Route::get('/discounted', [CommonCourseController::class, 'getDiscountedCourses']);
         Route::get('/free', [CommonCourseController::class, 'getFreeCourses']);
         Route::get('/popular', [CommonCourseController::class, 'getPopularCourses']);
-        Route::get('/practice-exercises',[CommonCourseController::class, 'getPracticeExercises']);
+        Route::get('/practice-exercises', [CommonCourseController::class, 'getPracticeExercises']);
         Route::get('/top-categories-with-most-courses', [CommonCourseController::class, 'getTopCategoriesWithMostCourses']);
         Route::get('/{slug}', [CommonCourseController::class, 'getCourseDetail']);
         Route::get('/{slug}/get-other-courses', [CommonCourseController::class, 'getOtherCourses']);

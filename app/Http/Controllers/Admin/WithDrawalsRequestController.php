@@ -117,9 +117,8 @@ class WithDrawalsRequestController extends Controller
 
                 if ($systemFundTransaction) {
                     $withdrawal->update([
-                        'status' => 'Đã xử lý',
+                        'status' => 'Hoàn thành',
                         'admin_comment' =>  $withdrawal->admin_comment,
-                        'instructor_confirmation' => 'not_received',
                     ]);
                 }
 
@@ -231,7 +230,7 @@ class WithDrawalsRequestController extends Controller
         $user = $withdrawal->wallet->user;
 
         $message = $withdrawal->status === 'Đã xử lý'
-            ? "Yêu cầu thanh toán của bạn đã được xử lý với số tiền " . number_format($withdrawal->amount) . " VND."
+            ? "Yêu cầu rút tiền của bạn đã được hệ thống phản hồi. Vui lòng kiểm tra lại."
             : "Yêu cầu thanh toán của bạn đã được xử lý thành công";
 
         $existingNotification = DatabaseNotification::query()

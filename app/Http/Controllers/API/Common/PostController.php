@@ -11,30 +11,20 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    //
     use LoggableTrait, ApiResponseTrait;
+    
     public function getPost()
     {
         try {
-            $posts = Post::selectRaw("
-            posts.id,
-            posts.title,
-            posts.thumbnail,
-            posts.created_at,
-            COUNT(comments.id) as total_comments,
-            JSON_OBJECT('name', users.name, 'code', users.code) as author,
-            JSON_OBJECT('name', categories.name, 'slug', categories.slug) as category,
-            posts.views
-        ")
-            ->leftJoin('users', 'posts.user_id', '=', 'users.id')
-            ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
-            ->leftJoin('comments', function ($join) {
-                $join->on('posts.id', '=', 'comments.commentable_id')
-                    ->whereRaw("comments.commentable_type = ?", [Post::class]);
-            })
-            ->where('posts.status', 'published')
-            ->groupBy('posts.id', 'users.name', 'users.code', 'categories.name', 'categories.slug')
-            ->orderByDesc('posts.views')
+            $posts = Post::query()
+            ->select('id','user_id', 'category_id' ,'title', 'thumbnail', 'created_at', 'views')
+            ->with(
+                [
+                    'user:id,name,avatar,code',
+                    'category:id,name,slug',
+                ]
+            )->withCount('comments')
+            ->orderByDesc('views')
             ->limit(3)
             ->get();
 
