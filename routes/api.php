@@ -384,6 +384,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::prefix('transactions')
                 ->group(function () {
                     Route::get('/participated-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getParticipatedCourses']);
+                    Route::get('/participated-membership', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getMembershipPlansSold']);
                     Route::get('/enrolled-free-courses', [\App\Http\Controllers\API\Instructor\TransactionController::class, 'getCourseEnrollFree']);
                 });
 
