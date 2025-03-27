@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 
 class Post extends Model
 {
-    use HasFactory, SoftDeletes, Searchable;
+    use HasFactory, SoftDeletes;
 
     const STATUS_DRAFT = 'draft';
     const STATUS_PENDING = 'pending';
@@ -49,20 +48,9 @@ class Post extends Model
     {
         return $this->belongsTo(Category::class);
     }
-
+    
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
-    }
-
-    public function toSearchableArray()
-    {
-        return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'content' => $this->content,
-            'description' => $this->description,
-            'slug' => $this->slug,
-        ];
     }
 }

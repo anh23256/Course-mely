@@ -24,6 +24,12 @@
                                 {{ $course->name }}
 
                                 @switch($course->status)
+                                    @case('draft')
+                                        <span class="badge badge-label bg-dark">
+                                            <i class="mdi mdi-circle-medium"></i> Bản nháp
+                                        </span>
+                                    @break
+
                                     @case('pending')
                                         <span class="badge badge-label bg-warning">
                                             <i class="mdi mdi-circle-medium"></i> Chờ phê duyệt
@@ -51,7 +57,7 @@
 
                             <!-- Các nút hành động -->
                             <div class="d-flex gap-2">
-                                @if ($course->status !== 'rejected')
+                                @if ($course->status == 'approved')
                                     <!-- Nút từ chối -->
                                     <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                         data-bs-target="#rejectCourseModal">
@@ -250,19 +256,22 @@
                                                 <td class="fw-medium">Ngày chấp nhận</td>
                                                 <td>{!! $course->accepted ?? '<span class="badge bg-success-subtle text-danger">Chưa kiểm duyệt</span>' !!}</td>
                                             </tr>
-                                            <tr>
-                                                <td class="fw-medium">Khóa học phổ biến</td>
-                                                <td>
-                                                    <div class="form-check form-switch form-switch-warning">
-                                                        <input class="form-check-input popular-course-toggle"
-                                                            type="checkbox" role="switch" name="popular_course"
-                                                            value="{{ $course->id }}"
-                                                            data-course-id="{{ $course->id }}"
-                                                            data-status="{{ $course->status }}"
-                                                            @checked($course->is_popular != null)>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            @if ($course->status === 'approved')
+                                                <tr>
+                                                    <td class="fw-medium">Khóa học phổ biến</td>
+                                                    <td>
+                                                        <div class="form-check form-switch form-switch-warning">
+                                                            <input class="form-check-input popular-course-toggle"
+                                                                type="checkbox" role="switch" name="popular_course"
+                                                                value="{{ $course->id }}"
+                                                                data-course-id="{{ $course->id }}"
+                                                                data-status="{{ $course->status }}"
+                                                                @checked($course->is_popular != null)>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endif
+
                                         </tbody>
                                     </table>
                                 </div>

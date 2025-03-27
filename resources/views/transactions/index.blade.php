@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $title)
 @push('page-css')
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
     <style>
         .card {
             border-radius: 10px;
