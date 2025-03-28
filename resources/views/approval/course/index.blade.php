@@ -2,6 +2,16 @@
 
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .hover-effect {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -26,40 +36,42 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row cursor-pointer">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card stats-card total-card">
-                    <div class="card-body text-center">
-                        <i class="ri-file-list-3-line card-icon"></i>
-                        <h5 class="card-title">Tổng số yêu cầu</h5>
-                        <p class="card-text">{{ number_format($approvalCount->total_approval ?? 0) }}</p>
+        <div class="row mb-2">
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card text-center shadow-sm border-0 hover-effect">
+                        <div class="card-body">
+                            <i class="bx bx-list-check text-primary fs-1"></i>
+                            <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
+                            <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card stats-card approved-card">
-                    <div class="card-body text-center">
-                        <i class="ri-checkbox-circle-line card-icon"></i>
-                        <h5 class="card-title">Đã kiểm duyệt</h5>
-                        <p class="card-text">{{ number_format($approvalCount->approved_approval ?? 0) }}</p>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card text-center shadow-sm border-0 hover-effect">
+                        <div class="card-body">
+                            <i class="bx bx-check-circle text-success fs-1"></i>
+                            <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
+                            <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card stats-card pending-card">
-                    <div class="card-body text-center">
-                        <i class="ri-time-line card-icon"></i>
-                        <h5 class="card-title">Chờ xử lý</h5>
-                        <p class="card-text">{{ number_format($approvalCount->pending_approval ?? 0) }}</p>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card text-center shadow-sm border-0 hover-effect">
+                        <div class="card-body">
+                            <i class="bx bx-time-five text-warning fs-1"></i>
+                            <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
+                            <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card stats-card rejected-card">
-                    <div class="card-body text-center">
-                        <i class="ri-close-circle-line card-icon"></i>
-                        <h5 class="card-title">Bị từ chối</h5>
-                        <p class="card-text">{{ number_format($approvalCount->rejected_approval ?? 0) }}</p>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card text-center shadow-sm border-0 hover-effect">
+                        <div class="card-body">
+                            <i class="bx bx-x-circle text-danger fs-1"></i>
+                            <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
+                            <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,8 +251,9 @@
                                         @foreach ($approvals as $approval)
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
-                                                <td>{{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 50) }}
-                                                </td>
+                                                <td
+                                                    style="max-width: 200px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
+                                                    {{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 60) }}
                                                 <td>{{ $approval->course->user->name ?? '' }}</td>
                                                 <td>
                                                     <img style="height: 80px" src="{{ $approval->course->thumbnail }}"
@@ -249,31 +262,35 @@
                                                 <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí' }}
                                                 </td>
                                                 <td>
-                                                    {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
+                                                    {!! !empty($approval->approver->name)
+                                                        ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>' 
+                                                        : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
                                                 </td>
                                                 <td>
                                                     @if ($approval->status == 'pending')
-                                                        <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
+                                                        <span class="badge bg-warning text-dark"><i class="bx bx-time-five"></i> Chờ xử lý</span>
                                                     @elseif($approval->status == 'approved')
-                                                        <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
+                                                        <span class="badge bg-success text-white"><i class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
                                                     @elseif($approval->status == 'modify_request')
-                                                        <span class="btn btn-sm btn-soft-warning">Sửa đổi nội dung</span>
+                                                        <span class="badge bg-info text-white"><i class="bx bx-edit"></i> Sửa đổi nội dung</span>
                                                     @else
-                                                        <span class="btn btn-sm btn-soft-danger">Từ chối</span>
+                                                        <span class="badge bg-danger text-white"><i class="bx bx-x-circle"></i> Từ chối</span>
                                                     @endif
                                                 </td>
-                                                <td>{!! $approval->request_date
-                                                    ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y')
-                                                    : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
+                                                <td>
+                                                    {!! !empty($approval->request_date)
+                                                        ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' . \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') . '</span>'
+                                                        : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
+                                                </td>
                                                 <td>
                                                     @if ($approval->approved_at)
-                                                        {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}
+                                                        <span class="badge bg-success text-white"><i class="bx bx-calendar-check"></i> {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
                                                     @elseif($approval->rejected_at)
-                                                        {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}
+                                                        <span class="badge bg-danger text-white"><i class="bx bx-calendar-x"></i> {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
                                                     @else
-                                                        <span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>
+                                                        <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>
                                                     @endif
-                                                </td>
+                                                </td>                                                
                                                 <td>
                                                     <a href="{{ route('admin.approvals.courses.show', $approval->id) }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">

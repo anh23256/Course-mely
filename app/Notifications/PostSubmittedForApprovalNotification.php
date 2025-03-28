@@ -48,7 +48,7 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
             'post_title' => $this->post->title,
             'post_slug' => $this->post->slug ?? '',
             'post_thumbnail' => $this->post->thumbnail ?? '',
-            'message' => "Bài viết '{$this->post->title}' đã được gửi yêu cầu kiểm duyệt.",
+            'message' => "Bài viết '{$this->post->title}' đã gửi yêu cầu kiểm duyệt.",
         ];
     }
 

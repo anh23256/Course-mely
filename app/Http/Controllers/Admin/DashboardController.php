@@ -27,7 +27,7 @@ class DashboardController extends Controller
             $queryTotalAmount = $this->getTotalAmount();
             $queryTotalCourse = $this->getTotalCourse();
             $queryTotalInstructor = $this->getTotalInstructor();
-            $queryTopInstructors = $this->getTopInstructor();
+            $queryTopInstructors = $this->getTopInstructor($request);
             $queryTopUsers = $this->getTopUser();
             $queryTopCourses = $this->getTopCourse();
             $querySystem_Funds = $this->getSystemFund();
@@ -41,7 +41,6 @@ class DashboardController extends Controller
             $queryGetTopViewCourses = $this->filterTopCourseView($queryGetTopViewCourses, $request);
 
             list(
-                $queryTopInstructors,
                 $queryTopUsers,
                 $queryTopCourses,
                 $queryCourseRatings,
@@ -56,7 +55,6 @@ class DashboardController extends Controller
                 $queryTotalByPaymentMethodAndInvoiceType
             ) = $this->getFilterDataChart(
                 $request,
-                $queryTopInstructors,
                 $queryTopUsers,
                 $queryTopCourses,
                 $queryCourseRatings,
@@ -183,7 +181,6 @@ class DashboardController extends Controller
 
     private function getFilterDataChart(
         Request $request,
-        $queryTopInstructors,
         $queryTopUsers,
         $queryTopCourses,
         $queryCourseRatings,
@@ -197,7 +194,6 @@ class DashboardController extends Controller
         $queryCategoryStats,
         $queryTotalByPaymentMethodAndInvoiceType
     ) {
-        $queryTopInstructors = $this->applyGlobalFilter($queryTopInstructors, $request, 'invoices', 'created_at');
         $queryTopUsers = $this->applyGlobalFilter($queryTopUsers, $request, 'invoices', 'created_at');
         $queryTopCourses = $this->applyGlobalFilter($queryTopCourses, $request, 'invoices', 'created_at');
         $queryCourseRatings = $this->applyGlobalFilter($queryCourseRatings, $request, 'courses', 'created_at');
@@ -212,7 +208,6 @@ class DashboardController extends Controller
         $queryTotalByPaymentMethodAndInvoiceType = $this->applyGlobalFilter($queryTotalByPaymentMethodAndInvoiceType, $request, 'invoices', 'created_at');
 
         return [
-            $queryTopInstructors,
             $queryTopUsers,
             $queryTopCourses,
             $queryCourseRatings,
@@ -362,29 +357,51 @@ class DashboardController extends Controller
 
     private function getTopInstructorFollow()
     {
-        return DB::table('users')
-            ->leftJoin('courses', 'users.id', '=', 'courses.user_id')
-            ->leftJoin('follows', 'follows.instructor_id', '=', 'users.id')
+        $users = DB::table('users')
+            ->select('users.id', 'users.name', 'users.avatar', 'users.code', 'users.created_at')
             ->join('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
             ->join('roles', function ($join) {
-                $join->on('roles.id', '=', 'model_has_roles.role_id')->where('roles.name', 'instructor');
+                $join->on('roles.id', '=', 'model_has_roles.role_id')
+                    ->where('roles.name', 'instructor');
             })
-            ->where('users.status', '!=', 'blocked')
+            ->where('users.status', '!=', 'blocked');
+
+        return DB::table(DB::raw("({$users->toSql()}) as users"))
+            ->mergeBindings($users)
+            ->leftJoinSub(
+                DB::table('follows')
+                    ->select('instructor_id', DB::raw('COUNT(id) as total_follow'))
+                    ->groupBy('instructor_id'),
+                'follows',
+                'follows.instructor_id',
+                '=',
+                'users.id'
+            )
+            ->leftJoinSub(
+                DB::table('courses')
+                    ->select('user_id', DB::raw('SUM(total_student) as total_student'))
+                    ->groupBy('user_id'),
+                'courses',
+                'courses.user_id',
+                '=',
+                'users.id'
+            )
             ->select(
+                'users.id',
                 'users.name',
                 'users.code',
                 'users.avatar',
-                DB::raw('COUNT(DISTINCT follows.id) as total_follow, SUM(DISTINCT courses.total_student) as total_student'),
+                DB::raw('COALESCE(follows.total_follow, 0) as total_follow'),
+                DB::raw('COALESCE(courses.total_student, 0) as total_student')
             )
-            ->groupBy('users.name', 'users.code', 'users.avatar')
-            ->orderBy('total_follow', 'desc')
+            ->orderByDesc('total_follow')
             ->limit(10);
     }
 
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id') 
+            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
             ->leftJoinSub(
                 DB::table('users')
                     ->select('id', 'name'),
@@ -405,86 +422,130 @@ class DashboardController extends Controller
             ->limit(10);
     }
 
-    private function getTopInstructor()
+    private function getTopInstructor(Request $request)
     {
-        return DB::table('users')
-            ->join('courses', 'users.id', '=', 'courses.user_id')
-            ->leftJoinSub(
-                DB::table('invoices')
-                    ->select('id', 'final_amount', 'course_id', 'created_at')
-                    ->where('invoices.status', 'Đã thanh toán'),
-                'invoices',
-                function ($join) {
-                    $join->on('courses.id', '=', 'invoices.course_id');
-                }
-            )
-            ->leftJoin('course_users', function ($join) {
-                $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
-            })
-            ->join('model_has_roles', function ($join) {
-                $join->on('model_has_roles.model_id', '=', 'users.id')->where('model_has_roles.model_type', User::class);
-            })
-            ->join('roles', function ($join) {
-                $join->on('roles.id', '=', 'model_has_roles.role_id')->where('roles.name', 'instructor');
-            })
+        $query = DB::table('courses')
             ->select(
+                'courses.user_id',
                 'users.id',
                 'users.name',
                 'users.email',
                 'users.avatar',
-                'users.created_at',
-                DB::raw('SUM(invoices.final_amount) as total_revenue'),
-                DB::raw('COUNT(DISTINCT courses.id) as total_courses'),
-                DB::raw('COUNT(DISTINCT course_users.user_id) as total_enrolled_students'),
+                DB::raw('ROUND(SUM(invoices.final_amount) * 0.6, 0) as total_revenue'),
             )
-            ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar', 'users.created_at')
-            ->orderBy('total_revenue', 'desc')
-            ->take(10);
+            ->leftJoin('invoices', function ($join) {
+                $join->on('courses.id', '=', 'invoices.course_id')
+                    ->where('invoices.status', 'Đã thanh toán');
+            })
+            ->leftJoin('users', function ($join) {
+                $join->on('users.id', '=', 'courses.user_id')
+                    ->where('users.status', '!=', 'blocked');
+            });
+
+        $query = $this->applyGlobalFilter($query, $request, 'invoices', 'created_at');
+
+        $totalRevenue = $query
+            ->groupBy('courses.user_id', 'users.id', 'users.name', 'users.email', 'users.avatar')
+            ->orderByDesc('total_revenue')
+            ->limit(10);
+
+        $id_topCourse = $totalRevenue->pluck('user_id');
+
+        $totalCourses = DB::table('courses')
+            ->select('user_id', DB::raw('COUNT(id) as total_courses'))
+            ->whereIn('user_id', $id_topCourse)
+            ->groupBy('user_id');
+
+        $totalStudents = DB::table('courses')
+            ->select('courses.user_id', DB::raw('COALESCE(COUNT(DISTINCT course_users.user_id), 0) as total_enrolled_students'))
+            ->leftJoin('course_users', function ($join) {
+                $join->on('courses.id', '=', 'course_users.course_id')
+                    ->where(['course_users.source' => 'purchase', 'course_users.access_status' => 'active']);
+            })
+            ->whereIn('courses.user_id', $id_topCourse)
+            ->groupBy('courses.user_id');
+
+        return DB::table(DB::raw("({$totalRevenue->toSql()}) as revenue"))
+            ->mergeBindings($totalRevenue)
+            ->leftJoinSub($totalCourses, 'courses', 'courses.user_id', '=', 'revenue.user_id')
+            ->leftJoinSub($totalStudents, 'students', 'students.user_id', '=', 'revenue.user_id')
+            ->select(
+                'revenue.id',
+                'revenue.name',
+                'revenue.email',
+                'revenue.avatar',
+                DB::raw('COALESCE(revenue.total_revenue, 0) as total_revenue'),
+                DB::raw('COALESCE(courses.total_courses, 0) as total_courses'),
+                DB::raw('COALESCE(students.total_enrolled_students, 0) as total_enrolled_students')
+            )
+            ->orderByDesc('total_revenue');
     }
 
     private function getTopCourse()
     {
+        $totalRevenue = DB::table('invoices')
+            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), 'created_at')
+            ->where('status', 'Đã thanh toán')
+            ->groupBy('course_id', 'created_at');
+
+        $totalStudents = DB::table('course_users')
+            ->select('course_id', DB::raw('COUNT(DISTINCT user_id) as total_enrolled_students'))
+            ->where(['source' => 'purchase', 'access_status' => 'active'])
+            ->groupBy('course_id');
+
+        $totalSales = DB::table('invoices')
+            ->select('course_id', DB::raw('COUNT(id) as total_sales'))
+            ->where('status', 'Đã thanh toán')
+            ->groupBy('course_id');
+
         return DB::table('courses')
-            ->leftJoin('invoices', function ($join) {
-                $join->on('courses.id', '=', 'invoices.course_id')->where('invoices.status', 'Đã thanh toán');
-            })
-            ->leftJoin('course_users', function ($join) {
-                $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
-            })
+            ->leftJoinSub($totalRevenue, 'invoices', 'invoices.course_id', '=', 'courses.id')
+            ->leftJoinSub($totalStudents, 'students', 'students.course_id', '=', 'courses.id')
+            ->leftJoinSub($totalSales, 'sales', 'sales.course_id', '=', 'courses.id')
             ->select(
                 'courses.id',
                 'courses.name',
                 'courses.thumbnail',
                 'courses.created_at',
-                DB::raw('SUM(invoices.final_amount) as total_revenue'),
-                DB::raw('COUNT(DISTINCT course_users.user_id) as total_enrolled_students'),
-                DB::raw('COUNT(invoices.id) as total_sales'),
+                DB::raw('COALESCE(invoices.total_revenue, 0) as total_revenue'),
+                DB::raw('COALESCE(students.total_enrolled_students, 0) as total_enrolled_students'),
+                DB::raw('COALESCE(sales.total_sales, 0) as total_sales')
             )
-            ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'courses.created_at')
             ->orderByDesc('total_revenue')
             ->take(10);
     }
 
     private function getTopUser()
     {
+        $invoices = DB::table('invoices')
+            ->select(
+                'user_id',
+                DB::raw('COUNT(DISTINCT course_id) as total_courses_purchased'),
+                DB::raw('SUM(final_amount) as total_spent'),
+                DB::raw('MAX(created_at) as last_purchase_date'),
+                'created_at'
+            )
+            ->where('status', 'Đã thanh toán')
+            ->groupBy('user_id', 'created_at');
+
+        $course_user = DB::table('course_users')
+            ->select('user_id', DB::raw('COUNT(DISTINCT course_id) as total_active_courses'))
+            ->where(['source' => 'purchase', 'access_status' => 'active'])
+            ->groupBy('user_id');
+
         return DB::table('users')
-            ->leftJoin('invoices', function ($join) {
-                $join->on('users.id', '=', 'invoices.user_id')->where('invoices.status', 'Đã thanh toán');
-            })
-            ->leftJoin('course_users', function ($join) {
-                $join->on('users.id', '=', 'course_users.user_id')->where(['source' => 'purchase', 'access_status' => 'active']);
-            })
+            ->leftJoinSub($invoices,  'invoices', 'invoices.user_id', '=', 'users.id')
+            ->leftJoinSub($course_user,  'course_users', 'course_users.user_id', '=', 'users.id')
             ->select(
                 'users.id',
                 'users.name',
                 'users.email',
                 'users.avatar',
-                DB::raw('COUNT(DISTINCT invoices.course_id) as total_courses_purchased'),
-                DB::raw('SUM(invoices.final_amount) as total_spent'),
-                DB::raw('MAX(invoices.created_at) as last_purchase_date')
+                DB::raw('COALESCE(invoices.total_courses_purchased, 0) as total_courses_purchased'),
+                DB::raw('COALESCE(invoices.total_spent, 0) as total_spent'),
+                DB::raw('COALESCE(invoices.last_purchase_date, NULL) as last_purchase_date')
             )
-            ->groupBy('users.id', 'users.name', 'users.email', 'users.avatar')
-            ->having('total_courses_purchased', '>', 0)
+            ->whereNotNull('invoices.total_courses_purchased')
             ->orderByDesc('total_spent')
             ->take(10);
     }
@@ -492,19 +553,19 @@ class DashboardController extends Controller
     private function getSystemFund()
     {
         return DB::table('invoices')
-            ->select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('ROUND(SUM(final_amount),0) as total_revenue')
-            )
-            ->selectRaw('ROUND(SUM(final_amount * ?),0) as total_profit,
+            ->selectRaw('
+            MONTH(created_at) as month,
+            YEAR(created_at) as year,
+            ROUND(SUM(final_amount), 0) as total_revenue,
+            ROUND(SUM(final_amount * ?), 0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
             SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
-            SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay', [self::RATE])
+            SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay
+        ', [self::RATE])
             ->where('status', 'Đã thanh toán')
-            ->groupBy(DB::raw('MONTH(created_at), YEAR(created_at)'))
-            ->orderBy('year')->orderBy('month');
+            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+            ->orderByRaw('YEAR(created_at) ASC, MONTH(created_at) ASC');
     }
 
     private function getCourseRating()
@@ -519,11 +580,12 @@ class DashboardController extends Controller
     {
         return DB::table('invoices')
             ->selectRaw('
-                SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
-                SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
-                SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
-                SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay,
-                COUNT(*) as total_invoice')
+            COUNT(*) as total_invoice,
+            COALESCE(COUNT(CASE WHEN invoice_type = "course" THEN 1 END), 0) as total_course_sales,
+            COALESCE(COUNT(CASE WHEN invoice_type = "membership" THEN 1 END), 0) as total_membership_sales,
+            COALESCE(COUNT(CASE WHEN payment_method = "momo" THEN 1 END), 0) as total_payment_method_momo,
+            COALESCE(COUNT(CASE WHEN payment_method = "vnpay" THEN 1 END), 0) as total_payment_method_vnpay
+        ')
             ->where('status', 'Đã thanh toán');
     }
 }
