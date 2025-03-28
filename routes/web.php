@@ -429,5 +429,6 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
 
-            Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+            Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
+            Route::post('chat/', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
     });

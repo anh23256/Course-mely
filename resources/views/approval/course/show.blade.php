@@ -824,7 +824,11 @@
                         let completion = response.data.completionStatus;
                         renderCriteria("#criteria_course_overview", completion.course_overview);
                         renderCriteria("#criteria_course_curriculum", completion.course_curriculum);
-                        renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        if (completion.course?.practice_exercise && "{{ $approval->course->is_practical_course }}" == 1) {
+                            renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        } else {
+                            renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        }
                     }
                 }
             });

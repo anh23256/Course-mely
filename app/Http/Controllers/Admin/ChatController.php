@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerTrait;
 
 class ChatController extends Controller
@@ -343,7 +344,6 @@ class ChatController extends Controller
             $name = $otherUser->name;
             $avatar = $otherUser->avatar ?? url('assets/images/users/user-dummy-img.jpg');
             $memberCount = null; // Không cần hiển thị số thành viên
-            // Trả về thông tin nhóm
 
             /** @var User $user */
             $user = Auth::user();
@@ -355,6 +355,13 @@ class ChatController extends Controller
                 $notification->delete();
             }
 
+            $onlineUsers = Cache::get("join_web_course_mely_{$otherUser->id}", '');
+
+            $otherUserStatus = 'offline';
+            if (!empty($onlineUsers)) {
+                $otherUserStatus = 'online';
+            }
+
             return response()->json([
                 'status' => 'success',
                 'data' => [
@@ -363,7 +370,8 @@ class ChatController extends Controller
                     'avatarUser' => $avatar,
                     'channelId' => $conversation->id,
                     'memberCount' => $memberCount,
-                    'sender_id' => $otherUser->id
+                    'sender_id' => $otherUser->id,
+                    'other_user_status' => $otherUserStatus
                 ]
             ]);
         } catch (\Exception $e) {
@@ -427,17 +435,17 @@ class ChatController extends Controller
     {
         try {
             $files = Message::where('conversation_id', $conversationId)
-            ->whereNotNull('meta_data')
-            ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
-            ->whereRaw("
+                ->whereNotNull('meta_data')
+                ->whereRaw("JSON_VALID(meta_data) AND JSON_LENGTH(meta_data) > 0")
+                ->whereRaw("
                 NOT (
                     JSON_CONTAINS_PATH(meta_data, 'one', '$.send_at') AND 
                     JSON_CONTAINS_PATH(meta_data, 'one', '$.read') AND
                     JSON_LENGTH(meta_data) = 2
                 )
             ")
-            ->orderBy('created_at', 'desc')
-            ->get();        
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             return response()->json([
                 'status' => 'success',
@@ -536,29 +544,6 @@ class ChatController extends Controller
         }
     }
 
-    public function statusUser(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $status = $request->status;
-
-            if (!$user) {
-                return;
-            }
-
-            Cache::put("user_status_$user->id", $status, now()->addMinutes(2));
-            Cache::put("last_activity_$user->id", now(), now()->addMinutes(2));
-
-            Broadcast(new UserStatusChanged($user->id, $status))->toOthers();
-
-            return response()->json(['success' => true, 'status' => $status]);
-        } catch (\Throwable $e) {
-            $this->logError($e);
-
-            return;
-        }
-    }
-
     public function kickUserFromGroup(Request $request)
     {
         try {
@@ -645,32 +630,68 @@ class ChatController extends Controller
         }
     }
 
-    public function getUserOnline(Request $request)
+    public function getUserJoinRoom(Request $request)
     {
-        $conversationId = $request->conversation_id ?? '';
-        $userIds = collect($request->active_users)->pluck('id')->filter()->all();
-        $type = $request->type ?? '';
+        $conversationId = $request->conversation_id;
+        $type = $request->type;
+        $userId = auth()->id();
 
-        if (empty($conversationId) || empty($userIds) || empty($type)) return;
+        if (empty($conversationId) || empty($type) || !$userId) {
+            return;
+        }
 
         $cacheKey = "chat_room:$conversationId:users";
-
         $users = Cache::get($cacheKey, []);
 
-        if ($type == 'join') {
-            $newUsers = array_diff($userIds, $users);
-            if (!empty($newUsers)) {
-                $users = array_merge($users, $newUsers);
-                Cache::put($cacheKey, $users, now()->addMinutes(60));
+        if ($type === 'join' || $type === 'ping') {
+            if (!in_array($userId, $users)) {
+                $users[] = $userId;
+                Cache::put($cacheKey, $users, now()->addMinutes(5));
+            } else {
+                Cache::put($cacheKey, $users, now()->addMinutes(5));
             }
-        } elseif ($type == 'leave') {
-            $remainingUsers = array_diff($users, $userIds);
-            if (count($remainingUsers) !== count($users)) {
-                if (empty($remainingUsers)) {
-                    Cache::forget($cacheKey);
-                } else {
-                    Cache::put($cacheKey, $remainingUsers, now()->addMinutes(60));
-                }
+        } elseif ($type === 'leave') {
+            $remainingUsers = array_diff($users, [$userId]);
+            if (empty($remainingUsers)) {
+                Cache::forget($cacheKey);
+            } else {
+                Cache::put($cacheKey, $remainingUsers, now()->addMinutes(5));
+            }
+        }
+
+        return;
+    }
+
+    public function getUserOnline(Request $request)
+    {
+        $userId = auth()->id();
+        $type = $request->input('type');
+        $onlineUsers = Cache::get("join_web_course_mely_{$userId}", []);
+
+        $conversationIds = ConversationUser::where('user_id', $userId)
+            ->where('is_blocked', 0)
+            ->whereHas('Conversation', function($query){
+                $query->where('type', 'direct');
+            })
+            ->orderBy('last_read_at', 'desc')
+            ->limit(50)
+            ->pluck('conversation_id');
+
+        if ($type === 'leave') {
+            if (empty($onlineUsers)) return;
+            Cache::forget("join_web_course_mely_{$userId}");
+
+            foreach ($conversationIds as $conversationId) {
+                broadcast(new UserStatusChanged('offline', $conversationId))->toOthers();
+            }
+        }
+
+        if ($type === 'join') {
+            if (!empty($onlineUsers)) return;
+            Cache::put("join_web_course_mely_{$userId}", $userId, now()->addMinutes(5));
+
+            foreach ($conversationIds as $conversationId) {
+                broadcast(new UserStatusChanged('online', $conversationId))->toOthers();
             }
         }
 

@@ -12,25 +12,28 @@ use Illuminate\Support\Facades\Cache;
 class UserStatusChanged implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $userId;
     public $isOnline;
+    public $conversationId;
 
-    public function __construct($userId, $isOnline = false)
+    public function __construct($isOnline, $conversationId)
     {
-        $this->userId = $userId;
         $this->isOnline = $isOnline;
+        $this->conversationId = $conversationId;
     }
 
     public function broadcastOn()
     {
-        return new PresenceChannel('user-status');
+        return new PresenceChannel('conversation.' . $this->conversationId);
+    }
+
+    public function broadcastAs()
+    {
+        return 'UserStatusChanged';
     }
 
     public function broadcastWith()
     {
         return [
-            'user_id' => $this->userId,
             'is_online' => $this->isOnline,
         ];
     }

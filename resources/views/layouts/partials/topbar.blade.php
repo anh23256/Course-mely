@@ -355,7 +355,8 @@
                             updateUnreadCount(unread_notifications_count);
 
                             if (buycourseCountNotification > 0) {
-                                if (buycourseCountNotification == countNotificationsData.buycourse.count) {
+                                if (buycourseCountNotification == countNotificationsData.buycourse
+                                    .count) {
                                     $('#notification-data').append(`
                                             <div class="col-12 col-md-12">
                                                 <div class="d-flex mt-4 justify-content-center">
@@ -632,6 +633,27 @@
                 });
 
             fetchNotifications();
+
+            window.Echo.join('user-status')
+                .here(users => {
+                    $.ajax({
+                        url: "{{ route('admin.getUserOnline') }}",
+                        method: 'POST',
+                        data: {
+                            type: 'join'
+                        }
+                    })
+                });
+
+            setInterval(() => {
+                $.ajax({
+                    url: "{{ route('admin.getUserOnline') }}",
+                    method: 'POST',
+                    data: {
+                        type: 'join'
+                    }
+                });
+            }, 300000);
         });
     </script>
 @endpush

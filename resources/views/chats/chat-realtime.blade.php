@@ -1372,7 +1372,7 @@
                 success: function(response) {
                     if (response.success) {
                         Message = "Xóa thành công";
-                        showToast('success',Message);
+                        showToast('success', Message);
                     } else {
                         Toastify({
                             text: response.message,
@@ -1390,7 +1390,7 @@
                     if (xhr.status === 422) {
                         errorMessage = "Nhóm phải có ít nhất 2 thành viên. Không thể tiếp tục xóa thêm.";
                     }
-                    showToast('error',errorMessage);
+                    showToast('error', errorMessage);
                 }
             });
         }
@@ -1418,18 +1418,18 @@
                 success: function(response) {
                     if (response.success) {
                         message = "Giải tán nhóm thành công";
-                        showToast('success',message);
+                        showToast('success', message);
                         window.location.reload();
                     } else {
                         errorMessage = "Giải tán nhóm thất bại";
-                        showToast('error',errorMessage);
+                        showToast('error', errorMessage);
                     }
                 },
                 error: function(xhr) {
                     let errorMessage = "Đã có lỗi xảy ra!";
                     if (xhr.status === 403) {
                         errorMessage = "Bạn không có quyền giải tán nhóm!";
-                        showToast('error',errorMessage);
+                        showToast('error', errorMessage);
                     }
                 }
             });
@@ -1451,7 +1451,7 @@
                     .then(data => {
                         if (data.status === 'success') {
                             message = "Xóa cuộc trò chuyện thành công";
-                            showToast('success',message);
+                            showToast('success', message);
                             location
                                 .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
@@ -1460,7 +1460,7 @@
                     })
                     .catch(error => {
                         errormessage = "Có lỗi xảy ra, vui lòng thử lại";
-                        showToast('error',errormessage);
+                        showToast('error', errormessage);
                     });
             }
         }
@@ -1481,17 +1481,17 @@
                     .then(data => {
                         if (data.status === 'success') {
                             message = "Rời nhóm thành công";
-                            showToast('success',message);
+                            showToast('success', message);
                             location
                                 .reload(); // Hoặc bạn có thể xóa phần tử khỏi giao diện nếu không muốn tải lại trang
                         } else {
                             errormessage = "Có lỗi xảy ra, vui lòng thử lại";
-                            showToast('error',errormessage);
+                            showToast('error', errormessage);
                         }
                     })
                     .catch(error => {
                         errormessage = "Có lỗi xảy ra, vui lòng thử lại";
-                        showToast('error',errormessage);
+                        showToast('error', errormessage);
                     });
             }
         }
@@ -1826,10 +1826,10 @@
                 if (response?.meta_data && response?.meta_data.length > 0) {
 
                     if (typeof response?.meta_data === 'object' &&
-                            'read' in response.meta_data &&
-                            'send_at' in response.meta_data) {
-                                return;
-                        }
+                        'read' in response.meta_data &&
+                        'send_at' in response.meta_data) {
+                        return;
+                    }
 
                     response?.meta_data.forEach(media => {
                         let fileName = media.file_name;
@@ -1942,6 +1942,10 @@
                         $('#files-tab').addClass('active');
                         $('#members-tab').removeClass('active');
 
+                        $('.show-status-user').text(
+                            response.data.other_user_status == 'online' ? '🟢' : '🔴'
+                        );
+
                         loadMessages(response.data.direct.id);
                         loadSentFiles(response.data.direct.id);
                     } else {
@@ -2027,7 +2031,7 @@
         function sendActiveUsersToServer(users = null, type) {
 
             $.ajax({
-                url: "{{ route('admin.getUserOnline') }}",
+                url: "{{ route('admin.getUserJoinRoom') }}",
                 type: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -2077,6 +2081,29 @@
 
                     window.Echo.join('conversation.' + currentConversationId)
                         .here(users => {
+                            $(`.show-status-user`).text('🟢');
+                            sendActiveUsersToServer(users, 'join');
+                        })
+                        .joining(user => {
+                            $(`.show-status-user`).text('🟢');
+                            console.log('User vừa vào:', user);
+                            sendActiveUsersToServer([user], 'join');
+                        })
+                        .leaving(user => {
+                            sendActiveUsersToServer([user], 'leave');
+                        })
+                        .listen('.MessageSent', function(event) {
+                            $('#messagesList').append(renderMessageRealTime(event));
+                            scrollToBottom();
+                        });
+                });
+            } else {
+                getUserInfo(currentConversationId);
+                $(document).ready(function() {
+                    $('#showadd').show();
+
+                    window.Echo.join('conversation.' + currentConversationId)
+                        .here(users => {
                             sendActiveUsersToServer(users, 'join');
                         })
                         .joining(user => {
@@ -2088,29 +2115,11 @@
                         .listen('.GroupMessageSent', function(event) {
                             $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
-                        });
-                });
-            } else {
-                getUserInfo(currentConversationId);
-                $(document).ready(function() {
-                    $('#showadd').hide();
-
-                    window.Echo.join('conversation.' + currentConversationId)
-                        .here(users => {
-                            console.log(users)
-                            sendActiveUsersToServer(users, 'join');
-                        })
-                        .joining(user => {
-                            console.log('User vừa vào:', user);
-                            sendActiveUsersToServer([user], 'join');
-                        })
-                        .leaving(user => {
-                            console.log('User vừa rời:', user);
-                            sendActiveUsersToServer([user], 'leave');
-                        })
-                        .listen('.MessageSent', function(event) {
-                            $('#messagesList').append(renderMessageRealTime(event));
-                            scrollToBottom();
+                        }).listen('.UserStatusChanged', function(event) {
+                            console.log(event);
+                            $('.show-status-user').text(
+                                event.is_online == 'online' ? '🟢' : '🔴'
+                            );
                         });
                 });
             }
