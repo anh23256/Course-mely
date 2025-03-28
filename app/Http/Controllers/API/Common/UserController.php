@@ -307,16 +307,29 @@ class UserController extends Controller
 
                 if (!$lessonProgress) {
                     $firstChapter = $course->chapters->first();
+                    $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
 
-                    $currentLesson = $firstChapter ? [
-                        'id' => $firstChapter->lessons->first()->id,
-                        'title' => $firstChapter->lessons->first()->title
+                    $currentLesson = $firstLesson ? [
+                        'id' => $firstLesson->id,
+                        'title' => $firstLesson->title
                     ] : null;
                 } else {
-                    $currentLesson = [
-                        'id' => $lessonProgress->lesson->id,
-                        'title' => $lessonProgress->lesson->title,
-                    ];
+                    $progress = $course->courseUsers->where('user_id', $user->id)->first();
+
+                    if ($progress && $progress->progress_percent == 100) {
+                        $lastChapter = $course->chapters->last();
+                        $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
+
+                        $currentLesson = $lastLesson ? [
+                            'id' => $lastLesson->id,
+                            'title' => $lastLesson->title
+                        ] : null;
+                    } else {
+                        $currentLesson = [
+                            'id' => $lessonProgress->lesson->id,
+                            'title' => $lessonProgress->lesson->title,
+                        ];
+                    }
                 }
 
                 return [

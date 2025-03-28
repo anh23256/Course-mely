@@ -42,7 +42,7 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Khóa học không tồn tại');
             }
 
-            $isInstructorOfCourse = $course->user_id === $user->id;
+            $isInstructorOfCourse =  $course->user_id === $user->id;
 
             if (!$isInstructorOfCourse) {
                 $userPurchaseCourse = CourseUser::query()
@@ -77,7 +77,7 @@ class LearningPathController extends Controller
             $totalLesson = $lessons->count();
 
             foreach ($chapters as $chapterIndex => $chapter) {
-                $chapterLessons = [];
+                $lessonData = [];
                 $isChapterFirst = $chapterIndex === 0;
                 $previousChapterCompleted = true;
                 $totalChapterDuration = 0;
@@ -110,7 +110,7 @@ class LearningPathController extends Controller
                         $totalChapterDuration += $lesson->lessonable->duration; // Cộng dồn thời lượng video cho chương
                     }
 
-                    $chapterLessons[] = [
+                    $lessonDetails = [
                         'id' => $lesson->id,
                         'title' => $lesson->title,
                         'type' => $lesson->type,
@@ -119,6 +119,12 @@ class LearningPathController extends Controller
                         'order' => $lesson->order,
                         'lessonable' => $lesson->lessonable,
                     ];
+
+                    if ($lesson->type === 'quiz' && $lesson->lessonable_type === Quiz::class) {
+                        $lessonDetails['total_questions'] = $lesson->lessonable->questions->count();
+                    }
+
+                    $lessonData[] = $lessonDetails;
                 }
 
                 $response[] = [
@@ -126,7 +132,7 @@ class LearningPathController extends Controller
                     'chapter_title' => $chapter->title,
                     'total_chapter_duration' => $totalChapterDuration,
                     'total_lessons' => $chapterTotalLessons,
-                    'lessons' => $chapterLessons,
+                    'lessons' => $lessonData,
                 ];
             }
 
@@ -134,6 +140,7 @@ class LearningPathController extends Controller
                 'course_name' => $course->name,
                 'course_status' => $course->status,
                 'is_practical_course' => $course->is_practical_course,
+                'level' => $course->level,
                 'total_lesson' => $totalLesson,
                 'chapter_lessons' => $response,
             ]);
@@ -335,8 +342,8 @@ class LearningPathController extends Controller
             $courseLevel = $course->level;
 
             $userPurchasedCourse = $this->hashPurchasedCourse($user->id, $course->id);
-            if (!$userPurchasedCourse ) {
-                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            if (!$userPurchasedCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này hoặc quyền truy cập đã bị vô hiệu hóa');
             }
 
             if ($courseLevel === 'advanced') {
@@ -530,7 +537,7 @@ class LearningPathController extends Controller
             $course = $chapter->course;
 
             $userPurchasedCourse = $this->hashPurchasedCourse($user->id, $course->id);
-            if (!$userPurchasedCourse ) {
+            if (!$userPurchasedCourse) {
                 return $this->respondForbidden('Bạn chưa mua khoá học này');
             }
 
