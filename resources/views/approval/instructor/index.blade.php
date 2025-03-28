@@ -36,7 +36,7 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
+        <div class="row  cursor-pointer">
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
@@ -219,7 +219,9 @@
                                         @foreach ($approvals as $approval)
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $approval->user->name ?? '' }}</td>
+                                                <td>
+                                                    <img src="{{$approval->user->avatar ?? '' }}" alt="Avatar" class="user-avatar me-3">
+                                                    {{ $approval->user->name ?? '' }}</td>
                                                 <td>{{ $approval->user->email ?? '' }}</td>
                                                 <td>
                                                     {!! !empty($approval->approver->name)

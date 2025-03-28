@@ -254,7 +254,6 @@
                                                 <td
                                                     style="max-width: 200px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
                                                     {{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 60) }}
-                                                </td>
                                                 <td>{{ $approval->course->user->name ?? '' }}</td>
                                                 <td>
                                                     <img style="height: 80px" src="{{ $approval->course->thumbnail }}"

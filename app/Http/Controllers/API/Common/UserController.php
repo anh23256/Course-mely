@@ -221,6 +221,7 @@ class UserController extends Controller
                     'status',
                     'thumbnail',
                     'level',
+                    'is_practical_course',
                 ])
                 ->whereHas('courseUsers', function ($query) use ($user) {
                     $query->where('user_id', $user->id)->where('access_status', 'active');
@@ -306,16 +307,29 @@ class UserController extends Controller
 
                 if (!$lessonProgress) {
                     $firstChapter = $course->chapters->first();
+                    $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
 
-                    $currentLesson = $firstChapter ? [
-                        'id' => $firstChapter->lessons->first()->id,
-                        'title' => $firstChapter->lessons->first()->title
+                    $currentLesson = $firstLesson ? [
+                        'id' => $firstLesson->id,
+                        'title' => $firstLesson->title
                     ] : null;
                 } else {
-                    $currentLesson = [
-                        'id' => $lessonProgress->lesson->id,
-                        'title' => $lessonProgress->lesson->title,
-                    ];
+                    $progress = $course->courseUsers->where('user_id', $user->id)->first();
+
+                    if ($progress && $progress->progress_percent == 100) {
+                        $lastChapter = $course->chapters->last();
+                        $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
+
+                        $currentLesson = $lastLesson ? [
+                            'id' => $lastLesson->id,
+                            'title' => $lastLesson->title
+                        ] : null;
+                    } else {
+                        $currentLesson = [
+                            'id' => $lessonProgress->lesson->id,
+                            'title' => $lessonProgress->lesson->title,
+                        ];
+                    }
                 }
 
                 return [
@@ -327,14 +341,15 @@ class UserController extends Controller
                     'status' => $course->status,
                     'chapters_count' => $course->chapters_count,
                     'lessons_count' => $course->lessons_count,
+                    'is_practical_course' => $course->is_practical_course,
                     'ratings' => [
                         'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
                         'average' => $ratingInfo ? $ratingInfo->average_rating : 0
                     ],
                     'total_video_duration' => $totalVideoDuration,
                     'progress_percent' => $course->courseUsers
-                            ->where('user_id', $user->id)->first()
-                            ->progress_percent ?? 0,
+                        ->where('user_id', $user->id)->first()
+                        ->progress_percent ?? 0,
                     'current_lesson' => $currentLesson,
                     'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
                     'category' => [
@@ -1135,7 +1150,6 @@ class UserController extends Controller
             }
 
             return $this->respondOk('Xóa chứng chỉ thành công');
-
         } catch (\Exception $e) {
             $this->logError($e);
 

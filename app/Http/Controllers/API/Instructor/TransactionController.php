@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Invoice;
+use App\Models\MembershipPlan;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
@@ -80,7 +81,67 @@ class TransactionController extends Controller
             return $this->respondError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+    public function getMembershipPlansSold(Request $request)
+    {
+        try {
+            $user = Auth::user();
 
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+            $membershipPlans = MembershipPlan::query()
+                ->where('instructor_id', $user->id)
+                ->pluck('id')
+                ->toArray();
+
+            if (empty($membershipPlans)) {
+                return $this->respondNotFound('Không tìm thấy gói membership');
+            }
+            $query = Transaction::where('transactionable_type', Invoice::class)
+                ->where('amount', '>', 0)
+                ->whereIn('transactionable_id', function ($q) use ($membershipPlans) {
+                    $q->select('id')
+                        ->from('invoices')
+                        ->where('invoice_type', 'membership')
+                        ->whereIn('membership_plan_id', $membershipPlans);
+                })
+                ->with(['user', 'transactionable.membershipPlan']);
+
+            if ($request->has('fromDate')) {
+                $query->whereDate('created_at', '>=', $request->input('fromDate'));
+            }
+            if ($request->has('toDate')) {
+                $query->whereDate('created_at', '<=', $request->input('toDate'));
+            }
+
+            $paidTransactions = $query->get();
+
+            if ($paidTransactions->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy giao dịch gói membership');
+            }
+
+            $result = $paidTransactions->map(function ($transaction) {
+                $invoice = $transaction->transactionable;
+
+                return [
+                    'membership_plan_name' => optional($invoice->membershipPlan)->name,
+                    'student_name' => $transaction->user->name ?? 'N/A',
+                    'student_avatar' => $transaction->user->avatar ?? '',
+                    'duration_months' => optional($invoice->membershipPlan)->duration_months,
+                    'amount_paid' => $transaction->amount,
+                    'invoice_code' => $invoice->code,
+                    'invoice_created_at' => $invoice->created_at,
+                    'id' => $invoice->id,
+                    'status' => $invoice->status,
+                ];
+            });
+
+            return $this->respondOk('Danh sách gói membership đã bán của: ' . $user->name, $result);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
     public function getCourseEnrollFree()
     {
         try {
@@ -93,7 +154,6 @@ class TransactionController extends Controller
             $courses = Course::query()
                 ->where('user_id', $user->id)->pluck('id')
                 ->toArray();
-
         } catch (\Exception $e) {
             $this->logError($e);
 

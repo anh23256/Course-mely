@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('page-css')
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -22,10 +22,9 @@
                 </div>
             </div>
         </div>
+         
         <!-- end page title -->
-
-        <!-- social-customer -->
-        <div class="row mb-2">
+        <div class="row cursor-pointer">
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="card text-center shadow-sm border-0 hover-effect">
                     <div class="card-body">
@@ -63,7 +62,6 @@
                 </div>
             </div>
         </div>
-        <!-- End social-customer -->
 
         <!-- List-posts -->
         <div class="row">
@@ -76,10 +74,9 @@
                                 <div class="d-flex justify-content-sm-end">
                                     <div class="search-box ms-2">
                                         <input type="text" name="search_full" class="form-control search h-75"
-                                               placeholder="Tìm kiếm..." data-search>
-                                        <button id="search-full"
-                                                class="h-75 ri-search-line search-icon m-0 p-0 border-0"
-                                                style="background: none;"></button>
+                                            placeholder="Tìm kiếm..." data-search>
+                                        <button id="search-full" class="h-75 ri-search-line search-icon m-0 p-0 border-0"
+                                            style="background: none;"></button>
                                     </div>
                                 </div>
                             </div>
@@ -89,7 +86,7 @@
                             </button>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-primary h-75" type="button" id="filterDropdown"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ri-filter-2-line"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
@@ -102,9 +99,8 @@
                                                         <label for="request_start_date" class="form-label">Ngày bắt đầu
                                                             gửi yêu cầu</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="request_start_date" id="request_start_date"
-                                                               data-filter
-                                                               value="{{ request()->input('request_start_date') ?? '' }}">
+                                                            name="request_start_date" id="request_start_date" data-filter
+                                                            value="{{ request()->input('request_start_date') ?? '' }}">
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
@@ -112,8 +108,8 @@
                                                         <label for="request_end_date" class="form-label">Ngày kết thúc
                                                             gửi yêu cầu</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="request_end_date" id="request_end_date" data-filter
-                                                               value="{{ request()->input('request_end_date') ?? '' }}">
+                                                            name="request_end_date" id="request_end_date" data-filter
+                                                            value="{{ request()->input('request_end_date') ?? '' }}">
                                                     </div>
                                                 </li>
                                             </div>
@@ -123,9 +119,8 @@
                                                         <label for="approval_start_date" class="form-label">Ngày bắt đầu
                                                             kiểm duyệt</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="approval_start_date" id="approval_start_date"
-                                                               data-filter
-                                                               value="{{ request()->input('approval_start_date') ?? '' }}">
+                                                            name="approval_start_date" id="approval_start_date" data-filter
+                                                            value="{{ request()->input('approval_start_date') ?? '' }}">
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
@@ -133,15 +128,14 @@
                                                         <label for="approval_end_date" class="form-label">Ngày kết thúc
                                                             kiểm duyệt</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                               name="approval_end_date" id="approval_end_date"
-                                                               data-filter
-                                                               value="{{ request()->input('approval_end_date') ?? '' }}">
+                                                            name="approval_end_date" id="approval_end_date" data-filter
+                                                            value="{{ request()->input('approval_end_date') ?? '' }}">
                                                     </div>
                                                 </li>
                                             </div>
                                             <li class="mt-2 d-flex gap-1">
                                                 <button class="btn btn-sm btn-success flex-grow-1" type="reset"
-                                                        id="resetFilter">Reset
+                                                    id="resetFilter">Reset
                                                 </button>
                                                 <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
                                                     dụng
@@ -160,26 +154,26 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Tiêu đề bài viết</label>
                                     <input class="form-control form-control-sm" name="post_title_approved" type="text"
-                                           placeholder="Nhập tiêu đề bài viết..."
-                                           value="{{ request()->input('post_title_approved') ?? '' }}" data-advanced-filter>
+                                        placeholder="Nhập tiêu đề bài viết..."
+                                        value="{{ request()->input('post_title_approved') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Tên tác giả</label>
                                     <input class="form-control form-control-sm" name="user_name_approved" type="text"
-                                           placeholder="Nhập tên tác giả..."
-                                           value="{{ request()->input('user_name_approved') ?? '' }}" data-advanced-filter>
+                                        placeholder="Nhập tên tác giả..."
+                                        value="{{ request()->input('user_name_approved') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Tên người kiểm duyệt</label>
                                     <input class="form-control form-control-sm" name="approver_name_approved"
-                                           type="text"
-                                           placeholder="Nhập tên người kiểm duyệt..."
-                                           value="{{ request()->input('approver_name_approved') ?? '' }}" data-advanced-filter>
+                                        type="text" placeholder="Nhập tên người kiểm duyệt..."
+                                        value="{{ request()->input('approver_name_approved') ?? '' }}"
+                                        data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="statusItem" class="form-label">Trạng thái kiểm duyệt</label>
                                     <select class="form-select form-select-sm" name="status" id="statusItem"
-                                            data-advanced-filter>
+                                        data-advanced-filter>
                                         <option value="">Chọn trạng thái</option>
                                         <option value="approved" @selected(request()->input('status') === 'approved')>Đã
                                             kiểm duyệt
@@ -206,17 +200,17 @@
                             <div class="table-responsive table-card mt-3 mb-1">
                                 <table class="table align-middle table-nowrap" id="postTable">
                                     <thead class="table-light">
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Tiêu đề bài viết</th>
-                                        <th>Tác giả</th>
-                                        <th>Hình ảnh</th>
-                                        <th>Người kiểm duyệt</th>
-                                        <th>Trạng thái</th>
-                                        <th>Ngày gửi yêu cầu</th>
-                                        <th>Ngày kiểm duyệt</th>
-                                        <th>Hành động</th>
-                                    </tr>
+                                        <tr>
+                                            <th>STT</th>
+                                            <th>Tiêu đề bài viết</th>
+                                            <th>Tác giả</th>
+                                            <th>Hình ảnh</th>
+                                            <th>Người kiểm duyệt</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày gửi yêu cầu</th>
+                                            <th>Ngày kiểm duyệt</th>
+                                            <th>Hành động</th>
+                                        </tr>
                                     </thead>
                                     <tbody class="list">
                                         @forelse ($approvals as $approval)
@@ -291,7 +285,7 @@
     <script>
         var routeUrlFilter = "{{ route('admin.approvals.posts.index') }}";
 
-        $(document).on('click', '#resetFilter', function () {
+        $(document).on('click', '#resetFilter', function() {
             window.location = routeUrlFilter;
         });
     </script>

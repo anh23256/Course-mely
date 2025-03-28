@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\LearningPath\CompletePracticeExerciseRequest;
 use App\Jobs\CreateCertificateJob;
 use App\Models\Coding;
 use App\Models\Course;
@@ -41,7 +42,7 @@ class LearningPathController extends Controller
                 return $this->respondNotFound('Khóa học không tồn tại');
             }
 
-            $isInstructorOfCourse = $course->user_id === $user->id;
+            $isInstructorOfCourse =  $course->user_id === $user->id;
 
             if (!$isInstructorOfCourse) {
                 $userPurchaseCourse = CourseUser::query()
@@ -76,7 +77,7 @@ class LearningPathController extends Controller
             $totalLesson = $lessons->count();
 
             foreach ($chapters as $chapterIndex => $chapter) {
-                $chapterLessons = [];
+                $lessonData = [];
                 $isChapterFirst = $chapterIndex === 0;
                 $previousChapterCompleted = true;
                 $totalChapterDuration = 0;
@@ -109,7 +110,7 @@ class LearningPathController extends Controller
                         $totalChapterDuration += $lesson->lessonable->duration; // Cộng dồn thời lượng video cho chương
                     }
 
-                    $chapterLessons[] = [
+                    $lessonDetails = [
                         'id' => $lesson->id,
                         'title' => $lesson->title,
                         'type' => $lesson->type,
@@ -118,6 +119,12 @@ class LearningPathController extends Controller
                         'order' => $lesson->order,
                         'lessonable' => $lesson->lessonable,
                     ];
+
+                    if ($lesson->type === 'quiz' && $lesson->lessonable_type === Quiz::class) {
+                        $lessonDetails['total_questions'] = $lesson->lessonable->questions->count();
+                    }
+
+                    $lessonData[] = $lessonDetails;
                 }
 
                 $response[] = [
@@ -125,13 +132,15 @@ class LearningPathController extends Controller
                     'chapter_title' => $chapter->title,
                     'total_chapter_duration' => $totalChapterDuration,
                     'total_lessons' => $chapterTotalLessons,
-                    'lessons' => $chapterLessons,
+                    'lessons' => $lessonData,
                 ];
             }
 
             return $this->respondOk('Danh sách bài học của khoá học: ' . $course->name, [
                 'course_name' => $course->name,
                 'course_status' => $course->status,
+                'is_practical_course' => $course->is_practical_course,
+                'level' => $course->level,
                 'total_lesson' => $totalLesson,
                 'chapter_lessons' => $response,
             ]);
@@ -332,6 +341,11 @@ class LearningPathController extends Controller
             $course = $chapter->course;
             $courseLevel = $course->level;
 
+            $userPurchasedCourse = $this->hashPurchasedCourse($user->id, $course->id);
+            if (!$userPurchasedCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này hoặc quyền truy cập đã bị vô hiệu hóa');
+            }
+
             if ($courseLevel === 'advanced') {
                 $previousLesson = Lesson::query()
                     ->where('chapter_id', $lesson->chapter_id)
@@ -497,6 +511,145 @@ class LearningPathController extends Controller
 
             DB::commit();
             return $this->respondOk('Đánh dấu bài học hoàn thành thành công', $lessonProgress);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function completePracticeExercise(CompletePracticeExerciseRequest $request, $lessonId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            $lesson = Lesson::query()->find($lessonId);
+
+            if (!$lesson) {
+                return $this->respondNotFound('Bài học không tồn tại');
+            }
+
+            $chapter = $lesson->chapter;
+            $course = $chapter->course;
+
+            $userPurchasedCourse = $this->hashPurchasedCourse($user->id, $course->id);
+            if (!$userPurchasedCourse) {
+                return $this->respondForbidden('Bạn chưa mua khoá học này');
+            }
+
+            $previousLesson = Lesson::query()
+                ->where('chapter_id', $lesson->chapter_id)
+                ->where('order', '<', $lesson->order)
+                ->orderBy('order', 'desc')
+                ->first();
+
+            if ($previousLesson) {
+                $previousLessonProgress = LessonProgress::query()
+                    ->where('lesson_id', $previousLesson->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if (!$previousLessonProgress || !$previousLessonProgress->is_completed) {
+                    return $this->respondOk('Bạn cần hoàn thành bài học trước trước khi tiếp tục.');
+                }
+            }
+
+            $lessonable = $lesson->lessonable;
+
+            $lessonProgress = LessonProgress::query()->firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'lesson_id' => $lessonId,
+                ],
+                [
+                    'is_completed' => false,
+                    'last_time_video' => 0,
+                ]
+            );
+
+            if ($lessonProgress->is_completed) {
+                return $this->respondOk('Bài học này đã được hoàn thành trước đó.');
+            }
+
+
+            $quiz = Quiz::query()
+                ->with('questions.answers')
+                ->where('id', $lessonable->id)
+                ->first();
+
+            if (!$quiz) {
+                return $this->respondNotFound('Không tìm thấy bài kiểm tra.');
+            }
+
+            $answers = $request->input('answers');
+
+            $correctAnswersCount = 0;
+            $totalQuestions = $quiz->questions->count();
+            $isCorrect = true;
+
+            foreach ($answers as $answer) {
+                $question = $quiz->questions()->where('id', $answer['question_id'])->first();
+
+                if (!$question) {
+                    $isCorrect = false;
+                    break;
+                }
+
+                // Handle check answer single choice
+                if (is_numeric($answer['answer_id'])) {
+                    $selectedAnswer = $question->answers->where('id', $answer['answer_id'])->first();
+
+                    if ($selectedAnswer && $selectedAnswer->is_correct === 1) {
+                        $correctAnswersCount++;
+                    } else {
+                        $isCorrect = false;
+                    }
+                }
+
+                // Handle check answer multiple choice
+                if (is_array($answer['answer_id'])) {
+                    $correctAnswers = $question->answers->where('is_correct', true)->pluck('id')->toArray();
+
+                    if (!array_diff($answer['answer_id'], $correctAnswers) && !array_diff($correctAnswers, $answer['answer_id'])) {
+                        $correctAnswersCount++;
+                    } else {
+                        $isCorrect = false;
+                    }
+                }
+            }
+
+            if ($correctAnswersCount < $totalQuestions) {
+                DB::rollBack();
+                return $this->respondOk('Bạn cần trả lời chính xác tất cả các câu hỏi.', [
+                    'correct_answer' => $correctAnswersCount,
+                    'total_question' => $totalQuestions,
+                ]);
+            }
+
+            $lessonProgress->is_completed = true;
+
+            UserQuizSubmission::query()->create([
+                'user_id' => $user->id,
+                'quiz_id' => $lessonable->id,
+                'answers' => json_encode($answers)
+            ]);
+
+            $lessonProgress->update([
+                'is_completed' => true
+            ]);
+
+            $this->updateCourseProgress($course->id, $user->id);
+
+            DB::commit();
+
+            return $this->respondOk('Nộp bài thành công', [
+                'correct_answer' => $correctAnswersCount,
+                'total_question' => $totalQuestions,
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -727,6 +880,7 @@ class LearningPathController extends Controller
         return CourseUser::query()
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
+            ->where('access_status', 'active')
             ->exists();
     }
 
@@ -772,5 +926,4 @@ class LearningPathController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
 }
