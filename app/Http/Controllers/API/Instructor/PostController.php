@@ -184,8 +184,8 @@ class PostController extends Controller
             $data['slug'] = !empty($data['title'])
                 ? Str::slug($data['title'])
                 : $post->slug;
-            // Nếu bài viết đã bị từ chối (status = pending), gửi lại để kiểm duyệt
-            if ($post->status === 'pending') {
+            // Nếu bài viết đã bị từ chối (status = draft), gửi lại để kiểm duyệt
+            if ($post->status === 'draft') {
                 Approvable::query()->create([
                     'approver_id' => null, // Chưa có người kiểm duyệt
                     'status' => 'pending', // Trạng thái ban đầu là pending

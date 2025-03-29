@@ -339,6 +339,7 @@ Route::prefix('admin')->as('admin.')
             Route::delete('/gifts/{id}', [SpinController::class, 'deleteGift'])->name('gift.delete');
             Route::delete('/spin-config/delete/{id}', [SpinController::class, 'deleteSpinConfig'])->name('deleteSpinConfig');
             Route::post('/spin/toggle-selection/{type}/{id}', [SpinController::class, 'toggleSelection'])->name('toggle-selection');
+            Route::post('/spin/toggle-status', [SpinController::class, 'toggleSpinStatus'])->name('toggle-status');
         });
 
         #============================== ROUTE WITH DRAWALS =============================
