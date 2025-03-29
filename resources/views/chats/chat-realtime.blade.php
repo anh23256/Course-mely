@@ -1059,24 +1059,23 @@
                     window.Echo.leave('conversation.' + currentConversationId);
                 }
 
+                const data = new FormData();
+                data.append('conversationId', currentConversationId);
+                data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                navigator.sendBeacon("{{ route('admin.clear-currency-conversation') }}", data);
                 currentConversationId = $(this).data('private-id');
-                let userId = @json(auth()->id());
                 $('#showadd').hide();
 
                 window.Echo.join('conversation.' + currentConversationId)
-                    .here(users => {
-                        console.log(users)
-                        sendActiveUsersToServer(users, 'join');
-                    })
-                    .joining(user => {
-                        sendActiveUsersToServer([user], 'join');
-                    })
-                    .leaving(user => {
-                        sendActiveUsersToServer([user], 'leave');
-                    })
                     .listen('.MessageSent', function(event) {
+                        console.log(event);
                         $('#messagesList').append(renderMessageRealTime(event));
                         scrollToBottom();
+                    }).listen('.UserStatusChanged', function(event) {
+                        $('.show-status-user').text(
+                            event.is_online == 'online' ? '🟢' : '🔴'
+                        );
                     });
             });
         });
@@ -1135,23 +1134,18 @@
                 if (window.Echo) {
                     window.Echo.leave('conversation.' + currentConversationId);
                 }
-                currentConversationId = $(this).data('group-id'); // Lấy ID nhóm đã chọn
+
+                const data = new FormData();
+                data.append('conversationId', currentConversationId);
+                data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                navigator.sendBeacon("{{ route('admin.clear-currency-conversation') }}", data);
+
+                currentConversationId = $(this).data('group-id');
 
                 $('#showadd').show();
 
                 window.Echo.join('conversation.' + currentConversationId)
-                    .here(users => {
-                        console.log('Phòng oke');
-
-                        sendActiveUsersToServer(users, 'join');
-                    })
-                    .joining(user => {
-                        console.log('Phòng oke');
-                        sendActiveUsersToServer([user], 'join');
-                    })
-                    .leaving(user => {
-                        sendActiveUsersToServer([user], 'leave');
-                    })
                     .listen('.GroupMessageSent', function(event) {
                         $('#messagesList').append(renderMessageRealTime(event));
                         scrollToBottom();
@@ -1818,7 +1812,7 @@
         function renderMessageRealTime(response) {
 
             const messageClass = response.sender.id == userId ? 'sender' : 'received';
-            const time = formatTime(response.created_at);
+            const time = formatTime(response.sent_at);
             let messageContent = `<p>${response.content || ''}</p>`;
             let mediaPreview = '';
 
@@ -1959,6 +1953,7 @@
         }
 
         function getGroupInfo(channelId) {
+
             $.ajax({
                 url: "{{ route('admin.chats.getGroupInfo') }}",
                 method: 'GET',
@@ -2031,7 +2026,7 @@
         function sendActiveUsersToServer(users = null, type) {
 
             $.ajax({
-                url: "{{ route('admin.getUserJoinRoom') }}",
+                url: "{{ route('admin.clear-currency-conversation') }}",
                 type: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -2049,6 +2044,27 @@
                 }
             });
         }
+
+        window.addEventListener('beforeunload', function(e) {
+            const data = new FormData();
+            data.append('conversationId', currentConversationId);
+            data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+            navigator.sendBeacon("{{ route('admin.clear-currency-conversation') }}", data);
+        });
+
+        if (window.location.pathname.startsWith('/chat-room')) {
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    const data = new FormData();
+                    data.append('conversationId', currentConversationId);
+                    data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                    navigator.sendBeacon("{{ route('admin.clear-currency-conversation') }}", data);
+                }
+            });
+        }
+
 
         if (firstChanelId && firstChanelType && COUNTWEB == 1) {
 
@@ -2082,17 +2098,8 @@
                     window.Echo.join('conversation.' + currentConversationId)
                         .here(users => {
                             $(`.show-status-user`).text('🟢');
-                            sendActiveUsersToServer(users, 'join');
                         })
-                        .joining(user => {
-                            $(`.show-status-user`).text('🟢');
-                            console.log('User vừa vào:', user);
-                            sendActiveUsersToServer([user], 'join');
-                        })
-                        .leaving(user => {
-                            sendActiveUsersToServer([user], 'leave');
-                        })
-                        .listen('.MessageSent', function(event) {
+                        .listen('.GroupMessageSent', function(event) {
                             $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
                         });
@@ -2103,16 +2110,9 @@
                     $('#showadd').show();
 
                     window.Echo.join('conversation.' + currentConversationId)
-                        .here(users => {
-                            sendActiveUsersToServer(users, 'join');
-                        })
-                        .joining(user => {
-                            sendActiveUsersToServer([user], 'join');
-                        })
-                        .leaving(user => {
-                            sendActiveUsersToServer([user], 'leave');
-                        })
-                        .listen('.GroupMessageSent', function(event) {
+                        .listen('.MessageSent', function(event) {
+                            console.log(event);
+                            
                             $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
                         }).listen('.UserStatusChanged', function(event) {

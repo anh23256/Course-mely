@@ -16,6 +16,7 @@ use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
@@ -102,14 +103,12 @@ class PostController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Gửi thông báo đến admin và employee
             $roleUser = ['employee', 'admin'];
             $admins = User::whereHas('roles', function ($query) use ($roleUser) {
                 $query->whereIn('name', $roleUser);
             })->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new PostSubmittedForApprovalNotification($post));
-            }
+
+            Notification::send($admins, new PostSubmittedForApprovalNotification($post));
 
             DB::commit();
 

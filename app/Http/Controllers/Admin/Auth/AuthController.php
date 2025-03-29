@@ -89,7 +89,6 @@ class AuthController extends Controller
         try {
             $user = $request->user();
             Log::info('User logged out', ['user' => $user]);
-            broadcast(new UserStatusChanged($user->id));
             Auth::logout();
             session()->flush();
             return redirect()->route('admin.login');

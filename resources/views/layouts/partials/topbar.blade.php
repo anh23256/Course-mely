@@ -614,6 +614,8 @@
                 .notification((notification) => {
                     triggerBellAnimation()
 
+                    console.log(notification);
+
                     Toastify({
                         text: `🔔 ${notification.message}`,
                         duration: 5000,
@@ -654,6 +656,43 @@
                     }
                 });
             }, 300000);
+
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const href = this.getAttribute('href');
+                    if (href && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+                        sessionStorage.setItem('isInternalNavigation', 'true');
+                    }
+                });
+            });
+
+            window.addEventListener('beforeunload', function() {
+                const navEntry = performance.getEntriesByType("navigation")[0];
+                const isReloading = navEntry && navEntry.type === 'reload';
+
+                if (isReloading) {
+                    sessionStorage.setItem('isReloading', 'true');
+                } else {
+                    sessionStorage.setItem('isReloading', 'false');
+                }
+
+                const isInternal = sessionStorage.getItem('isInternalNavigation') === 'true';
+
+                if (!isReloading && !isInternal) {
+                    const data = new FormData();
+                    data.append('type', 'leave');
+                    data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                    navigator.sendBeacon("{{ route('admin.getUserOnline') }}", data);
+                }
+
+                sessionStorage.removeItem('isInternalNavigation');
+            });
+
+            window.addEventListener('load', function() {
+                sessionStorage.removeItem('isReloading');
+                sessionStorage.removeItem('isInternalNavigation');
+            });
         });
     </script>
 @endpush

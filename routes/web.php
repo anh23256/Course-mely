@@ -430,5 +430,6 @@ Route::prefix('admin')->as('admin.')
             });
 
             Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
-            Route::post('chat/', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+            Route::post('user-status', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+            Route::post('clear-currency-conversation', [ChatController::class, 'clearCurrentChat'])->name('clear-currency-conversation');
     });
