@@ -223,6 +223,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Lấy danh sách phần thưởng có thể trúng
             Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
+
+            //Kiểm tra trạng thái vòng quay
+            Route::get('/status', [SpinController::class, 'getSpinStatus']);
         });
     });
     #============================== ROUTE TRANSACTION =============================
