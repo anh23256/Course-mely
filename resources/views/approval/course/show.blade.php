@@ -793,7 +793,8 @@
                 success: function(response) {
                     console.log(response);
                     if (response.data) {
-                        let progress = parseFloat(response.data.progress).toFixed(2) ?? 0;
+                        let progress = parseFloat(response.data.progress) || 0;
+                        progress = Number.isInteger(progress) ? progress : progress.toFixed(2);
                         $('#progressCourse').html(progress + '%');
                         $('#progressCourseStyle').css('width', progress + '%');
                         $('#progressCourseStyle').attr('aria-valuenow', progress);
@@ -823,7 +824,11 @@
                         let completion = response.data.completionStatus;
                         renderCriteria("#criteria_course_overview", completion.course_overview);
                         renderCriteria("#criteria_course_curriculum", completion.course_curriculum);
-                        renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        if (completion.course?.practice_exercise && "{{ $approval->course->is_practical_course }}" == 1) {
+                            renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        } else {
+                            renderCriteria("#criteria_course_objectives", completion.course_objectives);
+                        }
                     }
                 }
             });

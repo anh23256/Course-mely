@@ -11,5 +11,7 @@ class ConversationUser extends Model
 
     protected $fillable = ['conversation_id', 'user_id', 'is_blocked', 'last_read_at'];
 
-    
+    public function Conversation(){
+        return $this->belongsTo(Conversation::class);
+    }
 }

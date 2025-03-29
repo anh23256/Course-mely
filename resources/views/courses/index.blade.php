@@ -159,6 +159,7 @@
                                             <th>STT</th>
                                             <th>Ảnh bìa</th>
                                             <th>Tên khóa học</th>
+                                            <th>Khóa học</th>
                                             <th>Danh mục</th>
                                             <th>Giảng viên</th>
                                             <th>Trạng thái</th>
@@ -178,6 +179,11 @@
                                                     @endif
                                                 </td>
                                                 <td class="id">{{ $course->name }}</td>
+                                                <td class="id">
+                                                    <span class="badge {{ $course->is_practical_course ? 'bg-info' : 'bg-success' }}">
+                                                        {{ $course->is_practical_course ? 'Bài kiểm tra' : 'Khóa học đầy đủ' }}
+                                                    </span>
+                                                </td>
                                                 <td class="id">{{ $course->category->name ?? '' }}</td>
                                                 <td class="id">{{ $course->user->name ?? '' }}</td>
 

@@ -26,7 +26,9 @@
                     <div class="card-header align-items-center d-flex">
                         <h4 class="card-title mb-0 flex-grow-1">{{ $subTitle ?? '' }}</h4>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#importModal">Import dữ liệu</button>
+                            <button class="btn btn-soft-info btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="ri-upload-cloud-line align-middle me-1"></i> Import
+                            </button>
                             <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">Thêm mới </a>
                         </div>
                     </div>
@@ -47,7 +49,9 @@
                                     @foreach ($roles as $role)
                                         <tr>
                                             <td class="fw-medium">{{ $loop->iteration }}</td>
-                                            <td>{{ $role->name }}</td>
+                                            <td>
+                                                <span class="badge bg-primary-subtle text-primary">{{ $role->name }}</span>
+                                            </td>
                                             <td>{{ $role->description }}</td>
                                             <td>{{ $role->created_at }}</td>
                                             <td>
@@ -73,23 +77,38 @@
     </div>
 
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="importModalLabel">Import Dữ Liệu</h5>
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-primary" id="importModalLabel">
+                        <i class="ri-upload-cloud-line me-2"></i>Import Dữ Liệu
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <a href="{{ asset('storage/csv/roles_import_template.xlsx') }}" download class="btn btn-outline-primary btn-sm">Tải Mẫu</a>
+                    <div class="mb-3 text-center">
+                        <a href="{{ asset('storage/csv/roles_import_template.xlsx') }}" 
+                           download 
+                           class="btn btn-outline-primary btn-sm mb-3">
+                            <i class="ri-download-line me-1"></i>Tải Mẫu
+                        </a>
+                        <p class="text-muted mb-0">Tải mẫu Excel để import dữ liệu vai trò</p>
                     </div>
                     <form action="{{ route('admin.roles.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-3">
-                            <label for="importFile" class="form-label">Chọn file để import:</label>
-                            <input type="file" class="form-control" name="file" accept=".xlsx,.xls,.csv" required>
+                            <label for="importFile" class="form-label text-muted">Chọn file để import:</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   name="file" 
+                                   accept=".xlsx,.xls,.csv" 
+                                   required>
                         </div>
-                        <button type="submit" class="btn btn-success">Tiến hành Import</button>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-upload-cloud-line me-1"></i>Tiến hành Import
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

@@ -6,8 +6,8 @@
                     <th>STT</th>
                     <th>Tên giảng viên</th>
                     <th>Email</th>
-                    <th>Trạng thái</th>
                     <th>Người kiểm duyệt</th>
+                    <th>Trạng thái</th>
                     <th>Ngày gửi yêu cầu</th>
                     <th>Ngày kiểm duyệt</th>
                     <th>Hành động</th>
@@ -17,31 +17,43 @@
                 @foreach ($approvals as $approval)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $approval->user?->name }}</td>
-                        <td>{{ $approval->user?->email }}</td>
+                        <td>{{ $approval->user->name ?? '' }}</td>
+                        <td>{{ $approval->user->email ?? '' }}</td>
+                        <td>
+                            {!! !empty($approval->approver->name)
+                                ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>' 
+                                : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
+                        </td>
                         <td>
                             @if ($approval->status == 'pending')
-                                <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
+                                <span class="badge bg-warning text-dark"><i class="bx bx-time-five"></i> Chờ xử lý</span>
                             @elseif($approval->status == 'approved')
-                                <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
+                                <span class="badge bg-success text-white"><i class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
                             @else
-                                <span class="btn btn-sm btn-soft-danger">Từ chối</span>
+                                <span class="badge bg-danger text-white"><i class="bx bx-x-circle"></i> Từ chối</span>
                             @endif
                         </td>
                         <td>
-                            {!! $approval->approver?->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
-                        </td>
-                        <td>{!! $approval->request_date
-                            ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y')
-                            : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
-                        <td>
-                            {!! $approval->approved_at
-                                ? \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y')
-                                : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}
+                            {!! $approval->request_date 
+                                ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' . \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') . '</span>'
+                                : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
                         </td>
                         <td>
-                            <a href="{{ route('admin.approvals.instructors.show', $approval->id) }}"
-                                class="btn btn-sm btn-soft-secondary ">Chi tiết</a>
+                            @if($approval->approved_at)
+                                <span class="badge bg-success text-white"><i class="bx bx-calendar-check"></i> {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
+                            @elseif($approval->rejected_at)
+                                <span class="badge bg-danger text-white"><i class="bx bx-calendar-x"></i> {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
+                            @else
+                                <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>
+                            @endif
+                        </td>                
+                        <td>
+                            <a
+                                href="{{ route('admin.approvals.instructors.show', $approval->id) }}">
+                                <button class="btn btn-sm btn-info edit-item-btn">
+                                    <span class="ri-eye-line"></span>
+                                </button>
+                            </a>
                         </td>
                     </tr>
                 @endforeach

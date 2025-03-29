@@ -34,15 +34,21 @@ class Post extends Model
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
-    public function profile(){
+
+    public function profile()
+    {
         return $this->belongsTo(User::class);
     }
-    public function category(){
+
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
+    
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');

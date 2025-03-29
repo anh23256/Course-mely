@@ -57,9 +57,9 @@
         </div>
         <!-- end page title -->
 
-        <div class="row">
+        <div class="row cursor-pointer">
             <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card bg-white">
+                <div class="card stats-card total-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-primary">
                             <i class="ri-user-3-line"></i>
@@ -70,7 +70,7 @@
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card bg-white">
+                <div class="card stats-card approved-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-success">
                             <i class="ri-user-follow-line"></i>
@@ -81,7 +81,7 @@
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card bg-white">
+                <div class="card stats-card pending-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-warning">
                             <i class="ri-user-unfollow-line"></i>
@@ -92,7 +92,7 @@
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card bg-white">
+                <div class="card stats-card rejected-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-danger">
                             <i class="ri-lock-line"></i>
