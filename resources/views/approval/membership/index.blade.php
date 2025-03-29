@@ -171,23 +171,20 @@
                         <form>
                             <div class="row">
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên khóa học</label>
-                                    <input class="form-control form-control-sm" name="course_name_approved"
-                                        type="text" placeholder="Nhập tên khóa học..."
-                                        value="{{ request()->input('account_holder') ?? '' }}" data-advanced-filter>
-                                </div>
-                                <div class="col-md-3">
                                     <label class="form-label">Tên giảng viên</label>
-                                    <input class="form-control form-control-sm" name="user_name_approved" type="text"
-                                        placeholder="Nhập tên giảng viên..."
-                                        value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                    <input class="form-control form-control-sm" name="membershipPlan_instructor_name"
+                                        type="text" placeholder="Nhập tên đăng kí..."
+                                        value="{{ request()->input('membershipPlan_instructor_name') ?? '' }}"
+                                        data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên người kiểm duyệt</label>
-                                    <input class="form-control form-control-sm" name="approver_name_approved"
-                                        type="text" placeholder="Nhập tên người kiểm duyệt..."
-                                        value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control form-control-sm" name="membershipPlan_instructor_email"
+                                        type="text" placeholder="Nhập tên giảng viên..."
+                                        value="{{ request()->input('membershipPlan_instructor_email') ?? '' }}"
+                                        data-advanced-filter>
                                 </div>
+
                                 <div class="col-md-3">
                                     <label for="statusItem" class="form-label">Trạng thái kiểm duyệt</label>
                                     <select class="form-select form-select-sm" name="status" id="statusItem"
@@ -220,13 +217,14 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>STT</th>
-                                            <th>Tên khoá học</th>
+                                            <th>Tên gói</th>
                                             <th>Giảng viên</th>
-                                            <th>Hình ảnh</th>
-                                            <th>Giá</th>
+                                            <th>Email</th>
                                             <th>Người kiểm duyệt</th>
+                                            <th>Giá</th>
+                                            <th>Thời hạn</th>
                                             <th>Trạng thái</th>
-                                            <th>Ngày gửi yêu cầu</th>
+                                            <th>Ngày yêu cầu</th>
                                             <th>Ngày kiểm duyệt</th>
                                             <th>Hành động</th>
                                         </tr>
@@ -235,53 +233,25 @@
                                         @foreach ($approvals as $approval)
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
-                                                <td>{{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 50) }}
+                                                <td>{{ $approval->membershipPlan->name }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->name }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->email }}</td>
+                                                <td>{{ $approval->approver->name }}</td>
+                                                <td>{{ number_format($approval->membershipPlan->price, 0, ',', '.') }}đ
                                                 </td>
-                                                <td>{{ $approval->course->user->name ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->duration_months }} tháng</td>
                                                 <td>
-                                                    @if ($approval->course && $approval->course->thumbnail)
-                                                        <img style="height: 80px"
-                                                            src="{{ $approval->course->thumbnail }}" alt=""
-                                                            class="w-100 object-fit-cover">
-                                                    @else
-                                                        Không có ảnh
+                                                    @if ($approval->status === 'pending')
+                                                        <span class="badge bg-warning">Chờ duyệt</span>
+                                                    @elseif ($approval->status === 'approved')
+                                                        <span class="badge bg-success">Đã duyệt</span>
+                                                    @elseif ($approval->status === 'rejected')
+                                                        <span class="badge bg-danger">Từ chối</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí' }}
-                                                </td>
-                                                <td>
-                                                    {!! $approval->approver->name ?? '<span class="btn btn-sm btn-soft-success">Hệ thống đã xử lý</span>' !!}
-                                                </td>
-                                                <td>
-                                                    @if ($approval->status == 'pending')
-                                                        <span class="btn btn-sm btn-soft-warning">Chờ xử lý</span>
-                                                    @elseif($approval->status == 'approved')
-                                                        <span class="btn btn-sm btn-soft-success">Đã kiểm duyệt</span>
-                                                    @elseif($approval->status == 'modify_request')
-                                                        <span class="btn btn-sm btn-soft-warning">Sửa đổi nội dung</span>
-                                                    @else
-                                                        <span class="btn btn-sm btn-soft-danger">Từ chối</span>
-                                                    @endif
-                                                </td>
-                                                <td>{!! $approval->request_date
-                                                    ? \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y')
-                                                    : '<span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>' !!}</td>
-                                                <td>
-                                                    @if ($approval->approved_at)
-                                                        {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}
-                                                    @elseif($approval->rejected_at)
-                                                        {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}
-                                                    @else
-                                                        <span class="btn btn-sm btn-soft-warning">Chưa kiểm duyệt</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <a href="{{ route('admin.approvals.courses.show', $approval->id) }}">
-                                                        <button class="btn btn-sm btn-info edit-item-btn">
-                                                            <span class="ri-eye-line"></span>
-                                                        </button>
-                                                    </a>
-                                                </td>
+                                                <td>{{ $approval->request_date }}</td>
+                                                <td>{{ $approval->approved_at }}  </td>
+
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -304,7 +274,7 @@
 
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
+        var routeUrlFilter = "{{ route('admin.approvals.memberships.index') }}";
 
         function updateRange() {
             var minValue = $('#amountMinRange').val();
@@ -327,4 +297,53 @@
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            function fetchData() {
+                let advancedFormData = $('#advancedSearch form').serialize(); // Lấy dữ liệu form advanced search
+                let dropdownFormData = $('#filterDropdown').closest('.dropdown').find('form')
+            .serialize(); // Lấy dữ liệu form dropdown filter
+
+                let formData = advancedFormData + '&' + dropdownFormData; // Gộp 2 form thành 1 request
+
+                $.ajax({
+                    url: "{{ route('admin.approvals.memberships.index') }}",
+                    type: "GET",
+                    data: formData,
+                    beforeSend: function() {
+                        $('#table-container').html(
+                        '<div class="text-center">Đang tải...</div>'); // Hiển thị loading
+                    },
+                    success: function(response) {
+                        $('#table-container').html(response.html); // Cập nhật bảng dữ liệu
+                    },
+                    error: function(xhr) {
+                        alert("Đã có lỗi xảy ra: " + xhr.responseText); // Hiển thị lỗi nếu có
+                    }
+                });
+            }
+
+            // Bấm nút "Áp dụng" để lọc dữ liệu
+            $('#applyAdvancedFilter, #applyFilter').click(function(e) {
+                e.preventDefault();
+                fetchData(); // Gọi AJAX để cập nhật dữ liệu
+            });
+
+            // Bấm nút "Reset" để xóa bộ lọc
+            $('#resetFilter').click(function(e) {
+                e.preventDefault();
+                $('#advancedSearch form')[0].reset(); // Reset form advanced
+                $('#filterDropdown').closest('.dropdown').find('form')[0]
+            .reset(); // Reset form dropdown filter
+                fetchData(); // Gọi AJAX để lấy dữ liệu mặc định
+            });
+
+            // Lọc ngay khi thay đổi input/select
+            $('input[data-advanced-filter], select[data-advanced-filter], input[data-filter], select[data-filter]')
+                .on("change", function() {
+                    fetchData();
+                });
+        });
+    </script>
 @endpush

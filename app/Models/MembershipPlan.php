@@ -38,4 +38,9 @@ class MembershipPlan extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
