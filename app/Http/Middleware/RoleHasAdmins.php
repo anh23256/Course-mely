@@ -36,14 +36,6 @@ class RoleHasAdmins
         //     // Nếu không phải banners hoặc posts, từ chối quyền truy cập
         //     return abort(403, 'Bạn không có quyền truy cập vào hệ thống này.');
         // }
-        if (
-            Auth::check() && (
-                Auth::user()->hasRole('admin') || Auth::user()->hasRole('employee')
-            ) &&
-            Auth::user()->email_verified_at == null
-        ) {
-            return redirect('email');
-        }
 
         return abort(403, 'Bạn không có quyền truy cập vào hệ thống.');
     }
