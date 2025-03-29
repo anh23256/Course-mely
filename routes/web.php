@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApprovalMembershipController;
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -316,6 +317,13 @@ Route::prefix('admin')->as('admin.')
                     Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
                     Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
                 });
+
+                Route::prefix('memberships')
+                    ->as('memberships.')
+                    ->group(function () {
+                        Route::get('/', [ApprovalMembershipController::class, 'index'])->name('index');
+                        
+                    });
             });
 
         #============================== ROUTE INVOICE =============================

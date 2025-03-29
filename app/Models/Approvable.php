@@ -46,4 +46,9 @@ class Approvable extends Model
     {
         return $this->belongsTo(Course::class, 'approvable_id');
     }
+
+    public function membershipPlan()
+    {
+        return $this->belongsTo(MembershipPlan::class, 'approvable_id');
+    }
 }

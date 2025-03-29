@@ -16,6 +16,7 @@ class PostController extends Controller
     public function getPost()
     {
         try {
+
             $posts = Post::query()
             ->select('id','user_id', 'category_id' ,'title', 'thumbnail', 'created_at', 'views')
             ->with(
@@ -28,8 +29,9 @@ class PostController extends Controller
             ->limit(3)
             ->get();
 
-            return $this->respondOk('Danh sách bài viết', $posts);
 
+            
+            return $this->respondOk('Danh sách bài viết', $posts);
         } catch (\Exception $e) {
 
             $this->logError($e);
