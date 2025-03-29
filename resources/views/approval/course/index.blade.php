@@ -2,20 +2,21 @@
 
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
-    <style>
+    <<<<<<< HEAD=======<style>
         .hover-effect {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .hover-effect:hover {
-            transform: translateY(-5px);
-            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
         }
-    </style>
-@endpush
+        </style>
+        >>>>>>> 506afa53f62202415d80427f335e1ea9e32e0320
+    @endpush
 
-@section('content')
-    <div class="container-fluid">
+    @section('content')
+        <div class="container-fluid">
 
         <!-- start page title -->
         <div class="row">
@@ -335,29 +336,29 @@
     </div>
 @endsection
 
-@push('page-scripts')
-    <script>
-        var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
+    @push('page-scripts')
+        <script>
+            var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
 
-        function updateRange() {
-            var minValue = $('#amountMinRange').val();
-            var maxValue = $('#amountMaxRange').val();
-            document.getElementById('amountMin').textContent = formatCurrency(minValue) + ' VND';
-            document.getElementById('amountMax').textContent = formatCurrency(maxValue) + ' VND';
-        }
+            function updateRange() {
+                var minValue = $('#amountMinRange').val();
+                var maxValue = $('#amountMaxRange').val();
+                document.getElementById('amountMin').textContent = formatCurrency(minValue) + ' VND';
+                document.getElementById('amountMax').textContent = formatCurrency(maxValue) + ' VND';
+            }
 
-        function formatCurrency(value) {
-            return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
+            function formatCurrency(value) {
+                return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
 
-        updateRange();
+            updateRange();
 
-        $(document).on('click', '#resetFilter', function() {
-            window.location = routeUrlFilter;
-        });
-    </script>
-    <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
-    <script src="{{ asset('assets/js/common/filter.js') }}"></script>
-    <script src="{{ asset('assets/js/common/search.js') }}"></script>
-    <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
-@endpush
+            $(document).on('click', '#resetFilter', function() {
+                window.location = routeUrlFilter;
+            });
+        </script>
+        <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
+        <script src="{{ asset('assets/js/common/filter.js') }}"></script>
+        <script src="{{ asset('assets/js/common/search.js') }}"></script>
+        <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+    @endpush

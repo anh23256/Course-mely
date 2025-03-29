@@ -130,9 +130,9 @@ class ApprovalPostController extends Controller
                     'published_at' => now(), // Đặt thời gian xuất bản là thời điểm duyệt
                 ]);
             } else {
-                // Khi từ chối, giữ trạng thái là pending để giảng viên chỉnh sửa
+                // Khi từ chối, chuyển trạng thái sang draft để giảng viên chỉnh sửa
                 $approval->approvable->update([
-                    'status' => 'pending',
+                    'status' => 'draft',
                 ]);
             }
                 // Gửi thông báo đến giảng viên

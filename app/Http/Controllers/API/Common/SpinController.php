@@ -8,6 +8,7 @@ use App\Models\Gift;
 use App\Models\Spin;
 use App\Models\SpinConfig;
 use App\Models\SpinHistory;
+use App\Models\SpinSetting;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -19,19 +20,37 @@ use Illuminate\Support\Str;
 
 class SpinController extends Controller
 {
+    // API kiểm tra trạng thái vòng quay
+    public function getSpinStatus(Request $request)
+    {
+        $spinSetting = SpinSetting::first();
+        if (!$spinSetting) {
+            return response()->json([
+                'status' => 'inactive',
+                'message' => 'Vòng quay chưa được cấu hình!'
+            ], 503); // 503 Service Unavailable
+        }
+
+        return response()->json([
+            'status' => $spinSetting->status,
+            'message' => $spinSetting->status === 'active' 
+                ? 'Vòng quay đang hoạt động' 
+                : 'Vòng quay đang bảo trì, vui lòng quay lại sau'
+        ]);
+    }
     // Lấy danh sách phần thưởng từ coupons, gifts và thêm phần thưởng mặc định
     private function getAllRewards()
 {
     // Lấy từ SpinConfig và chia "Mã giảm giá ngẫu nhiên" thành 4 ô
     $rewards = SpinConfig::all()->flatMap(function ($config) {
-        if ($config->name === 'Mã giảm giá ngẫu nhiên') {
+        if ($config->name === 'Mã giảm giá') {
             $couponProbability = $config->probability / 4; // Chia đều cho 4 ô
             $couponRewards = [];
             for ($i = 1; $i <= 4; $i++) {
                 $couponRewards[] = [
                     'type' => 'coupon',
                     'id' => null,
-                    'name' => "Mã giảm giá ngẫu nhiên $i",
+                    'name' => "Mã giảm giá $i",
                     'probability' => $couponProbability,
                 ];
             }

@@ -39,6 +39,9 @@
         </li>
 
         <li class="nav-item">
+            <a class="nav-link menu-link" href="{{ route('admin.approvals.memberships.index') }}">
+                <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Kiểm duyệt gói thành viên</span>
+            </a>
             <a class="nav-link menu-link" href="{{ route('admin.approvals.courses.index') }}">
                 <i class="las la-book-reader"></i> <span data-key="t-authentication">Kiểm duyệt khoá học</span>
             </a>
@@ -47,9 +50,6 @@
             </a>
             <a class="nav-link menu-link" href="{{ route('admin.approvals.posts.index') }}">
                 <i class="las la-chalkboard-teacher"></i> <span data-key="t-authentication">Kiểm duyệt bài viết</span>
-            </a>
-            <a class="nav-link menu-link" href="{{ route('admin.approvals.courses.index') }}">
-                <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Gói thành viên</span>
             </a>
         </li>
 

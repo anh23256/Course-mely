@@ -72,8 +72,5 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
      */
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('notification.' . $this->notifiableId); // Gửi tới admin
-        Log::info('Broadcasting on channel: ' . $channel->name);
-        return $channel;
     }
 }
