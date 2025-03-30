@@ -248,7 +248,7 @@ class SpinController extends Controller
                         'user_id' => $user->id,
                         'coupon_id' => $couponId,
                         'status' => 'unused',
-                        'applied_at' => now(),
+                        'applied_at' => null,
                         'expired_at' => $expireDate,
                         'created_at' => now(),
                         'updated_at' => now(),

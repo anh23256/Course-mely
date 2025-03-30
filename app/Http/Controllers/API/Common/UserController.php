@@ -609,7 +609,7 @@ class UserController extends Controller
                     $query->whereNull('expired_at')
                         ->orWhere('expired_at', '>', now());
                 })
-                ->select('id', 'user_id', 'coupon_id', 'applied_at', 'expired_at', 'status')
+                ->select('id', 'user_id', 'coupon_id', 'expired_at', 'status')
                 ->get();
 
             if (!$couponUse) {

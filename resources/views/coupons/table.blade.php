@@ -32,7 +32,7 @@
                     </th>
                     <th>ID</th>
                     <th>Người tạo</th>
-                    <th>Tên mã giảm giá</th>
+                    <th>Chương trình</th>
                     <th>Mã giảm giá</th>
                     <th>Giảm giá</th>
                     <th>Trạng Thái</th>
@@ -74,10 +74,10 @@
                                 </span></td>
                         @endif
                         @if (empty($coupon_deleted_at) && !$coupon->deleted_at)
-                            <td class="date">{{ $coupon->start_date }}</td>
-                            <td class="date">{{ $coupon->expire_date }}</td>
+                        <td class="date">{{ $coupon->start_date ? \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') : '' }}</td>
+                        <td class="date">{{ $coupon->expire_date ? \Carbon\Carbon::parse($coupon->expire_date)->format('d/m/Y') : '' }}</td>
                         @endif
-                        <td class="date">{{ $coupon->used_count }}</td>
+                        <td class="date">{{ $coupon->max_usage }}</td>
                         @if (!empty($coupon_deleted_at) && $coupon->deleted_at)
                             <td class="date">{{ $coupon->deleted_at }}</td>
                         @else

@@ -234,12 +234,12 @@ class QuizImport implements ToCollection, WithHeadingRow, WithChunkReading, With
 
     public function chunkSize(): int
     {
-        return 100;
+        return 50;
     }
 
     public function batchSize(): int
     {
-        return 100;
+        return 50;
     }
 
     public function getErrors(): array

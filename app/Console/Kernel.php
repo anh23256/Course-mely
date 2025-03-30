@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('memberships:deactivate-expired')->everyMinute();
         $schedule->command('user:check-activity')->everyMinute();
         $schedule->command('coupons:update-expired-coupons')->dailyAt('00:00');
+        // $schedule->command('coupons:update-expired-coupons')->everyMinute();
     }
 
     /**

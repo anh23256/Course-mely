@@ -49,7 +49,6 @@ class SpinReceivedNotification extends Notification
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('notification.' . $this->userId);
-        return $channel;
+        return new PrivateChannel('notification.' . $this->userId);
     }
 }

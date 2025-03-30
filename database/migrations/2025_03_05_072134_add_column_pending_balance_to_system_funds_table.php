@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('system_funds', function (Blueprint $table) {
-            $table->decimal('pending_balance', 10, 2)->default(0)->after('balance');
+            $table->decimal('pending_balance', 18, 2)->default(0)->after('balance');
         });
     }
 

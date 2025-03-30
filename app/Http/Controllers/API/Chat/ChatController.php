@@ -43,8 +43,6 @@ class ChatController extends Controller
                 ->with('users:id,name,avatar')
                 ->where('owner_id', $user->id)
                 ->where('type', 'group')
-                ->whereNull('conversationable_id')
-                ->whereNull('conversationable_type')
                 ->withCount('users')
                 ->get()
                 ->map(function ($conversation) {

@@ -54,7 +54,7 @@ class InstructorApprovalNotification extends Notification implements ShouldBroad
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" đã được kiểm duyệt.',
+            'message' => 'Chúc mừng bạn đã trở thành giảng viên của CourseMeLy',
         ];
     }
 
@@ -68,7 +68,7 @@ class InstructorApprovalNotification extends Notification implements ShouldBroad
         return new BroadcastMessage([
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" đã được kiểm duyệt.',
+            'message' => 'Chúc mừng bạn đã trở thành giảng viên của CourseMeLy',
         ]);
     }
 
