@@ -257,9 +257,11 @@
                     </ul>
                 </div>
             @endcanany
+            @canany(['spin.create', 'spin.edit', 'spin.read', 'spin.delete'])
             <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
                 <i class=" bx bx-gift"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
             </a>
+            @endcanany
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
                 <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                     <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
