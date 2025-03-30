@@ -3,13 +3,8 @@
 @push('page-css')
     <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
-
-    <style>
-
-    </style>
 @endpush
 
 @section('content')
@@ -113,8 +108,7 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value"
-                                    data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
+                                <span class="counter-value" data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -1522,25 +1516,33 @@
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
 
-                loadCoursesContent({
-                    page: page
-                });
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadCoursesContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-instructors a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadInstructorsContent({
-                    page: page
-                });
+
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadInstructorsContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-users a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadUsersContent({
-                    page: page
-                });
+
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadUsersContent(dataFilter);
             });
 
             function loadCoursesContent(dataFilter) {
