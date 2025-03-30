@@ -25,6 +25,7 @@ class StoreSpinRequest extends FormRequest
         return [
             'type' => ['required',Rule::unique('spin_configs')],
             'name' => 'required|string',
+            'cells'=>'required|numeric',
             'probability' => 'required|numeric|min:0|max:100',
         ];
     }
@@ -35,6 +36,8 @@ class StoreSpinRequest extends FormRequest
             'type.unique'   => 'Loại quà đã tồn tại',
             'name.required'      => 'Tên quà không được để trống',
             'name.string' => 'Tên quà phải là chuỗi kí tự',
+            'cells.required'     => 'Số ô quà không được để trống',
+            'cells.numeric'     => 'Số ô quà phải là số',
             'probability.required'     => 'Tỉ lệ trúng không được để trống',
             'probability.numeric'     => 'Tỉ lệ trúng phải là số',
             'probability.max:100'     => 'Tỉ lệ trúng tối đa là 100%',

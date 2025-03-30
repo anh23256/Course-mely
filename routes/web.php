@@ -340,7 +340,7 @@ Route::prefix('admin')->as('admin.')
         });
 
         Route::prefix('spins')->as('spins.')->group(function () {
-            Route::get('/', [SpinController::class, 'index'])->name('index');
+            Route::get('/', [SpinController::class, 'index'])->name('index')->can('spin.index');
             Route::post('/spin-config/store', [SpinController::class, 'storeSpinConfig'])->name('spin-config.store');
             Route::put('/spin-configs/{id}', [SpinController::class, 'updateSpinConfig'])->name('spin-config.update');
             Route::post('/gifts', [SpinController::class, 'addGift'])->name('gift.store');

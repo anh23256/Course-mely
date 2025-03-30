@@ -182,7 +182,7 @@ class SpinController extends Controller
             DB::beginTransaction();
 
             $data = $request->all();
-
+            // dd( $data); die;
             $spinConfig = SpinConfig::create($data);
             DB::commit();
             return redirect()->back()->with('success', 'Thêm ô quà thành công!');

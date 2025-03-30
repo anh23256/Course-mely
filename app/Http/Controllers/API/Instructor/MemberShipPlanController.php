@@ -377,17 +377,17 @@ class MemberShipPlanController extends Controller
 //            ];
 //        }
 
-        $avgRatings = Rating::query()
-            ->whereIn('course_id', function ($query) use ($instructor) {
-                $query->select('id')->from('courses')->where('user_id', $instructor->id);
-            })->avg('rate');
+        // $avgRatings = Rating::query()
+        //     ->whereIn('course_id', function ($query) use ($instructor) {
+        //         $query->select('id')->from('courses')->where('user_id', $instructor->id);
+        //     })->avg('rate');
 
-        if ($avgRatings < 3.0) {
-            return [
-                'eligible' => false,
-                'message' => 'Đánh giá trung bình của bạn cần đạt ít nhất 3.0/5.0'
-            ];
-        }
+        // if ($avgRatings < 3.0) {
+        //     return [
+        //         'eligible' => false,
+        //         'message' => 'Đánh giá trung bình của bạn cần đạt ít nhất 3.0/5.0'
+        //     ];
+        // }
 
         return [
             'eligible' => true,
