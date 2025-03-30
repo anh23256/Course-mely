@@ -58,13 +58,16 @@ class LessonVideoController extends Controller
                 if (!$muxVideoUrl) {
                     return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại');
                 }
+                
+                sleep(5);
+                $duration = $this->videoUploadService->getVideoDurationToMux($muxVideoUrl['asset_id']);
 
                 $video = Video::query()->create([
                     'title' => $data['title'],
                     'url' => $dataFile['secure_url'],
                     'asset_id' => $muxVideoUrl['asset_id'],
                     'mux_playback_id' => $muxVideoUrl['playback_id'],
-                    'duration' => $dataFile['duration'],
+                    'duration' => $duration,
                 ]);
             }
 

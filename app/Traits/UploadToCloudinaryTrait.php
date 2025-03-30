@@ -92,11 +92,9 @@ trait UploadToCloudinaryTrait
             }
 
             if ($fullInfo) {
-                $duration = $uploadResult->getDuration() ?? null;
                 $publicId = $uploadResult->getPublicId() ?? null;
                 return [
                     'secure_url' => $secure_url,
-                    'duration' => $duration,
                     'public_id' => $publicId,
                 ];
             }

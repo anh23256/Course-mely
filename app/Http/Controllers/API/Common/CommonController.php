@@ -4,21 +4,26 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Common\UploadImageRequest;
 use App\Models\Course;
 use App\Models\MembershipPlan;
 use App\Models\Rating;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CommonController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
+
+    const FOLDER_NAME = 'uploads';
 
     public function instructorOrderByCountCourse(Request $request)
     {
@@ -240,6 +245,27 @@ class CommonController extends Controller
             ]);
 
             return $this->respondOk('Danh sách gói membership của giảng viên: ' . $user->name, $memberShipPlans);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function uploadImage(UploadImageRequest $request)
+    {
+        try {
+            $file = $request->file('image');
+
+            $filePath = $this->uploadToLocal($file, self::FOLDER_NAME);
+
+            if (!$filePath || is_array($filePath)) {
+                return $this->respondError('Tải ảnh lên thất bại');
+            }
+
+            $fullPath = Storage::url($filePath);
+
+            return $this->respondOk('Tải ảnh lên thành công', $fullPath);
         } catch (\Exception $e) {
             $this->logError($e);
 

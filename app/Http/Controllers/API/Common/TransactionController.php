@@ -513,15 +513,6 @@ class TransactionController extends Controller
                     ->where('access_status', '!=', 'active')
                     ->update(['access_status' => 'active']);
 
-                $spin = Spin::query()->create([
-                    'user_id' => $userId,
-                    'spin_count' => 1,
-                    'received_at' => now(),
-                    'expires_at' => now()->addDays(7),
-                ]);
-
-                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
-
                 $this->finalBuyMembership(
                     $userId,
                     $memberShipPlan,
@@ -910,7 +901,7 @@ class TransactionController extends Controller
             ])->first();
 
             if ($conversation) {
-                $conversation->users()->syncWithoutDetaching([$userID]); 
+                $conversation->users()->syncWithoutDetaching([$userID]);
             }
 
             $course->refresh();
@@ -1040,6 +1031,16 @@ class TransactionController extends Controller
                 $transaction
             )
         );
+
+        $spin = Spin::query()->create([
+            'user_id' => $userId,
+            'spin_count' => 1,
+            'received_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $user = User::query()->find($userId);
+        $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
     }
 
     public function applyCoupon(Request $request)
