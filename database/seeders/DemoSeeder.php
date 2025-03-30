@@ -29,7 +29,7 @@ class DemoSeeder extends Seeder
             $tenDem = ['Văn', 'Thị', 'Hữu', 'Ngọc', 'Thanh', 'Minh', 'Thùy', 'Tấn'];
             $ten = ['An', 'Bình', 'Chi', 'Dương', 'Giang', 'Hà', 'Khánh', 'Linh', 'My', 'Nam', 'Oanh', 'Phúc', 'Quang', 'Sơn', 'Trang', 'Uyên'];
 
-            for ($i = 1; $i <= 4000; $i++) {
+            for ($i = 1; $i <= 200; $i++) {
                 $firstName = $ho[array_rand($ho)] . ' ' . $tenDem[array_rand($tenDem)] . ' ' . $ten[array_rand($ten)];
                 $randomCourseIds = Course::where([
                     'is_practical_course' => 0,
@@ -60,7 +60,7 @@ class DemoSeeder extends Seeder
                     'address' => 'Số ' . rand(1, 200) . ' Đường ' . $ten[array_rand($ten)] . ', Quận ' . rand(1, 12) . ', TP. Hà Nội',
                 ]);
 
-                if ($i >= 10 && $i <= 3000) {
+                if ($i >= 10 && $i <= 200) {
                     $userId = $user->id;
 
                     foreach ($randomCourseIds as $course) {
