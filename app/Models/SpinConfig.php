@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class SpinConfig extends Model
 {
     use HasFactory;
-    protected $fillable = ['type', 'name', 'probability','status'];
+    protected $fillable = ['type', 'name', 'probability','cells'];
 }
