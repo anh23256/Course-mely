@@ -22,7 +22,6 @@ class StoreCouponRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:coupons,code',
             'description' => 'nullable|string',
@@ -33,6 +32,17 @@ class StoreCouponRequest extends FormRequest
             'expire_date' => 'required|date|after:start_date',
             'max_usage' => 'nullable|integer',
             'status' => 'boolean',
+            'system_wide' => 'required|boolean',
+            'selected_users' => [
+                'nullable',
+                'array',
+                function ($attribute, $value, $fail) {
+                    if (request()->input('system_wide') == false && empty($value)) {
+                        $fail('Vui lòng chọn ít nhất một người dùng nếu không áp dụng toàn hệ thống.');
+                    }
+                },
+            ],
+            'selected_users.*' => 'exists:users,id',
         ];
     }
 
@@ -44,55 +54,47 @@ class StoreCouponRequest extends FormRequest
     public function messages()
     {
         return [
-            //User
-            'user_id.required' => 'Trường user_id là bắt buộc.',
-            'user_id.exists' => 'Trường user_id không tồn tại.',
+            'name.required' => 'Trường tên là bắt buộc.',
+            'name.string' => 'Trường tên phải là chuỗi ký tự.',
+            'name.max' => 'Trường tên không được vượt quá 255 ký tự.',
 
-            //Name
-            'name.required' => 'Trường name là bắt buộc.',
-            'name.string' => 'Trường name phải là chuỗi ký tự.',
-            'name.max' => 'Trường name vượt quá 255 kí tự',
+            'code.required' => 'Trường mã giảm giá là bắt buộc.',
+            'code.string' => 'Trường mã giảm giá phải là chuỗi ký tự.',
+            'code.max' => 'Trường mã giảm giá không được vượt quá 255 ký tự.',
+            'code.unique' => 'Mã giảm giá đã tồn tại trong hệ thống.',
 
-            //Code
-            'code.required' => 'Trường code là bắt buộc.',
-            'code.string' => 'Trường code phải là chuỗi ký tự.',
-            'code.max' => 'Trường code vượt quá 255 kí tự',
-            'code.unique' => 'Trường code đã tồn tại trong hệ thống.',
+            'discount_type.required' => 'Trường loại giảm giá là bắt buộc.',
+            'discount_type.in' => 'Trường loại giảm giá không hợp lệ.',
 
-            //Discount_type
-            'discount_type.required' => 'Trường discount_type là bắt buộc.',
-            'discount_type.in' => 'Trường discount_type không hợp lệ.',
+            'discount_value.required' => 'Trường giá trị giảm giá là bắt buộc.',
+            'discount_value.numeric' => 'Trường giá trị giảm giá phải là số.',
 
-            //Discount_value
-            'discount_value.required' => 'Trường discount_value là bắt buộc.',
-            'discount_value.numeric' => 'Trường discount_value phải là số.',
+            'discount_max_value.numeric' => 'Trường giá trị giảm giá tối đa phải là số.',
+            'discount_max_value.min' => 'Trường giá trị giảm giá tối đa phải lớn hơn hoặc bằng 0.',
 
-            //Discount_max_value
-            'discount_max_value.numeric' => 'Trường discount_max_value phải là số.',
-            'discount_max_value.min' => 'Trường discount_max_value phải lớn hơn 0.',
+            'description.string' => 'Trường mô tả phải là chuỗi ký tự.',
 
-            //Description
-            'description.string' => 'Trường description phải là chuỗi ký tự.',
+            'start_date.required' => 'Trường ngày bắt đầu là bắt buộc.',
+            'start_date.date' => 'Trường ngày bắt đầu phải là kiểu dữ liệu ngày.',
 
-            //Start_date
-            'start_date.required' => 'Trường start_date là bắt buộc',
-            'start_date.date' => 'Sai kiểu dữ liệu date',
+            'expire_date.required' => 'Trường ngày kết thúc là bắt buộc.',
+            'expire_date.date' => 'Trường ngày kết thúc phải là kiểu dữ liệu ngày.',
+            'expire_date.after' => 'Trường ngày kết thúc phải lớn hơn ngày bắt đầu.',
 
-            //Expire_date
-            'expire_date.required' => 'Trường expire_date là bắt buộc',
-            'expire_date.date' => 'Sai kiểu dữ liệu date',
-            'expire_date.after' => 'Trường expire_date phải lớn hơn start_date',
+            'max_usage.integer' => 'Trường số lần sử dụng phải là số nguyên.',
 
-            //Used_count
-            'used_count.required' => 'Trường used_count là bắt buộc',
-            'used_count.integer' => 'Sai kiểu dữ liệu interger',
+            'system_wide.required' => 'Trường áp dụng toàn hệ thống là bắt buộc.',
+            'system_wide.boolean' => 'Trường áp dụng toàn hệ thống phải là kiểu boolean.',
+
+            'selected_users.array' => 'Trường danh sách người dùng phải là một mảng.',
+            'selected_users.*.exists' => 'Người dùng được chọn không tồn tại trong hệ thống.',
         ];
     }
 
     protected function prepareForValidation()
     {
         $this->merge([
-            'user_id' => auth()->id(),
+            'system_wide' => filter_var($this->input('system_wide'), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 }

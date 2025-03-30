@@ -57,7 +57,7 @@ class InstructorNotificationForCoursePurchase extends Notification implements Sh
     public function toDatabase($notifiable)
     {
         return [
-            'message' => 'Học viên ' . $this->buyer->name . 'đã mua khoá học ',
+            'message' => 'Học viên ' . $this->buyer->name . ' đã mua khoá học ',
             'student_id' => $this->buyer->id,
             'course_name' => $this->course->name,
             'transaction_amount' => $this->transaction->amount,

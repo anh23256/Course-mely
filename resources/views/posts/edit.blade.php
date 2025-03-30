@@ -106,9 +106,9 @@
                                     Draft
                                     <input type="radio" name="status" value="pending" @checked($post->status == 'pending')>
                                     Pending
-                                    <input type="radio" name="status" value="published" @checked($post->status == 'published')>
+                                    <input type="radio" disabled name="status" value="published" @checked($post->status == 'published')>
                                     Published
-                                    <input type="radio" name="status" value="private" @checked($post->status == 'private')>
+                                    <input type="radio" disabled name="status" value="private" @checked($post->status == 'private')>
                                     Private
                                 </div>
                             </div>

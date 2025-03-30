@@ -2,7 +2,7 @@
 
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
-    <<<<<<< HEAD=======<style>
+    <style>
         .hover-effect {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -12,7 +12,6 @@
         box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
         }
         </style>
-        >>>>>>> 506afa53f62202415d80427f335e1ea9e32e0320
     @endpush
 
     @section('content')

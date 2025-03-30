@@ -26,36 +26,48 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4">{{ $approvalCount->total_approval ?? 0 }}</p>
+        <div class="row cursor-pointer">
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card total-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-primary">
+                            <i class="bx bx-list-check text-primary fs-1"></i>
+                        </div>
+                        <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
+                        <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card approved-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-success">
+                            <i class="bx bx-check-circle text-success fs-1"></i>
+                        </div>
+                        <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
+                        <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu chờ xử lý</h5>
-                        <p class="card-text fs-4 text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card pending-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-warning">
+                            <i class="bx bx-time-five text-warning fs-1"></i>
+                        </div>
+                        <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
+                        <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu bị từ chối</h5>
-                        <p class="card-text fs-4 text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card rejected-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-danger">
+                            <i class="bx bx-x-circle text-danger fs-1"></i>
+                        </div>
+                        <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
+                        <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -220,10 +232,10 @@
                                             <th>Tên gói</th>
                                             <th>Giảng viên</th>
                                             <th>Email</th>
-                                            <th>Người kiểm duyệt</th>
                                             <th>Giá</th>
                                             <th>Thời hạn</th>
                                             <th>Trạng thái</th>
+                                            <th>Người kiểm duyệt</th>
                                             <th>Ngày yêu cầu</th>
                                             <th>Ngày kiểm duyệt</th>
                                             <th>Hành động</th>
@@ -232,14 +244,13 @@
                                     <tbody class="list">
                                         @foreach ($approvals as $approval)
                                             <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $approval->membershipPlan->name }}</td>
-                                                <td>{{ $approval->membershipPlan->instructor->name }}</td>
-                                                <td>{{ $approval->membershipPlan->instructor->email }}</td>
-                                                <td>{{ $approval->approver->name }}</td>
-                                                <td>{{ number_format($approval->membershipPlan->price, 0, ',', '.') }}đ
+                                                <td>{{ $loop->iteration ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->name ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->name ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->email ?? '' }}</td>
+                                                <td>{{ number_format($approval->membershipPlan->price ?? 0, 0, ',', '.') }}đ
                                                 </td>
-                                                <td>{{ $approval->membershipPlan->duration_months }} tháng</td>
+                                                <td>{{ $approval->membershipPlan->duration_months ?? 1 }} tháng</td>
                                                 <td>
                                                     @if ($approval->status === 'pending')
                                                         <span class="badge bg-warning">Chờ duyệt</span>
@@ -249,9 +260,39 @@
                                                         <span class="badge bg-danger">Từ chối</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $approval->request_date }}</td>
-                                                <td>{{ $approval->approved_at }}  </td>
-
+                                                <td>
+                                                    {!! $approval->request_date
+                                                        ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' .
+                                                            \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') .
+                                                            '</span>'
+                                                        : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
+                                                </td>
+                                                <td>
+                                                    @if ($approval->approved_at)
+                                                        <span class="badge bg-success text-white"><i
+                                                                class="bx bx-calendar-check"></i>
+                                                            {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
+                                                    @elseif($approval->rejected_at)
+                                                        <span class="badge bg-danger text-white"><i
+                                                                class="bx bx-calendar-x"></i>
+                                                            {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
+                                                    @else
+                                                        <span class="badge bg-warning text-dark"><i
+                                                                class="bx bx-time"></i> Chưa kiểm duyệt</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {!! !empty($approval->approver->name)
+                                                        ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
+                                                        : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
+                                                </td>
+                                                <td>
+                                                    <a href="#">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -303,7 +344,7 @@
             function fetchData() {
                 let advancedFormData = $('#advancedSearch form').serialize(); // Lấy dữ liệu form advanced search
                 let dropdownFormData = $('#filterDropdown').closest('.dropdown').find('form')
-            .serialize(); // Lấy dữ liệu form dropdown filter
+                    .serialize(); // Lấy dữ liệu form dropdown filter
 
                 let formData = advancedFormData + '&' + dropdownFormData; // Gộp 2 form thành 1 request
 
@@ -313,7 +354,7 @@
                     data: formData,
                     beforeSend: function() {
                         $('#table-container').html(
-                        '<div class="text-center">Đang tải...</div>'); // Hiển thị loading
+                            '<div class="text-center">Đang tải...</div>'); // Hiển thị loading
                     },
                     success: function(response) {
                         $('#table-container').html(response.html); // Cập nhật bảng dữ liệu
@@ -335,7 +376,7 @@
                 e.preventDefault();
                 $('#advancedSearch form')[0].reset(); // Reset form advanced
                 $('#filterDropdown').closest('.dropdown').find('form')[0]
-            .reset(); // Reset form dropdown filter
+                    .reset(); // Reset form dropdown filter
                 fetchData(); // Gọi AJAX để lấy dữ liệu mặc định
             });
 

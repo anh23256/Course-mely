@@ -33,24 +33,24 @@ class SpinController extends Controller
 
         return response()->json([
             'status' => $spinSetting->status,
-            'message' => $spinSetting->status === 'active' 
-                ? 'Vòng quay đang hoạt động' 
+            'message' => $spinSetting->status === 'active'
+                ? 'Vòng quay đang hoạt động'
                 : 'Vòng quay đang bảo trì, vui lòng quay lại sau'
         ]);
     }
     // Lấy danh sách phần thưởng từ coupons, gifts và thêm phần thưởng mặc định
     private function getAllRewards()
 {
-    // Lấy từ SpinConfig và chia "Mã giảm giá ngẫu nhiên" thành 4 ô
     $rewards = SpinConfig::all()->flatMap(function ($config) {
-        if ($config->name === 'Mã giảm giá') {
-            $couponProbability = $config->probability / 4; // Chia đều cho 4 ô
+        // Nếu là coupon, chia xác suất thành các biến thể
+        if ($config->type === 'coupon') {
+            $couponProbability = $config->probability / $config->cells;
             $couponRewards = [];
-            for ($i = 1; $i <= 4; $i++) {
+            for ($i = 1; $i <= $config->cells; $i++) {
                 $couponRewards[] = [
                     'type' => 'coupon',
                     'id' => null,
-                    'name' => "Mã giảm giá $i",
+                    'name' => "{$config->name} $i",
                     'probability' => $couponProbability,
                 ];
             }
@@ -184,90 +184,18 @@ class SpinController extends Controller
         }
 
         $response = ['reward' => $reward['name']];
-            // Nếu trúng mã giảm giá ngẫu nhiên
-            if ($reward['type'] === 'coupon' && strpos($reward['name'], 'Mã giảm giá ngẫu nhiên') !== false) {
-                // Quyết định ngẫu nhiên loại mã: fixed hoặc percentage
-                $discountType = rand(0, 1) ? 'fixed' : 'percentage';
-        
-                $fixedValues = [10000, 20000, 50000];
-                $percentValues = [10, 20, 30];
-                $discountValue = $discountType === 'fixed' 
-                    ? $fixedValues[array_rand($fixedValues)] 
-                    : $percentValues[array_rand($percentValues)];
-        
-                $steps = [10000, 20000, 30000, 40000, 50000];
-                $discountMaxValue = $discountType === 'percentage' ? $steps[array_rand($steps)] : 0.00;
-        
-                // Tạo mã coupon ngẫu nhiên
-                $couponCode = 'LUCKYWHEEL'. Str::upper(Str::random(6));
-        
-                // Kiểm tra mã trùng
-                while (DB::table('coupons')->where('code', $couponCode)->exists()) {
-                    $couponCode = 'LUCKYWHEEL'. Str::upper(Str::random(6));
-                }
-        
-                // Tính ngày hết hạn (7 ngày từ hiện tại)
-                $expireDate = now()->addDays(7);
-        
-                // Tạo tên coupon
-                $couponName = $discountType === 'fixed' 
-                    ? "Giảm " . number_format($discountValue) . " VNĐ" 
-                    : "Giảm " . $discountValue . "% (Tối đa " . number_format($discountMaxValue) . " VNĐ)";
-        
-                try {
-                    $admin = User::whereHas('roles', function ($query) {
-                        $query->where('name', 'admin');
-                    })->first();
-                    
-                    if (!$admin) {
-                        throw new Exception('Không tìm thấy admin trong hệ thống.');
-                    }
-                    
-                    $adminId = $admin->id;
-                    // Lưu vào bảng coupons
-                    $couponId = DB::table('coupons')->insertGetId([
-                        'user_id' => $adminId,
-                        'code' => $couponCode,
-                        'name' => $couponName,
-                        'discount_type' => $discountType,
-                        'discount_value' => $discountValue,
-                        'discount_max_value' => $discountMaxValue,
-                        'start_date' => now(),
-                        'expire_date' => $expireDate,
-                        'description' => 'Mã giảm giá tự động tạo khi quay thưởng',
-                        'max_usage' => 1, // Mỗi mã chỉ dùng được 1 lần
-                        'used_count' => 0,
-                        'status' => 1, // Active
-                        'specific_course' => 0, // Không áp dụng cho khóa học cụ thể
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-        
-                    // Lưu vào bảng coupon_uses
-                    DB::table('coupon_uses')->insert([
-                        'user_id' => $user->id,
-                        'coupon_id' => $couponId,
-                        'status' => 'unused',
-                        'applied_at' => now(),
-                        'expired_at' => $expireDate,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-        
-                } catch (\Exception $e) {
-                    return response()->json(['error' => 'Có lỗi xảy ra khi tạo mã giảm giá.'], 500);
-                }
-        
-                // Cập nhật response với thông tin mã giảm giá
-                $response['coupon_code'] = $couponCode;
-                $response['type'] = $discountType;
-                $response['value'] = $discountValue;
-                $response['max_value'] = $discountMaxValue;
-                $response['expired_at'] = $expireDate;
+        if ($reward['type'] === 'coupon') {
+            try {
+                $couponData = $this->generateCoupon($user);
+                $response = array_merge($response, $couponData);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Có lỗi xảy ra khi tạo mã giảm giá.'], 500);
             }
+        }
 
         return response()->json($response);
     }
+
 
     // Lấy số lượt quay còn lại
     public function getSpins(Request $request)
@@ -365,5 +293,69 @@ class SpinController extends Controller
     {
         $rewards = $this->getAllRewards();
         return response()->json($rewards);
+    }
+    public function generateCoupon($user) {
+        $discountType = rand(0, 1) ? 'fixed' : 'percentage';
+        $fixedValues = [10000, 20000, 50000];
+        $percentValues = [10, 20, 30];
+        $discountValue = $discountType === 'fixed'
+            ? $fixedValues[array_rand($fixedValues)]
+            : $percentValues[array_rand($percentValues)];
+        $steps = [10000, 20000, 30000, 40000, 50000];
+        $discountMaxValue = $discountType === 'percentage' ? $steps[array_rand($steps)] : 0.00;
+
+        $couponCode = 'LUCKYWHEEL' . Str::upper(Str::random(6));
+        while (DB::table('coupons')->where('code', $couponCode)->exists()) {
+            $couponCode = 'LUCKYWHEEL' . Str::upper(Str::random(6));
+        }
+
+        $expireDate = now()->addDays(7);
+        $couponName = $discountType === 'fixed'
+            ? "Giảm " . number_format($discountValue) . " VNĐ"
+            : "Giảm " . $discountValue . "% (Tối đa " . number_format($discountMaxValue) . " VNĐ)";
+
+        $admin = User::whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })->first();
+
+        if (!$admin) {
+            throw new Exception('Không tìm thấy admin trong hệ thống.');
+        }
+
+        $couponId = DB::table('coupons')->insertGetId([
+            'user_id' => $admin->id,
+            'code' => $couponCode,
+            'name' => $couponName,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_max_value' => $discountMaxValue,
+            'start_date' => now(),
+            'expire_date' => $expireDate,
+            'description' => 'Mã giảm giá tự động tạo khi quay thưởng',
+            'max_usage' => 1,
+            'used_count' => 0,
+            'status' => 1,
+            'specific_course' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('coupon_uses')->insert([
+            'user_id' => $user->id,
+            'coupon_id' => $couponId,
+            'status' => 'unused',
+            'applied_at' => now(),
+            'expired_at' => $expireDate,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return [
+            'coupon_code' => $couponCode,
+            'type' => $discountType,
+            'value' => $discountValue,
+            'max_value' => $discountMaxValue,
+            'expired_at' => $expireDate,
+        ];
     }
 }

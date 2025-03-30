@@ -14,7 +14,7 @@ return new class extends Migration {
     {
         Schema::create('system_funds', function (Blueprint $table) {
             $table->id();
-            $table->decimal('balance', 10, 2)->nullable();
+            $table->decimal('balance', 18, 2)->nullable();
             $table->timestamps();
         });
     }

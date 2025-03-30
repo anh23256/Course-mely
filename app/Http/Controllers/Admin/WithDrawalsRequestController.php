@@ -228,10 +228,10 @@ class WithDrawalsRequestController extends Controller
     protected function sendOrUpdateNotification($withdrawal)
     {
         $user = $withdrawal->wallet->user;
-
+        
         $message = $withdrawal->status === 'Đã xử lý'
-            ? "Yêu cầu rút tiền của bạn đã được hệ thống phản hồi. Vui lòng kiểm tra lại."
-            : "Yêu cầu thanh toán của bạn đã được xử lý thành công";
+            ? "Yêu cầu thanh toán của bạn đã được xử lý thành công"
+            : "Yêu cầu rút tiền của bạn đã được hệ thống phản hồi. Vui lòng kiểm tra lại.";
 
         $existingNotification = DatabaseNotification::query()
             ->where('notifiable_id', $user->id)

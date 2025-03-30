@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Coupon::class)->constrained()->cascadeOnDelete();
-            $table->enum('status',['used', 'unused'])->default('unused');
+            $table->enum('status', ['used', 'unused', 'expired'])->default('unused');
             $table->date('applied_at')->nullable();
             $table->date('expired_at')->nullable();
             $table->timestamps();

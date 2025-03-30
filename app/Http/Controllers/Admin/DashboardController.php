@@ -393,10 +393,10 @@ class DashboardController extends Controller
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
+            ->select('courses.name', 'users.name as instructor_name', 'users.avatar as instructor_avatar', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
             ->leftJoinSub(
                 DB::table('users')
-                    ->select('id', 'name'),
+                    ->select('id', 'name','avatar'),
                 'users',
                 function ($join) {
                     $join->on('users.id', '=', 'courses.user_id');

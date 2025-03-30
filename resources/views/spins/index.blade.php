@@ -215,6 +215,7 @@
                                 <tr>
                                     <th>Loại</th>
                                     <th>Tên</th>
+                                    <th>Số ô</th>
                                     <th>Tỷ lệ (%)</th>
                                     <th>Hành động</th>
                                 </tr>
@@ -224,6 +225,7 @@
                                     <tr data-id="{{ $config->id }}" data-type="spin_config">
                                         <td>{{ $config->type }}</td>
                                         <td>{{ $config->name }}</td>
+                                        <td>{{ $config->cells ?? '1' }}</td>
                                         <td>{{ $config->probability }}</td>
                                         <td>
                                             <form action="{{ route('admin.spins.spin-config.update', $config->id) }}"
@@ -249,6 +251,7 @@
                                     <tr data-id="{{ $gift->id }}" data-type="gift">
                                         <td>Gift</td>
                                         <td>{{ $gift->name }}</td>
+                                        <td>{{ $gift->cells ?? '1' }}</td>
                                         <td>{{ $gift->probability }}</td>
                                         <td>
                                             <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST"
@@ -420,6 +423,11 @@
                                 <input type="number" name="probability" value="{{ old('probability') }}"
                                     class="form-control" placeholder="Tỷ lệ (%)" step="0.01" min="0"
                                     max="100" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="cells" class="form-label">Số ô quà</label>
+                                <input type="int" name="cells" value="{{ old('cells') }}"
+                                    class="form-control" placeholder="Số ô quà trong vòng quay">
                             </div>
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary w-100">Thêm ô quà</button>
