@@ -210,6 +210,7 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COUPON =============================
         Route::prefix('coupons')->as('coupons.')->group(function () {
             Route::get('/', [CouponController::class, 'index'])->name('index')->can('coupon.index');
+            Route::get('/user-search', [CouponController::class, 'couponUserSearch'])->name('search');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
             Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');

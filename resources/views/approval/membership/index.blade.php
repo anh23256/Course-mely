@@ -232,14 +232,14 @@
                                     <tbody class="list">
                                         @foreach ($approvals as $approval)
                                             <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $approval->membershipPlan->name }}</td>
-                                                <td>{{ $approval->membershipPlan->instructor->name }}</td>
-                                                <td>{{ $approval->membershipPlan->instructor->email }}</td>
-                                                <td>{{ $approval->approver->name }}</td>
+                                                <td>{{ $loop->iteration ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->name ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->name ?? '' }}</td>
+                                                <td>{{ $approval->membershipPlan->instructor->email ?? '' }}</td>
+                                                <td>{{ $approval->approver->name ?? '' }}</td>
                                                 <td>{{ number_format($approval->membershipPlan->price, 0, ',', '.') }}đ
                                                 </td>
-                                                <td>{{ $approval->membershipPlan->duration_months }} tháng</td>
+                                                <td>{{ $approval->membershipPlan->duration_months ?? '' }} tháng</td>
                                                 <td>
                                                     @if ($approval->status === 'pending')
                                                         <span class="badge bg-warning">Chờ duyệt</span>

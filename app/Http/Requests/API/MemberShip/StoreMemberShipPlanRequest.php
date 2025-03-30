@@ -72,6 +72,10 @@ class StoreMemberShipPlanRequest extends BaseFormRequest
 
     protected function validateCourseUniqueness($validator, $courseIds, $instructorId, $currentDuration)
     {
+        if ($currentDuration == 12) {
+            return;
+        }
+
         $otherMembershipPlans = MembershipPlan::query()->where('instructor_id', $instructorId)
             ->where('duration_months', '!=', $currentDuration)
             ->get();
@@ -95,7 +99,7 @@ class StoreMemberShipPlanRequest extends BaseFormRequest
                 $validator->errors()->add(
                     'course_ids',
                     'Gói thành viên ' . $currentDuration . ' tháng không được trùng trên 80% nội dung với gói "' .
-                    $plan->name . '" (' . $plan->duration_months . ' tháng).'
+                        $plan->name . '" (' . $plan->duration_months . ' tháng).'
                 );
                 break;
             }

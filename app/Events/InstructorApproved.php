@@ -24,7 +24,7 @@ class InstructorApproved implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new PrivateChannel('member.' . $this->user->id);
+        return new PrivateChannel('App.Models.User.' . $this->user->id);
     }
 
     public function broadcastWith()

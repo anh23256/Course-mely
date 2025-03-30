@@ -1005,7 +1005,7 @@ class CourseController extends Controller
 
         if ($quiz) {
             $questions = Question::query()->where('quiz_id', $quiz->id)->get();
-            if ($questions->count() < 1 || $questions->count() > 10) {
+            if ($questions->count() < 5 || $questions->count() > 20) {
                 $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương '{$chapter->title}' phải có từ 1 đến 10 câu hỏi. Hiện tại có {$questions->count()} câu.";
             } else if ($questions->count() >= 1 && $questions->count() <= 10) {
                 $pass[] = "Bài kiểm tra trong chương phải có 1 đến 10 câu hỏi";

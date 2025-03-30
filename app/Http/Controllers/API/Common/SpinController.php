@@ -33,8 +33,8 @@ class SpinController extends Controller
 
         return response()->json([
             'status' => $spinSetting->status,
-            'message' => $spinSetting->status === 'active' 
-                ? 'Vòng quay đang hoạt động' 
+            'message' => $spinSetting->status === 'active'
+                ? 'Vòng quay đang hoạt động'
                 : 'Vòng quay đang bảo trì, vui lòng quay lại sau'
         ]);
     }
@@ -56,8 +56,7 @@ class SpinController extends Controller
             }
             return $couponRewards;
         }
-    
-        // Với các loại khác, giữ nguyên
+
         return [[
             'type' => $config->type,
             'id' => null,
@@ -299,30 +298,30 @@ class SpinController extends Controller
         $discountType = rand(0, 1) ? 'fixed' : 'percentage';
         $fixedValues = [10000, 20000, 50000];
         $percentValues = [10, 20, 30];
-        $discountValue = $discountType === 'fixed' 
-            ? $fixedValues[array_rand($fixedValues)] 
+        $discountValue = $discountType === 'fixed'
+            ? $fixedValues[array_rand($fixedValues)]
             : $percentValues[array_rand($percentValues)];
         $steps = [10000, 20000, 30000, 40000, 50000];
         $discountMaxValue = $discountType === 'percentage' ? $steps[array_rand($steps)] : 0.00;
-    
+
         $couponCode = 'LUCKYWHEEL' . Str::upper(Str::random(6));
         while (DB::table('coupons')->where('code', $couponCode)->exists()) {
             $couponCode = 'LUCKYWHEEL' . Str::upper(Str::random(6));
         }
-    
+
         $expireDate = now()->addDays(7);
-        $couponName = $discountType === 'fixed' 
-            ? "Giảm " . number_format($discountValue) . " VNĐ" 
+        $couponName = $discountType === 'fixed'
+            ? "Giảm " . number_format($discountValue) . " VNĐ"
             : "Giảm " . $discountValue . "% (Tối đa " . number_format($discountMaxValue) . " VNĐ)";
-    
+
         $admin = User::whereHas('roles', function ($query) {
             $query->where('name', 'admin');
         })->first();
-    
+
         if (!$admin) {
             throw new Exception('Không tìm thấy admin trong hệ thống.');
         }
-    
+
         $couponId = DB::table('coupons')->insertGetId([
             'user_id' => $admin->id,
             'code' => $couponCode,
@@ -340,7 +339,7 @@ class SpinController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-    
+
         DB::table('coupon_uses')->insert([
             'user_id' => $user->id,
             'coupon_id' => $couponId,
@@ -350,7 +349,7 @@ class SpinController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-    
+
         return [
             'coupon_code' => $couponCode,
             'type' => $discountType,
