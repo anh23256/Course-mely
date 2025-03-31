@@ -107,6 +107,7 @@ class TransactionController extends Controller
                 'user_id' => $userId,
                 'course_id' => $courseId,
                 'enrolled_at' => now(),
+                'source' => 'free',
             ]);
 
             $course->increment('total_student');
@@ -176,7 +177,12 @@ class TransactionController extends Controller
             $finalAmount = $validated['amount'];
 
             if ($paymentType === 'course') {
-                if (CourseUser::query()->where('user_id', $user->id)->where('course_id', $itemId)->exists()) {
+                if (CourseUser::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $itemId)
+                    ->where('source', 'purchase')
+                    ->exists()
+                ) {
                     return $this->respondError('Bạn đã sở hữu khoá học này rồi');
                 }
 
@@ -895,17 +901,38 @@ class TransactionController extends Controller
                 $this->clearCouponCache($userID, $discount->code);
             }
 
-            $conversation = Conversation::query()->where([
-                'conversationable_id' => $course->id,
-                'conversationable_type' => Course::class
-            ])->first();
+            // $conversation = Conversation::query()->where([
+            //     'conversationable_id' => $course->id,
+            //     'conversationable_type' => Course::class
+            // ])->first();
 
-            if ($conversation) {
-                $conversation->users()->syncWithoutDetaching([$userID]);
-            }
+            // if ($conversation) {
+            //     $conversation->users()->syncWithoutDetaching([$userID]);
+            // }
 
             $course->refresh();
             $course->increment('total_student');
+
+            $existingCourseUser = CourseUser::query()->where([
+                'user_id' => $userID,
+                'course_id' => $course->id,
+                'source' => 'membership'
+            ])->first();
+
+            if ($existingCourseUser) {
+                $existingCourseUser->update([
+                    'source' => 'purchase',
+                    'enrolled_at' => now(),
+                    'access_status' => 'active'
+                ]);
+            } else {
+                CourseUser::create([
+                    'user_id' => $userID,
+                    'course_id' => $course->id,
+                    'enrolled_at' => now(),
+                    'source' => 'purchase',
+                ]);
+            }
 
             $walletInstructor = Wallet::query()
                 ->firstOrCreate([

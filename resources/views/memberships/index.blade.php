@@ -156,7 +156,7 @@
                                                     <td class="id">{{ $loop->parent->iteration }}</td>
                                                     <td>{{ $user->name }}</td>
                                                     <td>{{ $user->email }}</td>
-                                                    <td>{{ $invoice->course->name }}</td>
+                                                    {{-- <td>{{ $invoice->course->name }}</td> --}}
                                                     <td>{{ number_format($invoice->total_spent, 0, ',', '.') }} VNĐ</td>
                                                     <td>{{ $invoice->total_registrations }} lần</td>
                                                     <td>{{ \Carbon\Carbon::parse($invoice->latest_membership)->format('d/m/Y') }}

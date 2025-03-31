@@ -27,6 +27,9 @@
             <a class="nav-link menu-link" href="{{ route('admin.invoices.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Khoá học đã bán</span>
             </a>
+            <a class="nav-link menu-link" href="{{ route('admin.invoices.memberships.index') }}">
+                <i class="ri-database-2-line"></i> <span data-key="t-authentication">Gói thành viên đã bán</span>
+            </a>
             <a class="nav-link menu-link" href="{{ route('admin.transactions.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Giao dịch thanh toán</span>
             </a>
@@ -69,7 +72,7 @@
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('admin.instructors.index') }}" class="nav-link">
-                            Người hướng dẫn </a>
+                            Giảng viên </a>
                     </li>
                     @can('super_admin.view')
                         <li class="nav-item">

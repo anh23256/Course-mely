@@ -41,7 +41,7 @@ class InstructorRejectedNotification extends Notification implements ShouldBroad
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Yêu cầu phê duyệt người hướng dẫn')
+            ->subject('Yêu cầu phê duyệt giảng viên')
             ->line('Rất xin lỗi. Hiện tại bạn không đủ điều kiện để trở thành giảng viên trên hệ thống của chúng tôi!!!')
             ->line('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!');
     }

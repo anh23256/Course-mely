@@ -133,7 +133,7 @@
                                     <div class="d-flex align-items-center">
                                         <div class="flex-grow-1 overflow-hidden">
                                             <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                                                Người hướng dẫn
+                                                Giảng viên
                                             </p>
                                         </div>
                                         <div class="flex-shrink-0">
@@ -209,7 +209,7 @@
                         <div class="col-xl-5">
                             <div class="card card-height-100">
                                 <div class="card-header align-items-center d-flex">
-                                    <h4 class="card-title mb-0 flex-grow-1">Người hướng dẫn nổi bật</h4>
+                                    <h4 class="card-title mb-0 flex-grow-1">Giảng viên nổi bật</h4>
                                     <div class="dateRangePicker" data-filter="topInstructorCourseMely">
                                     </div>
                                 </div>
@@ -219,7 +219,7 @@
                                             class="table table-centered table-hover align-middle table-nowrap mb-0">
                                             <thead>
                                                 <tr>
-                                                    <th scope="col">Người hướng dẫn</th>
+                                                    <th scope="col">Giảng viên</th>
                                                     <th scope="col">Khoá học</th>
                                                     <th scope="col">Học viên</th>
                                                     <th scope="col">Doanh thu</th>

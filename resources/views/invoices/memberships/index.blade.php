@@ -158,7 +158,7 @@
                                             <th>STT</th>
                                             <th>Mã hóa đơn</th>
                                             <th>Người mua</th>
-                                            <th>Khoá học</th>
+                                            <th>Tên gói</th>
                                             <th>Giảng viên</th>
                                             <th>Tổng thanh toán</th>
                                             <th>Trạng thái</th>
@@ -167,24 +167,36 @@
                                         </tr>
                                     </thead>
                                     <tbody class="list">
-                                        @foreach ($invoices as $invoice)
+                                        @forelse ($invoices as $invoice)
                                             <tr>
                                                 <td>{{ $loop->index + 1 }}</td>
                                                 <td>{{ $invoice->code ?? '' }}</td>
-                                                <td><span
-                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span><br>
-                                                    {{ $invoice->user->email }}
-                                                </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <img src="{{ $invoice->course->thumbnail }}"
-                                                            class="course-thumbnail me-3" alt="">
-                                                        <span
-                                                            class="fw-medium">{{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}</span>
+                                                        <img src="{{ $invoice->user->avatar ?? '' }}" alt="Avatar"
+                                                            class="user-avatar me-2">
+                                                        <div>
+                                                            <span
+                                                                class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span><br>
+                                                            {{ $invoice->user->email }}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    {{ $invoice->course->instructor->name ?? '' }}
+                                                    <div class="d-flex align-items-center">
+                                                        <span
+                                                            class="fw-medium">{{ Str::limit($invoice->membershipPlan->name ?? 'Không có tên', 40) }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ $invoice->membershipPlan->instructor->avatar ?? '' }}"
+                                                            alt="Avatar" class="user-avatar me-2">
+                                                        <div>
+                                                            <h6 class="mb-0">
+                                                                {{ $invoice->membershipPlan->instructor->name ?? '' }}</h6>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td>{{ number_format($invoice->final_amount ?? 0) }} VND</td>
                                                 <td>
@@ -194,14 +206,18 @@
                                                 <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('admin.invoices.show', $invoice->code ?? '') }}"
+                                                    <a href="{{ route('admin.invoices.memberships.show', $invoice->code ?? '') }}"
                                                         class="btn btn-sm btn-soft-info rounded-circle"
                                                         data-bs-toggle="tooltip" title="Xem chi tiết">
                                                         <i class="ri-eye-line"></i>
                                                     </a>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="9" class="text-center">Chưa có thông tin giao dịch.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>

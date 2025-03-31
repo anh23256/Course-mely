@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('course_users', function (Blueprint $table) {
-            $table->enum('source', ['purchase', 'membership'])->default('purchase')->after('completed_at');
+            $table->enum('source', ['purchase', 'membership', 'free'])->default('purchase')->after('completed_at');
             $table->enum('access_status', ['active', 'inactive'])->default('active')->after('source');
         });
     }
