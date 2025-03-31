@@ -2,30 +2,28 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\InvoicesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 
-class InvoiceController extends Controller
+class InvoiceMembershipController extends Controller
 {
     use LoggableTrait, FilterTrait;
 
     public function index(Request $request)
     {
         try {
-            $title = 'Khóa học đã bán';
-            $subTitle = 'Khóa học đã bán';
+            $title = 'Gói thành viên đã bán';
+            $subTitle = 'Gói thành viên đã bán';
 
             $queryInvoice = Invoice::query()
-                ->with([
-                    'course',
+                ->with(relations: [
+                    'membershipPlan',
                     'user'
                 ])
-                ->where('invoice_type', 'course')
+                ->where('invoice_type', 'membership')
                 ->latest('id')
                 ->where('status', 'Đã thanh toán');
 
@@ -33,12 +31,7 @@ class InvoiceController extends Controller
 
             $invoices = $queryInvoice->paginate(10);
 
-            if ($request->ajax()) {
-                $html = view('invoices.table', compact('invoices'))->render();
-                return response()->json(['html' => $html]);
-            }
-
-            return view('invoices.index', compact(['title', 'subTitle', 'invoices']));
+            return view('invoices.memberships.index', compact(['title', 'subTitle', 'invoices']));
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -51,17 +44,18 @@ class InvoiceController extends Controller
     {
         try {
             $title = 'Hóa đơn thanh toán';
-            $subTitle = 'Hóa đơn thanh toán';
+            $subTitle = 'Thông tin đăng ký';
 
             $invoice = Invoice::query()
                 ->with([
-                    'course',
+                    'membershipPlan.membershipSubscription',
                     'user'
                 ])
                 ->latest('id')
-                ->where(['status' => 'Đã thanh toán', 'code' => $code])->firstOrFail();
+                ->where(['status' => 'Đã thanh toán', 'code' => $code])
+                ->first();
 
-            return view('invoices.show', compact(['title', 'subTitle', 'invoice']));
+            return view('invoices.memberships.show', compact(['title', 'subTitle', 'invoice']));
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -69,7 +63,7 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Không tìm thấy thông tin hóa đơn');
         }
     }
-    
+
     private function filterSearch(Request $request, $queryInvoice)
     {
         try {
@@ -106,19 +100,6 @@ class InvoiceController extends Controller
         }
 
         return $query;
-    }
-
-    public function export()
-    {
-        try {
-
-            return Excel::download(new InvoicesExport, 'Invoices.xlsx');
-        } catch (\Exception $e) {
-
-            $this->logError($e);
-
-            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
-        }
     }
 
     private function search($searchTerm, $query)

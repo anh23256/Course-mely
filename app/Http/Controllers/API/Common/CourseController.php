@@ -344,8 +344,15 @@ class CourseController
         try {
             $courses = Course::query()
                 ->select([
-                    'id', 'category_id', 'user_id', 'name', 'slug', 'thumbnail',
-                    'price', 'price_sale', 'is_free',
+                    'id',
+                    'category_id',
+                    'user_id',
+                    'name',
+                    'slug',
+                    'thumbnail',
+                    'price',
+                    'price_sale',
+                    'is_free',
                 ])
                 ->with([
                     'category:id,name,slug',
@@ -451,6 +458,7 @@ class CourseController
             if ($user) {
                 $enrollment = CourseUser::query()->where('user_id', $user->id)
                     ->where('course_id', $course->id)
+                    ->whereIn('source', ['purchase', 'free']) 
                     ->exists();
 
                 $course->is_enrolled = $enrollment;

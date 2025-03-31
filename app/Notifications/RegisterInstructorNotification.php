@@ -40,7 +40,7 @@ class RegisterInstructorNotification extends Notification implements ShouldBroad
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Yêu cầu phê duyệt người hướng dẫn')
+            ->subject('Yêu cầu phê duyệt giảng viên')
             ->view('emails.instructor-approval', [
                 'user' => $this->user,
                 'notifiable' => $notifiable,
@@ -61,7 +61,7 @@ class RegisterInstructorNotification extends Notification implements ShouldBroad
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" đã được gửi yêu cầu kiểm duyệt.',
+            'message' => 'Giảng viên "' . $this->user->name . '" đã được gửi yêu cầu kiểm duyệt.',
             'url' => $this->getUrl(),
         ];
     }

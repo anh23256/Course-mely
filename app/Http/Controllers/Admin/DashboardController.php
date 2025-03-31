@@ -228,7 +228,7 @@ class DashboardController extends Controller
 
             switch ($type) {
                 case 'top_instructor':
-                    $headings = ['Người hướng dẫn', 'Khóa học đã bán', 'Học viên', 'Doanh thu'];
+                    $headings = ['Giảng viên', 'Khóa học đã bán', 'Học viên', 'Doanh thu'];
                     $formattedData = array_map(function ($item) {
                         if (!isset($item['name'], $item['total_courses'], $item['total_enrolled_students'], $item['total_revenue'])) {
                             return;

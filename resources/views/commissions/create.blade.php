@@ -70,7 +70,7 @@
                                         @endif
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="instructor_percentage" class="form-label">Phần trăm của người hướng dẫn</label>
+                                        <label for="instructor_percentage" class="form-label">Phần trăm của Giảng viên</label>
                                         <select id="instructor_percentage" class="form-select mb-3" aria-label="Default select example" name="instructor_percentage">
                                             <option value="">Chọn phần trăm</option>
                                             <option value="10">10%</option>

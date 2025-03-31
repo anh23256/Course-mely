@@ -912,7 +912,7 @@ class LearningPathController extends Controller
 
             $courseUser->progress_percent = round($progressPercent, 2);
 
-            if ($progressPercent == 100) {
+            if ($progressPercent == 90) {
                 $courseUser->completed_at = now();
                 CreateCertificateJob::dispatch($userId, $courseId);
             } else {

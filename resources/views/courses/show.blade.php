@@ -101,7 +101,7 @@
                         <div class="hstack gap-3 flex-wrap mt-3 text-white">
                             <div>
                                 <i class="ri-map-pin-user-line me-1"></i>
-                                Người hướng dẫn : {{ $course->user->name ?? '' }}
+                                Giảng viên : {{ $course->user->name ?? '' }}
                             </div>
                             <div class="vr"></div>
                             <div>

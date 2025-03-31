@@ -50,6 +50,7 @@ class CourseController extends Controller
 
         return view('courses.index', compact('title', 'subTitle', 'courses'));
     }
+    
     public function reject(Request $request, $id)
     {
         $course = Course::findOrFail($id);

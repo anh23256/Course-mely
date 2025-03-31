@@ -129,11 +129,11 @@
                                 </div>
                             @elseif($approval->status === 'rejected')
                                 <button type="button" class="btn btn-danger ">
-                                    Người hướng dẫn không đủ điều kiện
+                                    Giảng viên không đủ điều kiện
                                 </button>
                             @else
                                 <button type="button" class="btn btn-success ">
-                                    Người hướng dẫn đã được phê duyệt
+                                    Giảng viên đã được phê duyệt
                                 </button>
                             @endif
 
@@ -477,8 +477,8 @@
                 event.preventDefault();
 
                 Swal.fire({
-                    title: "Phê duyệt người hướng dẫn ?",
-                    text: "Bạn có chắc chắn muốn phê duyệt người hướng dẫn này?",
+                    title: "Phê duyệt giảng viên ?",
+                    text: "Bạn có chắc chắn muốn phê duyệt giảng viên này?",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonColor: "#DD6B55",

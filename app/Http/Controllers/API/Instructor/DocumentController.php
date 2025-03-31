@@ -192,6 +192,7 @@ class DocumentController extends Controller
             $lesson->update([
                 'title' => $data['title'],
                 'is_free_preview' => $data['is_free_preview'] ?? $lesson->is_free_preview,
+                'content' => $data['content'] ?? $lesson->content,
             ]);
 
             DB::commit();
