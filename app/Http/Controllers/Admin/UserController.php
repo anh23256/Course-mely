@@ -527,7 +527,7 @@ class UserController extends Controller
 
         $roles = [
             'clients' => ['name' => 'member', 'actor' => 'khách hàng', 'role_name' => 'clients'],
-            'instructors' => ['name' => 'instructor', 'actor' => 'người hướng dẫn', 'role_name' => 'instructors'],
+            'instructors' => ['name' => 'instructor', 'actor' => 'giảng viên', 'role_name' => 'instructors'],
             'employees' => ['name' => 'employee', 'actor' => 'nhân viên', 'role_name' => 'employees'],
             'deleted' => ['name' => 'deleted', 'actor' => 'thành viên đã xóa', 'role_name' => 'users.deleted']
         ];

@@ -21,15 +21,26 @@ class SearchController extends Controller
             $results = [];
 
             $courses = DB::table('courses')
-                ->select('id', 'name', 'slug', 'thumbnail')
-                ->where('status', 'approved')
-                ->where('visibility', 'public')
+                ->join('users', 'courses.user_id', '=', 'users.id')
+                ->select(
+                    'courses.id',
+                    'courses.user_id',
+                    'courses.name',
+                    'courses.slug',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.is_free',
+                    'courses.thumbnail',
+                    'users.name as instructor_name' 
+                )
+                ->where('courses.status', 'approved')
+                ->where('courses.visibility', 'public')
                 ->where(function ($q) use ($query) {
-                    $q->whereRaw("MATCH(name, description) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
-                        ->orWhere('name', 'LIKE', "%{$query}%")
-                        ->orWhere('description', 'LIKE', "%{$query}%");
+                    $q->whereRaw("MATCH(courses.name, courses.description) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
+                        ->orWhere('courses.name', 'LIKE', "%{$query}%")
+                        ->orWhere('courses.description', 'LIKE', "%{$query}%");
                 })
-                ->orderBy('total_student', 'desc')
+                ->orderBy('courses.total_student', 'desc')
                 ->limit(5)
                 ->get();
 

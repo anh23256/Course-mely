@@ -143,10 +143,10 @@
                                     @if (!$hasEnoughSpinConfigTypes)
                                         <li class="mb-2">
                                             <i class="bi bi-dash-circle text-danger me-2"></i>
-                                            Vòng quay chưa đủ 3 loại phần thưởng (no_reward, coupon, spin). Thiếu:
+                                            Vòng quay chưa đủ 3 loại phần thưởng (Không trúng, Mã giảm giá, Lượt quay). Thiếu:
                                             <ul class="list-group list-group-flush mt-1">
-                                                @foreach ($missingTypes as $type)
-                                                    <li class="list-group-item border-0 ps-4">{{ ucfirst($type) }}</li>
+                                                @foreach ($missingTypeNames as $typeName)
+                                                    <li class="list-group-item border-0 ps-4">{{ $typeName }}</li>
                                                 @endforeach
                                             </ul>
                                         </li>
@@ -170,8 +170,7 @@
                                     @endif
                                 </ul>
                             </div>
-                            <p class="text-muted fst-italic">Vui lòng hoàn thiện cấu hình để vòng quay hoạt động bình
-                                thường.</p>
+                            <p class="text-muted fst-italic">Vui lòng hoàn thiện cấu hình để vòng quay có thể hoạt động.</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
@@ -187,8 +186,20 @@
             <!-- Cấu hình tỷ lệ trúng -->
             <div class="col-70">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex align-items-center justify-content-between">
                         <h3>Cấu hình tỷ lệ trúng (Tổng: {{ $totalProbability }}%)</h3>
+                        <form action="{{ route('admin.spins.toggle-status') }}" method="POST">
+                            @csrf
+                            <div class="form-check form-switch form-switch-success">
+                                <input class="form-check-input" role="switch"
+                                       type="checkbox" 
+                                       name="status" 
+                                       value="active"
+                                       onchange="this.form.submit()"
+                                       {{ $spinSetting->status === 'active' ? 'checked' : '' }}>
+                                <label class="form-check-label">Kích hoạt vòng quay</label>
+                            </div>
+                        </form>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -204,6 +215,7 @@
                                 <tr>
                                     <th>Loại</th>
                                     <th>Tên</th>
+                                    <th>Số ô</th>
                                     <th>Tỷ lệ (%)</th>
                                     <th>Hành động</th>
                                 </tr>
@@ -213,6 +225,7 @@
                                     <tr data-id="{{ $config->id }}" data-type="spin_config">
                                         <td>{{ $config->type }}</td>
                                         <td>{{ $config->name }}</td>
+                                        <td>{{ $config->cells ?? '1' }}</td>
                                         <td>{{ $config->probability }}</td>
                                         <td>
                                             <form action="{{ route('admin.spins.spin-config.update', $config->id) }}"
@@ -238,6 +251,7 @@
                                     <tr data-id="{{ $gift->id }}" data-type="gift">
                                         <td>Gift</td>
                                         <td>{{ $gift->name }}</td>
+                                        <td>{{ $gift->cells ?? '1' }}</td>
                                         <td>{{ $gift->probability }}</td>
                                         <td>
                                             <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST"
@@ -301,16 +315,13 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <form
-                                                action="{{ route('admin.spins.toggle-selection', ['type' => 'gift', 'id' => $gift->id]) }}"
-                                                method="POST" class="toggle-selection-form">
-                                                @csrf
-                                                <div class="form-check form-switch form-switch-warning">
-                                                    <input class="form-check-input popular-course-toggle" role="switch"
-                                                        type="checkbox" name="is_selected" onchange="this.form.submit()"
-                                                        {{ $gift->is_selected ? 'checked' : '' }}>
-                                                </div>
-                                            </form>
+                                            <div class="form-check form-switch form-switch-warning">
+                                                <input class="form-check-input popular-course-toggle" 
+                                                       role="switch"
+                                                       type="checkbox" 
+                                                       data-gift-id="{{ $gift->id }}"
+                                                       {{ $gift->is_selected ? 'checked' : '' }}>
+                                            </div>
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.spins.gift.delete', $gift->id) }}" type="button"
@@ -412,6 +423,11 @@
                                 <input type="number" name="probability" value="{{ old('probability') }}"
                                     class="form-control" placeholder="Tỷ lệ (%)" step="0.01" min="0"
                                     max="100" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="cells" class="form-label">Số ô quà</label>
+                                <input type="int" name="cells" value="{{ old('cells') }}"
+                                    class="form-control" placeholder="Số ô quà trong vòng quay">
                             </div>
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary w-100">Thêm ô quà</button>
@@ -573,7 +589,7 @@
                 <!-- Ô Lịch sử quay của người chơi (mới) -->
                 <div class="card mb-4">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">Lịch sử quay của người chơi</h5>
+                        <h5 class="mb-0 text-white">Lịch sử quay của người chơi</h5>
                     </div>
                     <div class="card-body">
                         <!-- Form tìm kiếm -->
@@ -586,7 +602,7 @@
                                     <i class="bi bi-search"></i> Tìm kiếm
                                 </button>
                                 @if (request('search'))
-                                    <a href="{{ route('spins.index') }}" class="btn btn-secondary ms-2">
+                                    <a href="{{ route('admin.spins.index') }}" class="btn btn-secondary ms-2">
                                         <i class="bi bi-x"></i> Xóa bộ lọc
                                     </a>
                                 @endif
@@ -871,11 +887,6 @@
 
                             // Hiển thị thông báo lỗi
                             showToast('error', errorMessage);
-
-                            // Ghi log để debug (tùy chọn)
-                            console.error('Error:', error);
-                            console.error('Status:', status);
-                            console.error('Response:', xhr.responseJSON);
                         }
                     });
                 }
@@ -926,18 +937,54 @@
                                 totalProbabilityElement.text(
                                     `Cấu hình tỷ lệ trúng (Tổng: ${newTotal.toFixed(4)}%)`);
                             } else {
-                                // Hiển thị thông báo lỗi
+                                // Hiển thị thông báo lỗi từ server (nếu success: false)
                                 showToast('error', response.message ||
                                     'Có lỗi xảy ra, vui lòng thử lại');
                             }
                         },
                         error: function(xhr, status, error) {
+                            // Lấy thông điệp lỗi từ phản hồi của server
+                            const errorMessage = xhr.responseJSON && xhr.responseJSON.message ?
+                                xhr.responseJSON.message :
+                                'Có lỗi xảy ra, vui lòng thử lại';
+
+                            // Hiển thị thông báo lỗi
+                            showToast('error', errorMessage);
+
+                            // Ghi log để debug (tùy chọn)
                             console.error('Error:', error);
-                            showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                            console.error('Status:', status);
+                            console.error('Response:', xhr.responseJSON);
                         }
                     });
                 }
             });
         });
+        $('.popular-course-toggle').on('change', function() {
+                var giftId = $(this).data('gift-id');
+                var isSelected = $(this).is(':checked') ? 1 : 0;
+
+                $.ajax({
+                    url: '{{ route("admin.spins.toggle-selection", ["type" => "gift", "id" => "__ID__"]) }}'.replace('__ID__', giftId),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        is_selected: isSelected
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message); // Sử dụng toastr hoặc alert
+                        } else {
+                            // Nếu thất bại, đảo ngược trạng thái checkbox
+                            $(this).prop('checked', !isSelected);
+                            toastr.error(response.message);
+                        }
+                    }.bind(this), // Bind this để giữ context của checkbox
+                    error: function(xhr) {
+                        $(this).prop('checked', !isSelected); // Đảo ngược nếu lỗi
+                        toastr.error('Có lỗi xảy ra: ' + (xhr.responseJSON?.message || 'Không xác định'));
+                    }.bind(this)
+                });
+            });
     </script>
 @endpush

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Completion</title>
+
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            width: 297mm;
+            height: 210mm;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .certificate-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .certificate-bg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .certificate-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 70px;
+            height: calc(100% - 200px);
+        }
+
+        .title {
+            color: #FF6854;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            letter-spacing: 5px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .subtitle {
+            color: #000;
+            font-size: 24px;
+            margin: 0 0 30px 0;
+            letter-spacing: 2px;
+        }
+
+        .description {
+            color: #555;
+            font-size: 18px;
+            line-height: 1.5;
+            max-width: 80%;
+            margin: 20px auto 20px auto;
+        }
+
+        .course-name {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0 20px 0;
+            letter-spacing: 1px;
+            background-color: rgba(255, 104, 84, 0.1);
+            display: inline-block;
+            padding: 7px 15px;
+            border-radius: 30px;
+        }
+
+        .name {
+            color: #333;
+            font-size: 54px;
+            font-weight: 800;
+            margin: 4px auto;
+            padding: 10px 0;
+            width: 80%;
+            position: relative;
+        }
+
+        .date {
+            color: #333;
+            font-size: 18px;
+            margin: 20px 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .signature-name {
+            color: #FF6854;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .signature-title {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .certificate-footer {
+            margin-top: 20px;
+            text-align: center;
+            bottom: 20px;
+            width: 100%;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .cert-number {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: rgba(255, 104, 84, 0.1);
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body style="font-family: 'DejaVu Sans', sans-serif; text-align: center; margin: 0; padding: 0;">
+    <div style="background-image: url('background_template'); background-size: cover;" class="certificate-container">
+        <div class="certificate-content">
+            <table style="width: 100%; position: absolute; top: 15px; right: -30px;">
+                <tr>
+                    <td style="width: 50%; text-align: left;">
+                        <img src="dau_do" style="width: 100px; height: auto;" alt="Dấu đỏ Course MeLy">
+                    </td>
+                </tr>
+            </table>
+            <h1 class="title">GIẤY CHỨNG NHẬN</h1>
+            <p class="course-name">course_name</p>
+            <div class="name">user_name</div>
+            <div class="description">Cảm ơn bạn vì tất cả sự chăm chỉ và cống hiến
+                của mình. Hãy tiếp tục học hỏi, vì càng có nhiều kiến thức, bạn càng có cơ hội thành công trong cuộc
+                sống.</div>
+            <p class="date">ngay_hoan_thanh</p>
+            <div class="signatures">
+                <table style="width: 100%; text-align: center;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: middle;">
+                            <div class="signature-name">Đơn vị cấp chứng nhận</div>
+                            <table style="margin: auto;">
+                                <tr>
+                                    <td style="padding-right: 6px;">
+                                        <img src="logo_course_mely" alt="Course MeLy"
+                                            style="width: 30px; height: auto;">
+                                    </td>
+                                    <td class="signature-title">Course MeLy</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width: 50%; vertical-align: middle;">
+                            <div class="signature-name">CHỮ KÝ</div>
+                            <div class="signature-title">instructor_name</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="certificate-footer">
+                <div class="cert-number">Chứng nhận số: chung_nhan_so</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

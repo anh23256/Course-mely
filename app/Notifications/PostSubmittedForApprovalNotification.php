@@ -42,14 +42,7 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
     {
         Log::info("Saving notification to the database for user ID: " . $notifiable->id . " | Post ID: " . $this->post->id);
 
-        return [
-            'type' => 'post_submitted',
-            'post_id' => $this->post->id,
-            'post_title' => $this->post->title,
-            'post_slug' => $this->post->slug ?? '',
-            'post_thumbnail' => $this->post->thumbnail ?? '',
-            'message' => "Bài viết '{$this->post->title}' đã gửi yêu cầu kiểm duyệt.",
-        ];
+        return $this->notificationData();
     }
 
     /**
@@ -58,22 +51,23 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
     public function toBroadcast($notifiable)
     {
         $this->notifiableId = $notifiable->id;
-        return new BroadcastMessage([
+        return new BroadcastMessage($this->notificationData());
+    }
+    private function getUrl()
+    {
+        $approvableId = $this->post->approvables ? $this->post->approvables->id : null;
+        return $approvableId ? route('admin.approvals.posts.show', $approvableId) : '#';
+    }
+    private function notificationData(): array
+    {
+        return [
+            'type' => 'post_submitted',
             'post_id' => $this->post->id,
             'post_title' => $this->post->title,
             'post_slug' => $this->post->slug ?? '',
             'post_thumbnail' => $this->post->thumbnail ?? '',
-            'message' => "Bài viết '{$this->post->title}' đã được gửi để kiểm duyệt!",
-        ]);
-    }
-
-    /**
-     * Định nghĩa kênh broadcast
-     */
-    public function broadcastOn()
-    {
-        $channel = new PrivateChannel('notification.' . $this->notifiableId); // Gửi tới admin
-        Log::info('Broadcasting on channel: ' . $channel->name);
-        return $channel;
+            'message' => "Bài viết '{$this->post->title}' đã gửi yêu cầu kiểm duyệt.",
+            'url' => $this->getUrl(),
+        ];
     }
 }

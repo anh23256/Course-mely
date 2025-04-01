@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
+use function Livewire\on;
+
 class DashboardController extends Controller
 {
 
@@ -28,8 +30,8 @@ class DashboardController extends Controller
             $queryTotalCourse = $this->getTotalCourse();
             $queryTotalInstructor = $this->getTotalInstructor();
             $queryTopInstructors = $this->getTopInstructor($request);
-            $queryTopUsers = $this->getTopUser();
-            $queryTopCourses = $this->getTopCourse();
+            $queryTopUsers = $this->getTopUser($request);
+            $queryTopCourses = $this->getTopCourse($request);
             $querySystem_Funds = $this->getSystemFund();
             $queryCourseRatings = $this->getCourseRating();
             $queryTopCoursesProgress = $this->getTopCourseProgress();
@@ -37,12 +39,9 @@ class DashboardController extends Controller
             $quertTopInstructorsFollows = $this->getTopInstructorFollow();
             $queryCategoryStats = $this->getCategoryStat();
             $queryTotalByPaymentMethodAndInvoiceType = $this->getTotalByPaymentMethodAndInvoiceType();
-
             $queryGetTopViewCourses = $this->filterTopCourseView($queryGetTopViewCourses, $request);
 
             list(
-                $queryTopUsers,
-                $queryTopCourses,
                 $queryCourseRatings,
                 $querySystem_Funds,
                 $queryTotalAmount,
@@ -55,8 +54,6 @@ class DashboardController extends Controller
                 $queryTotalByPaymentMethodAndInvoiceType
             ) = $this->getFilterDataChart(
                 $request,
-                $queryTopUsers,
-                $queryTopCourses,
                 $queryCourseRatings,
                 $querySystem_Funds,
                 $queryTotalAmount,
@@ -87,6 +84,7 @@ class DashboardController extends Controller
             $courseRatings = $queryCourseRatings->get();
             $system_Funds = $querySystem_Funds->get();
             $topCoursesProgress = $queryTopCoursesProgress->get();
+
             $getTopViewCourses = $queryGetTopViewCourses->get();
             $topInstructorsFollows = $quertTopInstructorsFollows->get();
             $categoryStats = $queryCategoryStats->get();
@@ -149,7 +147,7 @@ class DashboardController extends Controller
             $query->whereBetween("{$table}.{$column}", [$startDate, $endDate]);
         } else {
             $query->where("{$table}.{$column}", '>=', "{$year}-01-01 00:00:00")
-                ->where("{$table}.{$column}", '<', now()->startOfDay());
+                ->where("{$table}.{$column}", '<=', now()->endOfDay());
         }
 
         return $query;
@@ -181,8 +179,6 @@ class DashboardController extends Controller
 
     private function getFilterDataChart(
         Request $request,
-        $queryTopUsers,
-        $queryTopCourses,
         $queryCourseRatings,
         $querySystem_Funds,
         $queryTotalAmount,
@@ -194,8 +190,6 @@ class DashboardController extends Controller
         $queryCategoryStats,
         $queryTotalByPaymentMethodAndInvoiceType
     ) {
-        $queryTopUsers = $this->applyGlobalFilter($queryTopUsers, $request, 'invoices', 'created_at');
-        $queryTopCourses = $this->applyGlobalFilter($queryTopCourses, $request, 'invoices', 'created_at');
         $queryCourseRatings = $this->applyGlobalFilter($queryCourseRatings, $request, 'courses', 'created_at');
         $querySystem_Funds = $this->applyGlobalFilter($querySystem_Funds, $request, 'invoices', 'created_at');
         $queryTotalAmount = $this->applyGlobalFilter($queryTotalAmount, $request, 'invoices', 'created_at');
@@ -208,8 +202,6 @@ class DashboardController extends Controller
         $queryTotalByPaymentMethodAndInvoiceType = $this->applyGlobalFilter($queryTotalByPaymentMethodAndInvoiceType, $request, 'invoices', 'created_at');
 
         return [
-            $queryTopUsers,
-            $queryTopCourses,
             $queryCourseRatings,
             $querySystem_Funds,
             $queryTotalAmount,
@@ -236,7 +228,7 @@ class DashboardController extends Controller
 
             switch ($type) {
                 case 'top_instructor':
-                    $headings = ['Người hướng dẫn', 'Khóa học đã bán', 'Học viên', 'Doanh thu'];
+                    $headings = ['Giảng viên', 'Khóa học đã bán', 'Học viên', 'Doanh thu'];
                     $formattedData = array_map(function ($item) {
                         if (!isset($item['name'], $item['total_courses'], $item['total_enrolled_students'], $item['total_revenue'])) {
                             return;
@@ -401,10 +393,10 @@ class DashboardController extends Controller
     private function getTopViewCourse()
     {
         return DB::table('courses')
-            ->select('courses.name', 'users.name as instructor_name', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
+            ->select('courses.name', 'users.name as instructor_name', 'users.avatar as instructor_avatar', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
             ->leftJoinSub(
                 DB::table('users')
-                    ->select('id', 'name'),
+                    ->select('id', 'name','avatar'),
                 'users',
                 function ($join) {
                     $join->on('users.id', '=', 'courses.user_id');
@@ -424,6 +416,9 @@ class DashboardController extends Controller
 
     private function getTopInstructor(Request $request)
     {
+        $invoices = DB::table('invoices')->where('invoices.status', 'Đã thanh toán');
+        $invoices = $this->applyGlobalFilter($invoices, $request, 'invoices', 'created_at');
+
         $query = DB::table('courses')
             ->select(
                 'courses.user_id',
@@ -431,32 +426,30 @@ class DashboardController extends Controller
                 'users.name',
                 'users.email',
                 'users.avatar',
+                'users.created_at',
                 DB::raw('ROUND(SUM(invoices.final_amount) * 0.6, 0) as total_revenue'),
             )
-            ->leftJoin('invoices', function ($join) {
-                $join->on('courses.id', '=', 'invoices.course_id')
-                    ->where('invoices.status', 'Đã thanh toán');
+            ->leftJoinSub($invoices, 'invoices', function ($join) {
+                $join->on('invoices.course_id', '=', 'courses.id');
             })
             ->leftJoin('users', function ($join) {
                 $join->on('users.id', '=', 'courses.user_id')
                     ->where('users.status', '!=', 'blocked');
             });
 
-        $query = $this->applyGlobalFilter($query, $request, 'invoices', 'created_at');
-
         $totalRevenue = $query
             ->groupBy('courses.user_id', 'users.id', 'users.name', 'users.email', 'users.avatar')
             ->orderByDesc('total_revenue')
             ->limit(10);
 
-        $id_topCourse = $totalRevenue->pluck('user_id');
+        $id_topCourse = (clone $totalRevenue)->pluck('user_id')->toArray();
 
         $totalCourses = DB::table('courses')
             ->select('user_id', DB::raw('COUNT(id) as total_courses'))
             ->whereIn('user_id', $id_topCourse)
             ->groupBy('user_id');
 
-        $totalStudents = DB::table('courses')
+        $totalStudents = DB::table(table: 'courses')
             ->select('courses.user_id', DB::raw('COALESCE(COUNT(DISTINCT course_users.user_id), 0) as total_enrolled_students'))
             ->leftJoin('course_users', function ($join) {
                 $join->on('courses.id', '=', 'course_users.course_id')
@@ -465,43 +458,42 @@ class DashboardController extends Controller
             ->whereIn('courses.user_id', $id_topCourse)
             ->groupBy('courses.user_id');
 
-        return DB::table(DB::raw("({$totalRevenue->toSql()}) as revenue"))
+        Log::debug('Top course user ids:', $id_topCourse);
+
+        return DB::table(DB::raw("({$totalRevenue->toSql()}) as invoices"))
             ->mergeBindings($totalRevenue)
-            ->leftJoinSub($totalCourses, 'courses', 'courses.user_id', '=', 'revenue.user_id')
-            ->leftJoinSub($totalStudents, 'students', 'students.user_id', '=', 'revenue.user_id')
+            ->leftJoinSub($totalCourses, 'courses', 'courses.user_id', '=', 'invoices.user_id')
+            ->leftJoinSub($totalStudents, 'students', 'students.user_id', '=', 'invoices.user_id')
             ->select(
-                'revenue.id',
-                'revenue.name',
-                'revenue.email',
-                'revenue.avatar',
-                DB::raw('COALESCE(revenue.total_revenue, 0) as total_revenue'),
+                'invoices.id',
+                'invoices.name',
+                'invoices.email',
+                'invoices.avatar',
+                'invoices.created_at',
+                DB::raw('COALESCE(invoices.total_revenue, 0) as total_revenue'),
                 DB::raw('COALESCE(courses.total_courses, 0) as total_courses'),
                 DB::raw('COALESCE(students.total_enrolled_students, 0) as total_enrolled_students')
             )
             ->orderByDesc('total_revenue');
     }
 
-    private function getTopCourse()
+    private function getTopCourse(Request $request)
     {
         $totalRevenue = DB::table('invoices')
-            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), 'created_at')
+            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
             ->where('status', 'Đã thanh toán')
-            ->groupBy('course_id', 'created_at');
+            ->orderByDesc('total_revenue')->groupBy('course_id')->limit(10);
+
+        $totalRevenue = $this->applyGlobalFilter($totalRevenue, $request, 'invoices', 'created_at');
 
         $totalStudents = DB::table('course_users')
-            ->select('course_id', DB::raw('COUNT(DISTINCT user_id) as total_enrolled_students'))
+            ->select('course_id', DB::raw('COUNT(user_id) as total_enrolled_students'))
             ->where(['source' => 'purchase', 'access_status' => 'active'])
-            ->groupBy('course_id');
-
-        $totalSales = DB::table('invoices')
-            ->select('course_id', DB::raw('COUNT(id) as total_sales'))
-            ->where('status', 'Đã thanh toán')
             ->groupBy('course_id');
 
         return DB::table('courses')
             ->leftJoinSub($totalRevenue, 'invoices', 'invoices.course_id', '=', 'courses.id')
             ->leftJoinSub($totalStudents, 'students', 'students.course_id', '=', 'courses.id')
-            ->leftJoinSub($totalSales, 'sales', 'sales.course_id', '=', 'courses.id')
             ->select(
                 'courses.id',
                 'courses.name',
@@ -509,13 +501,13 @@ class DashboardController extends Controller
                 'courses.created_at',
                 DB::raw('COALESCE(invoices.total_revenue, 0) as total_revenue'),
                 DB::raw('COALESCE(students.total_enrolled_students, 0) as total_enrolled_students'),
-                DB::raw('COALESCE(sales.total_sales, 0) as total_sales')
+                DB::raw('COALESCE(invoices.total_sales, 0) as total_sales')
             )
             ->orderByDesc('total_revenue')
             ->take(10);
     }
 
-    private function getTopUser()
+    private function getTopUser(Request $request)
     {
         $invoices = DB::table('invoices')
             ->select(
@@ -523,10 +515,12 @@ class DashboardController extends Controller
                 DB::raw('COUNT(DISTINCT course_id) as total_courses_purchased'),
                 DB::raw('SUM(final_amount) as total_spent'),
                 DB::raw('MAX(created_at) as last_purchase_date'),
-                'created_at'
             )
             ->where('status', 'Đã thanh toán')
-            ->groupBy('user_id', 'created_at');
+            ->orderByDesc('total_spent')
+            ->groupBy('user_id');
+
+        $invoices = $this->applyGlobalFilter($invoices, $request, 'invoices', 'created_at');
 
         $course_user = DB::table('course_users')
             ->select('user_id', DB::raw('COUNT(DISTINCT course_id) as total_active_courses'))

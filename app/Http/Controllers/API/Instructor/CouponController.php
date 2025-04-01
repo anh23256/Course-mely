@@ -94,7 +94,7 @@ class CouponController extends Controller
                         ],
                         [
                             'status' => 'unused',
-                            'applied_at' => $data['start_date'] ?? null,
+                            'applied_at' => null,
                             'expired_at' => $data['expire_date'] ?? null
                         ]
                     );
@@ -195,7 +195,6 @@ class CouponController extends Controller
                         'course_id' => $course_id,
                     ]);
                 }
-
             } else {
                 DB::table('coupon_course')->where('coupon_id', $coupon->id)->delete();
             }
@@ -243,7 +242,6 @@ class CouponController extends Controller
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
-
     }
 
     public function toggleStatus(string $id, string $action)

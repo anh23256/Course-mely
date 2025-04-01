@@ -223,6 +223,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Lấy danh sách phần thưởng có thể trúng
             Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
+
+            //Kiểm tra trạng thái vòng quay
+            Route::get('/status', [SpinController::class, 'getSpinStatus']);
         });
     });
     #============================== ROUTE TRANSACTION =============================
@@ -504,6 +507,9 @@ Route::get('/tags', [TagController::class, 'index']);
 Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::class, 'index']);
 
 Route::get('/instructor-order-by-count-course', [\App\Http\Controllers\API\Common\CommonController::class, 'instructorOrderByCountCourse']);
+
+#============================== ROUTE UPLOAD IMAGE =============================
+Route::post('/upload/image', [\App\Http\Controllers\API\Common\CommonController::class, 'uploadImage']);
 
 #============================== ROUTE POST =============================
 Route::prefix('blogs')

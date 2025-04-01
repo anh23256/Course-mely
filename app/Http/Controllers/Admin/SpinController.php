@@ -10,6 +10,7 @@ use App\Models\Gift;
 use App\Models\Spin;
 use App\Models\SpinConfig;
 use App\Models\SpinHistory;
+use App\Models\SpinSetting;
 use App\Models\User;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
@@ -27,12 +28,23 @@ class SpinController extends Controller
     const FOLDER = 'gifts';
     public function index(Request $request)
     {
+        // Lấy cấu hình vòng quay
+        $spinSetting = SpinSetting::firstOrCreate(); // Lấy hoặc tạo bản ghi đầu tiên
         // Cấu hình tỷ lệ trúng
         $spinConfigs = SpinConfig::all();
         // Kiểm tra số lượng phần thưởng theo loại (no_reward, coupon, spin)
         $requiredTypes = ['no_reward', 'coupon', 'spin'];
         $spinConfigTypes = $spinConfigs->pluck('type')->unique()->toArray();
         $missingTypes = array_diff($requiredTypes, $spinConfigTypes);
+
+        $typeNames = [
+            'no_reward' => 'Không trúng',
+            'coupon' => 'Mã giảm giá',
+            'spin' => 'Lượt quay',
+        ];
+        $missingTypeNames = array_map(function ($type) use ($typeNames) {
+            return $typeNames[$type] ?? ucfirst($type); // Fallback nếu type không có trong ánh xạ
+        }, $missingTypes);
         $hasEnoughSpinConfigTypes = count($missingTypes) === 0;
 
         // Lấy danh sách quà hiện vật được chọn
@@ -48,6 +60,8 @@ class SpinController extends Controller
 
         // Kiểm tra tất cả các điều kiện để hiển thị cảnh báo
         $isConfigValid = $hasEnoughSpinConfigTypes && $hasEnoughGifts && $isProbabilityValid;
+
+        $spinStatus = $spinSetting->status;
         $showConfigWarning = !$isConfigValid;
         $gifts = Gift::all()->where('is_selected', 1);
         $giftsAll = Gift::all();
@@ -156,7 +170,10 @@ class SpinController extends Controller
             'currentSelectedGiftsCount',
             'showConfigWarning',
             'isProbabilityValid',
-            'spinHistories'
+            'spinHistories',
+            'spinStatus',
+            'spinSetting',
+            'missingTypeNames',
         ));
     }
     public function storeSpinConfig(StoreSpinRequest $request)
@@ -165,7 +182,7 @@ class SpinController extends Controller
             DB::beginTransaction();
 
             $data = $request->all();
-
+            // dd( $data); die;
             $spinConfig = SpinConfig::create($data);
             DB::commit();
             return redirect()->back()->with('success', 'Thêm ô quà thành công!');
@@ -182,37 +199,53 @@ class SpinController extends Controller
         }
     }
     public function toggleSelection(Request $request, $type, $id)
-    {
-        try {
-            if ($type === 'gift') {
-                $item = Gift::findOrFail($id);
-                if (!$item->is_selected) {
-                    // Đếm số lượng quà hiện vật đã được chọn
-                    $selectedGiftsCount = Gift::where('is_selected', 1)->count();
+{
+    try {
+        $spinSetting = SpinSetting::first();
+        if ($spinSetting && $spinSetting->status === 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể thay đổi trạng thái quà hiện vật khi vòng quay đang hoạt động!'
+            ], 403);
+        }
 
-                    // Nếu đã có 2 quà hiện vật được chọn, không cho phép thêm
-                    if ($selectedGiftsCount >= 2) {
-                        return redirect()->back()->with('error', 'Chỉ được phép thêm tối đa 2 quà hiện vật vào vòng quay!');
-                    }
+        if ($type === 'gift') {
+            $item = Gift::findOrFail($id);
+            if (!$item->is_selected) {
+                $selectedGiftsCount = Gift::where('is_selected', 1)->count();
+                if ($selectedGiftsCount >= 2) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Chỉ được phép thêm tối đa 2 quà hiện vật vào vòng quay!'
+                    ], 400);
                 }
-            } else {
-                return redirect()->back()->with('error', 'Loại phần thưởng không hợp lệ');
             }
 
             $item->is_selected = !$item->is_selected;
             $item->save();
 
-            // Log::info("Admin toggled selection for $type", ['admin_id' => $request->user()->id, 'item_id' => $id, 'is_selected' => $item->is_selected]);
             $message = $item->is_selected
                 ? 'Thêm quà hiện vật vào vòng quay thành công!'
                 : 'Bỏ quà hiện vật khỏi vòng quay thành công!';
-            return redirect()->back()->with('success', $message);
-        } catch (\Exception $e) {
-            $this->logError($e);
-
-            return redirect()->back()->with('error', $e->getMessage());
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'is_selected' => $item->is_selected
+            ]);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Loại phần thưởng không hợp lệ'
+        ], 400);
+    } catch (\Exception $e) {
+        $this->logError($e);
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
     // Cập nhật cấu hình tỷ lệ trúng (SpinConfig)
     public function updateSpinConfig(Request $request, $id)
     {
@@ -274,7 +307,7 @@ class SpinController extends Controller
             'stock' => 'required|integer|min:0',
             'probability' => 'required|numeric|min:0|max:100',
             'description' => 'nullable|string',
-            'image_url' => 'nullable|url',
+            'thmubnail' => 'nullable|url',
             'is_active' => 'boolean',
         ]);
 
@@ -340,9 +373,64 @@ class SpinController extends Controller
     }
     public function deleteSpinConfig($id)
     {
+        // Lấy trạng thái vòng quay từ spin_settings
+        $spinSetting = SpinSetting::first();
+
+        // Kiểm tra nếu vòng quay đang hoạt động
+        if ($spinSetting && $spinSetting->status === 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa ô quà khi vòng quay đang hoạt động!'
+            ], 403); // 403 Forbidden
+        }
+
+        // Nếu vòng quay không hoạt động, tiến hành xóa
         $spinConfig = SpinConfig::findOrFail($id);
         $spinConfig->delete();
 
-        return response()->json(['success' => true, 'message' => 'Xóa ô quà thành công!']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Xóa ô quà thành công!'
+        ]);
+    }
+    public function toggleSpinStatus(Request $request)
+    {
+        $spinSetting = SpinSetting::firstOrCreate();
+
+        // Kiểm tra các điều kiện
+        $spinConfigs = SpinConfig::all();
+        $requiredTypes = ['no_reward', 'coupon', 'spin'];
+        $spinConfigTypes = $spinConfigs->pluck('type')->unique()->toArray();
+        $hasEnoughSpinConfigTypes = count(array_diff($requiredTypes, $spinConfigTypes)) === 0;
+
+        $selectedGifts = Gift::where('is_selected', 1)->get();
+        $requiredGifts = 2;
+        $hasEnoughGifts = $selectedGifts->count() === $requiredGifts;
+
+        $totalProbability = $spinConfigs->sum('probability') + $selectedGifts->sum('probability');
+        $isProbabilityValid = abs($totalProbability - 100) < 0.01;
+
+        $isConfigValid = $hasEnoughSpinConfigTypes && $hasEnoughGifts && $isProbabilityValid;
+
+        // Chỉ cho phép bật nếu tất cả điều kiện đều thỏa mãn
+        if ($request->input('status') === 'active' && !$isConfigValid) {
+            return redirect()->back()->with('error', 'Không thể kích hoạt vòng quay do chưa đủ điều kiện!');
+        }
+
+        // Cập nhật trạng thái theo yêu cầu từ switch
+        $newStatus = $request->input('status') === 'active' ? 'active' : 'inactive';
+        $spinSetting->update([
+            'status' => $newStatus,
+            'has_enough_spin_types' => $hasEnoughSpinConfigTypes,
+            'has_enough_gifts' => $hasEnoughGifts,
+            'is_probability_valid' => $isProbabilityValid,
+            'total_probability' => $totalProbability,
+        ]);
+        if ($newStatus === 'active') {
+            $message = 'Kích hoạt vòng quay thành công!';
+        } else {
+            $message = 'Vòng quay đã được tắt trạng thái hoạt động.';
+        }
+        return redirect()->back()->with('success', $message);
     }
 }

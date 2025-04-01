@@ -3,8 +3,11 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "start": "concurrently \"php artisan ser\" \"php artisan reverb:start\"",
-        "start:all": "concurrently \"php artisan ser\" \"npm run dev\" \"php artisan queue:work\" \"php artisan reverb:start\""
+        "start": "concurrently \"php artisan ser\" \"npm run dev\" \"php artisan reverb:start\"",
+        "start:all": "concurrently \"php artisan ser\" \"npm run dev\" \"php artisan queue:work\" \"php artisan reverb:start\"",
+        "queue": "php artisan queue:work",
+        "task": "php artisan schedule:work",
+        "clear": "php artisan cache:clear && php artisan config:clear"
     },
     "devDependencies": {
         "axios": "^1.1.2",

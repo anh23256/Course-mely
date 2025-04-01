@@ -3,12 +3,24 @@
 @push('page-css')
     <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
-
     <style>
+        .no-data {
+            text-align: center;
+            font-size: 18px;
+            color: #999;
+            padding: 20px;
+        }
 
+        .highcharts-series rect {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .highcharts-series rect:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
+        }
     </style>
 @endpush
 
@@ -113,8 +125,7 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value"
-                                    data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
+                                <span class="counter-value" data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -225,7 +236,7 @@
             <div class="col-xl-6">
                 <div class="card">
                     <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1 text-white">Người hướng dẫn nổi bật</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Giảng viên nổi bật</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_instructor"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                         <button class="fs-7 badge bg-primary mx-2" id="showTopInstructorButton">Xem biểu đồ</button>
@@ -236,7 +247,7 @@
                                 class="table table-centered table-hover align-middle table-nowrap mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Người hướng dẫn</th>
+                                        <th>Giảng viên</th>
                                         <th>Khoá học</th>
                                         <th>Học viên</th>
                                         <th>Doanh thu</th>
@@ -330,126 +341,133 @@
 
         <!-- Top Completed Courses & Top Instructors -->
         <div class="row mt-4">
-            <div class="col-xxl-7">
-                <div class="card">
-                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-3">
-                        <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
-                            class="avatar-xs rounded-circle object-fit-cover" alt="">
-                        <h4 class="card-title mb-0 mx-2 text-white">Tỷ trọng bán hàng: Khóa học & Gói thành viên</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
-                                <h6 class="text-danger">Khóa học bán ra</h6>
-                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
-                                    ? (fmod(
-                                        (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
-                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                            100,
-                                        1,
-                                    ) == 0
-                                        ? intval(
+            <div class="row">
+                <div class="col-xxl-7 d-flex">
+                    <div class="card h-100 w-100">
+                        <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-3">
+                            <img src="https://img.themesbrand.com/velzon/images/img-2.gif"
+                                class="avatar-xs rounded-circle object-fit-cover" alt="">
+                            <h4 class="card-title mb-0 mx-2 text-white">Tỷ trọng bán hàng: Khóa học & Gói thành viên</h4>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="row flex-grow-1">
+                                <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                    <h6 class="text-danger">Khóa học bán ra</h6>
+                                    {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                        ? (fmod(
                                             (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
                                                 $totalByPaymentMethodAndInvoiceType->total_invoice) *
                                                 100,
-                                        )
-                                        : round(
-                                            (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                            2,
-                                        ))
-                                    : 0 }}%
-                            </div>
-                            <div class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
-                                <h6 class="text-danger">Gói thành viên bán ra</h6>
-                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
-                                    ? (fmod(
-                                        (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
-                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                            100,
-                                        1,
-                                    ) == 0
-                                        ? intval(
+                                            1,
+                                        ) == 0
+                                            ? intval(
+                                                (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                            )
+                                            : round(
+                                                (($totalByPaymentMethodAndInvoiceType->total_course_sales ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                                2,
+                                            ))
+                                        : 0 }}%
+                                </div>
+                                <div
+                                    class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                    <h6 class="text-danger">Gói thành viên bán ra</h6>
+                                    {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                        ? (fmod(
                                             (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
                                                 $totalByPaymentMethodAndInvoiceType->total_invoice) *
                                                 100,
-                                        )
-                                        : round(
-                                            (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                            2,
-                                        ))
-                                    : 0 }}%
+                                            1,
+                                        ) == 0
+                                            ? intval(
+                                                (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                            )
+                                            : round(
+                                                (($totalByPaymentMethodAndInvoiceType->total_membership_sales ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                                2,
+                                            ))
+                                        : 0 }}%
+                                </div>
                             </div>
+                            <div id="render-membership-chart" class="w-100 flex-grow-1"></div>
                         </div>
-                        <div id="render-membership-chart" class="w-100"></div>
                     </div>
                 </div>
-            </div>
-            <div class="col-xxl-5">
-                <div class="card">
-                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-4">
-                        <h4 class="card-title mb-0 text-white">Tỷ trọng giao dịch qua từng phương thức thanh toán</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
-                                <h6 class="text-danger">Momo</h6>
-                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
-                                    ? (fmod(
-                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
-                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                            100,
-                                        1,
-                                    ) == 0
-                                        ? intval(
+
+                <div class="col-xxl-5 d-flex">
+                    <div class="card h-100 w-100">
+                        <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center p-4">
+                            <h4 class="card-title mb-0 text-white">Tỷ trọng giao dịch qua từng phương thức thanh toán</h4>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="row flex-grow-1">
+                                <div style="height: 60px !important"
+                                    class="col-6 text-center text-danger border-bottom border-3 fw-bold fs-15">
+                                    <h6 class="text-danger">Momo</h6>
+                                    {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                        ? (fmod(
                                             (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
                                                 $totalByPaymentMethodAndInvoiceType->total_invoice) *
                                                 100,
-                                        )
-                                        : round(
-                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                            2,
-                                        ))
-                                    : 0 }}%
-                            </div>
-                            <div class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
-                                <h6 class="text-danger">Vnpay</h6>
-                                {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
-                                    ? (fmod(
-                                        (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
-                                            $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                            100,
-                                        1,
-                                    ) == 0
-                                        ? intval(
+                                            1,
+                                        ) == 0
+                                            ? intval(
+                                                (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                            )
+                                            : round(
+                                                (($totalByPaymentMethodAndInvoiceType->total_payment_method_momo ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                                2,
+                                            ))
+                                        : 0 }}%
+                                </div>
+                                <div style="height: 60px !important"
+                                    class="col-6 text-center border-start border-bottom border-3 text-danger fw-bold fs-15">
+                                    <h6 class="text-danger">Vnpay</h6>
+                                    {{ ($totalByPaymentMethodAndInvoiceType->total_invoice ?? 0) > 0
+                                        ? (fmod(
                                             (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
                                                 $totalByPaymentMethodAndInvoiceType->total_invoice) *
                                                 100,
-                                        )
-                                        : round(
-                                            (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
-                                                $totalByPaymentMethodAndInvoiceType->total_invoice) *
-                                                100,
-                                            2,
-                                        ))
-                                    : 0 }}%
+                                            1,
+                                        ) == 0
+                                            ? intval(
+                                                (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                            )
+                                            : round(
+                                                (($totalByPaymentMethodAndInvoiceType->total_payment_method_vnpay ?? 0) /
+                                                    $totalByPaymentMethodAndInvoiceType->total_invoice) *
+                                                    100,
+                                                2,
+                                            ))
+                                        : 0 }}%
+                                </div>
                             </div>
+                            <div id="render-payment-method-chart" class="w-100 flex-grow-1"></div>
                         </div>
-                        <div id="render-payment-method-chart" class="w-100"></div>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!-- Ratings & Top Students -->
-        <div class="row mt-2 ">
-            <div class="col-xl-4">
-                <div class="card">
+        <div class="row mt-5 d-flex">
+            <div class="col-xl-5 d-flex">
+                <div class="card w-100 h-100">
                     <div class="card-header bg-primary bg-gradient bg-opacity-60">
                         <h4 class="card-title mb-0 text-white">Đánh giá khoá học</h4>
                     </div>
@@ -458,12 +476,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-8">
-                <div class="card">
+            <div class="col-xl-7 d-flex">
+                <div class="card w-100 h-100">
                     <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
                         <h4 class="card-title mb-0 flex-grow-1 text-white">Top học viên</h4>
-                        <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_student"><i
-                                class='fs-9 bx bx-download'> Excel</i></button>
+                        <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_student">
+                            <i class='fs-9 bx bx-download'> Excel</i>
+                        </button>
                         <button class="fs-7 badge bg-primary mx-2" id="showRenderTopStudentsButton">Xem biểu đồ</button>
                     </div>
                     <div class="card-body" id="showRenderTopStudentsDiv">
@@ -678,6 +697,14 @@
     <script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/moment.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/annotations.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+    <script src="https://code.highcharts.com/modules/packed-bubble.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
 
     <script>
         var topCourse = @json($topCourses);
@@ -752,323 +779,261 @@
             updateDateRangeText(defaultStart, defaultEnd);
         });
 
-        function updateChart(data = []) {
+        function updateChart(data) {
             let chartContainer = document.querySelector("#projects-overview-chart");
-
-            if (typeof chart !== "undefined" && chart) {
-                chart.destroy();
-                chart = undefined;
-            }
-
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có doanh thu</p>
-        </div>`;
+                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu lợi nhuận</div>`;
                 return;
             }
 
-            let categories = [];
-            let revenueData = [];
-            let profitData = [];
-            let courseSalesData = [];
-            let membershipSalesData = [];
-            let momoSalesData = [];
-            let vnpaySalesData = [];
+            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let profitData = data.map(item => parseFloat(item.total_profit));
 
-            data.forEach(item => {
-                categories.push("Tháng " + item.month + ", " + item.year);
-                revenueData.push(parseFloat(item.total_revenue));
-                profitData.push(parseFloat(item.total_profit));
-            });
-
-
-            let options = {
-                series: [{
-                        name: "Doanh thu",
-                        data: revenueData
-                    },
-                    {
-                        name: "Lợi nhuận",
-                        data: profitData
-                    }
-                ],
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    type: "bar",
-                    height: 400,
-                    stacked: false,
-                    zoom: {
-                        enabled: true
+                    type: 'area',
+                    zooming: {
+                        type: 'x'
                     },
-                    toolbar: {
-                        show: true
-                    }
-                },
-                dataLabels: {
-                    enabled: false,
-                    formatter: function(val) {
-                        return val.toLocaleString() + " VND";
+                    panning: true,
+                    panKey: 'shift',
+                    scrollablePlotArea: {
+                        minWidth: 600
                     },
-                    offsetY: -10,
-                    style: {
-                        fontSize: "12px",
-                        colors: ["#304758"]
-                    }
+                    backgroundColor: null
                 },
-                xaxis: {
+                title: {
+                    text: 'Biểu đồ lợi nhuận Course MeLy'
+                },
+                credits: {
+                    enabled: false
+                },
+                xAxis: {
                     categories: categories,
                     labels: {
-                        rotate: -45
-                    }
-                },
-                yaxis: {
+                        format: '{value}'
+                    },
+                    minRange: 6,
                     title: {
-                        text: "Doanh thu & Lợi nhuận (VND)"
+                        text: 'Thời gian'
                     }
                 },
-                grid: {
-                    padding: {
-                        left: 10,
-                        right: 10
-                    }
-                },
-                colors: ["#007BFF", "#FF4D4D"],
-                yaxis: [{
+                yAxis: {
+                    startOnTick: true,
+                    endOnTick: false,
                     title: {
-                        text: "Doanh thu & lợi nhuận (VND)"
+                        text: 'Lợi nhuận (VND)'
                     },
                     labels: {
-                        formatter: function(value) {
-                            return value.toLocaleString("vi-VN").replace(/\./g, ",") + " VND";
+                        formatter: function() {
+                            return this.value.toLocaleString() + " VND";
                         }
                     }
-                }],
+                },
                 tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return value.toLocaleString("vi-VN").replace(/\./g, ",") + " VND";
-                        }
-                    }
-                }
-
-            };
-
-            chart = new ApexCharts(chartContainer, options);
-            chart.render();
+                    shared: true,
+                    pointFormat: '<b>{point.y} VND</b>'
+                },
+                legend: {
+                    enabled: false
+                },
+                series: [{
+                    name: 'Lợi nhuận',
+                    data: profitData,
+                    lineColor: Highcharts.getOptions().colors[1],
+                    color: Highcharts.getOptions().colors[2],
+                    fillOpacity: 0.5,
+                    marker: {
+                        enabled: false
+                    },
+                    threshold: null
+                }]
+            });
         }
 
         function renderMembershipChart(data = []) {
             let chartContainer = document.querySelector("#render-membership-chart");
-
-            if (typeof chartMembership !== "undefined" && chartMembership) {
-                chartMembership.destroy();
-                chartMembership = undefined;
-            }
-
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu</div>`;
                 return;
             }
 
-            let categories = [];
-            let courseSalesData = [];
-            let membershipSalesData = [];
+            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let courseSalesData = data.map(item => parseInt(item.total_course_sales));
+            let membershipSalesData = data.map(item => parseInt(item.total_membership_sales));
 
-            data.forEach(item => {
-                categories.push("Tháng " + item.month + ", " + item.year);
-                courseSalesData.push(parseInt(item.total_course_sales));
-                membershipSalesData.push(parseInt(item.total_membership_sales));
-            });
-
-
-            let options = {
-                series: [{
-                        name: "Khóa học bán ra",
-                        data: courseSalesData
-                    },
-                    {
-                        name: "Gói thành viên bán ra",
-                        data: membershipSalesData
-                    }
-                ],
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    type: "area",
-                    height: 400,
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
-                    }
+                    type: 'area',
+                    height: '50%',
+                    backgroundColor: null,
+                    spacing: [20, 20, 20, 20]
                 },
-                xaxis: {
+                title: {
+                    text: null
+                },
+                credits: {
+                    enabled: false
+                },
+                xAxis: {
                     categories: categories
                 },
-                yaxis: {
+                yAxis: {
                     title: {
-                        text: "Số lượng bán ra"
+                        text: 'Số lượng'
                     }
                 },
-                tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return value.toLocaleString("vi-VN").replace(/\./g,
-                                ",");
-                        }
+                series: [{
+                        name: 'Khóa học',
+                        data: courseSalesData,
+                        color: '#17a2b8'
+                    },
+                    {
+                        name: 'Gói thành viên',
+                        data: membershipSalesData,
+                        color: '#ffc107'
                     }
-                }
-            };
-
-            chartMembership = new ApexCharts(chartContainer, options);
-            chartMembership.render();
-
+                ]
+            });
         }
 
         function renderPaymentMethodChart(data) {
             let chartContainer = document.querySelector("#render-payment-method-chart");
-
-            if (typeof chartPaymentMethod !== "undefined" && chartPaymentMethod) {
-                chartPaymentMethod.destroy();
-                chartPaymentMethod = undefined;
-            }
-
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #999;">
-                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-                </div>`;
+                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu</div>`;
                 return;
             }
 
-            let categories = [];
-            let momoData = [];
-            let vnpayData = [];
-            // let creditCardData = [];
+            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let momoData = data.map(item => parseInt(item.total_payment_method_momo) || 0);
+            let vnpayData = data.map(item => parseInt(item.total_payment_method_vnpay) || 0);
 
-            data.forEach(item => {
-                categories.push("Tháng " + item.month + ", " + item.year);
-                momoData.push(parseInt(item.total_payment_method_momo) || 0);
-                vnpayData.push(parseInt(item.total_payment_method_vnpay) || 0);
-                // creditCardData.push(parseInt(item.total_payment_method_credit_card) || 0);
-            });
-
-            let options = {
-                series: [{
-                        name: "Momo",
-                        data: momoData
-                    },
-                    {
-                        name: "VNPay",
-                        data: vnpayData
-                    }
-                    // ,
-                    // {
-                    //     name: "Credit Card",
-                    //     data: creditCardData
-                    // }
-                ],
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    type: "bar",
-                    height: 400,
-                    stacked: true,
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
+                    type: 'bar',
+                    height: "50%",
+                    backgroundColor: null,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutBounce'
                     }
                 },
-                xaxis: {
-                    categories: categories
-                },
-                yaxis: {
-                    title: {
-                        text: "Số lượng giao dịch"
-                    }
-                },
-                colors: ["#5A6FA7", "#F1C40F"],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: "60%"
-                    }
-                },
-                dataLabels: {
+                credits: {
                     enabled: false
                 },
-                legend: {
-                    position: "top"
-                }
-            };
-
-            chartPaymentMethod = new ApexCharts(chartContainer, options);
-            chartPaymentMethod.render();
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Số lượng giao dịch'
+                    }
+                },
+                plotOptions: {
+                    series: {
+                        borderRadius: 5,
+                        shadow: true
+                    }
+                },
+                series: [{
+                        name: 'Momo',
+                        data: momoData,
+                        color: {
+                            linearGradient: {
+                                x1: 0,
+                                x2: 1,
+                                y1: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, '#ff4081'],
+                                [1, '#ff80ab']
+                            ]
+                        }
+                    },
+                    {
+                        name: 'VNPay',
+                        data: vnpayData,
+                        color: {
+                            linearGradient: {
+                                x1: 0,
+                                x2: 1,
+                                y1: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, '#2196f3'],
+                                [1, '#6ec6ff']
+                            ]
+                        }
+                    }
+                ]
+            });
         }
 
         function updatePieChart(ratingData) {
             let pieChartContainer = document.querySelector("#rating-pie-chart");
-            if (pieChart) pieChart.destroy();
+            pieChartContainer.innerHTML = "";
+
             if (!ratingData || !ratingData.length) {
-                pieChartContainer.innerHTML = '<div class="text-center p-4 text-muted">Không có đánh giá</div>';
+                pieChartContainer.innerHTML = '<div class="no-data">Không có đánh giá</div>';
                 return;
             }
 
             let series = ratingData.map(item => parseFloat(item.total_courses));
             let labels = ratingData.map(item => `${item.rating} sao`);
 
-            let options = {
-                series: series,
+            Highcharts.chart(pieChartContainer, {
                 chart: {
-                    type: "pie",
-                    height: 400,
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
+                    type: 'pie',
+                    height: "80%",
+                    backgroundColor: null,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutBounce'
                     }
                 },
-                labels: labels,
-                legend: {
-                    position: "bottom"
-                }
-            };
-
-            pieChart = new ApexCharts(pieChartContainer, options);
-            pieChart.render();
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: 'Tỉ lệ đánh giá khóa học'
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        borderRadius: 10,
+                        shadow: true,
+                        size: '100%',
+                    }
+                },
+                series: [{
+                    name: 'Khóa học',
+                    data: labels.map((label, index) => ({
+                        name: label,
+                        y: series[index]
+                    })),
+                    colors: ['#FF9800', '#F44336', '#4CAF50', '#03A9F4', '#9C27B0']
+                }]
+            });
         }
 
         function updateCategoryRevenueChart(data = []) {
             let chartContainer = document.querySelector("#category-revenue-chart");
-
-            if (categoryRevenueChart) categoryRevenueChart.destroy();
+            chartContainer.innerHTML = "";
 
             if (!data || !data.length) {
                 chartContainer.innerHTML = '<div class="text-center p-4 text-muted">Không có dữ liệu</div>';
@@ -1080,441 +1045,476 @@
             let totalEnrolledStudentsSeries = data.map(item => parseInt(item.total_enrolled_students));
             let totalInstructorsSeries = data.map(item => parseInt(item.total_instructors));
 
-            let options = {
-                series: [{
-                        name: 'Số khóa học',
-                        data: totalCoursesSeries
-                    },
-                    {
-                        name: 'Số học viên',
-                        data: totalEnrolledStudentsSeries
-                    },
-                    {
-                        name: 'Số người hướng dẫn',
-                        data: totalInstructorsSeries
-                    }
-                ],
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    height: "100%",
                     type: 'line',
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
-                    }
+                    height: '70%',
+                    backgroundColor: null
                 },
-                stroke: {
-                    curve: 'smooth',
-                    width: 2
+                title: {
+                    text: 'Số học viên & giảng viên & khóa học theo danh mục'
                 },
-                markers: {
-                    size: 5
-                },
-                xaxis: {
+                xAxis: {
                     categories: categories,
                     labels: {
-                        rotate: -45,
+                        rotation: -45,
                         style: {
                             fontSize: '12px'
+                        },
+                        formatter: function() {
+                            return this.value.length > 20 ? this.value.substring(0, 17) + "..." : this.value;
                         }
                     }
                 },
-                yaxis: {
+                yAxis: {
                     title: {
                         text: 'Số lượng'
                     },
                     labels: {
-                        formatter: function(val) {
-                            return val.toLocaleString();
+                        formatter: function() {
+                            return this.value.toLocaleString();
                         }
                     }
                 },
-                tooltip: {
-                    y: {
-                        formatter: function(val) {
-                            return val.toLocaleString();
-                        }
-                    }
+                credits: {
+                    enabled: false
                 },
                 legend: {
-                    position: 'top',
-                    horizontalAlign: 'center',
-                    offsetY: 0
+                    align: 'center',
+                    verticalAlign: 'top'
                 },
-                colors: ['#008FFB', '#00E396', '#FEB019']
-            };
-
-            categoryRevenueChart = new ApexCharts(chartContainer, options);
-            categoryRevenueChart.render();
+                tooltip: {
+                    shared: true,
+                    pointFormat: '{series.name}: <b>{point.y}</b><br>'
+                },
+                series: [{
+                        name: 'Số khóa học',
+                        data: totalCoursesSeries,
+                        color: '#008FFB'
+                    },
+                    {
+                        name: 'Số học viên',
+                        data: totalEnrolledStudentsSeries,
+                        color: '#00E396'
+                    },
+                    {
+                        name: 'Số giảng viên',
+                        data: totalInstructorsSeries,
+                        color: '#FEB019'
+                    }
+                ]
+            });
         }
 
         function renderBestSellingCourses(data = []) {
             let chartContainer = document.querySelector("#bestSellingCourses");
-            if (chartBestSellingCourses) chartBestSellingCourses.destroy();
+            chartContainer.innerHTML = "";
+
             if (!data.data || !data.data.length) {
                 chartContainer.innerHTML = `<p class="text-center p-4 text-muted">Không có dữ liệu</p>`;
                 return;
             }
 
-            let colors = ["#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0", "#546E7A", "#26A69A", "#D7263D", "#F86624",
-                "#1B998B"
-            ];
-            let options = {
+            let categories = data.data.map(item => item.name);
+            let salesData = data.data.map(item => Number(item.total_sales) || 0);
+            let revenueData = data.data.map(item => Number(item.total_revenue) || 0);
+
+            Highcharts.chart(chartContainer, {
                 chart: {
+                    type: 'column',
                     height: "100%",
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
+                    backgroundColor: null
+                },
+                title: {
+                    text: 'Khóa học có doanh thu lớn nhất'
+                },
+                exporting: {
+                    enabled: true,
+                    buttons: {
+                        contextButton: {
+                            menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
                         }
+                    }
+                },
+                xAxis: {
+                    categories: categories.map(name => name.length > 20 ? name.substring(0, 17) + "..." : name),
+                    crosshair: true
+                },
+                credits: {
+                    enabled: false
+                },
+                yAxis: [{
+                        title: {
+                            text: 'Số lượng bán'
+                        },
+                        labels: {
+                            formatter: function() {
+                                return this.value.toLocaleString("vi-VN");
+                            }
+                        }
+                    },
+                    {
+                        title: {
+                            text: 'Doanh thu (VND)'
+                        },
+                        opposite: true,
+                        labels: {
+                            formatter: function() {
+                                return this.value.toLocaleString("vi-VN", {
+                                    style: "currency",
+                                    currency: "VND"
+                                });
+                            }
+                        }
+                    }
+                ],
+                tooltip: {
+                    shared: true,
+                    formatter: function() {
+                        let index = this.points[0].point.index;
+                        return `<b>${categories[index]}</b><br>
+                <span style="color:#008FFB">●</span> Số lượng bán: <b>${salesData[index].toLocaleString("vi-VN")}</b><br>
+                <span style="color:#FF4560">●</span> Doanh thu: <b>${revenueData[index].toLocaleString("vi-VN", { 
+                    style: "currency", 
+                    currency: "VND" 
+                })}</b>`;
+                    }
+                },
+                plotOptions: {
+                    column: {
+                        borderRadius: 5,
+                        grouping: true,
+                        shadow: true
+                    },
+                    areaspline: {
+                        fillOpacity: 0.2
                     }
                 },
                 series: [{
                         name: 'Số lượng bán',
-                        type: "bar",
-                        data: data.data.map(item => item.total_sales)
+                        type: 'column',
+                        data: salesData,
+                        color: '#008FFB'
                     },
                     {
-                        name: "Doanh thu (triệu VND)",
-                        type: "line",
-                        data: data.data.map(item => item.total_revenue)
-                    }
-                ],
-                yaxis: [{
-                        labels: {
-                            formatter: val => val.toLocaleString("vi-VN")
-                        }
-                    },
-                    {
-                        opposite: true,
-                        labels: {
-                            formatter: val => val.toLocaleString("vi-VN", {
-                                style: "currency",
-                                currency: "VND"
-                            }).replace("₫", "")
+                        name: 'Doanh thu (VND)',
+                        type: 'areaspline',
+                        yAxis: 1,
+                        data: revenueData,
+                        color: '#FF4560',
+                        lineWidth: 3,
+                        marker: {
+                            radius: 5,
+                            symbol: 'circle'
                         }
                     }
-                ],
-                xaxis: {
-                    categories: data.data.map((_, index) => index + 1)
-                },
-                plotOptions: {
-                    bar: {
-                        distributed: true,
-                        borderRadius: 4
-                    }
-                },
-                colors: colors,
-                tooltip: {
-                    y: {
-                        formatter: (val, {
-                            seriesIndex,
-                            dataPointIndex
-                        }) => {
-                            if (seriesIndex === 0)
-                                return `${data.data[dataPointIndex].name}: ${val.toLocaleString("vi-VN") + ' lượt bán'}`;
-                            return `${data.data[dataPointIndex].name}: ${val.toLocaleString("vi-VN", {
-                                style: "currency",
-                                currency: "VND"
-                            })}`;
-                        }
-                    }
-                }
-            };
-
-            chartBestSellingCourses = new ApexCharts(chartContainer, options);
-            chartBestSellingCourses.render();
+                ]
+            });
         }
 
         function renderTopInstructorsChart(data = []) {
             let chartContainer = document.querySelector("#renderTopInstructorsChart");
-            if (chartTopInstructors) chartTopInstructors.destroy();
+            chartContainer.innerHTML = "";
+
             if (!data.data || !data.data.length) {
                 chartContainer.innerHTML = `<p class="text-center p-4 text-muted">Không có dữ liệu</p>`;
                 return;
             }
 
-            let options = {
+            let categories = data.data.map(item => item.name || "Không rõ");
+            let revenueData = [],
+                courseData = [],
+                studentData = [];
+
+            data.data.forEach((item, index) => {
+                revenueData.push({
+                    x: index,
+                    y: 0,
+                    value: Number(item.total_revenue) || 0
+                });
+                courseData.push({
+                    x: index,
+                    y: 1,
+                    value: Number(item.total_courses) || 0
+                });
+                studentData.push({
+                    x: index,
+                    y: 2,
+                    value: Number(item.total_enrolled_students) || 0
+                });
+            });
+
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    height: "100%",
-                    type: "area",
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
+                    type: 'heatmap',
+                    plotBorderWidth: 1,
+                    height: "100%"
+                },
+                title: {
+                    text: 'Giảng viên có doanh thu cao nhất'
+                },
+                credits: {
+                    enabled: false
+                },
+                xAxis: {
+                    categories: categories,
+                    title: {
+                        text: "Giảng viên"
+                    },
+                    labels: {
+                        rotation: -45
+                    }
+                },
+                yAxis: {
+                    categories: ["Doanh thu (VND)", "Số khóa học", "Số học viên"],
+                    title: null
+                },
+                colorAxis: [{
+                    min: 0,
+                    stops: [
+                        [0, '#E3F2FD'],
+                        [0.5, '#42A5F5'],
+                        [1, '#0D47A1']
+                    ]
+                }, {
+                    min: 0,
+                    stops: [
+                        [0, '#FFF3E0'],
+                        [0.5, '#FFA726'],
+                        [1, '#E65100']
+                    ]
+                }, {
+                    min: 0,
+                    stops: [
+                        [0, '#FFEBEE'],
+                        [0.5, '#EF5350'],
+                        [1, '#B71C1C']
+                    ]
+                }],
+                legend: {
+                    align: 'right',
+                    layout: 'vertical',
+                    margin: 0,
+                    verticalAlign: 'top',
+                    y: 25,
+                    symbolHeight: 280
+                },
+                tooltip: {
+                    formatter: function() {
+                        return `<b>${categories[this.point.x]}</b><br>${this.series.name}: ${this.point.value.toLocaleString("vi-VN")}`;
                     }
                 },
                 series: [{
                         name: "Doanh thu (VND)",
-                        data: data.data.map(item => Number(item.total_revenue) || 0)
+                        borderWidth: 1,
+                        data: revenueData,
+                        colorAxis: 0,
+                        dataLabels: {
+                            enabled: true,
+                            color: '#000000'
+                        }
                     },
                     {
                         name: "Số khóa học",
-                        data: data.data.map(item => Number(item.total_courses) || 0)
+                        borderWidth: 1,
+                        data: courseData,
+                        colorAxis: 1,
+                        dataLabels: {
+                            enabled: true,
+                            color: '#000000'
+                        }
                     },
                     {
                         name: "Số học viên",
-                        data: data.data.map(item => Number(item.total_enrolled_students) || 0)
-                    }
-                ],
-                xaxis: {
-                    categories: data.data.map(item => item.name || "Không rõ"),
-                    labels: {
-                        rotate: -20,
-                        rotateAlways: true
-                    }
-                },
-                yaxis: {
-                    min: 0,
-                    forceNiceScale: true,
-                    labels: {
-                        formatter: val => val.toLocaleString("vi-VN")
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    curve: 'smooth'
-                },
-                colors: ["#008FFB", "#00E396", "#FEB019"],
-                tooltip: {
-                    y: {
-                        formatter: (val, {
-                            seriesIndex
-                        }) => {
-                            if (seriesIndex === 0)
-                                return `Doanh thu: ${val.toLocaleString("vi-VN", {
-                                    style: "currency",
-                                    currency: "VND"
-                                })}`;
-                            else if (seriesIndex === 1) return `Số khóa học: ${val}`;
-                            return `Số học viên: ${val}`;
+                        borderWidth: 1,
+                        data: studentData,
+                        colorAxis: 2,
+                        dataLabels: {
+                            enabled: true,
+                            color: '#000000'
                         }
                     }
-                },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.7,
-                        opacityTo: 0.3
-                    }
-                }
-            };
-
-            chartTopInstructors = new ApexCharts(chartContainer, options);
-            chartTopInstructors.render();
+                ]
+            });
         }
 
         function renderTopStudentsChart(data = []) {
             let chartContainer = document.querySelector("#renderTopStudentsChart");
-            if (chartTopStudents) chartTopStudents.destroy();
+            chartContainer.innerHTML = "";
+
             if (!data.data || !data.data.length) {
                 chartContainer.innerHTML = `<p class="text-center p-4 text-muted">Không có dữ liệu</p>`;
                 return;
             }
 
-            let options = {
+            let seriesData = [];
+            data.data.forEach(item => {
+                let student = item.name || "Không rõ";
+                let totalSpent = Number(item.total_spent) || 0;
+                let totalCourses = Number(item.total_courses_purchased) || 0;
+
+                if (totalCourses > 0) {
+                    seriesData.push([student, "Số khóa học đã mua", totalCourses]);
+                }
+                if (totalSpent > 0) {
+                    seriesData.push([student, "Tổng số tiền chi tiêu", totalSpent]);
+                }
+            });
+
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    height: 350,
-                    type: "bubble",
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
+                    type: 'sankey',
+                    height: "50%"
+                },
+                title: {
+                    text: 'Chi tiêu của học viên'
+                },
+                credits: {
+                    enabled: false
+                },
+                tooltip: {
+                    pointFormatter: function() {
+                        let unit = this.to === "Số khóa học đã mua" ? " khóa học" : " VND";
+                        return `<b>${this.from}</b> → <b>${this.to}</b>: <b>${this.weight.toLocaleString("vi-VN")}${unit}</b>`;
                     }
                 },
                 series: [{
-                    name: "Học viên",
-                    data: data.data.map(item => ({
-                        x: item.name || "Không rõ",
-                        y: Number(item.total_spent) || 0,
-                        z: Number(item.total_courses_purchased) || 0
-                    }))
-                }],
-                xaxis: {
-                    type: "category",
-                    labels: {
-                        rotate: -20,
-                        rotateAlways: true
-                    }
-                },
-                yaxis: {
-                    min: 0,
-                    labels: {
-                        formatter: val => val.toLocaleString("vi-VN", {
-                            style: "currency",
-                            currency: "VND"
-                        })
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: val =>
-                            `Doanh thu: ${val.toLocaleString("vi-VN", {style: "currency", currency: "VND"})}`
+                    keys: ['from', 'to', 'weight'],
+                    data: seriesData,
+                    colors: ["#007BFF", "#28A745", "#FFC107"],
+                    dataLabels: {
+                        color: "#333",
+                        style: {
+                            fontWeight: "bold"
+                        }
                     },
-                    z: {
-                        formatter: val => `Số lượt mua: ${val}`
-                    }
-                },
-                colors: ["#008FFB"]
-            };
-
-            chartTopStudents = new ApexCharts(chartContainer, options);
-            chartTopStudents.render();
+                    nodes: [{
+                        id: "Số khóa học đã mua",
+                        color: "#28A745"
+                    }, {
+                        id: "Tổng số tiền chi tiêu",
+                        color: "#FFC107"
+                    }]
+                }]
+            });
         }
 
         function renderTopInstructorsFollow(data = []) {
             let chartContainer = document.querySelector("#topInstructorsChart");
-            if (chartTopInstructorFollows) chartTopInstructorFollows.destroy();
+            chartContainer.innerHTML = "";
+
             if (!data.length) {
                 chartContainer.innerHTML = `<p class="text-center p-4 text-muted">Không có dữ liệu</p>`;
                 return;
             }
 
-            let options = {
-                series: [{
-                    data: data.map(item => ({
-                        x: `${item.name}`,
-                        y: item.total_student,
-                        custom: {
-                            name: item.name,
-                            follow: item.total_follow,
-                            students: item.total_student
-                        }
-                    }))
-                }],
+            let categories = data.map(item => item.name);
+            let totalStudents = data.map(item => item.total_student);
+            let totalFollows = data.map(item => item.total_follow);
+
+            Highcharts.chart(chartContainer, {
                 chart: {
-                    type: "radar",
-                    height: 350,
-                    width: "100%",
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
-                    }
+                    polar: true,
+                    type: 'line',
+                    height: 330
                 },
-                colors: ["#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0"],
-                legend: {
-                    show: false
+                title: {
+                    text: 'Top Giảng Viên - Học viên & Follow',
+                    align: 'center'
+                },
+                credits: {
+                    enabled: false
+                },
+                pane: {
+                    size: '80%'
+                },
+                xAxis: {
+                    categories: categories,
+                    tickmarkPlacement: 'on',
+                    lineWidth: 0
+                },
+                yAxis: {
+                    gridLineInterpolation: 'polygon',
+                    min: 0,
+                    title: {
+                        text: 'Số lượng'
+                    }
                 },
                 tooltip: {
-                    custom: ({
-                        series,
-                        seriesIndex,
-                        dataPointIndex,
-                        w
-                    }) => {
-                        let data = w.config.series[seriesIndex].data[dataPointIndex].custom;
-                        return `<div class="custom-tooltip">🧑‍🏫 <b>${data.name}</b><br>🔥 Follow: <b>${data.follow}</b><br>🎓 Học viên: <b>${data.students}</b></div>`;
-                    }
-                }
-            };
-
-            chartTopInstructorFollows = new ApexCharts(chartContainer, options);
-            chartTopInstructorFollows.render();
+                    shared: true,
+                    pointFormat: `<b>{series.name}</b>: {point.y}`
+                },
+                series: [{
+                    name: 'Học viên',
+                    data: totalStudents,
+                    color: '#008FFB',
+                    pointPlacement: 'on'
+                }, {
+                    name: 'Lượt Follow',
+                    data: totalFollows,
+                    color: '#00E396',
+                    pointPlacement: 'on'
+                }]
+            });
         }
 
         function renderTopCompletedCourses(data = []) {
             let chartContainer = document.querySelector("#topCompletedCourses");
-            if (chartTopCompletedCourses) chartTopCompletedCourses.destroy();
+            chartContainer.innerHTML = "";
+
             if (!data.length) {
                 chartContainer.innerHTML = `<p class="text-center p-4 text-muted">Không có dữ liệu</p>`;
                 return;
             }
 
-            let options = {
+            Highcharts.chart(chartContainer, {
                 chart: {
                     type: 'bar',
-                    height: 330,
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
+                    height: 330
+                },
+                title: {
+                    text: 'Tỷ lệ hoàn thành khóa học',
+                    align: 'center'
+                },
+                credits: {
+                    enabled: false
+                },
+                xAxis: {
+                    categories: data.map(item => {
+                        let name = item.course?.name || "N/A";
+                        return name.length > 25 ? name.substring(0, 17) + "..." : name;
+                    }),
+                    title: {
+                        text: 'Khoá học'
                     }
                 },
-                series: [{
-                    name: 'Tỷ lệ hoàn thành (%)',
-                    data: data.map(item => item.avg_progress)
-                }],
-                xaxis: {
-                    categories: data.map((item, index) => index + 1),
-                    labels: {
-                        formatter: val => Math.round(val)
-                    }
-                },
-                yaxis: {
-                    labels: {
-                        formatter: val => val.toString()
+                yAxis: {
+                    min: 0,
+                    max: 100,
+                    title: {
+                        text: 'Tỷ lệ hoàn thành (%)'
                     }
                 },
                 legend: {
-                    show: false
-                },
-                plotOptions: {
-                    bar: {
-                        horizontal: true,
-                        barHeight: '60%',
-                        distributed: true
-                    }
-                },
-                dataLabels: {
-                    enabled: true,
-                    formatter: val => `${val}%`
+                    enabled: false
                 },
                 tooltip: {
-                    y: {
-                        formatter: (val, {
-                            dataPointIndex
-                        }) => `${data[dataPointIndex]?.course?.name || 'N/A'}: ${val}%`
+                    pointFormat: '<b>{point.category}</b>: {point.y}% hoàn thành'
+                },
+                series: [{
+                    name: 'Tỷ lệ hoàn thành',
+                    data: data.map(item => Number(item.avg_progress) || 0),
+                    colorByPoint: true
+                }],
+                plotOptions: {
+                    bar: {
+                        dataLabels: {
+                            enabled: true,
+                            format: '{y}%'
+                        }
                     }
                 }
-            };
-
-            chartTopCompletedCourses = new ApexCharts(chartContainer, options);
-            chartTopCompletedCourses.render();
+            });
         }
 
         $(document).ready(function() {
@@ -1522,25 +1522,33 @@
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
 
-                loadCoursesContent({
-                    page: page
-                });
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadCoursesContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-instructors a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadInstructorsContent({
-                    page: page
-                });
+
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadInstructorsContent(dataFilter);
             });
 
             $(document).on('click', '#pagination-links-users a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
-                loadUsersContent({
-                    page: page
-                });
+
+                let dataFilter = getSelectedDateRange();
+
+                dataFilter.page = page;
+
+                loadUsersContent(dataFilter);
             });
 
             function loadCoursesContent(dataFilter) {

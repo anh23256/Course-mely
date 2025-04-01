@@ -27,6 +27,9 @@
             <a class="nav-link menu-link" href="{{ route('admin.invoices.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Khoá học đã bán</span>
             </a>
+            <a class="nav-link menu-link" href="{{ route('admin.invoices.memberships.index') }}">
+                <i class="ri-database-2-line"></i> <span data-key="t-authentication">Gói thành viên đã bán</span>
+            </a>
             <a class="nav-link menu-link" href="{{ route('admin.transactions.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Giao dịch thanh toán</span>
             </a>
@@ -39,9 +42,6 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link menu-link" href="{{ route('admin.approvals.memberships.index') }}">
-                <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Kiểm duyệt gói thành viên</span>
-            </a>
             <a class="nav-link menu-link" href="{{ route('admin.approvals.courses.index') }}">
                 <i class="las la-book-reader"></i> <span data-key="t-authentication">Kiểm duyệt khoá học</span>
             </a>
@@ -50,6 +50,9 @@
             </a>
             <a class="nav-link menu-link" href="{{ route('admin.approvals.posts.index') }}">
                 <i class="las la-chalkboard-teacher"></i> <span data-key="t-authentication">Kiểm duyệt bài viết</span>
+            </a>
+            <a class="nav-link menu-link" href="{{ route('admin.approvals.memberships.index') }}">
+                <i class=" ri-copper-diamond-line"></i> <span data-key="t-authentication">Gói thành viên</span>
             </a>
         </li>
 
@@ -69,7 +72,7 @@
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('admin.instructors.index') }}" class="nav-link">
-                            Người hướng dẫn </a>
+                            Giảng viên </a>
                     </li>
                     @can('super_admin.view')
                         <li class="nav-item">
@@ -257,9 +260,11 @@
                     </ul>
                 </div>
             @endcanany
+            @canany(['spin.create', 'spin.edit', 'spin.read', 'spin.delete'])
             <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
                 <i class=" bx bx-gift"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
             </a>
+            @endcanany
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
                 <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                     <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>

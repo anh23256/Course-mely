@@ -22,40 +22,48 @@
                 </div>
             </div>
         </div>
-         
+
         <!-- end page title -->
         <div class="row cursor-pointer">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center shadow-sm border-0 hover-effect">
-                    <div class="card-body">
-                        <i class="bx bx-list-check text-primary fs-1"></i>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card total-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-primary">
+                            <i class="bx bx-list-check text-primary fs-1"></i>
+                        </div>
                         <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
                         <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center shadow-sm border-0 hover-effect">
-                    <div class="card-body">
-                        <i class="bx bx-check-circle text-success fs-1"></i>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card approved-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-success">
+                            <i class="bx bx-check-circle text-success fs-1"></i>
+                        </div>
                         <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
                         <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center shadow-sm border-0 hover-effect">
-                    <div class="card-body">
-                        <i class="bx bx-time-five text-warning fs-1"></i>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card pending-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-warning">
+                            <i class="bx bx-time-five text-warning fs-1"></i>
+                        </div>
                         <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
                         <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center shadow-sm border-0 hover-effect">
-                    <div class="card-body">
-                        <i class="bx bx-x-circle text-danger fs-1"></i>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stats-card rejected-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-danger">
+                            <i class="bx bx-x-circle text-danger fs-1"></i>
+                        </div>
                         <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
                         <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
@@ -214,55 +222,69 @@
                                     </thead>
                                     <tbody class="list">
                                         @forelse ($approvals as $approval)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $approval->approvable ? \Illuminate\Support\Str::limit($approval->approvable->title ?? 'Không có tiêu đề', 50) : 'Không có bài viết' }}</td>
-                                            <td>{{ $approval->approvable && $approval->approvable->user ? $approval->approvable->user->name : '' }}</td>
-                                            <td>
-                                                <img style="height: 80px" src="{{ $approval->approvable && $approval->approvable->thumbnail ? $approval->approvable->thumbnail : asset('assets/images/no-photo.jpg') }}"
-                                                     alt="" class="w-100 object-fit-cover">
-                                            </td>
-                                            <td>
-                                                {!! !empty($approval->approver->name)
-                                                    ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>' 
-                                                    : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
-                                            </td>
-                                            <td>
-                                                @if ($approval->status == 'pending')
-                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time-five"></i> Chờ xử lý</span>
-                                                @elseif($approval->status == 'approved')
-                                                    <span class="badge bg-success text-white"><i class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
-                                                @else
-                                                    <span class="badge bg-danger text-white"><i class="bx bx-x-circle"></i> Từ chối</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                {!! $approval->request_date 
-                                                    ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' . \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') . '</span>'
-                                                    : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
-                                            </td>
-                                            <td>
-                                                @if($approval->approved_at)
-                                                    <span class="badge bg-success text-white"><i class="bx bx-calendar-check"></i> {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
-                                                @elseif($approval->rejected_at)
-                                                    <span class="badge bg-danger text-white"><i class="bx bx-calendar-x"></i> {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
-                                                @else
-                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('admin.approvals.posts.show', $approval->id) }}">
-                                                    <button class="btn btn-sm btn-info edit-item-btn">
-                                                        <span class="ri-eye-line"></span>
-                                                    </button>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="9" class="text-center">Không có bài viết nào để kiểm duyệt.</td>
-                                        </tr>
-                                    @endforelse
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $approval->approvable ? \Illuminate\Support\Str::limit($approval->approvable->title ?? 'Không có tiêu đề', 50) : 'Không có bài viết' }}
+                                                </td>
+                                                <td>{{ $approval->approvable && $approval->approvable->user ? $approval->approvable->user->name : '' }}
+                                                </td>
+                                                <td>
+                                                    <img style="height: 80px"
+                                                        src="{{ $approval->approvable && $approval->approvable->thumbnail ? $approval->approvable->thumbnail : asset('assets/images/no-photo.jpg') }}"
+                                                        alt="" class="w-100 object-fit-cover">
+                                                </td>
+                                                <td>
+                                                    {!! !empty($approval->approver->name)
+                                                        ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
+                                                        : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
+                                                </td>
+                                                <td>
+                                                    @if ($approval->status == 'pending')
+                                                        <span class="badge bg-warning text-dark"><i
+                                                                class="bx bx-time-five"></i> Chờ xử lý</span>
+                                                    @elseif($approval->status == 'approved')
+                                                        <span class="badge bg-success text-white"><i
+                                                                class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
+                                                    @else
+                                                        <span class="badge bg-danger text-white"><i
+                                                                class="bx bx-x-circle"></i> Từ chối</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {!! $approval->request_date
+                                                        ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' .
+                                                            \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') .
+                                                            '</span>'
+                                                        : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
+                                                </td>
+                                                <td>
+                                                    @if ($approval->approved_at)
+                                                        <span class="badge bg-success text-white"><i
+                                                                class="bx bx-calendar-check"></i>
+                                                            {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
+                                                    @elseif($approval->rejected_at)
+                                                        <span class="badge bg-danger text-white"><i
+                                                                class="bx bx-calendar-x"></i>
+                                                            {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
+                                                    @else
+                                                        <span class="badge bg-warning text-dark"><i
+                                                                class="bx bx-time"></i> Chưa kiểm duyệt</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('admin.approvals.posts.show', $approval->id) }}">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="9" class="text-center">Không có bài viết nào để kiểm
+                                                    duyệt.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>

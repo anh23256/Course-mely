@@ -41,8 +41,8 @@ class InstructorRejectedNotification extends Notification implements ShouldBroad
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Yêu cầu phê duyệt người hướng dẫn')
-            ->line('Người hướng dẫn "' . $this->user->name . '" bị từ chối kiểm duyệt.')
+            ->subject('Yêu cầu phê duyệt giảng viên')
+            ->line('Rất xin lỗi. Hiện tại bạn không đủ điều kiện để trở thành giảng viên trên hệ thống của chúng tôi!!!')
             ->line('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!');
     }
 
@@ -53,7 +53,7 @@ class InstructorRejectedNotification extends Notification implements ShouldBroad
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" bị từ chối kiểm duyệt.',
+            'message' => 'Rất xin lỗi. Hiện tại bạn không đủ điều kiện để trở thành giảng viên trên hệ thống của chúng tôi!!!',
         ];
     }
 
@@ -67,7 +67,7 @@ class InstructorRejectedNotification extends Notification implements ShouldBroad
         return new BroadcastMessage([
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" bị từ chối kiểm duyệt.',
+            'message' => 'Rất xin lỗi. Hiện tại bạn không đủ điều kiện để trở thành giảng viên trên hệ thống của chúng tôi!!!',
         ]);
     }
 

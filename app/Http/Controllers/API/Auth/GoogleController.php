@@ -63,7 +63,7 @@ class GoogleController extends Controller
                 } else {
                     $user = User::query()
                         ->create([
-                            'code' => Str::upper(Str::random(8)),
+                            'code' => substr(str_replace('-', '', Str::uuid()->toString()), 0, 10),
                             'name' => $googleUser->getName(),
                             'email' => $googleUser->getEmail(),
                             'avatar' => $googleUser->getAvatar(),

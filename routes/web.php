@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\InvoiceMembershipController;
 use App\Http\Controllers\Admin\MembershipUserController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
@@ -210,6 +211,7 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COUPON =============================
         Route::prefix('coupons')->as('coupons.')->group(function () {
             Route::get('/', [CouponController::class, 'index'])->name('index')->can('coupon.index');
+            Route::get('/user-search', [CouponController::class, 'couponUserSearch'])->name('search');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
             Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
@@ -310,24 +312,28 @@ Route::prefix('admin')->as('admin.')
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject');
                     });
                 Route::prefix('posts')
-                ->as('posts.')
-                ->group(function () {
-                    Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
-                    Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
-                    Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
-                    Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
-                });
+                    ->as('posts.')
+                    ->group(function () {
+                        Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
+                        Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
+                        Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
+                        Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
+                    });
 
                 Route::prefix('memberships')
                     ->as('memberships.')
                     ->group(function () {
                         Route::get('/', [ApprovalMembershipController::class, 'index'])->name('index');
-                        
                     });
             });
 
         #============================== ROUTE INVOICE =============================
         Route::prefix('invoices')->as('invoices.')->group(function () {
+            Route::prefix('memberships')->group(function () {
+                Route::get('/', [InvoiceMembershipController::class, 'index'])->name('memberships.index');
+                Route::get('/{code}', [InvoiceMembershipController::class, 'show'])->name('memberships.show');
+            });
+            
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
             Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');
@@ -339,7 +345,7 @@ Route::prefix('admin')->as('admin.')
         });
 
         Route::prefix('spins')->as('spins.')->group(function () {
-            Route::get('/', [SpinController::class, 'index'])->name('index');
+            Route::get('/', [SpinController::class, 'index'])->name('index')->can('spin.index');
             Route::post('/spin-config/store', [SpinController::class, 'storeSpinConfig'])->name('spin-config.store');
             Route::put('/spin-configs/{id}', [SpinController::class, 'updateSpinConfig'])->name('spin-config.update');
             Route::post('/gifts', [SpinController::class, 'addGift'])->name('gift.store');
@@ -347,6 +353,7 @@ Route::prefix('admin')->as('admin.')
             Route::delete('/gifts/{id}', [SpinController::class, 'deleteGift'])->name('gift.delete');
             Route::delete('/spin-config/delete/{id}', [SpinController::class, 'deleteSpinConfig'])->name('deleteSpinConfig');
             Route::post('/spin/toggle-selection/{type}/{id}', [SpinController::class, 'toggleSelection'])->name('toggle-selection');
+            Route::post('/spin/toggle-status', [SpinController::class, 'toggleSpinStatus'])->name('toggle-status');
         });
 
         #============================== ROUTE WITH DRAWALS =============================
@@ -437,6 +444,7 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
 
-            Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
-            Route::post('chat/', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+        Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
+        Route::post('user-status', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+        Route::post('clear-currency-conversation', [ChatController::class, 'clearCurrentChat'])->name('clear-currency-conversation');
     });

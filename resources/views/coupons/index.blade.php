@@ -68,7 +68,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row cursor-pointer">
             <div class="col-12 col-sm-6 col-md-3 mb-3">
                 <div class="card stat-card border-0">
                     <div class="card-body text-center">
@@ -265,7 +265,7 @@
                                             </th>
                                             <th>ID</th>
                                             <th>Người tạo</th>
-                                            <th>Tên mã giảm giá</th>
+                                            <th>Chương trình</th>
                                             <th>Mã giảm giá</th>
                                             <th>Giảm giá</th>
                                             <th>Trạng Thái</th>
@@ -285,7 +285,7 @@
                                                     </div>
                                                 </th>
 
-                                                <td class="id">{{ $coupon->id }}</td>
+                                                <td class="id">{{ $loop->iteration }}</td>
                                                 <td class="id">{{ $coupon->user->name }}</td>
                                                 <td class="customer_name">{{ $coupon->name }}</td>
                                                 <td class="date">{{ $coupon->code }}</td>
@@ -298,13 +298,13 @@
                                                         </span></td>
                                                 @else
                                                     <td class="status"><span class="badge bg-danger text-uppercase">
-                                                            Không hoạt động
+                                                          Hết hạn
                                                         </span></td>
                                                 @endif
 
-                                                <td class="date">{{ $coupon->start_date ?? '' }}</td>
-                                                <td class="date">{{ $coupon->expire_date ?? '' }}</td>
-                                                <td class="date">{{ $coupon->used_count ?? 0 }}</td>
+                                                <td class="date">{{ $coupon->start_date ? \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') : '' }}</td>
+                                                <td class="date">{{ $coupon->expire_date ? \Carbon\Carbon::parse($coupon->expire_date)->format('d/m/Y') : '' }}</td>
+                                                <td class="date">{{ $coupon->max_usage ?? 0 }}</td>
                                                 <td>
                                                     <div class="d-flex gap-2">
                                                         <div class="remove">

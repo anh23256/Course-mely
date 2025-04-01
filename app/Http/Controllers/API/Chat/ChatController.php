@@ -43,9 +43,9 @@ class ChatController extends Controller
                 ->with('users:id,name,avatar')
                 ->where('owner_id', $user->id)
                 ->where('type', 'group')
+                ->withCount('users')
                 ->whereNull('conversationable_id')
                 ->whereNull('conversationable_type')
-                ->withCount('users')
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -83,6 +83,8 @@ class ChatController extends Controller
                 ->where('type', 'group')
                 ->withCount('users')
                 ->with(['users:id,name,avatar'])
+                ->whereNull('conversationable_id')
+                ->whereNull('conversationable_type')
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();

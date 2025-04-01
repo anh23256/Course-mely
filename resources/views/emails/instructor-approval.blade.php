@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yêu Cầu Phê Duyệt Người Hướng Dẫn - CourseMeLy</title>
+    <title>Yêu Cầu Phê Duyệt Giảng viên - CourseMeLy</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body
@@ -34,7 +34,7 @@
                         <h2 style="color:#333; margin:0; font-size:24px; font-weight:600;">Xin
                             chào {{$notifiable->name ?? 'Quản trị viên'}},</h2>
                         <p style="color:#666; font-size:16px; line-height:1.6; margin-top:15px;">
-                            Một yêu cầu phê duyệt người hướng dẫn mới vừa được gửi đến <strong
+                            Một yêu cầu phê duyệt giảng viên mới vừa được gửi đến <strong
                                 style="color:#E27447;">CourseMeLy</strong>! Vui lòng xem xét thông tin chi tiết về
                             giảng viên này để đưa ra quyết định phê duyệt.
                         </p>
@@ -44,7 +44,7 @@
                 <tr>
                     <td style="padding:0 40px 30px;">
                         <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
-                            <span style="color:#E27447;">🧑‍🏫</span> Thông tin người hướng dẫn:
+                            <span style="color:#E27447;">🧑‍🏫</span> Thông tin giảng viên:
                         </p>
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>

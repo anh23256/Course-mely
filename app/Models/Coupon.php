@@ -50,6 +50,4 @@ class Coupon extends Model
     {
         return $this->belongsToMany(Course::class);
     }
-
-    
 }

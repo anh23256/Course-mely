@@ -7,6 +7,7 @@ use App\Http\Requests\API\Transaction\BuyCourseRequest;
 use App\Http\Requests\API\Transaction\DepositTransactionRequest;
 use App\Mail\MembershipPurchaseMail;
 use App\Mail\StudentCoursePurchaseMail;
+use App\Models\Conversation;
 use App\Models\Coupon;
 use App\Models\CouponUse;
 use App\Models\Course;
@@ -106,6 +107,7 @@ class TransactionController extends Controller
                 'user_id' => $userId,
                 'course_id' => $courseId,
                 'enrolled_at' => now(),
+                'source' => 'free',
             ]);
 
             $course->increment('total_student');
@@ -175,7 +177,12 @@ class TransactionController extends Controller
             $finalAmount = $validated['amount'];
 
             if ($paymentType === 'course') {
-                if (CourseUser::query()->where('user_id', $user->id)->where('course_id', $itemId)->exists()) {
+                if (CourseUser::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $itemId)
+                    ->where('source', 'purchase')
+                    ->exists()
+                ) {
                     return $this->respondError('Bạn đã sở hữu khoá học này rồi');
                 }
 
@@ -183,7 +190,7 @@ class TransactionController extends Controller
                 if (!$item) {
                     return $this->respondError('Không tìm thấy khóa học');
                 }
-                
+
                 $originalAmount = $item->price_sale > 0 ? $item->price_sale : $item->price;
             } else {
                 if (MembershipSubscription::query()
@@ -376,7 +383,7 @@ class TransactionController extends Controller
                     'coupon_discount' => $discountAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
-                    'code' => Str::upper(Str::random(10)),
+                    'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'vnpay',
                     'invoice_type' => 'course',
                 ]);
@@ -416,7 +423,7 @@ class TransactionController extends Controller
                     'amount' => $originalAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
-                    'code' => Str::upper(Str::random(10)),
+                    'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'vnpay',
                     'invoice_type' => 'membership'
                 ]);
@@ -483,7 +490,7 @@ class TransactionController extends Controller
                 }
 
                 $transaction = Transaction::query()->create([
-                    'transaction_code' => $inputData['vnp_TxnRef'],
+                    'transaction_code' => 'TXN' . $inputData['vnp_TxnRef'],
                     'user_id' => $userId,
                     'amount' => $inputData['vnp_Amount'] / 100,
                     'transactionable_id' => $invoice->id,
@@ -511,15 +518,6 @@ class TransactionController extends Controller
                     ->where('source', 'membership')
                     ->where('access_status', '!=', 'active')
                     ->update(['access_status' => 'active']);
-
-                $spin = Spin::query()->create([
-                    'user_id' => $userId,
-                    'spin_count' => 1,
-                    'received_at' => now(),
-                    'expires_at' => now()->addDays(7),
-                ]);
-
-                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
 
                 $this->finalBuyMembership(
                     $userId,
@@ -706,7 +704,7 @@ class TransactionController extends Controller
                     'coupon_discount' => $discountAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
-                    'code' => Str::upper(Str::random(10)),
+                    'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'momo',
                     'payment_type' => 'course'
                 ]);
@@ -718,7 +716,7 @@ class TransactionController extends Controller
                 ]);
 
                 $transaction = Transaction::create([
-                    'transaction_code' => $inputData['orderId'],
+                    'transaction_code' => 'TXN' . $inputData['orderId'],
                     'user_id' => $userId,
                     'amount' => $inputData['amount'],
                     'transactionable_id' => $invoice->id,
@@ -731,9 +729,141 @@ class TransactionController extends Controller
 
                 DB::commit();
 
-                return redirect()->away($frontendUrl . "?status=success&type=course");
+                return redirect()->away($frontendUrl . "?status=success");
             } else {
-                Log::info('member ship');
+                $memberShipPlan = MembershipPlan::query()->find($itemId);
+
+                if (!$memberShipPlan) {
+                    return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $invoice = Invoice::query()->create([
+                    'user_id' => $userId,
+                    'course_id' => null,
+                    'membership_plan_id' => $itemId,
+                    'amount' => $originalAmount,
+                    'final_amount' => $finalAmount,
+                    'status' => 'Đã thanh toán',
+                    'code' => 'INV' . Str::upper(Str::random(10)),
+                    'payment_method' => 'vnpay',
+                    'invoice_type' => 'membership'
+                ]);
+
+                $duration = $memberShipPlan->duration_months;
+
+                $courses = $memberShipPlan->membershipCourseAccess()->pluck('course_id')->toArray();
+
+                $existingMembership = MembershipSubscription::query()
+                    ->where('user_id', $userId)
+                    ->where('membership_plan_id', $itemId)
+                    ->first();
+
+                if ($existingMembership && $existingMembership->status === 'expired') {
+                    $oldEndDate = $existingMembership->end_date;
+
+                    if ($existingMembership->end_date > now()) {
+                        $newEndDate = Carbon::parse($existingMembership->end_date)->addMonths($duration);
+                    } else {
+                        $newEndDate = now()->addMonths($duration);
+                    }
+
+                    $existingMembership->update([
+                        'status' => 'active',
+                        'start_date' => now(),
+                        'end_date' => $newEndDate
+                    ]);
+
+                    $existingMembership->addLog(
+                        'renewed',
+                        'Đã gia hạn gói thành viên',
+                        [
+                            'old_end_date' => $oldEndDate->toDateTimeString(),
+                            'new_end_date' => $newEndDate->toDateTimeString(),
+                            'transaction_id' => $inputData['vnp_TxnRef'],
+                            'amount' => $inputData['vnp_Amount'] / 100,
+                            'invoice_id' => $invoice->id
+                        ]
+                    );
+                } else {
+                    $newEndDate = now()->addMonths($duration);
+
+                    MembershipSubscription::query()->create([
+                        'membership_plan_id' => $itemId,
+                        'user_id' => $userId,
+                        'start_date' => now(),
+                        'end_date' => $newEndDate,
+                        'status' => 'active',
+                        'activity_logs' => [
+                            [
+                                'action' => 'created',
+                                'details' => 'Đã mua gói thành viên',
+                                'data' => [
+                                    'start_date' => now()->toDateTimeString(),
+                                    'end_date' => $newEndDate->toDateTimeString(),
+                                    'transaction_id' => $inputData['vnp_TxnRef'],
+                                    'amount' => $inputData['vnp_Amount'] / 100,
+                                    'invoice_id' => $invoice->id
+                                ],
+                                'timestamp' => now()->toDateTimeString(),
+                            ]
+                        ]
+                    ]);
+                }
+
+                $transaction = Transaction::query()->create([
+                    'transaction_code' => 'TXN' . $inputData['vnp_TxnRef'],
+                    'user_id' => $userId,
+                    'amount' => $inputData['vnp_Amount'] / 100,
+                    'transactionable_id' => $invoice->id,
+                    'transactionable_type' => Invoice::class,
+                    'status' => 'Giao dịch thành công',
+                    'type' => 'invoice',
+                ]);
+
+                foreach ($courses as $courseId) {
+                    CourseUser::query()->updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'course_id' => $courseId
+                        ],
+                        [
+                            'enrolled_at' => now(),
+                            'access_status' => 'active',
+                            'source' => 'membership'
+                        ]
+                    );
+                }
+
+                CourseUser::query()
+                    ->where('user_id', $userId)
+                    ->where('source', 'membership')
+                    ->where('access_status', '!=', 'active')
+                    ->update(['access_status' => 'active']);
+
+                $spin = Spin::query()->create([
+                    'user_id' => $userId,
+                    'spin_count' => 1,
+                    'received_at' => now(),
+                    'expires_at' => now()->addDays(7),
+                ]);
+
+                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+
+                $this->finalBuyMembership(
+                    $userId,
+                    $memberShipPlan,
+                    $transaction,
+                    $invoice,
+                    $finalAmount
+                );
+
+                $student = User::query()->find($userId);
+
+                Mail::to($student->email)->send(
+                    new MembershipPurchaseMail($student, $memberShipPlan, $transaction, $invoice)
+                );
+
+                DB::commit();
 
                 return redirect()->away($frontendUrl . "?status=success");
             }
@@ -765,13 +895,44 @@ class TransactionController extends Controller
 
                 $couponUse->update([
                     'status' => 'used',
+                    'applied_at' => now(),
                 ]);
 
                 $this->clearCouponCache($userID, $discount->code);
             }
 
+            // $conversation = Conversation::query()->where([
+            //     'conversationable_id' => $course->id,
+            //     'conversationable_type' => Course::class
+            // ])->first();
+
+            // if ($conversation) {
+            //     $conversation->users()->syncWithoutDetaching([$userID]);
+            // }
+
             $course->refresh();
             $course->increment('total_student');
+
+            $existingCourseUser = CourseUser::query()->where([
+                'user_id' => $userID,
+                'course_id' => $course->id,
+                'source' => 'membership'
+            ])->first();
+
+            if ($existingCourseUser) {
+                $existingCourseUser->update([
+                    'source' => 'purchase',
+                    'enrolled_at' => now(),
+                    'access_status' => 'active'
+                ]);
+            } else {
+                CourseUser::create([
+                    'user_id' => $userID,
+                    'course_id' => $course->id,
+                    'enrolled_at' => now(),
+                    'source' => 'purchase',
+                ]);
+            }
 
             $walletInstructor = Wallet::query()
                 ->firstOrCreate([
@@ -897,6 +1058,16 @@ class TransactionController extends Controller
                 $transaction
             )
         );
+
+        $spin = Spin::query()->create([
+            'user_id' => $userId,
+            'spin_count' => 1,
+            'received_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $user = User::query()->find($userId);
+        $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
     }
 
     public function applyCoupon(Request $request)
@@ -922,19 +1093,20 @@ class TransactionController extends Controller
         }
     }
 
-    public function deleteApplyCoupon(Request $request) {
+    public function deleteApplyCoupon(Request $request)
+    {
         try {
             $user = Auth::user();
             if (!$user) {
                 return $this->respondForbidden('Bạn không có quyền truy cập');
             }
-    
+
             $data = $request->validate([
                 'code' => 'required|string',
             ]);
-    
+
             $this->clearCouponCache($user->id, $data['code']);
-    
+
             return $this->respondOk('Hủy mã giảm giá thành công');
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
