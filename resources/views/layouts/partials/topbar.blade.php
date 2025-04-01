@@ -480,7 +480,7 @@
                 if (type === 'register_course') {
                     approvalCountNotification++;
                     title = notification.data.course_name || 'Khóa học';
-                    thumbnail = notification.data.course_thumbnail;
+                    thumbnail = notification.data.course_thumbnail || 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1742943708/Gemini_Generated_Image_w68g6w68g6w68g6w_fcudfq.jpg';
                 } else if (type === 'register_instructor') {
                     title = notification.data.user_name || 'Giảng viên';
                     thumbnail =

@@ -268,9 +268,13 @@
                                             <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí' }}
                                             </td>
                                             <td>
-                                                {!! !empty($approval->approver->name)
-                                                    ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
-                                                    : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
+                                                @if ($approval->status === 'pending')
+                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa xử lý</span>
+                                                @elseif (!empty($approval->approver->name))
+                                                    <span class="badge bg-primary text-white"><i class="bx bx-user"></i> {{ $approval->approver->name }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if ($approval->status == 'pending')
