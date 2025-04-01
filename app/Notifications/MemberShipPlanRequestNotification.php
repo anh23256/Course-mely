@@ -30,11 +30,13 @@ class MemberShipPlanRequestNotification extends Notification implements ShouldQu
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = 'ahihi';
+        $url = route('admin.approvals.memberships.show', $this->approvalRequest->id);
 
         return (new MailMessage)
             ->subject('Yêu cầu kiểm duyệt gói thành viên đã được gửi')
-            ->view('emails.membership-request', [
+            ->view(
+                'emails.membership-request',
+                [
                     'instructor' => $this->instructor,
                     'membershipPlan' => $this->membershipPlan,
                     'approvalRequest' => $this->approvalRequest,
@@ -48,8 +50,7 @@ class MemberShipPlanRequestNotification extends Notification implements ShouldQu
     {
         if ($notifiable->id === $this->instructor->id) {
             return [
-                'message' => "Giảng viên {$this->instructor->name} đã gửi yêu cầu kiểm duyệt gói thành viên",
-                'content' => "Yêu cầu kiểm duyệt gói thành viên \"{$this->membershipPlan->name}\" của bạn đã được gửi thành công",
+                'message' => "Yêu cầu kiểm duyệt gói thành viên \"{$this->membershipPlan->name}\" của bạn đã được gửi thành công",
                 'type' => 'register_course',
                 'membership_plan_id' => $this->membershipPlan->id,
                 'membership_plan_code' => $this->membershipPlan->code,

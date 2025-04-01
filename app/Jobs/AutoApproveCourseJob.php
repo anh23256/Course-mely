@@ -21,8 +21,8 @@ class AutoApproveCourseJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-//    public $tries = 10;
-//    public $backoff = 5;
+    //    public $tries = 10;
+    //    public $backoff = 5;
 
     protected $course;
 
@@ -31,7 +31,6 @@ class AutoApproveCourseJob implements ShouldQueue
      */
     public function __construct(Course $course)
     {
-        Log::info("Dispatching AutoApproveCourseJob for course: " . $course->id);
         $this->course = $course;
     }
 
@@ -59,10 +58,8 @@ class AutoApproveCourseJob implements ShouldQueue
 
             $errors = CourseValidatorService::validateCourse($course);
 
-            Log::error($errors);
-
             if (!empty($errors)) {
-                DB::transaction(function () use ($approval, $course) {
+                DB::transaction(function () use ($approval, $course, $errors) {
                     $approval->update([
                         'status' => 'rejected',
                         'note' => 'Khoá học chưa đạt yêu cầu kiểm duyệt.',
@@ -74,10 +71,16 @@ class AutoApproveCourseJob implements ShouldQueue
                         'status' => 'rejected',
                         'visibility' => 'private',
                     ]);
+
+                    $approval->logApprovalAction(
+                        'rejected',
+                        null,
+                        'Khoá học chưa đạt yêu cầu kiểm duyệt.',
+                        implode(', ', $errors)
+                    );
                 });
 
                 $this->course->user->notify(new CourseRejectedNotification($this->course));
-
             } else {
                 DB::transaction(function () use ($approval, $course) {
                     $approval->update([
@@ -92,6 +95,12 @@ class AutoApproveCourseJob implements ShouldQueue
                         'visibility' => 'public',
                         'accepted' => now(),
                     ]);
+
+                    $approval->logApprovalAction(
+                        'approved',
+                        null,
+                        'Khoá học đã được kiểm duyệt.'
+                    );
                 });
 
                 $this->course->user->notify(new CourseApprovedNotification($this->course));

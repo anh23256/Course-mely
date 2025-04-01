@@ -20,7 +20,6 @@
                 <div class="col">
                     <div class="p-2">
                         <h3 class="text-white mb-1">
-                            {{--                            @dd($approval) --}}
                             {{ $approval->course->name }}
                             @if ($approval->content_modification == 1)
                                 <span class="badge badge-label bg-warning">
@@ -659,7 +658,7 @@
 @endsection
 
 @push('page-scripts')
-    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player" defer></script>
     <script>
         $(document).ready(function() {
             $(".approve").click(function(event) {
@@ -675,7 +674,7 @@
                     cancelButtonText: "Huỷ"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $("#approveModifyRequestForm").submit();
+                        $("#approveForm").submit();
                     }
                 });
             });
@@ -824,7 +823,8 @@
                         let completion = response.data.completionStatus;
                         renderCriteria("#criteria_course_overview", completion.course_overview);
                         renderCriteria("#criteria_course_curriculum", completion.course_curriculum);
-                        if (completion.course?.practice_exercise && "{{ $approval->course->is_practical_course }}" == 1) {
+                        if (completion.course?.practice_exercise &&
+                            "{{ $approval->course->is_practical_course }}" == 1) {
                             renderCriteria("#criteria_course_objectives", completion.course_objectives);
                         } else {
                             renderCriteria("#criteria_course_objectives", completion.course_objectives);

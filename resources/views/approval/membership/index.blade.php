@@ -261,6 +261,15 @@
                                                     @endif
                                                 </td>
                                                 <td>
+                                                    @if ($approval->status === 'pending')
+                                                        <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa xử lý</span>
+                                                    @elseif (!empty($approval->approver->name))
+                                                        <span class="badge bg-primary text-white"><i class="bx bx-user"></i> {{ $approval->approver->name }}</span>
+                                                    @else
+                                                        <span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     {!! $approval->request_date
                                                         ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' .
                                                             \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') .
@@ -281,13 +290,9 @@
                                                                 class="bx bx-time"></i> Chưa kiểm duyệt</span>
                                                     @endif
                                                 </td>
+                                        
                                                 <td>
-                                                    {!! !empty($approval->approver->name)
-                                                        ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
-                                                        : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
-                                                </td>
-                                                <td>
-                                                    <a href="#">
+                                                    <a href="{{ route('admin.approvals.memberships.show', $approval->id ?? '') }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">
                                                             <span class="ri-eye-line"></span>
                                                         </button>

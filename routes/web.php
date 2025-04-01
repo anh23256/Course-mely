@@ -311,6 +311,7 @@ Route::prefix('admin')->as('admin.')
                         Route::put('/{instructor}', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'approve'])->name('approve');
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject');
                     });
+
                 Route::prefix('posts')
                     ->as('posts.')
                     ->group(function () {
@@ -324,6 +325,10 @@ Route::prefix('admin')->as('admin.')
                     ->as('memberships.')
                     ->group(function () {
                         Route::get('/', [ApprovalMembershipController::class, 'index'])->name('index');
+                        Route::get('/{membership}', [ApprovalMembershipController::class, 'show'])->name('show');
+                        Route::get('/{id}/courses', [ApprovalMembershipController::class, 'getCourses'])->name('courses');
+                        Route::put('/{membership}', [ApprovalMembershipController::class, 'approve'])->name('approve');
+                        Route::put('/{membership}/reject', [ApprovalMembershipController::class, 'reject'])->name('reject');
                     });
             });
 
@@ -333,7 +338,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/', [InvoiceMembershipController::class, 'index'])->name('memberships.index');
                 Route::get('/{code}', [InvoiceMembershipController::class, 'show'])->name('memberships.show');
             });
-            
+
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('export', [InvoiceController::class, 'export'])->name('export');
             Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');

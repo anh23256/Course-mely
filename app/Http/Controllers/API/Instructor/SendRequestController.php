@@ -144,16 +144,13 @@ class SendRequestController extends Controller
                 'status' => 'modify_request'
             ]);
 
-            $approvable = Approvable::query()->firstOrNew([
+            $approvable = Approvable::create([
                 'approvable_id' => $course->id,
                 'approvable_type' => Course::class,
-            ]);
-
-            $approvable->fill([
                 'status' => 'pending',
                 'request_date' => now(),
                 'reason' => $data['reason'],
-                'content_modification' => true
+                'content_modification' => true,
             ]);
 
             $approvable->save();
@@ -196,6 +193,4 @@ class SendRequestController extends Controller
 
         return response()->json(['message' => 'Khóa học đã được duyệt thành công!'], 200);
     }
-
-
 }

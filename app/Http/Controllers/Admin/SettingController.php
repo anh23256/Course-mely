@@ -27,7 +27,7 @@ class SettingController extends Controller
             $subTitle = 'Danh sách các cài đặt';
 
             $settings = Setting::latest('id')->paginate(10);
-            $templateCertificates = CertificateTemplate::query()->limit(3)->get();
+            $templateCertificates = CertificateTemplate::query()->limit(4)->get();
 
             return view('settings.index', compact(['title', 'subTitle', 'settings', 'templateCertificates']));
         } catch (\Exception $e) {
