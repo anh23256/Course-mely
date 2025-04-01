@@ -23,20 +23,20 @@
 
         <ul class="nav nav-tabs">
             <li class="nav-item">
-                <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
-                    href="{{ route('admin.notifications.all-notifications', ['status' => 'all']) }}">
+                <a class="nav-link notification-tab {{ request('status', 'all') === 'all' ? 'active' : '' }}"
+                    href="#" data-status="all">
                     Tất cả
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request('status') === 'unread' ? 'active' : '' }}"
-                    href="{{ route('admin.notifications.all-notifications', ['status' => 'unread']) }}">
+                <a class="nav-link notification-tab {{ request('status') === 'unread' ? 'active' : '' }}"
+                    href="#" data-status="unread">
                     Chưa đọc
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request('status') === 'read' ? 'active' : '' }}"
-                    href="{{ route('admin.notifications.all-notifications', ['status' => 'read']) }}">
+                <a class="nav-link notification-tab {{ request('status') === 'read' ? 'active' : '' }}"
+                    href="#" data-status="read">
                     Đã đọc
                 </a>
             </li>
@@ -89,8 +89,8 @@
                 </div>
 
                 <!-- Hiển thị phân trang -->
-                <div class="mt-3">
-                    {{ $notifications->links() }}
+                <div class="row justify-content-end">
+                    {{ $notifications->appends(request()->query())->links() }}
                 </div>
 
             </div>

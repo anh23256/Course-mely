@@ -49,7 +49,7 @@ class NotificationController extends Controller
                 }
             }
 
-            $notifications = collect();   
+            $notifications = collect();
 
             foreach ($typeGroups as $key => $group) {
                 if (!empty($group['type'])) {
@@ -155,13 +155,12 @@ class NotificationController extends Controller
             // dd($request->all()); 
 
             $status = $request->input('status', 'all');
-
             if ($status === 'unread') {
                 $queryNotifications->whereNull('read_at');
-            } else if ($status === 'read') {
+            } elseif ($status === 'read') {
                 $queryNotifications->whereNotNull('read_at');
             }
-
+            
             if ($request->has('search_full')) {
 
                 $queryNotifications = $this->searchNotifications($request->search_full, $queryNotifications);
@@ -182,7 +181,6 @@ class NotificationController extends Controller
                 $html = view('notifications.table', compact('notifications'))->render();
                 return response()->json(['html' => $html]);
             }
-
 
             return view('notifications.index', compact('notifications', 'title', 'subTitle'));
         } catch (\Exception $e) {
