@@ -33,7 +33,7 @@
                         <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
 
                         <div class="d-flex gap-2">
-                            
+
                             <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
@@ -63,6 +63,18 @@
                                                             value="{{ request()->input('endDate') ?? '' }}">
                                                     </div>
                                                 </li>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Loại thông báo</label>
+                                                    <select class="form-select form-select-sm" name="notification_type"
+                                                        id="statusItem" data-filter>
+                                                        <option value="">Chọn loại thông báo</option>
+                                                        @foreach ($notifications->unique(fn($n) => $n->data['type']) as $notification)
+                                                            <option value="{{ $notification->data['type'] }}">
+                                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
                                             </div>
                                             <li class="mt-2 d-flex gap-1">
                                                 <button class="btn btn-sm btn-success flex-grow-1" type="reset"
@@ -84,18 +96,7 @@
 
                         <form>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Loại thông báo</label>
-                                    <select class="form-select form-select-sm" name="notification_type" id="statusItem"
-                                        data-advanced-filter>
-                                        <option value="">Chọn loại thông báo</option>
-                                        @foreach ($notifications->unique(fn($n) => $n->data['type']) as $notification)
-                                            <option value="{{ $notification->data['type'] }}">
-                                                {{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+
 
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
@@ -130,24 +131,24 @@
                                 </div>
                             </div>
 
-                            
+
                             <ul class="nav nav-tabs">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request('status', 'all') === 'all' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'all']) }}">
-                                        <i class="ri-list-check me-1"></i> Tất cả
+                                    <a class="nav-link notification-tab {{ request('status', 'all') === 'all' ? 'active' : '' }}"
+                                        href="#" data-status="all">
+                                        Tất cả
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request('status') === 'unread' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'unread']) }}">
-                                        <i class="ri-mail-unread-line me-1"></i> Chưa đọc
+                                    <a class="nav-link notification-tab {{ request('status') === 'unread' ? 'active' : '' }}"
+                                        href="#" data-status="unread">
+                                        Chưa đọc
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request('status') === 'read' ? 'active' : '' }}"
-                                        href="{{ route('admin.notifications.all-notifications', ['status' => 'read']) }}">
-                                        <i class="ri-mail-open-line me-1"></i> Đã đọc
+                                    <a class="nav-link notification-tab {{ request('status') === 'read' ? 'active' : '' }}"
+                                        href="#" data-status="read">
+                                        Đã đọc
                                     </a>
                                 </li>
                             </ul>
@@ -169,7 +170,7 @@
                                                     <th>Ngày gửi</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="notificationList">
                                                 @foreach ($notifications as $key => $notification)
                                                     <tr>
                                                         <td>
@@ -199,10 +200,10 @@
                                     </div>
 
                                     <!-- Hiển thị phân trang -->
-                                    <div class="mt-3">
-                                        {{ $notifications->links() }}
-                                    </div>
 
+                                    <div class="row justify-content-end">
+                                        {{ $notifications->appends(request()->query())->links() }}
+                                    </div>
                                 </div>
 
 
@@ -238,4 +239,49 @@
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            function loadNotifications(status) {
+                let search = $('#searchFull').val(); // Lấy từ khóa tìm kiếm hiện tại
+                let filters = $('form').serialize(); // Lấy toàn bộ filter hiện tại
+
+                $.ajax({
+                    url: "{{ route('admin.notifications.all-notifications') }}",
+                    type: "GET",
+                    data: filters + '&status=' + status, // Gửi tất cả filter + status tab
+                    beforeSend: function() {
+                        $('#item_List').html('<div class="text-center p-3">Đang tải...</div>');
+                    },
+                    success: function(response) {
+                        $('#item_List').html(response.html); // Load dữ liệu vào danh sách
+                        $('.notification-tab').removeClass('active'); // Xóa active cũ
+                        $('[data-status="' + status + '"]').addClass('active'); // Gán active tab mới
+                    },
+                    error: function() {
+                        alert("Lỗi tải dữ liệu!");
+                    }
+                });
+            }
+
+            // Sự kiện khi nhấn vào tab
+            $(document).on('click', '.notification-tab', function(e) {
+                e.preventDefault();
+                let status = $(this).data('status'); // Lấy trạng thái từ tab
+                loadNotifications(status);
+            });
+
+            // Áp dụng bộ lọc (tìm kiếm, ngày, loại thông báo)
+            $(document).on('click', '#applyFilter, #applyAdvancedFilter', function(e) {
+                e.preventDefault();
+                let status = $('.notification-tab.active').data('status') || 'all'; // Lấy tab hiện tại
+                loadNotifications(status);
+            });
+
+            // Reset bộ lọc
+            $(document).on('click', '#resetFilter', function() {
+                window.location = "{{ route('admin.notifications.all-notifications') }}";
+            });
+        });
+    </script>
 @endpush
