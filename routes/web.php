@@ -361,10 +361,11 @@ Route::prefix('admin')->as('admin.')
             ->as('withdrawals.')
             ->group(function () {
                 Route::get('/', [WithDrawalsRequestController::class, 'index'])->name('index');
+                Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
                 Route::get('/{withdrawal}', [WithDrawalsRequestController::class, 'show'])->name('show');
                 Route::post('/confirm-payment', [WithDrawalsRequestController::class, 'confirmPayment'])->name('confirmPayment');
                 Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status');
-                Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
+                
             });
 
         #============================== ROUTE TRANSACTIONS =============================

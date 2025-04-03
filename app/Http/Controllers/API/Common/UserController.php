@@ -1125,6 +1125,7 @@ class UserController extends Controller
 
             $profile = Profile::where('user_id', $user->id)->first();
 
+
             if (!$profile) {
                 return $this->respondForbidden('Không tìm thấy hồ sơ');
             }
@@ -1133,6 +1134,8 @@ class UserController extends Controller
             if (!is_array($certificates)) {
                 $certificates = [];
             }
+
+            // dd($certificates);
 
             $certificatePath = $request->certificate;
 
