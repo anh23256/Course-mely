@@ -6,6 +6,7 @@ use App\Models\Chapter;
 use App\Models\Conversation;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\Follow;
 use App\Models\Invoice;
 use App\Models\Lesson;
 use App\Models\Rating;
@@ -68,6 +69,8 @@ class DemoSeeder extends Seeder
                     $userId = $user->id;
 
                     foreach ($randomCourseIds as $course) {
+                        $instructor = User::query()->where('id', $course['user_id'])->first();
+
                         $year = fake()->randomElement([
                             2025,
                             2025,
@@ -81,11 +84,21 @@ class DemoSeeder extends Seeder
                         }
 
                         $rate = fake()->randomElement([1, 2, 3, 4, 5]);
+
+                        if ($instructor->email == "ducmely@gmail.com") {
+                            $rate = 5;
+                        }
+
                         Rating::create([
                             'user_id' => $userId,
                             'course_id' => $course['id'],
                             'content' => $rate == 1 ? 'Quá tệ không có gì hay' : ($rate == 2 ? 'Bài học dở' : ($rate == 3 ? 'Tạm được' : ($rate == 4 ? 'Hay nha, dễ hiểu' : 'Tuyệt vời, bài học dễ hiệu không có gì để chê'))),
                             'rate' => $rate
+                        ]);
+
+                        Follow::createOrFirst([
+                            'follower_id' => $userId,
+                            'instructor_id' => $instructor->id, 
                         ]);
 
                         $chapterIds = Chapter::where('course_id', $course['id'])->pluck('id');

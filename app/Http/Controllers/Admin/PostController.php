@@ -13,6 +13,7 @@ use App\Notifications\CrudNotification;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ use function PHPUnit\Framework\isEmpty;
 
 class PostController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait, FilterTrait;
+    use LoggableTrait, UploadToCloudinaryTrait, FilterTrait, UploadToLocalTrait;
 
     const FOLDER = 'blogs';
 
@@ -103,7 +104,7 @@ class PostController extends Controller
             $data = $request->except('thumbnail');
 
             if ($request->hasFile('thumbnail')) {
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['user_id'] = Auth::id();
@@ -220,10 +221,10 @@ class PostController extends Controller
 
             if ($request->hasFile('thumbnail')) {
                 if ($post->thumbnail && filter_var($post->thumbnail, FILTER_VALIDATE_URL)) {
-                    $this->deleteImage($post->thumbnail, self::FOLDER);
+                    $this->deleteFromLocal($post->thumbnail, self::FOLDER);
                 }
 
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['is_hot'] = $request->input('is_hot') ?? 0;
@@ -250,8 +251,6 @@ class PostController extends Controller
 
             DB::commit();
 
-            CrudNotification::sendToMany([], $id);
-
             return redirect()->route('admin.posts.edit', $id)->with('success', 'Cập nhật bài viết thành công');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -275,7 +274,7 @@ class PostController extends Controller
             $post->delete();
 
             if (isset($category->icon)) {
-                $this->deleteImage($post->thubmnail, self::FOLDER);
+                $this->deleteFromLocal($post->thubmnail, self::FOLDER);
             }
             return response()->json($data = ['status' => 'success', 'message' => 'Mục đã được xóa.']);
         } catch (\Exception $e) {

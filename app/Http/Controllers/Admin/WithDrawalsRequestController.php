@@ -377,7 +377,6 @@ class WithDrawalsRequestController extends Controller
     public function export()
     {
         try {
-            dd("Đang chạy export"); // Kiểm tra xem có vào đây không
             return Excel::download(new WithDrawalExport, 'withdrawals.xlsx');
         } catch (\Exception $e) {
             $this->logError($e);

@@ -120,8 +120,8 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Mã hóa đơn</label>
                                     <input class="form-control form-control-sm" name="code" type="text"
-                                        placeholder="Nhập tên người mua khóa học..."
-                                        value="{{ request()->input('code') ?? '' }}" data-advanced-filter>
+                                        placeholder="Nhập mã hóa đơn..." value="{{ request()->input('code') ?? '' }}"
+                                        data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Người mua</label>
@@ -130,19 +130,37 @@
                                         value="{{ request()->input('user_name_invoice') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên khóa học</label>
-                                    <input class="form-control form-control-sm" name="course_name_invoice" type="text"
-                                        placeholder="Nhập mã khóa học..."
-                                        value="{{ request()->input('course_name_invoice') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Số điện thoại người mua</label>
+                                    <input class="form-control form-control-sm" name="phone_user" type="text"
+                                        placeholder="Nhập số điện thoại người mua khóa học..."
+                                        value="{{ request()->input('phone_user') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
+                                    <label class="form-label">Email người mua</label>
+                                    <input class="form-control form-control-sm" name="user_email_invoice" type="text"
+                                        placeholder="Nhập email người mua khóa học..."
+                                        value="{{ request()->input('user_email_invoice') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3 mt-3">
+                                    <label class="form-label">Tên khóa học</label>
+                                    <input class="form-control form-control-sm" name="course_name_invoice" type="text"
+                                        placeholder="Nhập tên khóa học..."
+                                        value="{{ request()->input('course_name_invoice') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3 mt-3">
                                     <label class="form-label">Giảng viên</label>
                                     <input class="form-control form-control-sm" name="course_user_name" type="text"
-                                        placeholder="Nhập tên khóa học..."
+                                        placeholder="Nhập tên giảng viên..."
                                         value="{{ request()->input('course_user_name') ?? '' }}" data-advanced-filter>
                                 </div>
+                                <div class="col-md-3 mt-3">
+                                    <label class="form-label">Email giảng viên</label>
+                                    <input class="form-control form-control-sm" name="course_user_email" type="text"
+                                        placeholder="Nhập email giảng viên..."
+                                        value="{{ request()->input('course_user_email') ?? '' }}" data-advanced-filter>
+                                </div>
                                 <div class="mt-3 text-end">
-                                    <button class="btn btn-sm btn-success" type="reset">Reset</button>
+                                    <button class="btn btn-sm btn-success" id="resetFilter" type="reset">Reset</button>
                                     <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
                                 </div>
                             </div>
@@ -173,7 +191,10 @@
                                                 <td>{{ $invoice->code ?? '' }}</td>
                                                 <td><span
                                                         class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span><br>
-                                                    {{ $invoice->user->email }}
+                                                    <small class="text-muted">{{ $invoice->user->email }}</small>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted">{{ $invoice->user->profile->phone ?? '' }}</small>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
@@ -184,7 +205,11 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    {{ $invoice->course->instructor->name ?? '' }}
+                                                    <span
+                                                        class="text-danger fw-bold">{{ $invoice->course->instructor->name ?? '' }}</span>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted">{{ $invoice->course->instructor->email ?? '' }}</small>
                                                 </td>
                                                 <td>{{ number_format($invoice->final_amount ?? 0) }} VND</td>
                                                 <td>
@@ -239,6 +264,10 @@
             $('#amountMinRange').val(0);
             $('#amountMaxRange').val(99990000);
             updateRange();
+        });
+
+        $(document).on('click', '#resetFilter', function() {
+            window.location = routeUrlFilter;
         });
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>

@@ -34,7 +34,7 @@
                             <i class="bx bx-list-check text-primary fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                             <i class="bx bx-check-circle text-success fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                             <i class="bx bx-time-five text-warning fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
-                        <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                             <i class="bx bx-x-circle text-danger fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
-                        <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
