@@ -3,39 +3,55 @@
     <div id="two-column-menu">
     </div>
     <ul class="navbar-nav" id="navbar-nav">
+        @canany(['analytic.read'])
         <li class="menu-title"><span data-key="t-menu">Bảng điều khiển</span></li>
+        @endcanany
         <li class="nav-item cusor-pointer">
+            @canany(['revenue.read'])
             <a class="nav-link menu-link" href="{{ route('admin.revenue-statistics.index') }}">
                 <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Thống kê doanh thu</span>
             </a>
+            @endcanany
         </li>
         <li class="nav-item cusor-pointer">
+            @canany(['top-course.read'])
             <a class="nav-link menu-link" href="{{ route('admin.top-courses.index') }}">
                 <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Top khoá học bán chạy</span>
             </a>
+            @endcanany
         </li>
         <li class="nav-item cusor-pointer">
+            @canany(['analytic.read'])
             <a class="nav-link menu-link" href="{{ route('admin.analytics.index') }}">
                 <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê truy cập</span>
             </a>
+            @endcanany
         </li>
-
+        @canany(['transactions.read'])
         <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Quản lý giao dịch</span>
         </li>
-
+        @endcanany
         <li class="nav-item">
+            @canany(['invoices.read'])
             <a class="nav-link menu-link" href="{{ route('admin.invoices.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Khoá học đã bán</span>
             </a>
+            @endcanany
+            @canany(['invoices.memberships.read'])
             <a class="nav-link menu-link" href="{{ route('admin.invoices.memberships.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Gói thành viên đã bán</span>
             </a>
+            @endcanany
+            @canany(['transactions.read'])
             <a class="nav-link menu-link" href="{{ route('admin.transactions.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Giao dịch thanh toán</span>
             </a>
+            @endcanany
+            @canany(['withdrawals.read'])
             <a class="nav-link menu-link" href="{{ route('admin.withdrawals.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Yêu cầu rút tiền</span>
             </a>
+            @endcanany
         </li>
 
         <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Kiểm duyệt hệ thống</span>
@@ -128,7 +144,7 @@
         </li>
 
         <li class="nav-item">
-            @canany(['categories.create', 'categories.edit', 'categories.read', 'categories.delete'])
+            @canany(['category.create', 'category.edit', 'category.read', 'category.delete'])
                 <a class="nav-link menu-link" href="#sidebarCategory" data-bs-toggle="collapse" role="button"
                    aria-expanded="false" aria-controls="sidebarCategory">
                     <i class="ri-apps-2-line"></i> <span data-key="t-authentication">Quản lý danh mục</span>
@@ -266,7 +282,7 @@
                     </ul>
                 </div>
             @endcanany
-            @canany(['spin.create', 'spin.edit', 'spin.read', 'spin.delete'])
+            @canany(['spin.read'])
             <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
                 <i class=" bx bx-gift"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
             </a>

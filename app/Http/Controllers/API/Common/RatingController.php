@@ -158,7 +158,7 @@ class RatingController extends Controller
                 ->with('user:id,name,avatar,code')
                 ->latest()
                 ->limit(5)
-                ->get(['id', 'content', 'user_id','created_at']);
+                ->get(['id','rate', 'content', 'user_id','created_at']);
 
             if (!$ratings) {
                 return $this->respondNotFound('Không có đánh giá nào');
