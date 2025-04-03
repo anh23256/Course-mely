@@ -294,14 +294,19 @@ class CourseController
                             'courses.price_sale',
                             'courses.is_free',
                             'courses.total_student',
-                            DB::raw('COUNT(lessons.id) as total_lesson'),
-                            DB::raw('SUM(videos.duration) as total_duration'),
+                            DB::raw('(SELECT COUNT(lessons.id) 
+                                  FROM lessons 
+                                  INNER JOIN chapters ON lessons.chapter_id = chapters.id 
+                                  WHERE chapters.course_id = courses.id) as total_lesson'),
+                            DB::raw('(SELECT SUM(videos.duration) 
+                                  FROM lessons 
+                                  INNER JOIN chapters ON lessons.chapter_id = chapters.id 
+                                  LEFT JOIN videos ON videos.id = lessons.lessonable_id 
+                                  WHERE chapters.course_id = courses.id) as total_duration'),
                             DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating'),
                             DB::raw('COUNT(DISTINCT ratings.rate) as total_rating')
                         )
                             ->join('chapters', 'chapters.course_id', '=', 'courses.id')
-                            ->join('lessons', 'lessons.chapter_id', '=', 'chapters.id')
-                            ->leftJoin('videos', 'videos.id', '=', 'lessons.lessonable_id')
                             ->leftJoin('ratings', 'ratings.course_id', '=', 'courses.id')
                             ->leftJoin('users', 'users.id', '=', 'courses.user_id')
                             ->addSelect('users.code as creator_code', 'users.name as creator_name', 'users.email as creator_email', 'users.avatar as creator_avatar')
@@ -320,7 +325,8 @@ class CourseController
                 ])
                 ->whereHas('courses', function ($query) {
                     $query->where('visibility', '=', 'public')
-                        ->where('status', '=', 'approved');
+                        ->where('status', '=', 'approved')
+                    ;
                 })
                 ->withCount('courses')
                 ->orderBy('courses_count', 'desc')
@@ -344,8 +350,15 @@ class CourseController
         try {
             $courses = Course::query()
                 ->select([
-                    'id', 'category_id', 'user_id', 'name', 'slug', 'thumbnail',
-                    'price', 'price_sale', 'is_free',
+                    'id',
+                    'category_id',
+                    'user_id',
+                    'name',
+                    'slug',
+                    'thumbnail',
+                    'price',
+                    'price_sale',
+                    'is_free',
                 ])
                 ->with([
                     'category:id,name,slug',
@@ -451,6 +464,7 @@ class CourseController
             if ($user) {
                 $enrollment = CourseUser::query()->where('user_id', $user->id)
                     ->where('course_id', $course->id)
+                    ->whereIn('source', ['purchase', 'free'])
                     ->exists();
 
                 $course->is_enrolled = $enrollment;

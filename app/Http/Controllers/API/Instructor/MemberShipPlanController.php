@@ -105,7 +105,7 @@ class MemberShipPlanController extends Controller
             }
 
             $uuid = Str::uuid();
-            $data['code'] = substr($uuid, 0, 10);
+            $data['code'] = substr(str_replace('-', '', $uuid), 0, 10);
             $data['instructor_id'] = $instructor->id;
 
             $membershipPlan = MembershipPlan::query()->create($data);
@@ -244,28 +244,13 @@ class MemberShipPlanController extends Controller
             }
 
             $memberShipPlan = MembershipPlan::query()
-                ->with('membershipCourseAccess', function ($query) {
-                    return $query->select('membership_plan_id', 'course_id');
-                })
+                ->with('membershipCourseAccess')
                 ->where('code', $code)
                 ->where('instructor_id', $instructor->id)
                 ->first();
 
             if (!$memberShipPlan) {
                 return $this->respondNotFound('Không tìm thấy gói thành viên');
-            }
-
-            $existingRequest = Approvable::query()->where([
-                'approvable_type' => MembershipPlan::class,
-                'approvable_id' => $memberShipPlan->id,
-            ])->whereIn('status', ['pending', 'approved'])->first();
-
-            if ($existingRequest) {
-                if ($existingRequest->status === 'pending') {
-                    return $this->respondError('Gói này đã có yêu cầu kiểm duyệt đang chờ xử lý');
-                } else {
-                    return $this->respondError('Gói này đã được phê duyệt trước đó');
-                }
             }
 
             $courseCount = $memberShipPlan->membershipCourseAccess->count();
@@ -282,15 +267,36 @@ class MemberShipPlanController extends Controller
                 return $this->respondError('Gói phải có tối thiểu 5 khoá học để có thể gửi yêu cầu');
             }
 
-            $memberShipPlan->status = 'active';
-            $memberShipPlan->save();
-
-            $approvalRequest = Approvable::query()->create([
+            $existingRequest = Approvable::query()->where([
                 'approvable_type' => MembershipPlan::class,
                 'approvable_id' => $memberShipPlan->id,
-                'status' => 'approved',
-                'request_date' => now(),
-            ]);
+            ])->first();
+
+            if ($existingRequest) {
+                if ($existingRequest->status === 'pending') {
+                    $existingRequest->update([
+                        'request_date' => now(),
+                    ]);
+                } else {
+                    $existingRequest->update([
+                        'status' => 'pending',
+                        'request_date' => now(),
+                        'approved_at' => null,
+                        'rejected_at' => null,
+                        'reason' => null,
+                    ]);
+                }
+            } else {
+                $existingRequest = Approvable::query()->create([
+                    'approvable_type' => MembershipPlan::class,
+                    'approvable_id' => $memberShipPlan->id,
+                    'status' => 'pending',
+                    'request_date' => now(),
+                ]);
+            }
+
+            $memberShipPlan->status = 'pending';
+            $memberShipPlan->save();
 
             $managers = User::query()
                 ->whereHas('roles', function ($query) {
@@ -301,15 +307,15 @@ class MemberShipPlanController extends Controller
             foreach ($managers as $manager) {
                 $manager->notify(new MemberShipPlanRequestNotification(
                     $memberShipPlan,
-                    $instructor,
-                    $approvalRequest
+                    $manager,
+                      $existingRequest
                 ));
             }
 
             $instructor->notify(new MemberShipPlanRequestNotification(
                 $memberShipPlan,
                 $instructor,
-                $approvalRequest
+                  $existingRequest
             ));
 
             DB::commit();
@@ -363,19 +369,19 @@ class MemberShipPlanController extends Controller
             ];
         }
 
-//        $studentCount = CourseUser::query()
-//            ->whereIn('course_id', function ($query) use ($instructor) {
-//                $query->select('id')->from('courses')->where('user_id', $instructor->id);
-//            })
-//            ->distinct('user_id')
-//            ->count();
-//
-//        if ($studentCount < 50) {
-//            return [
-//                'eligible' => false,
-//                'message' => 'Bạn cần có ít nhất 50 học viên đăng ký khoá học'
-//            ];
-//        }
+        //        $studentCount = CourseUser::query()
+        //            ->whereIn('course_id', function ($query) use ($instructor) {
+        //                $query->select('id')->from('courses')->where('user_id', $instructor->id);
+        //            })
+        //            ->distinct('user_id')
+        //            ->count();
+        //
+        //        if ($studentCount < 50) {
+        //            return [
+        //                'eligible' => false,
+        //                'message' => 'Bạn cần có ít nhất 50 học viên đăng ký khoá học'
+        //            ];
+        //        }
 
         // $avgRatings = Rating::query()
         //     ->whereIn('course_id', function ($query) use ($instructor) {

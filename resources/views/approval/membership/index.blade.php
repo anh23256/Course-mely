@@ -324,8 +324,9 @@
                                                                 class="bx bx-time"></i> Chưa kiểm duyệt</span>
                                                     @endif
                                                 </td>
+                                        
                                                 <td>
-                                                    <a href="#">
+                                                    <a href="{{ route('admin.approvals.memberships.show', $approval->id ?? '') }}">
                                                         <button class="btn btn-sm btn-info edit-item-btn">
                                                             <span class="ri-eye-line"></span>
                                                         </button>

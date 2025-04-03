@@ -164,12 +164,12 @@ class ApprovalInstructorController extends Controller
 
     public function approve(Request $request, string $id)
     {
-        return $this->updateApprovalStatus($id, 'approved', 'Người hướng dẫn đã được kiểm duyệt', 'instructor');
+        return $this->updateApprovalStatus($id, 'approved', 'Giảng viên đã được kiểm duyệt', 'instructor');
     }
 
     public function reject(Request $request, string $id)
     {
-        $note = $request->note ?? 'Người hướng dẫn đã bị từ chối';
+        $note = $request->note ?? 'Giảng viên đã bị từ chối';
         return $this->updateApprovalStatus($id, 'rejected', $note, 'member');
     }
 
@@ -191,7 +191,7 @@ class ApprovalInstructorController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', "Người hướng dẫn đã được $status");
+            return redirect()->back()->with('success', "Giảng viên đã được $status");
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logError($e);

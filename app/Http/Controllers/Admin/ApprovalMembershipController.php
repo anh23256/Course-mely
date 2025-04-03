@@ -7,9 +7,11 @@ use App\Models\Approvable;
 use App\Models\Invoice;
 use App\Models\MembershipPlan;
 use App\Models\MembershipSubscription;
+use App\Notifications\MembershipApprovalNotification;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ApprovalMembershipController extends Controller
 {
@@ -76,6 +78,130 @@ class ApprovalMembershipController extends Controller
             'approvals',
             'approvalCount'
         ]));
+    }
+
+    public function show(string $id)
+    {
+        try {
+            $approval = Approvable::query()
+                ->where('approvable_type', MembershipPlan::class)
+                ->with([
+                    'approver',
+                    'membershipPlan.instructor',
+                ])
+                ->latest('created_at')
+                ->find($id);
+
+            $courses = null;
+
+            if ($approval && $approval->membershipPlan) {
+                $courses = $approval->membershipPlan->membershipCourseAccess()
+                    ->paginate(5);
+            }
+
+            $title = 'Kiểm duyệt gói thành viên';
+            $subTitle = 'Thông tin kiểm duyệt';
+
+            return view('approval.membership.show', compact([
+                'title',
+                'subTitle',
+                'approval',
+                'courses',
+            ]));
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+
+    public function getCourses(string $id, Request $request)
+    {
+        if (!$request->ajax()) {
+            abort(404);
+        }
+
+        try {
+            $approval = Approvable::query()
+                ->where('approvable_type', MembershipPlan::class)
+                ->with(['membershipPlan'])
+                ->find($id);
+
+            if (!$approval) {
+                return response()->json(['error' => 'Approval not found'], 404);
+            }
+
+            $courses = $approval->membershipPlan->membershipCourseAccess()
+                ->paginate(5);
+
+            return view('approval.membership.courses-table', compact('courses'));
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return response()->json(['error' => 'Server error'], 500);
+        }
+    }
+
+    public function approve(Request $request, string $id)
+    {
+        return $this->updateApprovalStatus($id, 'approved', 'Gói thành viên đã được duyệt');
+    }
+
+    public function reject(Request $request, string $id)
+    {
+        $note = $request->note ?? 'Gói thành viên đã bị từ chối';
+        return $this->updateApprovalStatus($id, 'rejected', $note);
+    }
+
+    private function updateApprovalStatus(string $id, string $status, string $note)
+    {
+        try {
+            DB::beginTransaction();
+
+            $approval = Approvable::query()->find($id);
+
+            $approval->status = $status;
+            $approval->note = $note;
+            $approval->{$status . '_at'} = now();
+            $approval->approver_id = auth()->id();
+            $approval->save();
+
+            $instructor = $approval->membershipPlan->instructor;
+
+            if ($status === 'approved') {
+                $approval->membershipPlan->update([
+                    'status' => 'active',
+                ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
+            } else {
+                $approval->membershipPlan->update([
+                    'status' => 'draft',
+                ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
+            }
+
+            $instructor->notify(new MembershipApprovalNotification($status, $note,  $approval->membershipPlan));
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Gói thành viên đã được $status");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return redirect()->route('admin.approvals.courses.index')
+                ->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 
     private function filter(Request $request, $query)

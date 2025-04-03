@@ -271,7 +271,7 @@
             <div class="col-xl-6">
                 <div class="card">
                     <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
-                        <h4 class="card-title mb-0 flex-grow-1 text-white">Người hướng dẫn nổi bật</h4>
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Giảng viên nổi bật</h4>
                         <button class="badge bg-warning mx-2 rounded-5 dowloadExcel" data-type="top_instructor"><i
                                 class='fs-9 bx bx-download'> Excel</i></button>
                         <button class="fs-7 badge bg-primary mx-2" id="showTopInstructorButton">Xem biểu đồ</button>
@@ -282,7 +282,7 @@
                                 class="table table-centered table-hover align-middle table-nowrap mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Người hướng dẫn</th>
+                                        <th>Giảng viên</th>
                                         <th>Khoá học</th>
                                         <th>Học viên</th>
                                         <th>Doanh thu</th>

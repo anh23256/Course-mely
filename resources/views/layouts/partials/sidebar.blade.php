@@ -37,6 +37,9 @@
             <a class="nav-link menu-link" href="{{ route('admin.invoices.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Khoá học đã bán</span>
             </a>
+            <a class="nav-link menu-link" href="{{ route('admin.invoices.memberships.index') }}">
+                <i class="ri-database-2-line"></i> <span data-key="t-authentication">Gói thành viên đã bán</span>
+            </a>
             <a class="nav-link menu-link" href="{{ route('admin.transactions.index') }}">
                 <i class="ri-database-2-line"></i> <span data-key="t-authentication">Giao dịch thanh toán</span>
             </a>
@@ -79,7 +82,7 @@
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('admin.instructors.index') }}" class="nav-link">
-                            Người hướng dẫn </a>
+                            Giảng viên </a>
                     </li>
                     @can('super_admin.view')
                         <li class="nav-item">
@@ -178,6 +181,7 @@
                     </ul>
                 </div>
             @endcanany
+            @canany(['post.create', 'post.edit', 'post.read', 'post.delete'])
             <a class="nav-link menu-link" href="#sidebarPost" data-bs-toggle="collapse" role="button"
                aria-expanded="false" aria-controls="sidebarPost">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý bài viết</span>
@@ -198,12 +202,13 @@
                     </li>
                 </ul>
             </div>
+            @endcanany
             @canany(['coupon.create', 'coupon.edit', 'coupon.read', 'coupon.delete'])
                 <a class="nav-link menu-link" href="#sidebarCoupon" data-bs-toggle="collapse" role="button"
                    aria-expanded="false" aria-controls="sidebarCoupon">
                     <i class=" ri-coupon-line"></i> <span data-key="t-authentication">Quản lý mã giảm giá</span>
                 </a>
-            @endcanany
+            
             <div class="collapse menu-dropdown" id="sidebarCoupon">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
@@ -220,7 +225,8 @@
                     </li>
                 </ul>
             </div>
-
+            @endcanany
+            @canany(['comment.create', 'comment.edit', 'comment.read', 'comment.delete'])
             <a class="nav-link menu-link" href="#sidebarComment" data-bs-toggle="collapse" role="button"
                aria-expanded="false" aria-controls="sidebarComment">
                 <i class="las la-comment"></i> <span data-key="t-authentication">Quản lý bình luận</span>
@@ -235,6 +241,8 @@
 
                 </ul>
             </div>
+            @endcanany
+            @canany(['course.create', 'course.edit', 'course.read', 'course.delete'])
             <a class="nav-link menu-link" href="#sidebarCourse" data-bs-toggle="collapse" role="button"
                aria-expanded="false" aria-controls="sidebarCourse">
                 <i class="lab la-blogger"></i> <span data-key="t-authentication">Quản lý khóa học</span>
@@ -249,6 +257,7 @@
 
                 </ul>
             </div>
+            @endcanany
             @canany(['setting.create', 'setting.edit', 'setting.read', 'setting.delete'])
                 <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
                    aria-expanded="false" aria-controls="sidebarSetting">

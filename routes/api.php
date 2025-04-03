@@ -508,6 +508,9 @@ Route::get('/categories', [\App\Http\Controllers\API\Common\CategoryController::
 
 Route::get('/instructor-order-by-count-course', [\App\Http\Controllers\API\Common\CommonController::class, 'instructorOrderByCountCourse']);
 
+#============================== ROUTE UPLOAD IMAGE =============================
+Route::post('/upload/image', [\App\Http\Controllers\API\Common\CommonController::class, 'uploadImage']);
+
 #============================== ROUTE POST =============================
 Route::prefix('blogs')
     ->group(function () {

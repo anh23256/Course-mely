@@ -7,7 +7,7 @@
                     <th>Mã hóa đơn</th>
                     <th>Người mua</th>
                     <th>Khoá học</th>
-                    <th>Người hướng dẫn</th>
+                    <th>Giảng viên</th>
                     <th>Tổng thanh toán</th>
                     <th>Trạng thái</th>
                     <th>Ngày mua</th>

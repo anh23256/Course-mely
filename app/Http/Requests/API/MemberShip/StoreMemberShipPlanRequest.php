@@ -72,10 +72,6 @@ class StoreMemberShipPlanRequest extends BaseFormRequest
 
     protected function validateCourseUniqueness($validator, $courseIds, $instructorId, $currentDuration)
     {
-        if ($currentDuration == 12) {
-            return;
-        }
-
         $otherMembershipPlans = MembershipPlan::query()->where('instructor_id', $instructorId)
             ->where('duration_months', '!=', $currentDuration)
             ->get();

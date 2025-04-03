@@ -224,19 +224,19 @@
                             Thông tin yêu cầu rút tiền #{{ $withDraw->id ?? '' }}
                         </h5>
                         <div>
-                            @if ($withDraw->status === 'Đang xử lý')
+                            @if ($withDraw && $withDraw->status === 'Đang xử lý')
                                 <span class="status-badge bg-warning text-dark">
                                     <i class="ri-time-line mr-1"></i> {{ $withDraw->status }}
                                 </span>
-                            @elseif($withDraw->status === 'Chờ xác nhận lại')
+                            @elseif ($withDraw && $withDraw->status === 'Chờ xác nhận lại')
                                 <span class="status-badge bg-info text-white">
                                     <i class="ri-refresh-line mr-1"></i> {{ $withDraw->status }}
                                 </span>
-                            @elseif($withDraw->status === 'Hoàn thành')
+                            @elseif ($withDraw && $withDraw->status === 'Hoàn thành')
                                 <span class="status-badge bg-success text-white">
                                     <i class="ri-check-double-line mr-1"></i> {{ $withDraw->status }}
                                 </span>
-                            @elseif($withDraw->status === 'Từ chối')
+                            @elseif ($withDraw && $withDraw->status === 'Từ chối')
                                 <span class="status-badge bg-danger text-white">
                                     <i class="ri-close-circle-line mr-1"></i> {{ $withDraw->status }}
                                 </span>
@@ -271,7 +271,7 @@
                             </tr>
                             <tr>
                                 <td><i class="ri-money-dollar-circle-line mr-2 text-primary"></i> Số tiền</td>
-                                <td><span class="amount">{{ number_format($withDraw->amount) }} VNĐ</span></td>
+                                <td><span class="amount">{{ number_format($withDraw->amount ?? 0)  }} VNĐ</span></td>
                             </tr>
                             <tr>
                                 <td><i class="ri-calendar-event-line mr-2 text-primary"></i> Ngày gửi yêu cầu</td>
@@ -281,7 +281,7 @@
                                 <td><i class="ri-file-text-line mr-2 text-primary"></i> Ghi chú</td>
                                 <td>{{ $withDraw->note ?? 'Không có ghi chú' }}</td>
                             </tr>
-                            @if ($withDraw->completed_date)
+                            @if ($withDraw && $withDraw->completed_date)
                                 <tr>
                                     <td><i class="ri-calendar-check-line mr-2 text-primary"></i> Ngày xử lý</td>
                                     <td>{{ $withDraw->completed_date ?? '' }}</td>
@@ -293,7 +293,7 @@
                 </div>
 
                 <!-- Instructor confirmation card (if confirmed) -->
-                @if ($withDraw->instructor_confirmation === 'confirmed')
+                @if ($withDraw && $withDraw->instructor_confirmation === 'confirmed')
                     <div class="info-card">
                         <div class="card-header">
                             <h5 class="card-title">
@@ -331,7 +331,7 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="action-buttons">
-                            <button data-id="{{ $withDraw->id }}" type="button" class="btn btn-info check-status-btn"
+                            <button data-id="{{ $withDraw->id ?? null }}" type="button" class="btn btn-info check-status-btn"
                                     data-bs-toggle="modal" data-bs-target="#transactionModal">
                                 <i class="ri-search-line"></i> Kiểm tra trạng thái
                             </button>
@@ -379,7 +379,7 @@
                     </div>
                 </div>
 
-                @if ($withDraw->admin_comment)
+                @if ($withDraw && $withDraw->admin_comment)
                     <div class="info-card">
                         <div class="card-header">
                             <h5 class="card-title">
@@ -405,13 +405,13 @@
                     </div>
                     <div class="card-body">
                         <div class="text-center p-3">
-                            @if ($withDraw->status === 'Hoàn thành')
+                            @if ($withDraw && $withDraw->status === 'Hoàn thành')
                                 <div class="mb-3">
                                     <i class="ri-check-double-line text-success" style="font-size: 3rem;"></i>
                                 </div>
                                 <h5 class="text-success">Giao dịch đã hoàn thành</h5>
                                 <p class="text-muted mb-0">Ngày hoàn thành: {{ $withDraw->completed_date ?? '' }}</p>
-                            @elseif ($withDraw->status === 'Từ chối')
+                            @elseif ($withDraw && $withDraw->status === 'Từ chối')
                                 <div class="mb-3">
                                     <i class="ri-close-circle-line text-danger" style="font-size: 3rem;"></i>
                                 </div>
@@ -467,7 +467,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        @if ($withDraw->admin_comment)
+                        @if ($withDraw && $withDraw->admin_comment)
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Phản hồi trước đó:</label>
                                 <div class="admin-comment mb-2">
@@ -477,10 +477,10 @@
                                 </div>
                             </div>
                         @endif
-                        <input id="withdrawal_id" type="hidden" value="{{ $withDraw->id }}">
+                        <input id="withdrawal_id" type="hidden" value="{{ $withDraw->id ?? null }}">
                         <div>
                             <label class="form-label fw-medium">Nội dung phản hồi:</label>
-                            @if($withDraw->status === 'Chờ xác nhận lại')
+                            @if($withDraw && $withDraw->status === 'Chờ xác nhận lại')
                                 <div class="d-flex justify-content-end mb-2">
                                     <button type="button" id="loadOldComment" class="btn btn-sm btn-secondary">
                                         <i class="ri-file-copy-line mr-1"></i> Sử dụng phản hồi trước đó

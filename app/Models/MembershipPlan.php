@@ -43,4 +43,9 @@ class MembershipPlan extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    
+    public function membershipSubscription()
+    {
+        return $this->hasOne(MembershipSubscription::class, 'membership_plan_id');
+    }
 }

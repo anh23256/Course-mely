@@ -46,6 +46,7 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
     public function show(string $code)
     {
         try {
@@ -68,6 +69,7 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Không tìm thấy thông tin hóa đơn');
         }
     }
+    
     private function filterSearch(Request $request, $queryInvoice)
     {
         try {

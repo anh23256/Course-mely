@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Appreciation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: "manrope", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        .certificate-container {
+            width: 297mm;
+            height: 210mm;
+            background-color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .certificate-bg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .certificate-content {
+            position: relative;
+            z-index: 1;
+            padding: 80px;
+            text-align: center;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .title {
+            color: #FF6854;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            letter-spacing: 5px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .title:after {
+            content: '';
+            display: block;
+            width: 50%;
+            max-width: 200px;
+            height: 4px;
+            background-color: #FF6854;
+            margin: 0 auto 0 auto;
+            border-radius: 2px;
+        }
+
+        .subtitle {
+            color: #000;
+            font-size: 24px;
+            margin: 0 0 30px 0;
+            letter-spacing: 2px;
+        }
+
+        .description {
+            color: #555;
+            font-size: 18px;
+            line-height: 1.5;
+            max-width: 80%;
+            margin: 20px auto 20px auto;
+        }
+
+        .course-name {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0 25px 0;
+            letter-spacing: 1px;
+            background-color: rgba(255, 104, 84, 0.1);
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+
+        .name {
+            color: #333;
+            font-size: 54px;
+            font-weight: 800;
+            margin: 4px auto;
+            padding: 10px 0;
+            width: 80%;
+            position: relative;
+        }
+
+        .name:before {
+            content: '';
+            position: absolute;
+            width: 50%;
+            max-width: 200px;
+            height: 5px;
+            background-color: #FF6854;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .date {
+            color: #333;
+            font-size: 18px;
+            margin: 20px 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .signature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 50px;
+            border-top: 2px solid rgba(255, 104, 84, 0.3);
+            min-width: 200px;
+        }
+
+        .signature-name {
+            color: #FF6854;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .signature-title {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .certificate-footer {
+            margin-top: 20px;
+            text-align: center;
+            bottom: 20px;
+            width: 100%;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .cert-number {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: rgba(255, 104, 84, 0.1);
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        
+        @media print {
+            body {
+                background: none;
+            }
+            
+            .certificate-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="background-image: url('bg1.png'); background-size: cover;" class="certificate-container">
+        <table style="width: 100%; position: absolute; top: 15px; right: -30px;">
+            <tr>
+                <td style="width: 50%; text-align: left;">
+                    <img src="http://127.0.0.1:8000/assets/images/daudocoursemely.png" style="width: 100px; height: auto;" alt="Dấu đỏ Course MeLy">
+                </td>
+            </tr>
+        </table>
+        <div class="certificate-content">
+            <h1 class="title">GIẤY CHỨNG NHẬN</h1>
+            <p class="course-name">Khoá học Laravel & Vue.js từ cơ bản đến nâng cao</p>
+            <div class="name">TRUONG VAN TUNG</div>
+            <p class="description">Cảm ơn bạn vì tất cả sự chăm chỉ và cống hiến của mình. Hãy tiếp tục học hỏi, vì càng
+                có nhiều kiến thức, bạn càng có cơ hội thành công trong cuộc sống.</p>
+            <p class="date">ngay_hoan_thanh</p>
+            <div class="signatures">
+                <div class="signature">
+                    <div class="signature-name">
+                        Đơn vị cấp chứng nhận
+                    </div>
+                    <div style="display: flex ;align-items: center; gap: 6px; margin-top: 6px;" class="signature-name">
+                        <img src="https://res.cloudinary.com/dvrexlsgx/image/upload/v1743350747/icon_chexvg.svg"
+                            alt="Course MeLy" style="width: 30px; vertical-align: middle;">
+                        <div class="signature-title">
+                            Course MeLy</div>
+                    </div>
+                </div>
+                <div class="signature">
+                    <div class="signature-name">CHỮ KÝ</div>
+                    <div class="signature-title" style="margin-top: 6px;">TONG VAN DUC</div>
+                </div>
+            </div>
+            <div class="certificate-footer">
+                <div class="cert-number">Chứng nhận số: chung_nhan_so</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

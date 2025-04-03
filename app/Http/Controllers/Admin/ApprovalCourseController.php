@@ -105,6 +105,7 @@ class ApprovalCourseController extends Controller
             })->sum(function ($lesson) {
                 return $lesson->lessonable->duration ?? 0;
             });
+
             $videos = $approval->approvable->chapters
                 ->flatMap(fn($chapter) => $chapter->lessons)
                 ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
@@ -173,10 +174,22 @@ class ApprovalCourseController extends Controller
                     'status' => $status,
                     'accepted' => now()
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             } else {
                 $approval->course->update([
                     'status' => $status,
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             }
 
             DB::commit();
@@ -206,6 +219,12 @@ class ApprovalCourseController extends Controller
             $approval->content_modification = false;
             $approval->reason = null;
             $approval->save();
+
+            $approval->logApprovalAction(
+                $status,
+                auth()->user(),
+                $note
+            );
 
             $approval->course->update([
                 'status' => 'approved',
@@ -253,6 +272,12 @@ class ApprovalCourseController extends Controller
             $approval->content_modification = false;
             $approval->approver_id = auth()->id();
             $approval->save();
+
+            $approval->logApprovalAction(
+                $status,
+                auth()->user(),
+                $note
+            );
 
             $approval->course->update([
                 'status' => 'draft',
