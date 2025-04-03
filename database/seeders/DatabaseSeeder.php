@@ -17,27 +17,31 @@ class DatabaseSeeder extends Seeder
         $startTime = microtime(true);
 
         $this->call([
-            RoleSeeder::class,
-            PermissionsSeeder::class,
-            SupportedBankSeeder::class,
-            TagSeeder::class,
-            UserSeeder::class,
-            WalletSedder::class,
-            BannerSeeder::class,
-            CategorySeeder::class,
-            CourseSeeder::class,
-            ApprovableSeeder::class,
-            CouponSeeder::class,
+            // RoleSeeder::class,
+            // PermissionsSeeder::class,
+            // SupportedBankSeeder::class,
+            // TagSeeder::class,
+            // UserSeeder::class,
+            // WalletSedder::class,
+            // BannerSeeder::class,
+            // CategorySeeder::class,
+            // CourseSeeder::class,
+            // ApprovableSeeder::class,
+            // CouponSeeder::class,
+            // PostSeeder::class,
+            // InvoiceSeeder::class,
+            // WithdrawalsRequestSeeder::class,
+            // TransactionSeeder::class,
+            // SystemFundSeeder::class,
+            // MembershipSeeder::class
+
             PostSeeder::class,
-            InvoiceSeeder::class,
-            WithdrawalsRequestSeeder::class,
-            TransactionSeeder::class,
-            SystemFundSeeder::class,
-            MembershipSeeder::class
+            CommentSeeder::class,
+            ReactionSeeder::class,
         ]);
 
         $endTime = microtime(true);
 
-        echo 'Thời gian thực hiện: '. round($endTime - $startTime) . 's';
+        echo 'Thời gian thực hiện: ' . round($endTime - $startTime) . 's';
     }
 }
