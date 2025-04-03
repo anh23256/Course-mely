@@ -18,13 +18,17 @@
             <a class="nav-link menu-link" href="{{ route('admin.top-courses.index') }}">
                 <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top khóa học</span>
             </a>
+            @endcanany
         </li>
         <li class="nav-item cusor-pointer">
+            @canany(['top-instructors.read'])
             <a class="nav-link menu-link" href="{{ route('admin.top-instructors.index') }}">
                 <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top giảng viên</span>
             </a>
+            @endcanany
         </li>
         <li class="nav-item cusor-pointer">
+            @canany(['top-students.read'])
             <a class="nav-link menu-link" href="{{ route('admin.top-students.index') }}">
                 <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top học viên</span>
             </a>
@@ -293,10 +297,21 @@
                 </div>
             @endcanany
             @canany(['spin.read'])
-            <a class="nav-link menu-link" href="{{ route('admin.spins.index') }}">
-                <i class=" bx bx-gift"></i> <span data-key="t-authentication"> Vòng quay may mắn</span>
-            </a>
-            @endcanany
+            <a class="nav-link menu-link" data-bs-toggle="collapse" data-bs-target="#sidebarSpin" role="button"
+            aria-expanded="false" aria-controls="sidebarSpin">
+             <i class="ri-settings-3-line"></i> <span data-key="t-authentication">Quản lý vòng quay</span>
+         </a>
+         <div class="collapse menu-dropdown" id="sidebarSpin">
+             <ul class="nav nav-sm flex-column">
+                 <li class="nav-item">
+                     <a href="{{ route('admin.spins.index') }}" class="nav-link" data-key="t-chat">Cấu hình vòng quay</a>
+                 </li>
+                 <li class="nav-item">
+                     <a href="{{ route('admin.spin-types.index') }}" class="nav-link" data-key="t-chat">Danh sách loại quà</a>
+                 </li>
+             </ul>
+         </div>
+        @endcanany
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
                 <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                     <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
