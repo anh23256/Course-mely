@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Permissions;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePermissionRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class UpdatePermissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +22,23 @@ class UpdatePermissionRequest extends FormRequest
      */
     public function rules(): array
     {
+       // Lấy ID của quyền từ route hoặc request
+       $permissionId = $this->route('permission') ?? $this->input('id');
+
+       return [
+           'name' => [
+               'required',
+               Rule::unique('permissions', 'name')->ignore($permissionId),
+           ],
+           'description' => 'required|string',
+       ];
+    }
+    public function messages()
+    {
         return [
-            //
+            'name.required' => 'Tên quyền không được để trống',
+            'name.unique' => 'Tên quyền quyền đã tồn tại',
+            'description.required' => 'Nhập mô tả của quyền này',
         ];
     }
 }
