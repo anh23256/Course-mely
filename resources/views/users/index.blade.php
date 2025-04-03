@@ -305,15 +305,15 @@
                                             </td>
                                             <td class="status">
                                                 @if ($user->status === 'active')
-                                                    <span class="badge bg-success w-100">
+                                                    <span class="badge bg-success">
                                                             Active
                                                         </span>
                                                 @elseif($user->status === 'inactive')
-                                                    <span class="badge bg-warning w-100">
+                                                    <span class="badge bg-warning">
                                                             Inactive
                                                         </span>
                                                 @else
-                                                    <span class="badge bg-danger w-100">
+                                                    <span class="badge bg-danger">
                                                             Block
                                                         </span>
                                                 @endif

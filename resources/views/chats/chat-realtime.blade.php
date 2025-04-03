@@ -197,7 +197,7 @@
                                                                             ->where('id', '<>', auth()->id())
                                                                             ->first();
                                                                     @endphp
-                                                                    <img src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
+                                                                    <img class="rounded-5" src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
                                                                         alt="" width="30px">
                                                                 </div>
                                                             </div>

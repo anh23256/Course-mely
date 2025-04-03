@@ -3,7 +3,6 @@
 @push('page-css')
     <link href="{{ asset('assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/daterangepicker.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
     <style>
         .no-data {
@@ -30,8 +29,6 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">{{ $title ?? 'Dashboard' }}</h4>
-                    <div class="dateRangePicker btn btn-outline-primary rounded-pill px-3"
-                        data-filter="totalRevenueCourseMely"></div>
                 </div>
             </div>
         </div>
@@ -52,8 +49,18 @@
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body p-4"
-                        style="background: linear-gradient(135deg, #e9f7ef, #d4efdf); border-radius: 12px;">
+                        style="background: linear-gradient(135deg, #e9f7ef, #d4efdf); border-radius: 12px; position: relative;">
+                        <span class="percentage-change fw-bold"
+                            style="position: absolute; top: 10px; right: 10px; color: {{ $revenueChange > 0 ? 'green' : ($revenueChange < 0 ? 'red' : 'gray') }};">
+                            @if ($revenueChange > 0)
+                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                            @else
+                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @endif
+                            {{ fmod($revenueChange, 1) == 0 ? number_format($revenueChange, 0) : number_format($revenueChange, 2) }}%
+                        </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng doanh thu</p>
+
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
                                 <span
@@ -76,6 +83,15 @@
                 <div class="card card-animate">
                     <div class="card-body p-4"
                         style="background: linear-gradient(135deg, #e9f2ff, #d6eaff); border-radius: 12px;">
+                        <span class="percentage-change fw-bold"
+                            style="position: absolute; top: 10px; right: 10px; color: {{ $profitChange > 0 ? 'green' : ($profitChange < 0 ? 'red' : 'gray') }};">
+                            @if ($profitChange > 0)
+                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                            @else
+                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @endif
+                            {{ fmod($profitChange, 1) == 0 ? number_format($profitChange, 0) : number_format($profitChange, 2) }}%
+                        </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Lợi nhuận đạt được</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -97,6 +113,15 @@
                 <div class="card card-animate">
                     <div class="card-body p-4"
                         style="background: linear-gradient(135deg, #fff3e6, #ffeedb); border-radius: 12px;">
+                        <span class="percentage-change fw-bold"
+                            style="position: absolute; top: 10px; right: 10px; color: {{ $courseChange > 0 ? 'green' : ($courseChange < 0 ? 'red' : 'gray') }};">
+                            @if ($courseChange > 0)
+                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                            @else
+                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @endif
+                            {{ fmod($courseChange, 1) == 0 ? number_format($courseChange, 0) : number_format($courseChange, 2) }}%
+                        </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng khóa học</p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -116,6 +141,15 @@
                 <div class="card card-animate">
                     <div class="card-body p-4"
                         style="background: linear-gradient(135deg, #e9e9ff, #dcdbff); border-radius: 12px;">
+                        <span class="percentage-change fw-bold"
+                            style="position: absolute; top: 10px; right: 10px; color: {{ $instructorChange > 0 ? 'green' : ($instructorChange < 0 ? 'red' : 'gray') }};">
+                            @if ($instructorChange > 0)
+                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                            @else
+                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @endif
+                            {{ fmod($instructorChange, 1) == 0 ? number_format($instructorChange, 0) : number_format($instructorChange, 2) }}%
+                        </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng số giảng viên </p>
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="avatar-sm me-3 flex-shrink-0">
@@ -125,7 +159,8 @@
                                 </span>
                             </div>
                             <h4 class="fs-24 fw-bold text-dark mb-0 flex-grow-1 text-end">
-                                <span class="counter-value" data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
+                                <span class="counter-value"
+                                    data-target="totalInstructor">{{ $totalInstructor ?? 0 }}</span>
                             </h4>
                         </div>
                     </div>
@@ -321,8 +356,8 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-center">{{ $topCourse->total_sales }}</td>
-                                            <td class="text-center">{{ $topCourse->total_enrolled_students }}</td>
+                                            <td>{{ $topCourse->total_sales }}</td>
+                                            <td>{{ $topCourse->total_enrolled_students }}</td>
                                             <td>{{ number_format($topCourse->total_revenue) }}</td>
                                         </tr>
                                     @endforeach
@@ -339,7 +374,6 @@
             </div>
         </div>
 
-        <!-- Top Completed Courses & Top Instructors -->
         <div class="row mt-4">
             <div class="row">
                 <div class="col-xxl-7 d-flex">
@@ -694,9 +728,7 @@
 
 @push('page-scripts')
     <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/moment.min.js') }}"></script>
-    <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/annotations.js"></script>
@@ -728,67 +760,22 @@
         else greetingText = "Chúc ngủ ngon, {{ Auth::user()->name ?? 'Quản trị viên' }}!";
         $("#greeting").text(greetingText);
 
-        $(".dateRangePicker").each(function() {
-            let button = $(this);
-
-            function updateDateRangeText(start, end) {
-                button.html("📅 " + start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY"));
-                button.attr("data-start", start.format("YYYY-MM-DD"));
-                button.attr("data-end", end.format("YYYY-MM-DD"));
-            }
-
-            let defaultStart = moment().startOf("year");
-            let defaultEnd = moment();
-
-            button.daterangepicker({
-                autoUpdateInput: false,
-                showDropdowns: true,
-                linkedCalendars: false,
-                minDate: moment("2000-01-01"),
-                maxDate: moment(),
-                startDate: defaultStart,
-                endDate: defaultEnd,
-                ranges: {
-                    "Hôm nay": [moment(), moment()],
-                    "Hôm qua": [moment().subtract(1, "days"), moment().subtract(1, "days")],
-                    "7 ngày trước": [moment().subtract(6, "days"), moment()],
-                    "Tháng này": [moment().startOf("month"), moment().endOf("month")],
-                    "Tháng trước": [moment().subtract(1, "month").startOf("month"), moment().subtract(1,
-                        "month").endOf("month")],
-                    "1 năm trước": [moment().subtract(1, "year").startOf("year"), moment().subtract(1,
-                        "year").endOf("year")]
-                },
-                locale: {
-                    format: "DD/MM/YYYY",
-                    applyLabel: "Áp dụng",
-                    cancelLabel: "Hủy",
-                    customRangeLabel: "Tùy chỉnh",
-                }
-            }, function(start, end) {
-                updateDateRangeText(start, end);
-
-                let data = {
-                    startDate: start.format("YYYY-MM-DD"),
-                    endDate: end.format("YYYY-MM-DD"),
-                    page: 1,
-                };
-
-                loadAll(data)
-            });
-
-            updateDateRangeText(defaultStart, defaultEnd);
-        });
-
         function updateChart(data) {
             let chartContainer = document.querySelector("#projects-overview-chart");
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu lợi nhuận</div>`;
+                chartContainer.innerHTML = `<div class="no-data">Chưa có doanh thu</div>`;
                 return;
             }
 
-            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let categories = data.map(item => {
+                let date = new Date(item.date);
+                return new Intl.DateTimeFormat('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                }).format(date);
+            });
             let profitData = data.map(item => parseFloat(item.total_profit));
 
             Highcharts.chart(chartContainer, {
@@ -815,7 +802,6 @@
                     labels: {
                         format: '{value}'
                     },
-                    minRange: 6,
                     title: {
                         text: 'Thời gian'
                     }
@@ -858,11 +844,17 @@
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu</div>`;
+                chartContainer.innerHTML = `<div class="no-data">Chưa có giao dịch</div>`;
                 return;
             }
 
-            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let categories = data.map(item => {
+                let date = new Date(item.date);
+                return new Intl.DateTimeFormat('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                }).format(date);
+            });
             let courseSalesData = data.map(item => parseInt(item.total_course_sales));
             let membershipSalesData = data.map(item => parseInt(item.total_membership_sales));
 
@@ -906,18 +898,24 @@
             chartContainer.innerHTML = "";
 
             if (!data || data.length === 0) {
-                chartContainer.innerHTML = `<div class="no-data">Không có dữ liệu</div>`;
+                chartContainer.innerHTML = `<div class="no-data">Chưa có giao dịch</div>`;
                 return;
             }
 
-            let categories = data.map(item => `Tháng ${item.month}, ${item.year}`);
+            let categories = data.map(item => {
+                let date = new Date(item.date);
+                return new Intl.DateTimeFormat('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                }).format(date);
+            });
             let momoData = data.map(item => parseInt(item.total_payment_method_momo) || 0);
             let vnpayData = data.map(item => parseInt(item.total_payment_method_vnpay) || 0);
 
             Highcharts.chart(chartContainer, {
                 chart: {
                     type: 'bar',
-                    height: "50%",
+                    height: "80%",
                     backgroundColor: null,
                     animation: {
                         duration: 1000,
@@ -942,6 +940,10 @@
                     series: {
                         borderRadius: 5,
                         shadow: true
+                    },
+                    bar: {
+                        horizontal: true,
+                        barHeight: '150%'
                     }
                 },
                 series: [{
@@ -1098,7 +1100,7 @@
                         color: '#00E396'
                     },
                     {
-                        name: 'Số giảng viên',
+                        name: 'Số người hướng dẫn',
                         data: totalInstructorsSeries,
                         color: '#FEB019'
                     }
@@ -1409,7 +1411,6 @@
             }
 
             let categories = data.map(item => item.name);
-            let totalStudents = data.map(item => item.total_student);
             let totalFollows = data.map(item => item.total_follow);
 
             Highcharts.chart(chartContainer, {
@@ -1419,8 +1420,7 @@
                     height: 330
                 },
                 title: {
-                    text: 'Top Giảng Viên - Học viên & Follow',
-                    align: 'center'
+                    text: null
                 },
                 credits: {
                     enabled: false
@@ -1445,11 +1445,6 @@
                     pointFormat: `<b>{series.name}</b>: {point.y}`
                 },
                 series: [{
-                    name: 'Học viên',
-                    data: totalStudents,
-                    color: '#008FFB',
-                    pointPlacement: 'on'
-                }, {
                     name: 'Lượt Follow',
                     data: totalFollows,
                     color: '#00E396',
@@ -1522,33 +1517,27 @@
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
 
-                let dataFilter = getSelectedDateRange();
-
-                dataFilter.page = page;
-
-                loadCoursesContent(dataFilter);
+                loadCoursesContent({
+                    page: page
+                });
             });
 
             $(document).on('click', '#pagination-links-instructors a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
 
-                let dataFilter = getSelectedDateRange();
-
-                dataFilter.page = page;
-
-                loadInstructorsContent(dataFilter);
+                loadInstructorsContent({
+                    page: page
+                });
             });
 
             $(document).on('click', '#pagination-links-users a', function(e) {
                 e.preventDefault();
                 var page = $(this).attr('href').split('page=')[1];
 
-                let dataFilter = getSelectedDateRange();
-
-                dataFilter.page = page;
-
-                loadUsersContent(dataFilter);
+                loadUsersContent({
+                    page: page
+                });
             });
 
             function loadCoursesContent(dataFilter) {
@@ -1600,14 +1589,6 @@
                             topStudent);
                     }
                 });
-            }
-
-            function getSelectedDateRange() {
-                let button = $(".dateRangePicker");
-                return {
-                    startDate: button.attr("data-start"),
-                    endDate: button.attr("data-end")
-                };
             }
 
             $(document).on('click', '#showBestSellingCoursesButton', function(e) {
@@ -1752,83 +1733,6 @@
             });
         });
 
-        function loadAll(filterData) {
-            $.ajax({
-                url: "{{ route('admin.dashboard') }}",
-                type: "GET",
-                data: filterData,
-                success: function(response) {
-                    console.log(response.topCourses);
-
-                    topCourse = response.topCourses;
-                    topInstructor = response.topInstructors;
-                    topStudent = response.topUsers;
-
-                    $('#table-students tbody').html(response.top_users_table);
-                    $('#pagination-links-users').html(response.pagination_links_users);
-
-                    $('#table-instructors tbody').html(response.top_instructors_table);
-                    $('#pagination-links-instructors').html(response.pagination_links_instructors);
-
-                    $('#table-courses tbody').html(response.top_courses_table);
-                    $('#pagination-links-courses').html(response.pagination_links_courses);
-
-                    $('#top-course-view').html(response.getTopViewCourses);
-
-                    updateChart(response.system_Funds);
-                    updatePieChart(response.course_rating);
-                    renderTopCompletedCourses(response.topCoursesProgress);
-                    renderTopInstructorsFollow(response.topInstructorsFollows);
-                    renderMembershipChart(response.system_Funds);
-                    renderPaymentMethodChart(response.system_Funds);
-                    updateCategoryRevenueChart(response.categoryStats);
-
-                    $('.counter-value[data-target="totalRevenue"]').text(new Intl.NumberFormat(
-                        'vi-VN', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                        }).format(response.totalAmount.total_revenue || 0));
-
-                    $('.counter-value[data-target="totalProfit"]').text(new Intl.NumberFormat(
-                        'vi-VN', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                        }).format(response.totalAmount.total_profit || 0));
-
-                    $('.counter-value[data-target="totalCourse"]').text(new Intl.NumberFormat(
-                        'vi-VN', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                        }).format(response.totalCourse || 0));
-
-                    $('.counter-value[data-target="totalInstructor"]').text(new Intl.NumberFormat(
-                        'vi-VN', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                        }).format(response.totalInstructor || 0));
-
-                    $('.counter-value-revenue').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalAmount.total_revenue || 0));
-
-                    $('.counter-value-profit').text(new Intl.NumberFormat('vi-VN', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(response.totalAmount.total_profit || 0));
-
-                    if ($('#bestSellingCourses').is(':visible')) renderBestSellingCourses(
-                        topCourse);
-                    if ($('#renderTopInstructorsChart').is(':visible')) renderTopInstructorsChart(
-                        topInstructor);
-                    if ($('#renderTopStudentsChart').is(':visible')) renderTopStudentsChart(
-                        topStudent);
-
-                    swiper.update();
-                }
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             const filterItems = document.querySelectorAll('.course-filter');
 
@@ -1869,6 +1773,15 @@
                     slidesPerView: 4
                 }
             }
+        });
+
+        const observer = new MutationObserver(() => {
+            swiper.update();
+        });
+
+        observer.observe(document.querySelector('.marketplace-swiper .swiper-wrapper'), {
+            childList: true,
+            subtree: true
         });
     </script>
 @endpush

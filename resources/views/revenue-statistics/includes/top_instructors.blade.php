@@ -18,7 +18,7 @@
                 </div>
             </div>
         </td>
-        <td class="text-center">
+        <td>
             <p class="mb-0">{{ $topInstructor->total_courses ?? '' }}</p>
             <span class="text-muted">Đã bán</span>
         </td>

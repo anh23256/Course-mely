@@ -31,6 +31,8 @@ use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\SpinController;
 use App\Http\Controllers\Admin\TopCourseController;
+use App\Http\Controllers\Admin\TopInstructorController;
+use App\Http\Controllers\Admin\TopStudentController;
 use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -366,11 +368,10 @@ Route::prefix('admin')->as('admin.')
             ->as('withdrawals.')
             ->group(function () {
                 Route::get('/', [WithDrawalsRequestController::class, 'index'])->name('index')->can('withdrawal.read');
+                Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
                 Route::get('/{withdrawal}', [WithDrawalsRequestController::class, 'show'])->name('show');
                 Route::post('/confirm-payment', [WithDrawalsRequestController::class, 'confirmPayment'])->name('confirmPayment')->can('withdrawal.update');
-                Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status')->can('withdrawal.update');
-                Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
-            });
+                Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status')->can('withdrawal.update');            });
 
         #============================== ROUTE TRANSACTIONS =============================
         Route::prefix('transactions')
@@ -389,7 +390,16 @@ Route::prefix('admin')->as('admin.')
 
         #============================== ROUTE REVENUE STATISTICS =============================
         Route::get('/revenue-statistics', [RevenueStatisticController::class, 'index'])
-            ->name('revenue-statistics.index')->can('revenue.read');
+            ->name('revenue-statistics.index');
+
+        Route::post('/revenue-statistics/export', [RevenueStatisticController::class, 'export'])
+            ->name('revenue-statistics.export');
+        #============================== ROUTE TOP INSTRUCTOR =============================
+        Route::get('/top-instructors', [TopInstructorController::class, 'index'])
+            ->name('top-instructors.index');
+        #============================== ROUTE TOP STUDENT =============================
+        Route::get('/top-students', [TopStudentController::class, 'index'])
+            ->name('top-students.index');
         #============================== ROUTE TOP COURSE =============================
         Route::get('/top-courses', [TopCourseController::class, 'index'])
             ->name('top-courses.index')->can('top-course.read');

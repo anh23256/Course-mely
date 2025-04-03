@@ -29,9 +29,9 @@ class DashboardController extends Controller
             $queryTotalAmount = $this->getTotalAmount();
             $queryTotalCourse = $this->getTotalCourse();
             $queryTotalInstructor = $this->getTotalInstructor();
-            $queryTopInstructors = $this->getTopInstructor($request);
-            $queryTopUsers = $this->getTopUser($request);
-            $queryTopCourses = $this->getTopCourse($request);
+            $queryTopInstructors = $this->getTopInstructor();
+            $queryTopUsers = $this->getTopUser();
+            $queryTopCourses = $this->getTopCourse();
             $querySystem_Funds = $this->getSystemFund();
             $queryCourseRatings = $this->getCourseRating();
             $queryTopCoursesProgress = $this->getTopCourseProgress();
@@ -40,31 +40,6 @@ class DashboardController extends Controller
             $queryCategoryStats = $this->getCategoryStat();
             $queryTotalByPaymentMethodAndInvoiceType = $this->getTotalByPaymentMethodAndInvoiceType();
             $queryGetTopViewCourses = $this->filterTopCourseView($queryGetTopViewCourses, $request);
-
-            list(
-                $queryCourseRatings,
-                $querySystem_Funds,
-                $queryTotalAmount,
-                $queryTotalCourse,
-                $queryTotalInstructor,
-                $queryTopCoursesProgress,
-                $queryGetTopViewCourses,
-                $quertTopInstructorsFollows,
-                $queryCategoryStats,
-                $queryTotalByPaymentMethodAndInvoiceType
-            ) = $this->getFilterDataChart(
-                $request,
-                $queryCourseRatings,
-                $querySystem_Funds,
-                $queryTotalAmount,
-                $queryTotalCourse,
-                $queryTotalInstructor,
-                $queryTopCoursesProgress,
-                $queryGetTopViewCourses,
-                $quertTopInstructorsFollows,
-                $queryCategoryStats,
-                $queryTotalByPaymentMethodAndInvoiceType
-            );
 
             $topInstructors = DB::table(DB::raw("({$queryTopInstructors->toSql()}) as sub"))
                 ->mergeBindings($queryTopInstructors)
@@ -78,13 +53,62 @@ class DashboardController extends Controller
                 ->mergeBindings($queryTopCourses)
                 ->paginate(5);
 
-            $totalAmount = $queryTotalAmount->first();
-            $totalCourse = $queryTotalCourse->count();
-            $totalInstructor = $queryTotalInstructor->count();
+            $currentMonth = now();
+            $lastMonth = now()->subMonth();
+
+            $totalAmount = $queryTotalAmount
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereYear('created_at', $currentMonth->year)
+                ->first();
+
+            $totalAmountLastMonth = $this->getTotalAmount()
+                ->whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->first();
+
+            $revenueChange = 0;
+            if ($totalAmount->total_revenue > 0 && $totalAmountLastMonth->total_revenue > 0) {
+                $revenueChange = (($totalAmount->total_revenue - $totalAmountLastMonth->total_revenue) / $totalAmountLastMonth->total_revenue) * 100;
+            }
+
+            $profitChange = 0;
+            if ($totalAmount->total_profit > 0 && $totalAmountLastMonth->total_profit > 0) {
+                $profitChange = (($totalAmount->total_profit - $totalAmountLastMonth->total_profit) / $totalAmountLastMonth->total_profit) * 100;
+            }
+
+            $totalCourse = $queryTotalCourse
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereYear('created_at', $currentMonth->year)
+                ->count();
+
+            $totalCourseLastMonth = $this->getTotalCourse()
+                ->whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->count();
+
+            $courseChange = 0;
+            if ($totalCourseLastMonth > 0) {
+                $courseChange = (($totalCourse - $totalCourseLastMonth) / $totalCourseLastMonth) * 100;
+            }
+
+            $totalInstructor = $queryTotalInstructor
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereYear('created_at', $currentMonth->year)
+                ->count();
+
+            $totalInstructorLastMonth = $this->getTotalInstructor()
+                ->whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->count();
+
+            $instructorChange = 0;
+            if ($totalInstructorLastMonth > 0) {
+                $instructorChange = (($totalInstructor - $totalInstructorLastMonth) / $totalInstructorLastMonth) * 100;
+            }
+
             $courseRatings = $queryCourseRatings->get();
             $system_Funds = $querySystem_Funds->get();
             $topCoursesProgress = $queryTopCoursesProgress->get();
-
             $getTopViewCourses = $queryGetTopViewCourses->get();
             $topInstructorsFollows = $quertTopInstructorsFollows->get();
             $categoryStats = $queryCategoryStats->get();
@@ -99,18 +123,9 @@ class DashboardController extends Controller
                     'pagination_links_courses' => $topCourses->links()->toHtml(),
                     'pagination_links_instructors' => $topInstructors->links()->toHtml(),
                     'pagination_links_users' => $topUsers->links()->toHtml(),
-                    'system_Funds' => $system_Funds,
-                    'course_rating' => $courseRatings,
-                    'topCourses' => $topCourses,
                     'topInstructors' => $topInstructors,
                     'topUsers' => $topUsers,
-                    'totalAmount' => $totalAmount,
-                    'totalCourse' => $totalCourse,
-                    'totalInstructor' => $totalInstructor,
-                    'categoryStats' => $categoryStats,
-                    'topCoursesProgress' => $topCoursesProgress,
-                    'topInstructorsFollows' => $topInstructorsFollows,
-                    'totalByPaymentMethodAndInvoiceType' => $totalByPaymentMethodAndInvoiceType
+                    'topCourses' => $topCourses,
                 ]);
             }
 
@@ -128,29 +143,17 @@ class DashboardController extends Controller
                 'getTopViewCourses',
                 'topInstructorsFollows',
                 'categoryStats',
-                'totalByPaymentMethodAndInvoiceType'
+                'totalByPaymentMethodAndInvoiceType',
+                'revenueChange',
+                'profitChange',
+                'courseChange',
+                'instructorChange'
             ]));
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $this->logError($e);
 
             return redirect()->back()->with('error', 'Lấy dữ liệu không thành công vui lòng thử lại');
         }
-    }
-
-    private function applyGlobalFilter($query, Request $request, $table, $column)
-    {
-        $startDate = $request->input('startDate');
-        $endDate = $request->input('endDate');
-        $year = now()->year;
-
-        if (!empty($startDate) && !empty($endDate)) {
-            $query->whereBetween("{$table}.{$column}", [$startDate, $endDate]);
-        } else {
-            $query->where("{$table}.{$column}", '>=', "{$year}-01-01 00:00:00")
-                ->where("{$table}.{$column}", '<=', now()->endOfDay());
-        }
-
-        return $query;
     }
 
     private function filterTopCourseView($query, Request $request)
@@ -175,44 +178,6 @@ class DashboardController extends Controller
         }
 
         return $query;
-    }
-
-    private function getFilterDataChart(
-        Request $request,
-        $queryCourseRatings,
-        $querySystem_Funds,
-        $queryTotalAmount,
-        $queryTotalCourse,
-        $queryTotalInstructor,
-        $queryTopCoursesProgress,
-        $queryGetTopViewCourses,
-        $quertTopInstructorsFollows,
-        $queryCategoryStats,
-        $queryTotalByPaymentMethodAndInvoiceType
-    ) {
-        $queryCourseRatings = $this->applyGlobalFilter($queryCourseRatings, $request, 'courses', 'created_at');
-        $querySystem_Funds = $this->applyGlobalFilter($querySystem_Funds, $request, 'invoices', 'created_at');
-        $queryTotalAmount = $this->applyGlobalFilter($queryTotalAmount, $request, 'invoices', 'created_at');
-        $queryTotalCourse = $this->applyGlobalFilter($queryTotalCourse, $request, 'courses', 'created_at');
-        $queryTotalInstructor = $this->applyGlobalFilter($queryTotalInstructor, $request, 'users', 'created_at');
-        $queryTopCoursesProgress = $this->applyGlobalFilter($queryTopCoursesProgress, $request, 'course_users', 'created_at');
-        $queryGetTopViewCourses = $this->applyGlobalFilter($queryGetTopViewCourses, $request, 'courses', 'created_at');
-        $quertTopInstructorsFollows = $this->applyGlobalFilter($quertTopInstructorsFollows, $request, 'users', 'created_at');
-        $queryCategoryStats = $this->applyGlobalFilter($queryCategoryStats, $request, 'categories', 'created_at');
-        $queryTotalByPaymentMethodAndInvoiceType = $this->applyGlobalFilter($queryTotalByPaymentMethodAndInvoiceType, $request, 'invoices', 'created_at');
-
-        return [
-            $queryCourseRatings,
-            $querySystem_Funds,
-            $queryTotalAmount,
-            $queryTotalCourse,
-            $queryTotalInstructor,
-            $queryTopCoursesProgress,
-            $queryGetTopViewCourses,
-            $quertTopInstructorsFollows,
-            $queryCategoryStats,
-            $queryTotalByPaymentMethodAndInvoiceType
-        ];
     }
 
     public function export(Request $request)
@@ -306,7 +271,8 @@ class DashboardController extends Controller
     private function getTotalCourse()
     {
         return Course::query()
-            ->where('status', 'approved')->pluck('id');
+            ->where('status', 'approved')
+            ->select('id');
     }
 
     private function getTotalInstructor()
@@ -314,13 +280,13 @@ class DashboardController extends Controller
         return User::query()
             ->whereHas('roles', function ($query) {
                 $query->where('name', 'instructor');
-            })->pluck('id');
+            })->select('id');
     }
 
     private function getTotalAmount()
     {
         return DB::table('invoices')
-            ->selectRaw('SUM(final_amount) as total_revenue, SUM(final_amount * ?) as total_profit', [self::RATE])
+            ->selectRaw('ROUND(SUM(final_amount),0) as total_revenue, ROUND(SUM(final_amount * ?),0) as total_profit', [self::RATE])
             ->where('status', 'Đã thanh toán');
     }
 
@@ -363,18 +329,11 @@ class DashboardController extends Controller
             ->leftJoinSub(
                 DB::table('follows')
                     ->select('instructor_id', DB::raw('COUNT(id) as total_follow'))
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
                     ->groupBy('instructor_id'),
                 'follows',
                 'follows.instructor_id',
-                '=',
-                'users.id'
-            )
-            ->leftJoinSub(
-                DB::table('courses')
-                    ->select('user_id', DB::raw('SUM(total_student) as total_student'))
-                    ->groupBy('user_id'),
-                'courses',
-                'courses.user_id',
                 '=',
                 'users.id'
             )
@@ -384,7 +343,6 @@ class DashboardController extends Controller
                 'users.code',
                 'users.avatar',
                 DB::raw('COALESCE(follows.total_follow, 0) as total_follow'),
-                DB::raw('COALESCE(courses.total_student, 0) as total_student')
             )
             ->orderByDesc('total_follow')
             ->limit(10);
@@ -396,7 +354,7 @@ class DashboardController extends Controller
             ->select('courses.name', 'users.name as instructor_name', 'users.avatar as instructor_avatar', 'courses.thumbnail', 'courses.views', 'courses.price', 'courses.price_sale', 'courses.is_free', 'courses.slug', 'courses.id')
             ->leftJoinSub(
                 DB::table('users')
-                    ->select('id', 'name','avatar'),
+                    ->select('id', 'name', 'avatar'),
                 'users',
                 function ($join) {
                     $join->on('users.id', '=', 'courses.user_id');
@@ -411,13 +369,16 @@ class DashboardController extends Controller
             ->groupBy('course_id')
             ->orderByDesc('avg_progress')
             ->with('course:id,name')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->limit(10);
     }
 
-    private function getTopInstructor(Request $request)
+    private function getTopInstructor()
     {
-        $invoices = DB::table('invoices')->where('invoices.status', 'Đã thanh toán');
-        $invoices = $this->applyGlobalFilter($invoices, $request, 'invoices', 'created_at');
+        $invoices = DB::table('invoices')->where('invoices.status', 'Đã thanh toán')
+            ->whereMonth('invoices.created_at', now()->month)
+            ->whereYear('invoices.created_at', now()->year);
 
         $query = DB::table('courses')
             ->select(
@@ -439,8 +400,7 @@ class DashboardController extends Controller
 
         $totalRevenue = $query
             ->groupBy('courses.user_id', 'users.id', 'users.name', 'users.email', 'users.avatar')
-            ->orderByDesc('total_revenue')
-            ->limit(10);
+            ->orderByDesc('total_revenue');
 
         $id_topCourse = (clone $totalRevenue)->pluck('user_id')->toArray();
 
@@ -457,8 +417,6 @@ class DashboardController extends Controller
             })
             ->whereIn('courses.user_id', $id_topCourse)
             ->groupBy('courses.user_id');
-
-        Log::debug('Top course user ids:', $id_topCourse);
 
         return DB::table(DB::raw("({$totalRevenue->toSql()}) as invoices"))
             ->mergeBindings($totalRevenue)
@@ -477,14 +435,14 @@ class DashboardController extends Controller
             ->orderByDesc('total_revenue');
     }
 
-    private function getTopCourse(Request $request)
+    private function getTopCourse()
     {
         $totalRevenue = DB::table('invoices')
             ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
             ->where('status', 'Đã thanh toán')
+            ->whereMonth('invoices.created_at', now()->month)
+            ->whereYear('invoices.created_at', now()->year)
             ->orderByDesc('total_revenue')->groupBy('course_id')->limit(10);
-
-        $totalRevenue = $this->applyGlobalFilter($totalRevenue, $request, 'invoices', 'created_at');
 
         $totalStudents = DB::table('course_users')
             ->select('course_id', DB::raw('COUNT(user_id) as total_enrolled_students'))
@@ -507,7 +465,7 @@ class DashboardController extends Controller
             ->take(10);
     }
 
-    private function getTopUser(Request $request)
+    private function getTopUser()
     {
         $invoices = DB::table('invoices')
             ->select(
@@ -517,10 +475,10 @@ class DashboardController extends Controller
                 DB::raw('MAX(created_at) as last_purchase_date'),
             )
             ->where('status', 'Đã thanh toán')
+            ->whereMonth('invoices.created_at', now()->month)
+            ->whereYear('invoices.created_at', now()->year)
             ->orderByDesc('total_spent')
             ->groupBy('user_id');
-
-        $invoices = $this->applyGlobalFilter($invoices, $request, 'invoices', 'created_at');
 
         $course_user = DB::table('course_users')
             ->select('user_id', DB::raw('COUNT(DISTINCT course_id) as total_active_courses'))
@@ -548,8 +506,7 @@ class DashboardController extends Controller
     {
         return DB::table('invoices')
             ->selectRaw('
-            MONTH(created_at) as month,
-            YEAR(created_at) as year,
+            DATE(created_at) as date,
             ROUND(SUM(final_amount), 0) as total_revenue,
             ROUND(SUM(final_amount * ?), 0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
@@ -558,8 +515,10 @@ class DashboardController extends Controller
             SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay
         ', [self::RATE])
             ->where('status', 'Đã thanh toán')
-            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
-            ->orderByRaw('YEAR(created_at) ASC, MONTH(created_at) ASC');
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->groupByRaw('DATE(created_at)')
+            ->orderByRaw('DATE(created_at) ASC');
     }
 
     private function getCourseRating()
@@ -580,6 +539,8 @@ class DashboardController extends Controller
             COALESCE(COUNT(CASE WHEN payment_method = "momo" THEN 1 END), 0) as total_payment_method_momo,
             COALESCE(COUNT(CASE WHEN payment_method = "vnpay" THEN 1 END), 0) as total_payment_method_vnpay
         ')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->where('status', 'Đã thanh toán');
     }
 }

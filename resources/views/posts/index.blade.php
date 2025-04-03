@@ -176,7 +176,7 @@
                                                     <h6 class="mb-0 text-truncate" style="max-width: 250px;">{{ $post->title }}</h6>
                                                 </td>
                                                 <td>
-                                                    <img class="rounded shadow-sm" src="{{ $post->thumbnail }}"
+                                                    <img class="rounded shadow-sm" src="{{ Storage::url($post->thumbnail) }}"
                                                          alt="Hình đại diện" width="80" height="50" style="object-fit: cover;">
                                                 </td>
                                                 <td class="text-danger fw-bold">{{ $post->user->name ?? '' }}</td>

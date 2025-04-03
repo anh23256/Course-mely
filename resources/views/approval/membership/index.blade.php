@@ -34,7 +34,7 @@
                             <i class="bx bx-list-check text-primary fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                             <i class="bx bx-check-circle text-success fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                             <i class="bx bx-time-five text-warning fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
-                        <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                             <i class="bx bx-x-circle text-danger fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
-                        <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -183,21 +183,38 @@
                         <form>
                             <div class="row">
                                 <div class="col-md-3">
+                                    <label class="form-label">Tên gói</label>
+                                    <input class="form-control form-control-sm" name="membershipPlan_name_approved"
+                                        type="text" placeholder="Nhập tên gói..."
+                                        value="{{ request()->input('membershipPlan_name_approved') ?? '' }}"
+                                        data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-label">Tên giảng viên</label>
-                                    <input class="form-control form-control-sm" name="membershipPlan_instructor_name"
-                                        type="text" placeholder="Nhập tên đăng kí..."
-                                        value="{{ request()->input('membershipPlan_instructor_name') ?? '' }}"
-                                        data-advanced-filter>
+                                    <input class="form-control form-control-sm" name="name_instructor" type="text"
+                                        placeholder="Nhập tên giảng viên..."
+                                        value="{{ request()->input('name_instructor') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Email</label>
-                                    <input class="form-control form-control-sm" name="membershipPlan_instructor_email"
-                                        type="text" placeholder="Nhập tên giảng viên..."
-                                        value="{{ request()->input('membershipPlan_instructor_email') ?? '' }}"
+                                    <label class="form-label">Số điện thoại giảng viên</label>
+                                    <input class="form-control form-control-sm" name="phone_instructor" type="text"
+                                        placeholder="Nhập số điện thoại giảng viên..."
+                                        value="{{ request()->input('phone_instructor') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Email giảng viên</label>
+                                    <input class="form-control form-control-sm" name="instructor_email" type="text"
+                                        placeholder="Nhập email giảng viên..."
+                                        value="{{ request()->input('instructor_email') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-4 mt-3">
+                                    <label class="form-label">Tên người kiểm duyệt</label>
+                                    <input class="form-control form-control-sm" name="approver_name_approved"
+                                        type="text" placeholder="Nhập tên người kiểm duyệt..."
+                                        value="{{ request()->input('approver_name_approved') ?? '' }}"
                                         data-advanced-filter>
                                 </div>
-
-                                <div class="col-md-3">
+                                <div class="col-md-4 mt-3">
                                     <label for="statusItem" class="form-label">Trạng thái kiểm duyệt</label>
                                     <select class="form-select form-select-sm" name="status" id="statusItem"
                                         data-advanced-filter>
@@ -210,6 +227,21 @@
                                         </option>
                                         <option value="rejected" @selected(request()->input('status') === 'rejected')>Từ
                                             chối
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mt-3">
+                                    <label for="membershipPlan_duration_months_approval" class="form-label">Thời
+                                        hạn</label>
+                                    <select class="form-select form-select-sm"
+                                        name="membershipPlan_duration_months_approval"
+                                        id="membershipPlan_duration_months_approval" data-advanced-filter>
+                                        <option value="">Chọn trạng thái</option>
+                                        <option value="3" @selected(request()->input('membershipPlan_duration_months_approval') == 3)>3 tháng
+                                        </option>
+                                        <option value="6" @selected(request()->input('membershipPlan_duration_months_approval') == 6)>6 tháng
+                                        </option>
+                                        <option value="12" @selected(request()->input('membershipPlan_duration_months_approval') == 12)>12 tháng
                                         </option>
                                     </select>
                                 </div>
@@ -246,7 +278,13 @@
                                             <tr>
                                                 <td>{{ $loop->iteration ?? '' }}</td>
                                                 <td>{{ $approval->membershipPlan->name ?? '' }}</td>
-                                                <td>{{ $approval->membershipPlan->instructor->name ?? '' }}</td>
+                                                <td>
+                                                    <span
+                                                        class="text-danger font-weight-bold">{{ $approval->membershipPlan->instructor->name ?? '' }}</span>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted">{{ $approval->membershipPlan->instructor->profile->phone ?? '' }}</small>
+                                                </td>
                                                 <td>{{ $approval->membershipPlan->instructor->email ?? '' }}</td>
                                                 <td>{{ number_format($approval->membershipPlan->price ?? 0, 0, ',', '.') }}đ
                                                 </td>
@@ -261,13 +299,9 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if ($approval->status === 'pending')
-                                                        <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa xử lý</span>
-                                                    @elseif (!empty($approval->approver->name))
-                                                        <span class="badge bg-primary text-white"><i class="bx bx-user"></i> {{ $approval->approver->name }}</span>
-                                                    @else
-                                                        <span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>
-                                                    @endif
+                                                    {!! !empty($approval->approver->name)
+                                                        ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
+                                                        : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
                                                 </td>
                                                 <td>
                                                     {!! $approval->request_date

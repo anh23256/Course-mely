@@ -67,7 +67,7 @@ class StatisticController extends Controller
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
 
-            $courseRevenue = DB::table('invoices')
+            $courses = DB::table('courses')
                 ->select(
                     'courses.id',
                     'courses.name',
@@ -76,23 +76,54 @@ class StatisticController extends Controller
                     'courses.slug',
                     'courses.thumbnail',
                     'courses.total_student',
+                    'courses.category_id'
+                )->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
+
+            $invoices = DB::table('invoices')
+                ->select('invoices.course_id', DB::raw('SUM(invoices.final_amount) as total_revenue'))
+                ->joinSub($courses, 'courses', function ($join) {
+                    $join->on('courses.id', '=', 'invoices.course_id');
+                })->groupBy('invoices.course_id');
+
+            $ratings = DB::table('ratings')
+                ->select(DB::raw('AVG(DISTINCT ratings.rate) as avg_rating'), 'ratings.course_id')
+                ->joinSub($courses, 'courses', function ($join) {
+                    $join->on('ratings.course_id', '=', 'courses.id');
+                })->groupBy('ratings.course_id');
+
+            $course_users = DB::table('course_users')
+                ->select('course_users.course_id', DB::raw('COUNT(course_users.user_id) as total_student'), DB::raw('AVG(course_users.progress_percent) as avg_progress'))
+                ->joinSub($courses, 'courses', function ($join) {
+                    $join->on('courses.id', '=', 'course_users.course_id');
+                })->groupBy('course_users.course_id');
+
+            $courseRevenue = DB::table(DB::raw("({$courses->toSql()}) as courses"))
+                ->mergeBindings($courses)
+                ->select(
+                    'courses.id',
+                    'courses.name',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.slug',
+                    'courses.thumbnail',
+                    'course_users.total_student',
                     'categories.name as name_category',
                     'categories.slug as slug_category',
                     'categories.icon as icon_category',
-                    DB::raw('ROUND(SUM(invoices.final_amount)*0.6, 2) as total_revenue'),
-                    DB::raw('ROUND(AVG(course_users.progress_percent),2) as avg_progress'),
-                    DB::raw('ROUND(AVG(DISTINCT ratings.rate), 1) as avg_rating')
+                    DB::raw('ROUND(COALESCE(invoices.total_revenue)*0.6, 2) as total_revenue'),
+                    DB::raw('ROUND(COALESCE(course_users.avg_progress),2) as avg_progress'),
+                    DB::raw('ROUND(COALESCE(ratings.avg_rating), 1) as avg_rating')
                 )
-                ->join('courses', function ($join) use ($user) {
-                    $join->on('invoices.course_id', '=', 'courses.id')->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
+                ->leftJoinSub($invoices,'invoices', function($join){
+                    $join->on('invoices.course_id', '=', 'courses.id');
                 })
-                ->leftJoin('course_users', function ($join) {
-                    $join->on('courses.id', '=', 'course_users.course_id')->where(['source' => 'purchase', 'access_status' => 'active']);
+                ->leftJoinSub($ratings,'ratings', function($join){
+                    $join->on('ratings.course_id', '=', 'courses.id');
+                })
+                ->leftJoinSub($course_users,'course_users', function($join){
+                    $join->on('course_users.course_id', '=', 'courses.id');
                 })
                 ->join('categories', 'categories.id', '=', 'courses.category_id')
-                ->leftJoin('ratings', 'courses.id', '=', 'ratings.course_id')
-                ->where('invoices.status', 'Đã thanh toán')
-                ->groupBy('courses.slug')
                 ->orderByDesc('total_revenue')
                 ->get();
 

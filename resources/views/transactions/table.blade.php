@@ -20,32 +20,35 @@
                         <td>{{ $loop->index + 1 }}</td>
                         <td>{{ $transaction->transaction_code ?? 'Không có thông tin' }}</td>
                         <td><span
-                                class="text-primary fw-bold">{{ $transaction->user->name ?? 'Không có thông tin'}}</span>
+                                class="text-primary fw-bold">{{ $transaction->user->name ?? 'Không có thông tin' }}</span>
+                            <br>
+                            <small
+                                class="text-muted">{{ $transaction->user->profile->phone ?? '' }}</small>
                         </td>
                         <td>{{ $transaction->user->email ?? 'Không có thông tin' }}</td>
                         <td>{{ number_format($transaction->amount) ?? 0 }} VND</td>
                         <td>
-                            @if ($transaction->type === 'invoice')
-                                <span class="badge bg-success w-50">
+                            @if ($transaction->type == 'invoice')
+                                <span class="badge bg-success">
                                     Mua bán
                                 </span>
-                            @elseif($transaction->type === 'withdrawal')
-                                <span class="badge bg-info w-50">
+                            @elseif($transaction->type == 'withdrawal')
+                                <span class="badge bg-info">
                                     Rút tiền
                                 </span>
                             @endif
                         </td>
                         <td class="col-1">
-                            @if ($transaction->status === 'Giao dịch thành công')
-                                <span class="badge bg-success w-100">
+                            @if ($transaction->status === 'Thành công')
+                                <span class="badge bg-success">
                                     {{ $transaction->status }}
                                 </span>
                             @elseif($transaction->status === 'Chờ xử lý')
-                                <span class="badge bg-warning w-100">
+                                <span class="badge bg-warning">
                                     {{ $transaction->status }}
                                 </span>
                             @else
-                                <span class="badge bg-danger w-100">
+                                <span class="badge bg-danger">
                                     {{ $transaction->status }}
                                 </span>
                             @endif
@@ -53,12 +56,21 @@
                         <td>{{ $transaction->created_at ?? '' }}
                         </td>
                         <td>
-                            <a
-                                href="{{ route('admin.transactions.show', $transaction->id) }}">
-                                <button class="btn btn-sm btn-info edit-item-btn">
-                                    <span class="ri-eye-line"></span>
-                                </button>
-                            </a>
+                            @if ($transaction->type === 'withdrawal')
+                                <a
+                                    href="{{ route('admin.withdrawals.show', $transaction->transactionable_id) }}">
+                                    <button class="btn btn-sm btn-info edit-item-btn">
+                                        <span class="ri-eye-line"></span>
+                                    </button>
+                                </a>
+                            @else
+                                <a
+                                    href="{{ route('admin.transactions.show', $transaction->transaction_code) }}">
+                                    <button class="btn btn-sm btn-info edit-item-btn">
+                                        <span class="ri-eye-line"></span>
+                                    </button>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
