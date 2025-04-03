@@ -9,8 +9,8 @@
                 </div>
             </div>
         </td>
-        <td class="text-center"><h5 class="fs-14 my-1 fw-normal">{{ $topCourse->total_sales ?? '' }}</h5></td>
-        <td class="text-center"><h5 class="fs-14 my-1 fw-normal">{{ $topCourse->total_enrolled_students ?? '' }}</h5></td>
+        <td><h5 class="fs-14 my-1 fw-normal">{{ $topCourse->total_sales ?? '' }}</h5></td>
+        <td><h5 class="fs-14 my-1 fw-normal">{{ $topCourse->total_enrolled_students ?? '' }}</h5></td>
         <td><h5 class="fs-14 my-1 fw-normal">{{ number_format($topCourse->total_revenue ?? 0) }}</h5></td>
     </tr>
 @endforeach

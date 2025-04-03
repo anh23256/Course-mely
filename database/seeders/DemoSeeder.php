@@ -69,9 +69,6 @@ class DemoSeeder extends Seeder
 
                     foreach ($randomCourseIds as $course) {
                         $year = fake()->randomElement([
-                            2022,
-                            2023,
-                            2024,
                             2025,
                             2025,
                             2025
@@ -219,7 +216,7 @@ class DemoSeeder extends Seeder
                             $conversation = Conversation::create([
                                 'conversationable_id' => $course['id'],
                                 'conversationable_type' => Course::class,
-                                'title' => "Nhóm thảo luận của khóa học {$course['id']}"
+                                'name' => "Nhóm thảo luận của khóa học {$course['id']}"
                             ]);
 
                             $conversation->users()->attach([$userId, $course['user_id']]);

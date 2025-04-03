@@ -25,42 +25,12 @@ class ApprovalMembershipController extends Controller
         $queryApprovals = Approvable::query()
             ->with([
                 'approver',
-                'membershipPlan.instructor',
-                // Lấy thông tin instructor của gói Membership
-
+                'membershipPlan.instructor.profile',
             ])
             ->orderBy('id', 'desc')
             ->where('approvable_type', MembershipPlan::class)
-            ->when($request->filled('membershipPlan_instructor_name'), function ($query) use ($request) {
-                $query->whereHas('membershipPlan.instructor', function ($query) use ($request) {
-                    $query->where('name', 'LIKE', "%{$request->membershipPlan_instructor_name}%");
-                });
-            })
-            ->when($request->filled('membershipPlan_instructor_email'), function ($query) use ($request) {
-                $query->whereHas('membershipPlan.instructor', function ($query) use ($request) {
-                    $query->where('email', 'LIKE', "%{$request->membershipPlan_instructor_email}%");
-                });
-            })
-            ->when($request->filled('amount_min') && $request->filled('amount_max'), function ($query) use ($request) {
-                $query->whereHas('membershipPlan', function ($query) use ($request) {
-                    $query->whereBetween('price', [$request->amount_min, $request->amount_max]);
-                });
-            })
-            ->when($request->filled('request_start_date'), function ($query) use ($request) {
-                $query->whereDate('request_date', '>=', $request->request_start_date);
-            })
-            ->when($request->filled('request_end_date'), function ($query) use ($request) {
-                $query->whereDate('request_date', '<=', $request->request_end_date);
-            })
-            ->when($request->filled('approval_start_date'), function ($query) use ($request) {
-                $query->whereDate('approved_at', '>=', $request->approval_start_date);
-            })
-            ->when($request->filled('approval_end_date'), function ($query) use ($request) {
-                $query->whereDate('approved_at', '<=', $request->approval_end_date);
-            })
             ->orderBy('id', 'desc');
 
-        // dd($queryApprovals);
 
         // Thống kê số lượng kiểm duyệt theo trạng thái
         $approvalCount = Approvable::query()
@@ -71,21 +41,30 @@ class ApprovalMembershipController extends Controller
             sum(status = "rejected") as rejected_approval
         ')->where('approvable_type', MembershipPlan::class)->first();
 
-        // Lọc dữ liệu nếu có request
+        if ($request->has('search_full')) {
+            $queryApprovals = $this->search($request, $queryApprovals);
+        }
+
         if ($request->hasAny([
+            'request_start_date',
+            'request_end_date',
+            'approval_start_date',
+            'approval_end_date',
             'status',
-            
+            'approver_name_approved',
+            'membershipPlan_name_approved',
+            'amount_min',
+            'amount_max',
+            'instructor_email',
+            'name_instructor',
+            'phone_instructor',
+            'membershipPlan_duration_months_approval',
         ])) {
             $queryApprovals = $this->filter($request, $queryApprovals);
         }
 
-        // Tìm kiếm nâng cao
-        // if ($request->has('search_full'))
-        //     $queryApprovals = $this->search($request, $queryApprovals);
-
         $approvals = $queryApprovals->paginate(10);
 
-        // Xử lý AJAX (nếu có)
         if ($request->ajax()) {
             $html = view('approval.membership.table', compact('approvals'))->render();
             return response()->json(['html' => $html]);
@@ -102,12 +81,68 @@ class ApprovalMembershipController extends Controller
     private function filter(Request $request, $query)
     {
         $filters = [
-
+            'request_date' => ['attribute' => ['request_start_date' => '>=', 'request_end_date' => '<=']],
+            'approval_date' => ['filed' => ['approved_at', 'rejected_at'], 'attribute' => ['approval_start_date' => '>=', 'approval_end_date' => '<=']],
             'status' => ['queryWhere' => '='],
-            
+            'approver_name_approved' => null,
+            'membershipPlan_name_approved' => null,
+            'membershipPlan_price_approval' => ['attribute' => ['amount_min' => '>=', 'amount_max' => '<=']],
         ];
 
         $query = $this->filterTrait($filters, $request, $query);
+
+        $email_instructor = $request->input('instructor_email', '');
+        $name_instructor = $request->input('name_instructor', '');
+        $phone_instructor = $request->input('phone_instructor', '');
+        $duration_month = $request->input('membershipPlan_duration_months_approval', '');
+
+        if (!empty($name_instructor) || !empty($email_instructor) || !empty($phone_instructor)) {
+            $query->whereHas('membershipPlan.instructor', function ($query) use ($email_instructor, $name_instructor) {
+
+                if (!empty($name_instructor)) {
+                    $query->where('name', 'LIKE', "%{$name_instructor}%");
+                }
+
+                if (!empty($email_instructor)) {
+                    $query->where('email', 'LIKE', "%{$email_instructor}%");
+                }
+
+                if (!empty($phone_instructor)) {
+                    $query->whereHas('profile', function ($query) use ($phone_instructor) {
+                        $query->where('phone', 'LIKE', "%$phone_instructor%");
+                    });
+                }
+            });
+        }
+
+        if (!empty($duration_month)) {
+            $query->whereHas('membershipPlan', function ($query) use ($duration_month) {
+                $query->where('duration_months', $duration_month);
+            });
+        }
+
+        return $query;
+    }
+    private function search($request, $query)
+    {
+        if (!empty($request->search_full)) {
+            $searchTerm = $request->search_full;
+            $query->where(function ($query) use ($searchTerm) {
+                $query->whereHas('approver', function ($query) use ($searchTerm) {
+                    $query->where('name', 'LIKE', "%$searchTerm%");
+                })
+                    ->orWhereHas('membershipPlan', function ($query) use ($searchTerm) {
+                        $query->where('name', 'LIKE', "%$searchTerm%");
+                    })
+                    ->orWhereHas('membershipPlan.instructor', function ($query) use ($searchTerm) {
+                        $query->where('name', 'LIKE', "%$searchTerm%")
+                            ->orWhere('email', 'LIKE', "%$searchTerm%")
+                            ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                                $query->where('phone', 'LIKE', "%$searchTerm%");
+                            });
+                    });
+            });
+        }
 
         return $query;
     }

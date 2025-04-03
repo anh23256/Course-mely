@@ -25,7 +25,7 @@ class ApprovalPostController extends Controller
         $queryApprovals = Approvable::query()
             ->with([
                 'approver',
-                'approvable.user', // Tải quan hệ user của Post
+                'post.user',
             ])
             ->orderBy('id', 'desc')
             ->where('approvable_type', Post::class);
@@ -46,8 +46,10 @@ class ApprovalPostController extends Controller
             'approval_start_date',
             'approval_end_date',
             'post_title_approved',
-            'user_name_approved',
             'approver_name_approved',
+            'name_creator',
+            'phone_creator',
+            'creator_email',
             'status'
         ])) {
             $queryApprovals = $this->filter($request, $queryApprovals);
@@ -135,7 +137,7 @@ class ApprovalPostController extends Controller
                     'status' => 'draft',
                 ]);
             }
-                // Gửi thông báo đến giảng viên
+            // Gửi thông báo đến giảng viên
             $user = $approval->approvable->user;
             $user->notify(new PostApprovalNotification($approval->approvable, $status, $note));
             DB::commit();
@@ -154,13 +156,34 @@ class ApprovalPostController extends Controller
         $filters = [
             'status' => ['queryWhere' => '='],
             'post_title_approved' => null,
-            'user_name_approved' => null,
             'approver_name_approved' => null,
             'request_date' => ['attribute' => ['request_start_date' => '>=', 'request_end_date' => '<=']],
             'approval_date' => ['filed' => ['approved_at', 'rejected_at'], 'attribute' => ['approval_start_date' => '>=', 'approval_end_date' => '<=']],
         ];
 
         $query = $this->filterTrait($filters, $request, $query);
+
+        $name_creator = $request->input('name_creator', '');
+        $phone_creator = $request->input('phone_creator', '');
+        $creator_email = $request->input('creator_email', '');
+        if (!empty($name_creator) || !empty($phone_creator) || !empty($creator_email)) {
+            $query->whereHas('post.user', function ($query) use ($name_creator, $phone_creator, $creator_email) {
+
+                if (!empty($name_creator)) {
+                    $query->where('name', 'LIKE', "%{$name_creator}%");
+                }
+
+                if (!empty($creator_email)) {
+                    $query->where('email', 'LIKE', "%{$creator_email}%");
+                }
+
+                if (!empty($phone_creator)) {
+                    $query->whereHas('profile', function ($query) use ($phone_creator) {
+                        $query->where('phone', 'LIKE', "%$phone_creator%");
+                    });
+                }
+            });
+        }
 
         return $query;
     }
@@ -170,15 +193,18 @@ class ApprovalPostController extends Controller
         if (!empty($request->search_full)) {
             $searchTerm = $request->search_full;
             $query->where(function ($query) use ($searchTerm) {
-                $query->where('note', 'LIKE', "%$searchTerm%")
-                    ->orWhereHas('approver', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%");
-                    })
-                    ->orWhereHas('user', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%");
-                    })
+                $query->whereHas('approver', function ($query) use ($searchTerm) {
+                    $query->where('name', 'LIKE', "%$searchTerm%");
+                })
                     ->orWhereHas('post', function ($query) use ($searchTerm) {
                         $query->where('title', 'LIKE', "%$searchTerm%");
+                    })
+                    ->orWhereHas('post.user', function ($query) use ($searchTerm) {
+                        $query->where('name', 'LIKE', "%$searchTerm%")
+                            ->orWhere('email', 'LIKE', "%$searchTerm%")
+                            ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                                $query->where('phone', 'LIKE', "%$searchTerm%");
+                            });
                     });
             });
         }

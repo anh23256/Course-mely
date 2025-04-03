@@ -30,6 +30,8 @@ use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\SpinController;
 use App\Http\Controllers\Admin\TopCourseController;
+use App\Http\Controllers\Admin\TopInstructorController;
+use App\Http\Controllers\Admin\TopStudentController;
 use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -311,19 +313,18 @@ Route::prefix('admin')->as('admin.')
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject');
                     });
                 Route::prefix('posts')
-                ->as('posts.')
-                ->group(function () {
-                    Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
-                    Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
-                    Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
-                    Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
-                });
+                    ->as('posts.')
+                    ->group(function () {
+                        Route::get('/', [ApprovalPostController::class, 'index'])->name('index');
+                        Route::get('/{post}', [ApprovalPostController::class, 'show'])->name('show');
+                        Route::put('/{post}', [ApprovalPostController::class, 'approve'])->name('approve');
+                        Route::put('/{post}/reject', [ApprovalPostController::class, 'reject'])->name('reject');
+                    });
 
                 Route::prefix('memberships')
                     ->as('memberships.')
                     ->group(function () {
                         Route::get('/', [ApprovalMembershipController::class, 'index'])->name('index');
-                        
                     });
             });
 
@@ -380,9 +381,18 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE REVENUE STATISTICS =============================
         Route::get('/revenue-statistics', [RevenueStatisticController::class, 'index'])
             ->name('revenue-statistics.index');
+
+        Route::post('/revenue-statistics/export', [RevenueStatisticController::class, 'export'])
+            ->name('revenue-statistics.export');
         #============================== ROUTE TOP COURSE =============================
         Route::get('/top-courses', [TopCourseController::class, 'index'])
             ->name('top-courses.index');
+        #============================== ROUTE TOP COURSE =============================
+        Route::get('/top-instructors', [TopInstructorController::class, 'index'])
+            ->name('top-instructors.index');
+        #============================== ROUTE TOP COURSE =============================
+        Route::get('/top-students', [TopStudentController::class, 'index'])
+            ->name('top-students.index');
 
         #============================== ROUTE NOTIFICATIONS =============================
         Route::prefix('notifications')
@@ -439,7 +449,7 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/dissolve-group', [ChatController::class, 'dissolveGroup'])->name('dissolveGroup');
             });
 
-            Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
-            Route::post('user-status', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
-            Route::post('clear-currency-conversation', [ChatController::class, 'clearCurrentChat'])->name('clear-currency-conversation');
+        Route::post('chat/notify-inactive-users', [ChatController::class, 'getUserJoinRoom'])->name('getUserJoinRoom');
+        Route::post('user-status', [ChatController::class, 'getUserOnline'])->name('getUserOnline');
+        Route::post('clear-currency-conversation', [ChatController::class, 'clearCurrentChat'])->name('clear-currency-conversation');
     });

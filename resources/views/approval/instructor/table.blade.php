@@ -17,36 +17,56 @@
                 @foreach ($approvals as $approval)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $approval->user->name ?? '' }}</td>
-                        <td>{{ $approval->user->email ?? '' }}</td>
+                        <td>
+                            <img src="{{ $approval->user->avatar ?? '' }}" alt="Avatar"
+                                class="user-avatar me-3">
+                            {{ $approval->user->name ?? '' }}
+                        </td>
+                        <td>
+                            <span
+                                class="text-danger font-weight-bold">{{ $approval->user->email ?? '' }}</span>
+                            <br>
+                            <small
+                                class="text-muted">{{ $approval->user->profile->phone ?? '' }}</small>
+                        </td>
                         <td>
                             {!! !empty($approval->approver->name)
-                                ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>' 
+                                ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
                                 : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
                         </td>
                         <td>
                             @if ($approval->status == 'pending')
-                                <span class="badge bg-warning text-dark"><i class="bx bx-time-five"></i> Chờ xử lý</span>
+                                <span class="badge bg-warning text-dark"><i
+                                        class="bx bx-time-five"></i> Chờ xử lý</span>
                             @elseif($approval->status == 'approved')
-                                <span class="badge bg-success text-white"><i class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
+                                <span class="badge bg-success text-white"><i
+                                        class="bx bx-check-circle"></i> Đã kiểm duyệt</span>
                             @else
-                                <span class="badge bg-danger text-white"><i class="bx bx-x-circle"></i> Từ chối</span>
+                                <span class="badge bg-danger text-white"><i
+                                        class="bx bx-x-circle"></i> Từ chối</span>
                             @endif
                         </td>
                         <td>
-                            {!! $approval->request_date 
-                                ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' . \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') . '</span>'
+                            {!! $approval->request_date
+                                ? '<span class="badge bg-info text-white"><i class="bx bx-calendar"></i> ' .
+                                    \Carbon\Carbon::parse($approval->request_date)->format('d/m/Y') .
+                                    '</span>'
                                 : '<span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>' !!}
                         </td>
                         <td>
-                            @if($approval->approved_at)
-                                <span class="badge bg-success text-white"><i class="bx bx-calendar-check"></i> {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
+                            @if ($approval->approved_at)
+                                <span class="badge bg-success text-white"><i
+                                        class="bx bx-calendar-check"></i>
+                                    {{ \Carbon\Carbon::parse($approval->approved_at)->format('d/m/Y') }}</span>
                             @elseif($approval->rejected_at)
-                                <span class="badge bg-danger text-white"><i class="bx bx-calendar-x"></i> {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
+                                <span class="badge bg-danger text-white"><i
+                                        class="bx bx-calendar-x"></i>
+                                    {{ \Carbon\Carbon::parse($approval->rejected_at)->format('d/m/Y') }}</span>
                             @else
-                                <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa kiểm duyệt</span>
+                                <span class="badge bg-warning text-dark"><i
+                                        class="bx bx-time"></i> Chưa kiểm duyệt</span>
                             @endif
-                        </td>                
+                        </td>
                         <td>
                             <a
                                 href="{{ route('admin.approvals.instructors.show', $approval->id) }}">

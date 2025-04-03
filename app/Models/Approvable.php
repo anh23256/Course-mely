@@ -51,4 +51,9 @@ class Approvable extends Model
     {
         return $this->belongsTo(MembershipPlan::class, 'approvable_id');
     }
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class, 'approvable_id');
+    }
 }

@@ -11,7 +11,17 @@
         </li>
         <li class="nav-item cusor-pointer">
             <a class="nav-link menu-link" href="{{ route('admin.top-courses.index') }}">
-                <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Top khoá học bán chạy</span>
+                <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top khóa học</span>
+            </a>
+        </li>
+        <li class="nav-item cusor-pointer">
+            <a class="nav-link menu-link" href="{{ route('admin.top-instructors.index') }}">
+                <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top giảng viên</span>
+            </a>
+        </li>
+        <li class="nav-item cusor-pointer">
+            <a class="nav-link menu-link" href="{{ route('admin.top-students.index') }}">
+                <i class=" ri-bar-chart-fill"></i> <span data-key="t-dashboards">Thống kê top học viên</span>
             </a>
         </li>
         <li class="nav-item cusor-pointer">
