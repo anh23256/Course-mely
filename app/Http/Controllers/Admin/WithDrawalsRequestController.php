@@ -79,7 +79,7 @@ class WithDrawalsRequestController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return redirect()->back()->with('error', 'Có lị xây ra, vui lý thử lai sau');
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
 

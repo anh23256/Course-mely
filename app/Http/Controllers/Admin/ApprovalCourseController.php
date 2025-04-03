@@ -56,8 +56,9 @@ class ApprovalCourseController extends Controller
             'approval_start_date',
             'approval_end_date',
             'course_name_approved',
-            'user_name_approved',
             'approver_name_approved',
+            'instructor_email',
+            'name_instructor',
             'status'
         ])) {
             $queryApprovals = $this->filter($request, $queryApprovals);
@@ -104,6 +105,7 @@ class ApprovalCourseController extends Controller
             })->sum(function ($lesson) {
                 return $lesson->lessonable->duration ?? 0;
             });
+
             $videos = $approval->approvable->chapters
                 ->flatMap(fn($chapter) => $chapter->lessons)
                 ->filter(fn($lesson) => $lesson->lessonable_type === Video::class)
@@ -136,7 +138,6 @@ class ApprovalCourseController extends Controller
                 'quizzes',
                 'videos',
             ]));
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -173,10 +174,22 @@ class ApprovalCourseController extends Controller
                     'status' => $status,
                     'accepted' => now()
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             } else {
                 $approval->course->update([
                     'status' => $status,
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             }
 
             DB::commit();
@@ -206,6 +219,12 @@ class ApprovalCourseController extends Controller
             $approval->content_modification = false;
             $approval->reason = null;
             $approval->save();
+
+            $approval->logApprovalAction(
+                $status,
+                auth()->user(),
+                $note
+            );
 
             $approval->course->update([
                 'status' => 'approved',
@@ -254,6 +273,12 @@ class ApprovalCourseController extends Controller
             $approval->approver_id = auth()->id();
             $approval->save();
 
+            $approval->logApprovalAction(
+                $status,
+                auth()->user(),
+                $note
+            );
+
             $approval->course->update([
                 'status' => 'draft',
                 'modification_request' => true
@@ -291,12 +316,27 @@ class ApprovalCourseController extends Controller
         $filters = [
             'status' => ['queryWhere' => '='],
             'course_name_approved' => null,
-            'user_name_approved' => null,
             'approver_name_approved' => null,
             'course_price_approved' => ['attribute' => ['amount_min' => '>=', 'amount_max' => '<=']],
             'request_date' => ['attribute' => ['request_start_date' => '>=', 'request_end_date' => '<=']],
             'approval_date' => ['filed' => ['approved_at', 'rejected_at'], 'attribute' => ['approval_start_date' => '>=', 'approval_end_date' => '<=']],
         ];
+
+        $email_instructor = $request->input('instructor_email', '');
+        $name_instructor = $request->input('name_instructor', '');
+
+        if (!empty($name_instructor) || !empty($email_instructor)) {
+            $query->whereHas('course.user', function ($query) use ($email_instructor, $name_instructor) {
+
+                if (!empty($name_instructor)) {
+                    $query->where('name', 'LIKE', "%{$name_instructor}%");
+                }
+
+                if (!empty($email_instructor)) {
+                    $query->where('email', 'LIKE', "%{$email_instructor}%");
+                }
+            });
+        }
 
         $query = $this->filterTrait($filters, $request, $query);
 
@@ -308,15 +348,15 @@ class ApprovalCourseController extends Controller
         if (!empty($request->search_full)) {
             $searchTerm = $request->search_full;
             $query->where(function ($query) use ($searchTerm) {
-                $query->where('note', 'LIKE', "%$searchTerm%")
-                    ->orWhereHas('approver', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%");
-                    })
-                    ->orWhereHas('user', function ($query) use ($searchTerm) {
+                $query->whereHas('approver', function ($query) use ($searchTerm) {
                         $query->where('name', 'LIKE', "%$searchTerm%");
                     })
                     ->orWhereHas('course', function ($query) use ($searchTerm) {
                         $query->where('name', 'LIKE', "%$searchTerm%");
+                    })
+                    ->orWhereHas('course.user', function ($query) use ($searchTerm) {
+                        $query->where('name', 'LIKE', "%$searchTerm%")
+                            ->orWhere('email', 'LIKE', "%$searchTerm%");
                     });
             });
         }

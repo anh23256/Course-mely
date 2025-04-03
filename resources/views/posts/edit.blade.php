@@ -88,7 +88,7 @@
                         </div>
                         <div class="card-body">
                             <div class="col-md-12 mb-2">
-                                <img class="img-thumbnail" src="{{ $post->thumbnail }}" alt="Hình đại diện">
+                                <img class="img-thumbnail" src="{{ Storage::url($post->thumbnail) }}" alt="Hình đại diện">
                             </div>
                         </div>
                     </div>

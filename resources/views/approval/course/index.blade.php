@@ -4,18 +4,18 @@
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
     <style>
         .hover-effect {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .hover-effect:hover {
-        transform: translateY(-5px);
-        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
         }
-        </style>
-    @endpush
+    </style>
+@endpush
 
-    @section('content')
-        <div class="container-fluid">
+@section('content')
+    <div class="container-fluid">
 
         <!-- start page title -->
         <div class="row">
@@ -44,7 +44,7 @@
                             <i class="bx bx-list-check text-primary fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Tổng số yêu cầu</h5>
-                        <p class="card-text fs-4 fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold">{{ $approvalCount->total_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -52,10 +52,10 @@
                 <div class="card stats-card approved-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-success">
-                        <i class="bx bx-check-circle text-success fs-1"></i>
+                            <i class="bx bx-check-circle text-success fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu đã kiểm duyệt</h5>
-                        <p class="card-text fs-4 fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-success">{{ $approvalCount->approved_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -63,10 +63,10 @@
                 <div class="card stats-card pending-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-warning">
-                        <i class="bx bx-time-five text-warning fs-1"></i>
+                            <i class="bx bx-time-five text-warning fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu chờ xử lý</h5>
-                        <p class="card-text fs-4 fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-warning">{{ $approvalCount->pending_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -74,10 +74,10 @@
                 <div class="card stats-card rejected-card">
                     <div class="card-body text-center">
                         <div class="stat-icon text-danger">
-                        <i class="bx bx-x-circle text-danger fs-1"></i>
+                            <i class="bx bx-x-circle text-danger fs-1"></i>
                         </div>
                         <h5 class="card-title mt-2">Yêu cầu bị từ chối</h5>
-                        <p class="card-text fs-4 fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
+                        <p class="card-text fw-bold text-danger">{{ $approvalCount->rejected_approval ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -154,26 +154,6 @@
                                                 </div>
                                             </li>
                                         </div>
-                                        <div class="row">
-                                            <li class="col-6">
-                                                <div class="mb-2">
-                                                    <label for="approval_start_date" class="form-label">Ngày bắt đầu
-                                                        kiểm duyệt</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        name="approval_start_date" id="approval_start_date" data-filter
-                                                        value="{{ request()->input('approval_start_date') ?? '' }}">
-                                                </div>
-                                            </li>
-                                            <li class="col-6">
-                                                <div class="mb-2">
-                                                    <label for="approval_end_date" class="form-label">Ngày kết thúc
-                                                        kiểm duyệt</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        name="approval_end_date" id="approval_end_date" data-filter
-                                                        value="{{ request()->input('approval_end_date') ?? '' }}">
-                                                </div>
-                                            </li>
-                                        </div>
                                         <li class="mt-2 d-flex gap-1">
                                             <button class="btn btn-sm btn-success flex-grow-1" type="reset"
                                                 id="resetFilter">Reset
@@ -196,27 +176,35 @@
                                 <label class="form-label">Tên khóa học</label>
                                 <input class="form-control form-control-sm" name="course_name_approved" type="text"
                                     placeholder="Nhập tên khóa học..."
-                                    value="{{ request()->input('account_holder') ?? '' }}" data-advanced-filter>
+                                    value="{{ request()->input('course_name_approved') ?? '' }}" data-advanced-filter>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tên giảng viên</label>
-                                <input class="form-control form-control-sm" name="user_name_approved" type="text"
+                                <input class="form-control form-control-sm" name="name_instructor" type="text"
                                     placeholder="Nhập tên giảng viên..."
-                                    value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                    value="{{ request()->input('name_instructor') ?? '' }}" data-advanced-filter>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Email giảng viên</label>
+                                <input class="form-control form-control-sm" name="instructor_email" type="text"
+                                    placeholder="Nhập email giảng viên..."
+                                    value="{{ request()->input('instructor_email') ?? '' }}" data-advanced-filter>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tên người kiểm duyệt</label>
                                 <input class="form-control form-control-sm" name="approver_name_approved" type="text"
                                     placeholder="Nhập tên người kiểm duyệt..."
-                                    value="{{ request()->input('account_number') ?? '' }}" data-advanced-filter>
+                                    value="{{ request()->input('approver_name_approved') ?? '' }}" data-advanced-filter>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4 mt-3">
                                 <label for="statusItem" class="form-label">Trạng thái kiểm duyệt</label>
                                 <select class="form-select form-select-sm" name="status" id="statusItem"
                                     data-advanced-filter>
                                     <option value="">Chọn trạng thái</option>
                                     <option value="approved" @selected(request()->input('status') === 'approved')>Đã
                                         kiểm duyệt
+                                    </option>
+                                    <option value="modify_request" @selected(request()->input('status') === 'modify_request')>Sửa đổi nội dung
                                     </option>
                                     <option value="pending" @selected(request()->input('status') === 'pending')>Chờ
                                         xử lý
@@ -225,6 +213,24 @@
                                         chối
                                     </option>
                                 </select>
+                            </div>
+                            <div class="col-md-4 mt-3">
+                                <div class="mb-2">
+                                    <label for="approval_start_date" class="form-label">Ngày bắt đầu
+                                        kiểm duyệt</label>
+                                    <input type="date" class="form-control form-control-sm" name="approval_start_date"
+                                        id="approval_start_date" data-advanced-filter
+                                        value="{{ request()->input('approval_start_date') ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mt-3">
+                                <div class="mb-2">
+                                    <label for="approval_end_date" class="form-label">Ngày kết thúc
+                                        kiểm duyệt</label>
+                                    <input type="date" class="form-control form-control-sm" name="approval_end_date"
+                                        id="approval_end_date" data-advanced-filter
+                                        value="{{ request()->input('approval_end_date') ?? '' }}">
+                                </div>
                             </div>
                             <div class="mt-3 text-end">
                                 <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
@@ -260,7 +266,13 @@
                                             <td
                                                 style="max-width: 200px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
                                                 {{ \Illuminate\Support\Str::limit($approval->course->name ?? 'Không có tên', 60) }}
-                                            <td>{{ $approval->course->user->name ?? '' }}</td>
+                                            <td>
+                                                <span
+                                                    class="text-danger font-weight-bold">{{ $approval->course->user->name ?? '' }}</span>
+                                                <br>
+                                                <small
+                                                    class="text-muted">{{ $approval->course->user->email ?? '' }}</small>
+                                            </td>
                                             <td>
                                                 <img style="height: 80px" src="{{ $approval->course->thumbnail }}"
                                                     alt="" class="w-100 object-fit-cover">
@@ -268,9 +280,13 @@
                                             <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí' }}
                                             </td>
                                             <td>
-                                                {!! !empty($approval->approver->name)
-                                                    ? '<span class="badge bg-primary text-white"><i class="bx bx-user"></i> ' . $approval->approver->name . '</span>'
-                                                    : '<span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>' !!}
+                                                @if ($approval->status === 'pending')
+                                                    <span class="badge bg-warning text-dark"><i class="bx bx-time"></i> Chưa xử lý</span>
+                                                @elseif (!empty($approval->approver->name))
+                                                    <span class="badge bg-primary text-white"><i class="bx bx-user"></i> {{ $approval->approver->name }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary text-white"><i class="bx bx-cog"></i> Hệ thống đã xử lý</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if ($approval->status == 'pending')
@@ -335,29 +351,29 @@
     </div>
 @endsection
 
-    @push('page-scripts')
-        <script>
-            var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
+@push('page-scripts')
+    <script>
+        var routeUrlFilter = "{{ route('admin.approvals.courses.index') }}";
 
-            function updateRange() {
-                var minValue = $('#amountMinRange').val();
-                var maxValue = $('#amountMaxRange').val();
-                document.getElementById('amountMin').textContent = formatCurrency(minValue) + ' VND';
-                document.getElementById('amountMax').textContent = formatCurrency(maxValue) + ' VND';
-            }
+        function updateRange() {
+            var minValue = $('#amountMinRange').val();
+            var maxValue = $('#amountMaxRange').val();
+            document.getElementById('amountMin').textContent = formatCurrency(minValue) + ' VND';
+            document.getElementById('amountMax').textContent = formatCurrency(maxValue) + ' VND';
+        }
 
-            function formatCurrency(value) {
-                return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            }
+        function formatCurrency(value) {
+            return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
 
-            updateRange();
+        updateRange();
 
-            $(document).on('click', '#resetFilter', function() {
-                window.location = routeUrlFilter;
-            });
-        </script>
-        <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
-        <script src="{{ asset('assets/js/common/filter.js') }}"></script>
-        <script src="{{ asset('assets/js/common/search.js') }}"></script>
-        <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
-    @endpush
+        $(document).on('click', '#resetFilter', function() {
+            window.location = routeUrlFilter;
+        });
+    </script>
+    <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
+    <script src="{{ asset('assets/js/common/filter.js') }}"></script>
+    <script src="{{ asset('assets/js/common/search.js') }}"></script>
+    <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+@endpush
