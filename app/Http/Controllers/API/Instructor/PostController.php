@@ -14,14 +14,17 @@ use App\Notifications\PostSubmittedForApprovalNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait, ApiResponseTrait;
+    use LoggableTrait, UploadToLocalTrait, ApiResponseTrait;
 
     const FOLDER = 'blogs';
 
@@ -39,7 +42,12 @@ class PostController extends Controller
                 'category',
             ])
                 ->where('user_id', $user->id)
-                ->get();
+                ->get()->map(function ($post) {
+                    if ($post->thumbnail) {
+                        $post->thumbnail = Storage::url($post->thumbnail) ?? '';
+                    }
+                    return $post;
+                });
 
             if ($posts->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào');
@@ -61,22 +69,19 @@ class PostController extends Controller
             $data = $request->except('thumbnail', 'published_at');
 
             if ($request->hasFile('thumbnail')) {
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['user_id'] = Auth::id();
-
             $data['category_id'] = $request->input('category_id');
-
-            $data['status'] = 'pending';
-
+            $data['status'] = 'draft'; // Trạng thái mặc định là bản nháp
             $data['slug'] = !empty($data['title'])
                 ? Str::slug($data['title']) . '-' . Str::uuid()
                 : Str::uuid();
 
             $post = Post::query()->create($data);
 
-
+            // Gắn tag nếu có
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::query()->firstOrCreate([
@@ -87,6 +92,39 @@ class PostController extends Controller
 
                 $post->tags()->sync($tags->pluck('id'));
             }
+
+            DB::commit();
+
+            return $this->respondCreated('Tạo bài viết thành công', $post);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (!empty($data['thumbnail']) && filter_var($data['thumbnail'], FILTER_VALIDATE_URL)) {
+                $this->deleteFromLocal($data['thumbnail'], self::FOLDER);
+            }
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+    public function submitForApproval(Request $request, $postId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $post = Post::findOrFail($postId);
+
+            if ($post->user_id !== Auth::id()) {
+                return $this->respondForbidden('Bạn không có quyền gửi yêu cầu kiểm duyệt cho bài viết này');
+            }
+
+            if ($post->status !== 'draft') {
+                return $this->respondBadRequest('Bài viết không ở trạng thái bản nháp để gửi yêu cầu kiểm duyệt');
+            }
+
+            $post->update(['status' => 'pending']);
+
             // Tạo yêu cầu kiểm duyệt
             $approvable = Approvable::query()->create([
                 'approver_id' => null,
@@ -103,6 +141,7 @@ class PostController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // Gửi thông báo cho admin
             $roleUser = ['employee', 'admin'];
             $admins = User::whereHas('roles', function ($query) use ($roleUser) {
                 $query->whereIn('name', $roleUser);
@@ -112,23 +151,15 @@ class PostController extends Controller
 
             DB::commit();
 
-            return $this->respondCreated('Tạo bài viết thành công, đang chờ kiểm duyệt', $post);
+            return $this->respondSuccess('Gửi yêu cầu kiểm duyệt thành công', $post);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            if (
-                !empty($data['thumbnail']) &&
-                filter_var($data['thumbnail'], FILTER_VALIDATE_URL)
-            ) {
-                $this->deleteImage($data['thumbnail'], self::FOLDER);
-            }
 
             $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
     public function getPostBySlug(string $slug)
     {
         try {
@@ -159,48 +190,37 @@ class PostController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            $data = $request->except('thumbnail', 'category_id', 'published_at');
-
+    
             $post = Post::query()
                 ->with(['tags'])
                 ->where('slug', $slug)
-                ->first();
-
+                ->firstOrFail();
+    
+            if ($post->user_id !== Auth::id()) {
+                return $this->respondForbidden('Bạn không có quyền cập nhật bài viết này');
+            }
+            if ($post->status === 'pending') {
+                return $this->respondBadRequest('Không thể cập nhật bài viết đang chờ kiểm duyệt');
+            }
+            $data = $request->except('thumbnail', 'category_id', 'published_at');
+    
             if ($request->hasFile('thumbnail')) {
                 if ($post->thumbnail && filter_var($post->thumbnail, FILTER_VALIDATE_URL)) {
-                    $this->deleteImage($post->thumbnail, self::FOLDER);
+                    $this->deleteFromLocal($post->thumbnail, self::FOLDER);
                 }
-
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             } else {
                 $data['thumbnail'] = $post->thumbnail;
             }
-
-
+    
             $data['category_id'] = $request->input('category_id') ?? $post->category_id;
             $data['published_at'] = $request->input('published_at') ?? $post->published_at;
             $data['slug'] = !empty($data['title'])
-                ? Str::slug($data['title'])
+                ? Str::slug($data['title']) . '-' . Str::uuid()
                 : $post->slug;
-            // Nếu bài viết đã bị từ chối (status = draft), gửi lại để kiểm duyệt
-            if ($post->status === 'draft') {
-                Approvable::query()->create([
-                    'approver_id' => null, // Chưa có người kiểm duyệt
-                    'status' => 'pending', // Trạng thái ban đầu là pending
-                    'note' => null, // Chưa có ghi chú
-                    'reason' => null, // Chưa có lý do chỉnh sửa
-                    'content_modification' => 0, // Không yêu cầu chỉnh sửa nội dung
-                    'approvable_type' => Post::class, // Loại đối tượng là Post
-                    'approvable_id' => $post->id, // ID của bài viết
-                    'request_date' => now(), // Ngày yêu cầu kiểm duyệt
-                    'approved_at' => null, // Chưa được duyệt
-                    'rejected_at' => null, // Chưa bị từ chối
-                    'created_at' => now(), // Thời gian tạo bản ghi
-                    'updated_at' => now(), // Thời gian cập nhật bản ghi
-                ]);
-            }
+    
             $post->update($data);
+    
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::firstOrCreate([
@@ -208,20 +228,23 @@ class PostController extends Controller
                         'slug' => Str::slug($tagName) ?? Str::uuid()
                     ]);
                 });
-
                 $post->tags()->sync($tags->pluck('id'));
             } else {
                 $post->tags()->detach();
             }
-
+    
             DB::commit();
-
-            return $this->respondOk('Cập nhật bài viết thành công, đang chờ kiểm duyệt', $post);
+    
+            if ($post->status === 'draft') {
+                return $this->respondOk('Cập nhật bài viết bản nháp thành công', $post);
+            } else {
+                return $this->respondOk('Cập nhật bài viết thành công', $post);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
-
+    
             $this->logError($e, $request->all());
-
+    
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
