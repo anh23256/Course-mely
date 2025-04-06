@@ -127,15 +127,27 @@ class ApprovalPostController extends Controller
 
             if ($status === 'approved') {
                 // Khi duyệt, chuyển trạng thái thành published và cập nhật published_at
-                $approval->approvable->update([
+                $approval->post->update([
                     'status' => 'published', // Chuyển thành published
                     'published_at' => now(), // Đặt thời gian xuất bản là thời điểm duyệt
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             } else {
                 // Khi từ chối, chuyển trạng thái sang draft để giảng viên chỉnh sửa
-                $approval->approvable->update([
+                $approval->post->update([
                     'status' => 'draft',
                 ]);
+
+                $approval->logApprovalAction(
+                    $status,
+                    auth()->user(),
+                    $note
+                );
             }
             // Gửi thông báo đến giảng viên
             $user = $approval->approvable->user;

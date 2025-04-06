@@ -274,8 +274,8 @@
                                                     class="text-muted">{{ $approval->course->user->email ?? '' }}</small>
                                             </td>
                                             <td>
-                                                <img style="height: 80px" src="{{ $approval->course->thumbnail }}"
-                                                    alt="" class="w-100 object-fit-cover">
+                                                <img style="height: 80px; width: 80px; border-radius: 5px" src="{{ $approval->course->thumbnail }}"
+                                                    alt="" class="w-80 object-fit-cover">
                                             </td>
                                             <td>{{ $approval->course->price > 0 ? number_format($approval->course->price) : 'Miễn phí' }}
                                             </td>

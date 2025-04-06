@@ -108,38 +108,51 @@ class PostController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-    public function submitForApproval(Request $request, $postId)
+
+    public function submitForApproval(Request $request, $slug)
     {
         try {
             DB::beginTransaction();
 
-            $post = Post::findOrFail($postId);
+            $post = Post::query()->where('slug', $slug)->first();
 
             if ($post->user_id !== Auth::id()) {
                 return $this->respondForbidden('Bạn không có quyền gửi yêu cầu kiểm duyệt cho bài viết này');
             }
 
             if ($post->status !== 'draft') {
-                return $this->respondBadRequest('Bài viết không ở trạng thái bản nháp để gửi yêu cầu kiểm duyệt');
+                return $this->respondError('Bài viết không ở trạng thái bản nháp để gửi yêu cầu kiểm duyệt');
+            }
+
+            $existingRequest = Approvable::query()->where([
+                'approvable_type' => Post::class,
+                'approvable_id' => $post->id,
+            ])->first();
+
+            if ($existingRequest) {
+                if ($existingRequest->status === 'pending') {
+                    $existingRequest->update([
+                        'request_date' => now(),
+                    ]);
+                } else {
+                    $existingRequest->update([
+                        'status' => 'pending',
+                        'request_date' => now(),
+                        'approved_at' => null,
+                        'rejected_at' => null,
+                        'reason' => null,
+                    ]);
+                }
+            } else {
+                $existingRequest = Approvable::query()->create([
+                    'approvable_type' => Post::class,
+                    'approvable_id' => $post->id,
+                    'status' => 'pending',
+                    'request_date' => now(),
+                ]);
             }
 
             $post->update(['status' => 'pending']);
-
-            // Tạo yêu cầu kiểm duyệt
-            $approvable = Approvable::query()->create([
-                'approver_id' => null,
-                'status' => 'pending',
-                'note' => null,
-                'reason' => null,
-                'content_modification' => 0,
-                'approvable_type' => Post::class,
-                'approvable_id' => $post->id,
-                'request_date' => now(),
-                'approved_at' => null,
-                'rejected_at' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
 
             // Gửi thông báo cho admin
             $roleUser = ['employee', 'admin'];
@@ -160,6 +173,7 @@ class PostController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
     public function getPostBySlug(string $slug)
     {
         try {
@@ -178,6 +192,10 @@ class PostController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài viết');
             }
 
+            if ($post->thumbnail) {
+                $post->thumbnail = Storage::url($post->thumbnail);
+            }
+
             return $this->respondOk('Thông tin bài viết: ' . $post->title, $post);
         } catch (\Exception $e) {
             $this->logError($e);
@@ -190,12 +208,12 @@ class PostController extends Controller
     {
         try {
             DB::beginTransaction();
-    
+
             $post = Post::query()
                 ->with(['tags'])
                 ->where('slug', $slug)
                 ->firstOrFail();
-    
+
             if ($post->user_id !== Auth::id()) {
                 return $this->respondForbidden('Bạn không có quyền cập nhật bài viết này');
             }
@@ -203,7 +221,7 @@ class PostController extends Controller
                 return $this->respondBadRequest('Không thể cập nhật bài viết đang chờ kiểm duyệt');
             }
             $data = $request->except('thumbnail', 'category_id', 'published_at');
-    
+
             if ($request->hasFile('thumbnail')) {
                 if ($post->thumbnail && filter_var($post->thumbnail, FILTER_VALIDATE_URL)) {
                     $this->deleteFromLocal($post->thumbnail, self::FOLDER);
@@ -212,15 +230,15 @@ class PostController extends Controller
             } else {
                 $data['thumbnail'] = $post->thumbnail;
             }
-    
+
             $data['category_id'] = $request->input('category_id') ?? $post->category_id;
             $data['published_at'] = $request->input('published_at') ?? $post->published_at;
             $data['slug'] = !empty($data['title'])
                 ? Str::slug($data['title']) . '-' . Str::uuid()
                 : $post->slug;
-    
+
             $post->update($data);
-    
+
             if (!empty($request->input('tags'))) {
                 $tags = collect($request->input('tags'))->map(function ($tagName) {
                     return Tag::firstOrCreate([
@@ -232,9 +250,9 @@ class PostController extends Controller
             } else {
                 $post->tags()->detach();
             }
-    
+
             DB::commit();
-    
+
             if ($post->status === 'draft') {
                 return $this->respondOk('Cập nhật bài viết bản nháp thành công', $post);
             } else {
@@ -242,9 +260,9 @@ class PostController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
-    
+
             $this->logError($e, $request->all());
-    
+
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }

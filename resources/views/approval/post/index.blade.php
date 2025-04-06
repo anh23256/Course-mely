@@ -124,8 +124,8 @@
                                 </div>
                                 <div class="col-md-3 mt-3">
                                     <label class="form-label">Tên người kiểm duyệt</label>
-                                    <input class="form-control form-control-sm" name="approver_name_approved"
-                                        type="text" placeholder="Nhập tên người kiểm duyệt..."
+                                    <input class="form-control form-control-sm" name="approver_name_approved" type="text"
+                                        placeholder="Nhập tên người kiểm duyệt..."
                                         value="{{ request()->input('approver_name_approved') ?? '' }}"
                                         data-advanced-filter>
                                 </div>
@@ -224,9 +224,9 @@
                                                 </td>
                                                 </td>
                                                 <td>
-                                                    <img style="height: 80px"
-                                                        src="{{ $approval->post && $approval->post->thumbnail ? $approval->post->thumbnail : asset('assets/images/no-photo.jpg') }}"
-                                                        alt="" class="w-100 object-fit-cover">
+                                                    <img style="height: 80px; border-radius: 5px"
+                                                        src="{{ $approval->post && $approval->post->thumbnail ? Storage::url($approval->post->thumbnail) : asset('assets/images/no-photo.jpg') }}"
+                                                        alt="" class="w-80 object-fit-cover ">
                                                 </td>
                                                 <td>
                                                     {!! !empty($approval->approver->name)
