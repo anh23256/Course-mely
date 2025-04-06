@@ -371,7 +371,8 @@ Route::prefix('admin')->as('admin.')
                 Route::get('export', [WithDrawalsRequestController::class, 'export'])->name('export');
                 Route::get('/{withdrawal}', [WithDrawalsRequestController::class, 'show'])->name('show');
                 Route::post('/confirm-payment', [WithDrawalsRequestController::class, 'confirmPayment'])->name('confirmPayment')->can('withdrawal.update');
-                Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status')->can('withdrawal.update');            });
+                Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status')->can('withdrawal.update');
+            });
 
         #============================== ROUTE TRANSACTIONS =============================
         Route::prefix('transactions')
