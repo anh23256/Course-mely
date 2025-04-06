@@ -77,8 +77,8 @@ class DashboardController extends Controller
             }
 
             $totalCourse = $queryTotalCourse
-                ->whereMonth('created_at', $currentMonth->month)
-                ->whereYear('created_at', $currentMonth->year)
+                // ->whereMonth('created_at', $currentMonth->month)
+                // ->whereYear('created_at', $currentMonth->year)
                 ->count();
 
             $totalCourseLastMonth = $this->getTotalCourse()

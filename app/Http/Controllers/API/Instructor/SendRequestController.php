@@ -80,7 +80,7 @@ class SendRequestController extends Controller
             }
 
             if ($status === 'draft' || $status === 'rejected') {
-                $managers = User::query()->role(['admin'])->get();
+                $managers = User::query()->role(['admin','employee'])->get();
 
                 foreach ($managers as $manager) {
                     $manager->notify(new CourseSubmittedNotification($course));
@@ -93,7 +93,7 @@ class SendRequestController extends Controller
                 DB::commit();
                 return $this->respondOk('Gửi yêu cầu thành công');
             } elseif ('pending') {
-                $managers = User::query()->role(['admin'])->get();
+                $managers = User::query()->role(['admin', 'employee'])->get();
 
                 foreach ($managers as $manager) {
                     $manager->notifications()

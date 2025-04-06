@@ -388,12 +388,6 @@ class TransactionController extends Controller
                     'invoice_type' => 'course',
                 ]);
 
-                CourseUser::create([
-                    'user_id' => $userId,
-                    'course_id' => $itemId,
-                    'enrolled_at' => now(),
-                ]);
-
                 $transaction = Transaction::create([
                     'transaction_code' => $inputData['vnp_TxnRef'],
                     'user_id' => $userId,
@@ -555,7 +549,7 @@ class TransactionController extends Controller
             $secretKey = config('momo.secret_key');
             $returnUrl = config('momo.return_url');
             $ipnUrl = config('momo.notify_url', $returnUrl);
-            $requestType = "payWithATM";
+            $requestType = "payWithCC";
             $extraData = "";
 
             $orderId = 'ORDER' . time();
@@ -709,12 +703,6 @@ class TransactionController extends Controller
                     'payment_type' => 'course'
                 ]);
 
-                CourseUser::create([
-                    'user_id' => $userId,
-                    'course_id' => $itemId,
-                    'enrolled_at' => now(),
-                ]);
-
                 $transaction = Transaction::create([
                     'transaction_code' => 'TXN' . $inputData['orderId'],
                     'user_id' => $userId,
@@ -779,8 +767,8 @@ class TransactionController extends Controller
                         [
                             'old_end_date' => $oldEndDate->toDateTimeString(),
                             'new_end_date' => $newEndDate->toDateTimeString(),
-                            'transaction_id' => $inputData['vnp_TxnRef'],
-                            'amount' => $inputData['vnp_Amount'] / 100,
+                            'transaction_id' =>  $inputData['orderId'],
+                            'amount' => $inputData['amount'] / 100,
                             'invoice_id' => $invoice->id
                         ]
                     );
@@ -800,8 +788,8 @@ class TransactionController extends Controller
                                 'data' => [
                                     'start_date' => now()->toDateTimeString(),
                                     'end_date' => $newEndDate->toDateTimeString(),
-                                    'transaction_id' => $inputData['vnp_TxnRef'],
-                                    'amount' => $inputData['vnp_Amount'] / 100,
+                                    'transaction_id' => $inputData['orderId'],
+                                    'amount' => $inputData['amount'],
                                     'invoice_id' => $invoice->id
                                 ],
                                 'timestamp' => now()->toDateTimeString(),
@@ -811,9 +799,9 @@ class TransactionController extends Controller
                 }
 
                 $transaction = Transaction::query()->create([
-                    'transaction_code' => 'TXN' . $inputData['vnp_TxnRef'],
+                    'transaction_code' => 'TXN' . $inputData['orderId'],
                     'user_id' => $userId,
-                    'amount' => $inputData['vnp_Amount'] / 100,
+                    'amount' => $inputData['amount'],
                     'transactionable_id' => $invoice->id,
                     'transactionable_type' => Invoice::class,
                     'status' => 'Giao dịch thành công',
@@ -840,14 +828,14 @@ class TransactionController extends Controller
                     ->where('access_status', '!=', 'active')
                     ->update(['access_status' => 'active']);
 
-                $spin = Spin::query()->create([
+                $spin =   Spin::query()->create([
                     'user_id' => $userId,
                     'spin_count' => 1,
                     'received_at' => now(),
                     'expires_at' => now()->addDays(7),
                 ]);
 
-                //                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
+                $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
 
                 $this->finalBuyMembership(
                     $userId,
@@ -901,14 +889,14 @@ class TransactionController extends Controller
                 $this->clearCouponCache($userID, $discount->code);
             }
 
-            // $conversation = Conversation::query()->where([
-            //     'conversationable_id' => $course->id,
-            //     'conversationable_type' => Course::class
-            // ])->first();
+            $conversation = Conversation::query()->where([
+                'conversationable_id' => $course->id,
+                'conversationable_type' => Course::class
+            ])->first();
 
-            // if ($conversation) {
-            //     $conversation->users()->syncWithoutDetaching([$userID]);
-            // }
+            if ($conversation) {
+                $conversation->users()->syncWithoutDetaching([$userID]);
+            }
 
             $course->refresh();
             $course->increment('total_student');
@@ -992,6 +980,16 @@ class TransactionController extends Controller
             );
 
             $student = User::query()->find($userID);
+            if ($finalAmount > 500000) {
+                $spin = Spin::query()->create([
+                    'user_id' => $student->id,
+                    'spin_count' => 1,
+                    'received_at' => now(),
+                    'expires_at' => now()->addDays(7),
+                ]);
+    
+                $student->notify(new SpinReceivedNotification($student->id, $spin->spin_count, $spin->expires_at));
+            }
 
             Mail::to($student->email)->send(
                 new StudentCoursePurchaseMail($student, $course, $transaction, $invoice)

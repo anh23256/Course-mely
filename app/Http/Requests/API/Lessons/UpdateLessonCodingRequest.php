@@ -30,7 +30,8 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'hints' => 'nullable|array',
             'result_code' => 'nullable|string',
             'solution_code' => 'nullable|string',
-            'sample_code' => 'nullable|string'
+            'sample_code' => 'nullable|string',
+            'test_case' => 'nullable'
         ];
     }
 
@@ -47,7 +48,7 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'hints.array' => 'Gợi ý phải là mảng',
             'result_code.string' => 'Mã kết quả phải là chuỗi',
             'solution_code.string' => 'Mã lý thuyết phải là chuỗi',
-            'sample_code.string' => 'Code mẫu phải là chuỗi'
+            'sample_code.string' => 'Code mẫu phải là chuỗi',
         ];
     }
 }
