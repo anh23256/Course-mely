@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Approvable;
+use App\Models\Conversation;
 use App\Models\Course;
 use App\Models\User;
 use App\Notifications\CourseApprovedNotification;
@@ -32,6 +33,29 @@ class AutoApproveCourseJob implements ShouldQueue
     public function __construct(Course $course)
     {
         $this->course = $course;
+    }
+
+    private function createChatGroup(Course $course): void
+    {
+        $existingConversation = Conversation::query()
+            ->where('conversationable_id', $course->id)
+            ->where('conversationable_type', Course::class)
+            ->where('type', 'group')
+            ->first();
+
+        if ($existingConversation) {
+            return;
+        }
+
+        $conversation = Conversation::create([
+            'conversationable_id' => $course->id,
+            'conversationable_type' => Course::class,
+            'name' => 'Nhóm học tập cho khóa học ' . $course->name,
+            'type' => 'group',
+            'owner_id' => $course->user_id
+        ]);
+
+        $conversation->users()->attach($course->user_id);
     }
 
     /**
@@ -95,6 +119,8 @@ class AutoApproveCourseJob implements ShouldQueue
                         'visibility' => 'public',
                         'accepted' => now(),
                     ]);
+
+                    $this->createChatGroup($course);
 
                     $approval->logApprovalAction(
                         'approved',

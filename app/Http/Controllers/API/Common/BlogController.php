@@ -14,6 +14,7 @@ use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -43,7 +44,7 @@ class BlogController extends Controller
                     'title' => $post->title,
                     'slug' => $post->slug,
                     'description' => $post->description,
-                    'thumbnail' => $post->thumbnail,
+                    'thumbnail' => Storage::url($post->thumbnail) ?? '',
                     'views' => $post->views,
                     'comment_count' => $commentCount,
                     'published_at' => $post->published_at,
@@ -52,7 +53,7 @@ class BlogController extends Controller
                         'name' => $post->user->name,
                         'avatar' => $post->user->avatar,
                         'email' => $post->user->email,
-                    ] : null, 
+                    ] : null,
                     'category' => $post->category ? [
                         'id' => $post->category->id,
                         'name' => $post->category->name,
@@ -143,7 +144,9 @@ class BlogController extends Controller
                     'ip' => $ip,
                 ]);
             }
-            $post['profile']= $post->user->profile->about_me ?? null;
+
+            $post['profile'] = $post->user->profile->about_me ?? null;
+            $post['thumbnail'] = Storage::url($post->thumbnail) ?? '';
             return $this->respondOk('Thông tin bài viết: ' . $post->title, $post);
         } catch (\Exception $e) {
             $this->logError($e);
@@ -151,70 +154,71 @@ class BlogController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
     public function getBlogsByCategory($slug)
-{
-    try {
-        $posts = Post::query()
-            ->with([
-                'user',
-                'category',
-                'tags',
-                'comments',
-            ])
-            ->where('status', Post::STATUS_PUBLISHED)
-            ->whereHas('category', function ($query) use ($slug) {
-                $query->where('slug', $slug);
-            })
-            ->paginate(4);
+    {
+        try {
+            $posts = Post::query()
+                ->with([
+                    'user',
+                    'category',
+                    'tags',
+                    'comments',
+                ])
+                ->where('status', Post::STATUS_PUBLISHED)
+                ->whereHas('category', function ($query) use ($slug) {
+                    $query->where('slug', $slug);
+                })
+                ->paginate(4);
 
-        if ($posts->isEmpty()) {
+            if ($posts->isEmpty()) {
+                return response()->json([
+                    'message' => 'Không tìm thấy bài viết nào trong danh mục này'
+                ], 404);
+            }
+
+            $filteredBlogs = collect($posts->items())->map(function ($post) {
+                $commentCount = $post->comments ? $post->comments->count() : 0;
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'description' => $post->description,
+                    'thumbnail' => $post->thumbnail,
+                    'views' => $post->views,
+                    'comment_count' => $commentCount,
+                    'published_at' => $post->published_at,
+                    'user' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'avatar' => $post->user->avatar,
+                        'email' => $post->user->email,
+                    ],
+                    'category' => [
+                        'id' => $post->category->id,
+                        'name' => $post->category->name,
+                        'slug' => $post->category->slug,
+                    ]
+                ];
+            });
+
             return response()->json([
-                'message' => 'Không tìm thấy bài viết nào trong danh mục này'
-            ], 404);
-        }
-
-        $filteredBlogs = collect($posts->items())->map(function ($post) {
-            $commentCount = $post->comments ? $post->comments->count() : 0;
-            return [
-                'id' => $post->id,
-                'title' => $post->title,
-                'slug' => $post->slug,
-                'description' => $post->description,
-                'thumbnail' => $post->thumbnail,
-                'views' => $post->views,
-                'comment_count' => $commentCount,
-                'published_at' => $post->published_at,
-                'user' => [
-                    'id' => $post->user->id,
-                    'name' => $post->user->name,
-                    'avatar' => $post->user->avatar,
-                    'email' => $post->user->email,
-                ],
-                'category' => [
-                    'id' => $post->category->id,
-                    'name' => $post->category->name,
-                    'slug' => $post->category->slug,
+                'message' => 'Danh sách bài viết trong danh mục:',
+                'data' => $filteredBlogs,
+                'pagination' => [
+                    'total' => $posts->total(),
+                    'per_page' => $posts->perPage(),
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
                 ]
-            ];
-        });
-
-        return response()->json([
-            'message' => 'Danh sách bài viết trong danh mục:',
-            'data' => $filteredBlogs,
-            'pagination' => [
-                'total' => $posts->total(),
-                'per_page' => $posts->perPage(),
-                'current_page' => $posts->currentPage(),
-                'last_page' => $posts->lastPage(),
-            ]
-        ], 200);
-    } catch (\Exception $e) {
-        Log::error($e);
-        return response()->json([
-            'message' => 'Có lỗi xảy ra, vui lòng thử lại'
-        ], 500);
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json([
+                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
+            ], 500);
+        }
     }
-}
 
     public function getBlogsByTag($slug)
     {

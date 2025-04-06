@@ -11,6 +11,7 @@ use App\Models\Spin;
 use App\Models\SpinConfig;
 use App\Models\SpinHistory;
 use App\Models\SpinSetting;
+use App\Models\SpinType;
 use App\Models\User;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
@@ -32,6 +33,7 @@ class SpinController extends Controller
         $spinSetting = SpinSetting::firstOrCreate(); // Lấy hoặc tạo bản ghi đầu tiên
         // Cấu hình tỷ lệ trúng
         $spinConfigs = SpinConfig::all();
+        $spinTypes = SpinType::all();
         // Kiểm tra số lượng phần thưởng theo loại (no_reward, coupon, spin)
         $requiredTypes = ['no_reward', 'coupon', 'spin'];
         $spinConfigTypes = $spinConfigs->pluck('type')->unique()->toArray();
@@ -174,6 +176,7 @@ class SpinController extends Controller
             'spinStatus',
             'spinSetting',
             'missingTypeNames',
+            'spinTypes',
         ));
     }
     public function storeSpinConfig(StoreSpinRequest $request)

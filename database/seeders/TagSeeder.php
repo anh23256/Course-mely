@@ -5,23 +5,58 @@ namespace Database\Seeders;
 use App\Models\Tag;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Faker\Factory as Faker;
 
 class TagSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $faker = Faker::create();
+        $techTags = [
+            'Trí tuệ nhân tạo',
+            'Học máy',
+            'Blockchain',
+            'Lập trình web',
+            'Điện toán đám mây',
+            'An ninh mạng',
+            'Khoa học dữ liệu',
+            'Internet vạn vật',
+            'Phát triển ứng dụng di động',
+            'DevOps',
+            'Dữ liệu lớn',
+            'Thực tế ảo',
+            'Thực tế tăng cường',
+            'Công nghệ 5G',
+            'Marketing số',
+            'Thiết kế UI/UX',
+            'Kỹ thuật phần mềm',
+            'Học sâu',
+            'Xử lý ngôn ngữ tự nhiên',
+            'Quản trị cơ sở dữ liệu',
+            'Bảo mật mạng',
+            'Điện toán lượng tử',
+            'Điện toán biên',
+            'Phát triển API',
+            'Kiến trúc vi dịch vụ',
+            'Lập trình Full Stack',
+            'Ứng dụng di động',
+            'Phát triển Android',
+            'Phát triển iOS',
+            'Phát triển game',
+            'Robot học',
+            'Tự động hóa',
+            'Lập trình Frontend',
+            'Lập trình Backend',
+            'Công nghệ thông tin',
+            'Chuyển đổi số',
+            'Phân tích dữ liệu',
+            'Thanh toán điện tử',
+            'Tiền điện tử',
+            'Công nghệ sinh trắc học'
+        ];
 
-        for ($i = 0; $i < 100; $i++) {
-            $name = $faker->unique()->word();
-
+        foreach ($techTags as $tag) {
             Tag::create([
-                'name' => $name,
-                'slug' => Str::slug($name) . '-' . substr(Str::uuid(),0,10),
+                'name' => $tag,
+                'slug' => Str::slug($tag) . '-' . Str::random(8),
             ]);
         }
     }

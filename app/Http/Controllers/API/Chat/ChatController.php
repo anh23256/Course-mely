@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Chat;
 
 use App\Events\GroupMessageSent;
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Course;
@@ -10,7 +11,7 @@ use App\Models\CourseUser;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
-use App\Notifications\Client\MessageNotification;
+use App\Notifications\MessageNotification;
 use App\Notifications\UserAddedToGroupChatNotification;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
@@ -40,12 +41,13 @@ class ChatController extends Controller
             $user = Auth::user();
 
             $conversations = Conversation::query()
+                ->whereHas('users', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
                 ->with('users:id,name,avatar')
-                ->where('owner_id', $user->id)
                 ->where('type', 'group')
                 ->withCount('users')
-                ->whereNull('conversationable_id')
-                ->whereNull('conversationable_type')
+                // ->where('conversationable_type', Course::class)
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -83,8 +85,7 @@ class ChatController extends Controller
                 ->where('type', 'group')
                 ->withCount('users')
                 ->with(['users:id,name,avatar'])
-                ->whereNull('conversationable_id')
-                ->whereNull('conversationable_type')
+                // ->where('conversationable_type', Course::class)
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -396,6 +397,15 @@ class ChatController extends Controller
             $limit = $request->query('limit', 1000);
             $lastMessageId = $request->query('last_message_id');
 
+            $cacheKey = "join_web_course_mely_conversation_{$conversationId}";
+
+            $users = Cache::get($cacheKey, []);
+
+            if (!in_array($userId, $users)) {
+                $users[] = $userId;
+                Cache::put($cacheKey, $users, now()->addMinutes(5));
+            }
+
             $query = Message::query()
                 ->where('conversation_id', $conversationId)
                 ->with([
@@ -410,6 +420,7 @@ class ChatController extends Controller
             }
 
             $messages = $query->get();
+            broadcast(new UserStatusChanged('online', $conversationId))->toOthers();
 
             return $this->respondOk('Danh sách tin nhắn', [
                 'messages' => $messages,
@@ -510,15 +521,19 @@ class ChatController extends Controller
                 return $this->respondError('Không có người nhận trong cuộc trò chuyện này');
             }
 
-            //            if ($this->isUserOnlineInConversation($recipient->id, $conversation->id)) {
             broadcast(new \App\Events\MessageSentEvent($message, $conversation))->toOthers();
-            //            } else {
-            //                $recipient->notify(new MessageNotification($message, $conversation));
-            //            }
+
+            $cacheKey = "join_web_course_mely_conversation_{$data['conversation_id']}";
+            $users = Cache::get($cacheKey, [auth()->id()]);
+
+            if (!in_array($recipient->id, $users)) {
+                $users[] = $recipient->id;
+                Cache::put($cacheKey, $users);
+
+                $this->notifyConversationMembers($conversation, $message);
+            }
 
             DB::commit();
-
-            //            $this->notifyConversationMembers($conversation, $message);
 
             return $this->respondOk('Gửi tin nhắn thành công', $message);
         } catch (\Exception $e) {
@@ -553,42 +568,47 @@ class ChatController extends Controller
     {
         try {
             $userId = Auth::id();
-
+            $page = $request->query('page', 1);
+            $perPage = 4;
+    
             $conversations = Conversation::query()
-                ->where('type', 'direct')
                 ->whereHas('users', function ($query) use ($userId) {
                     $query->where('user_id', $userId);
                 })
+                ->where('type', 'direct')
                 ->with(['users:id,name,avatar'])
+                ->withCount('messages')
+                ->orderByDesc('updated_at')  
+                ->take($perPage)
                 ->get();
-
+    
             if ($conversations->isEmpty()) {
                 return $this->respondNotFound('Bạn không có cuộc trò chuyện cá nhân nào');
             }
-
+    
             $users = $conversations->flatMap(function ($conversation) use ($userId) {
                 return $conversation->users->map(function ($user) use ($conversation, $userId) {
                     if ($user->id !== $userId) {
-                        // Thêm conversation_id và ẩn id gốc của conversation
                         $data = $user->toArray();
                         $data['conversation_id'] = $conversation->id;
                         $data['is_online'] = $this->isUserOnlineInConversation($user->id, $conversation->id);
+                        $data['last_message_at'] = $conversation->updated_at;
+                        $data['messages_count'] = $conversation->messages_count;
                         unset($data['pivot']);
                         return $data;
                     }
                 })->filter();
             });
-
+    
             if ($users->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy người dùng nào trong các cuộc trò chuyện cá nhân');
             }
-
-            $uniqueUsers = $users->unique('id')->values();
-
+    
+            $uniqueUsers = $users->take($perPage)->values();
+    
             return $this->respondOk('Danh sách cuộc trò chuyện cá nhân', $uniqueUsers);
         } catch (\Exception $e) {
             $this->logError($e);
-
             return $this->respondServerError();
         }
     }
@@ -693,12 +713,13 @@ class ChatController extends Controller
         }
     }
 
-    private function notifyConversationMembers(string $conversation, string $message)
+    private function notifyConversationMembers($conversation,  $message)
     {
+        Log::info($conversation);
         $senderId = Auth::id();
 
         $recipientUsers = $conversation->users;
-
+        broadcast(new UserStatusChanged('offline', $conversation->id))->toOthers();
         foreach ($recipientUsers as $user) {
             if ($user->id == $senderId) continue;
 
@@ -712,14 +733,14 @@ class ChatController extends Controller
 
     private function isUserOnlineInConversation(string $userId, string $conversationId)
     {
-        $key = "user_online:{$conversationId}:{$userId}";
+        $key = "join_web_course_mely_{$userId}";
         return Cache::has($key);
     }
 
     private function setUserOnline($userId, $conversationId)
     {
-        $key = "user_online:{$conversationId}:{$userId}";
-        Cache::put($key, true, now()->addMinutes(2));
+        $key = "join_web_course_mely_{$userId}";
+        Cache::put($key, true, now()->addMinutes(5));
     }
 
     private function getOwnedGroupChat(string $id)
