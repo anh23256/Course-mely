@@ -59,6 +59,11 @@ Route::prefix('auth')->as('auth.')->group(function () {
     Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback']);
 });
 
+
+Route::get('/get-upload-url', [CommonController::class, 'getUploadUrl']);
+Route::get('/get-info-video/{uploadId}', [CommonController::class, 'getInfoVideo']);
+Route::post('/mux-webhook', [CommonController::class, 'handleMuxWebhook']);
+
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 

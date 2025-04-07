@@ -110,7 +110,8 @@
                                                         <i class="ri-user-add-line"></i>
                                                     </span>
                                                     <select id="received" name="user_id" class="form-select shadow-sm">
-                                                        <option value="" disabled selected>Chọn thành viên...</option>
+                                                        <option value="" disabled selected>Chọn thành viên...
+                                                        </option>
                                                         @foreach ($data['users'] as $user)
                                                             <option value="{{ $user->id }}"
                                                                 data-avatar="{{ $user->avatar }}">
@@ -197,7 +198,8 @@
                                                                             ->where('id', '<>', auth()->id())
                                                                             ->first();
                                                                     @endphp
-                                                                    <img class="rounded-5" src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
+                                                                    <img class="rounded-5"
+                                                                        src="{{ $otherUser->avatar ?? url('assets/images/users/multi-user.jpg') }}"
                                                                         alt="" width="30px">
                                                                 </div>
                                                             </div>
@@ -559,7 +561,8 @@
                                                                                     role="tabpanel"
                                                                                     aria-labelledby="documents-tab">
                                                                                     <div class="border rounded border-dashed p-2"
-                                                                                        id="documentFilesList"></div>
+                                                                                        id="documentFilesList">
+                                                                                    </div>
                                                                                     <div class="text-center mt-2">
                                                                                         <button id="loadMoreDocuments"
                                                                                             type="button"
@@ -783,7 +786,6 @@
             </div>
         </div>
         <!-- end chat-wrapper -->
-
     </div>
 @endsection
 
@@ -791,6 +793,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
     <script src="{{ asset('assets/libs/fg-emoji-picker/fgEmojiPicker.js') }}"></script>
+
     <script>
         var APP_URL = "{{ env('APP_URL') . '/' }}";
         const userId = "{{ auth()->id() }}"; // Truyền id người dùng từ Laravel sang JavaScript
@@ -877,21 +880,21 @@
 
                         if (fileType.startsWith("image/")) {
                             previewHtml = `<img src="${e.target.result}" class="thumbnail"
-                        style="max-width:150px; border-radius: 8px; margin:5px;">`;
+                    style="max-width:150px; border-radius: 8px; margin:5px;">`;
                         } else if (fileType.startsWith("video/")) {
                             previewHtml = `<video class="thumbnail" controls
-                        style="max-width:150px; border-radius: 8px; margin:5px;">
-                        <source src="${e.target.result}" type="${fileType}">
-                      </video>`;
+                    style="max-width:150px; border-radius: 8px; margin:5px;">
+                    <source src="${e.target.result}" type="${fileType}">
+                  </video>`;
                         } else if (fileType === "application/pdf") {
                             previewHtml = `<embed src="${e.target.result}" class="thumbnail"
-                        style="width:100px; height:100px; border-radius: 8px; margin:5px;">`;
+                    style="width:100px; height:100px; border-radius: 8px; margin:5px;">`;
                         } else {
                             let fileThumbnail = getFileThumbnail(fileExt);
                             previewHtml = `<div class="file-thumbnail" style="display:inline-block; text-align:center; margin:5px;">
-                        <img src="${fileThumbnail}" style="width:50px; height:50px;">
-                        <p style="font-size:12px;">${file.name}</p>
-                      </div>`;
+                    <img src="${fileThumbnail}" style="width:50px; height:50px;">
+                    <p style="font-size:12px;">${file.name}</p>
+                  </div>`;
                         }
 
                         previewContainer.append(previewHtml);
@@ -902,7 +905,6 @@
 
                 previewContainer.show();
             });
-
 
             function getFileThumbnail(ext) {
                 return `/assets/images/icons/${ext}.png`;
@@ -1219,6 +1221,7 @@
 
                 if (fileInput.length > 0) {
                     for (let i = 0; i < fileInput.length; i++) {
+                        let file = fileInput[i];
                         let fileType = fileInput[i].type;
 
                         if (fileType.startsWith('image/')) {
@@ -2112,7 +2115,7 @@
                     window.Echo.join('conversation.' + currentConversationId)
                         .listen('.MessageSent', function(event) {
                             console.log(event);
-                            
+
                             $('#messagesList').append(renderMessageRealTime(event));
                             scrollToBottom();
                         }).listen('.UserStatusChanged', function(event) {
