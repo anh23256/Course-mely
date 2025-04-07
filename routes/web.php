@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\SpinController;
+use App\Http\Controllers\Admin\SpinTypeController;
 use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\TopInstructorController;
 use App\Http\Controllers\Admin\TopStudentController;
@@ -155,6 +156,9 @@ Route::prefix('admin')->as('admin.')
             Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy')
                 ->can('category.delete');
         });
+        
+        #============================== ROUTE Spin-tpye =============================
+        Route::resource('spin-types', SpinTypeController::class);
 
         #============================== ROUTE COMMENTS =============================
         Route::prefix('comments')->as('comments.')->group(function () {

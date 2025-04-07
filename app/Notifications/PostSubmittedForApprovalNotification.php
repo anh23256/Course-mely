@@ -25,19 +25,11 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
         $this->post = $post;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return ['database', 'broadcast'];
     }
 
-    /**
-     * Lưu thông báo vào database
-     */
     public function toDatabase($notifiable)
     {
         Log::info("Saving notification to the database for user ID: " . $notifiable->id . " | Post ID: " . $this->post->id);
@@ -45,19 +37,17 @@ class PostSubmittedForApprovalNotification extends Notification implements Shoul
         return $this->notificationData();
     }
 
-    /**
-     * Gửi thông báo qua broadcast
-     */
-    public function toBroadcast($notifiable)
+    public function toBroadcast($notifiable): BroadcastMessage
     {
-        $this->notifiableId = $notifiable->id;
         return new BroadcastMessage($this->notificationData());
     }
+
     private function getUrl()
     {
         $approvableId = $this->post->approvables ? $this->post->approvables->id : null;
         return $approvableId ? route('admin.approvals.posts.show', $approvableId) : '#';
     }
+
     private function notificationData(): array
     {
         return [

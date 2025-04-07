@@ -408,9 +408,9 @@
                                 <label for="type" class="form-label">Loại</label>
                                 <select name="type" value="{{ old('type') }}" class="form-select">
                                     <option value="">Chọn loại quà</option>
-                                    <option value="no_reward">Không trúng</option>
-                                    <option value="coupon">Mã giảm giá</option>
-                                    <option value="spin">Thêm 1 lượt quay</option>
+                                    @foreach ($spinTypes as $spinType)
+                                        <option value="{{ $spinType->name }}">{{ $spinType->display_name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-md-12">

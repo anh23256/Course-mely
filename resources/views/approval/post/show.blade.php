@@ -12,7 +12,7 @@
                 <div class="col-md-auto">
                     <div class="avatar-md">
                         <div class="avatar-title bg-white rounded-circle">
-                            <img src="{{ $approval->approvable->thumbnail ?? asset('assets/images/no-photo.jpg') }}" alt=""
+                            <img src="{{ Storage::url($approval->approvable->thumbnail) ?? asset('assets/images/no-photo.jpg') }}" alt=""
                                  class="rounded-circle img-fluid h-100 object-fit-cover">
                         </div>
                     </div>

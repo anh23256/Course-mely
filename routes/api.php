@@ -397,6 +397,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/{slug}', [PostController::class, 'getPostBySlug']);
                 Route::post('/', [PostController::class, 'store']);
                 Route::put('/{post}', [PostController::class, 'update']);
+                Route::post('/submit-for-approval/{slug}', [PostController::class, 'submitForApproval']);
             });
 
             #============================== ROUTE COUPON =============================
