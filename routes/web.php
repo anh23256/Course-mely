@@ -309,6 +309,7 @@ Route::prefix('admin')->as('admin.')
                     ->as('instructors.')
                     ->group(function () {
                         Route::get('/', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'index'])->name('index')->can('approval.instructor.read');
+                        Route::get('export', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'export'])->name('export');
                         Route::get('/{instructor}', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'show'])->name('show');
                         Route::put('/{instructor}', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'approve'])->name('approve')->can('approval.instructor.approve');
                         Route::put('/{instructor}/reject', [\App\Http\Controllers\Admin\ApprovalInstructorController::class, 'reject'])->name('reject')->can('approval.instructor.reject');
