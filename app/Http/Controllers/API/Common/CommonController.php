@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\MembershipPlan;
 use App\Models\Rating;
 use App\Models\User;
+use App\Services\VideoUploadService;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToLocalTrait;
@@ -24,6 +25,13 @@ class CommonController extends Controller
     use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
 
     const FOLDER_NAME = 'uploads';
+
+    protected $videoUploadService;
+
+    public function __construct(VideoUploadService $videoUploadService)
+    {
+        $this->videoUploadService = $videoUploadService;
+    }
 
     public function instructorOrderByCountCourse(Request $request)
     {
@@ -270,6 +278,42 @@ class CommonController extends Controller
             $this->logError($e);
 
             return $this->respondServerError();
+        }
+    }
+    public function getUploadUrl()
+    {
+        try {
+            $result = $this->videoUploadService->createUploadUrl();
+
+            return response()->json([
+                'upload_url' => $result['upload_url'],
+                'asset_id' => $result['asset_id'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getInfoVideo($uploadId)
+    {
+        try {
+            $result =  $this->videoUploadService->getVideoInfoFromMux($uploadId);
+
+            $assetId = $result['asset_id'] ?? null;
+            $playbackId = $result['playback_id'] ?? null;
+            $duration = $result['duration'] ?? null;
+
+            return response()->json([
+                'asset_id' => $assetId,
+                'playback_id' => $playbackId,
+                'duration' => $duration
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }

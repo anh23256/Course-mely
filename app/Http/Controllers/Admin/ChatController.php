@@ -721,7 +721,7 @@ class ChatController extends Controller
         try {
             $conversationId = $request->input('conversationId', '');
 
-            if(empty($conversationId)) return;
+            if (empty($conversationId)) return;
 
             $cacheKey = "join_web_course_mely_conversation_{$conversationId}";
             $userId = auth()->id();

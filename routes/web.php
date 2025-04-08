@@ -380,7 +380,6 @@ Route::prefix('admin')->as('admin.')
                 Route::post('/check-status', [WithDrawalsRequestController::class, 'checkStatus'])->name('check-status')->can('withdrawal.update');
             });
 
-
         #============================== ROUTE TRANSACTIONS =============================
         Route::prefix('transactions')
             ->as('transactions.')
