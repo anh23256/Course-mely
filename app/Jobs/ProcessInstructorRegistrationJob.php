@@ -37,7 +37,7 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
             DB::beginTransaction();
             $user = $this->user;
 
-            $this->createProfile($user->id, $this->requestData['certificates'], $this->requestData['qa_systems']);
+            $this->createProfile($user->id, $this->requestData['certificates'], $this->requestData['qa_systems'], $this->requestData['identity_verification'] ?? null);
 
             $approvable = Approvable::create([
                 'approvable_id' => $user->id,
@@ -85,24 +85,23 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
         }
     }
 
-    private function createProfile(int $userId, array $certificates, array $qaSystemsData)
+    private function createProfile(int $userId, array $certificates, array $qaSystemsData, $indentityVerification = null)
     {
         $profile = Profile::query()->where('user_id', $userId)->first();
 
-        if ($profile) {
-            $profile->update([
-                'certificates' => json_encode($certificates),
-                'qa_systems' => json_encode($qaSystemsData),
-            ]);
+        $profileData = [
+            'certificates' => json_encode($certificates),
+            'qa_systems' => json_encode($qaSystemsData),
+            'identity_verification' => $indentityVerification
+        ];
 
+        if ($profile) {
+            $profile->update($profileData);
             return $profile;
         }
 
-        return Profile::query()->create([
-            'user_id' => $userId,
-            'certificates' => json_encode($certificates),
-            'qa_systems' => json_encode($qaSystemsData),
-        ]);
+        $profileData['user_id'] = $userId;
+        return Profile::query()->create($profileData);
     }
 
     private function checkInstructorApproval(User $instructor)
@@ -133,6 +132,12 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
             $errors[] = "Giảng viên phải có ít nhất một chứng chỉ.";
         } else {
             $pass[] = "Giảng viên có chứng chỉ.";
+        }
+
+        if (!$profile || empty($profile->identity_verification)) {
+            $errors[] = "Tài liệu xác minh danh tính không được để trống.";
+        } else {
+            $pass[] = "Giảng viên có tài liệu xác minh danh tính.";
         }
 
         if (!$profile || empty($profile->qa_systems) || count(json_decode($profile->qa_systems, true)) < 3) {

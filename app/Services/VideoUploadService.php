@@ -62,6 +62,7 @@ class VideoUploadService
             $this->logError($e);
             return $this->respondServerError('Không thể tạo URL upload, vui lòng thử lại sau.');
         }
+        
     }
     public function uploadVideoToMux($videoUrl)
     {
