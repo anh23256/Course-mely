@@ -114,13 +114,13 @@ class StatisticController extends Controller
                     DB::raw('ROUND(COALESCE(course_users.avg_progress),2) as avg_progress'),
                     DB::raw('ROUND(COALESCE(ratings.avg_rating), 1) as avg_rating')
                 )
-                ->leftJoinSub($invoices,'invoices', function($join){
+                ->leftJoinSub($invoices, 'invoices', function ($join) {
                     $join->on('invoices.course_id', '=', 'courses.id');
                 })
-                ->leftJoinSub($ratings,'ratings', function($join){
+                ->leftJoinSub($ratings, 'ratings', function ($join) {
                     $join->on('ratings.course_id', '=', 'courses.id');
                 })
-                ->leftJoinSub($course_users,'course_users', function($join){
+                ->leftJoinSub($course_users, 'course_users', function ($join) {
                     $join->on('course_users.course_id', '=', 'courses.id');
                 })
                 ->join('categories', 'categories.id', '=', 'courses.category_id')
@@ -306,6 +306,48 @@ class StatisticController extends Controller
             }
 
             return $this->respondOk('Thống kê lượt mua và học viên theo tháng', $monthlySales);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getRevenueMembershipsByMonth(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $yearNow = now()->year;
+            $year = $request->input('year', $yearNow);
+            if ($year > $yearNow) $year = $yearNow;
+
+            $membershipRevenue = DB::table('invoices')
+                ->selectRaw('MONTH(invoices.created_at) as month, 
+                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue')
+                ->join('courses', function ($join) use ($user) {
+                    $join->on('invoices.course_id', '=', 'courses.id')
+                        ->where('courses.user_id', $user->id);
+                })
+                ->whereYear('invoices.created_at', $year)
+                ->where('invoices.status', 'Đã thanh toán')
+                ->groupBy('month')
+                ->pluck('membership_revenue', 'month')
+                ->toArray();
+
+
+            $monthlyMemberships = [];
+
+            for ($i = 1; $i <= 12; $i++) {
+                $monthlyMemberships[$i] = [
+                    'month' => $i,
+                    'membershipRevenue' => $membershipRevenue[$i] ?? 0,
+                ];
+            }
+
+            return $this->respondOk('Thống kê doanh thu gói thành viên theo tháng', $monthlyMemberships);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');

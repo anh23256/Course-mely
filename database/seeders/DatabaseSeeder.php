@@ -29,15 +29,15 @@ class DatabaseSeeder extends Seeder
             // ApprovableSeeder::class,
             // CouponSeeder::class,
             // PostSeeder::class,
-            // InvoiceSeeder::class,
+            InvoiceSeeder::class,
             // WithdrawalsRequestSeeder::class,
             // TransactionSeeder::class,
             // SystemFundSeeder::class,
             // MembershipSeeder::class
 
-            PostSeeder::class,
-            CommentSeeder::class,
-            ReactionSeeder::class,
+            // PostSeeder::class,
+            // CommentSeeder::class,
+            // ReactionSeeder::class,
         ]);
 
         $endTime = microtime(true);
