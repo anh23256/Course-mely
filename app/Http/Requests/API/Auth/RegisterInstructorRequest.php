@@ -45,6 +45,7 @@ class RegisterInstructorRequest extends BaseFormRequest
             'certificates.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:2048',
             'qa_systems' => 'required|array|size:' . $qaSystemCount,
             'qa_systems.*' => 'required',
+            'identity_verification' => 'required|file|mimes:jpg,jpeg,png,webp|max:2048',
         ];
 
         return $rules;
@@ -69,7 +70,11 @@ class RegisterInstructorRequest extends BaseFormRequest
             'certificates.*.max' => 'Kích thước tệp chứng chỉ không được vượt quá 2MB.',
             'qa_systems.required' => 'Hãy trả lời câu hỏi được đưa ra từ hệ thống của chúng tôi.',
             'qa_systems.size' => 'Bạn phải trả lời tất cả :size câu hỏi từ hệ thống.',
-            'qa_systems.*.required' => 'Tất cả câu hỏi của hệ thống đều bắt buộc phải trả lời.'
+            'qa_systems.*.required' => 'Tất cả câu hỏi của hệ thống đều bắt buộc phải trả lời.',
+            'identity_verification.required' => 'Vui lòng tải lên ảnh xác minh danh tính',
+            'identity_verification.file' => 'Ảnh xác minh phải là một tệp hợp lệ.',
+            'identity_verification.mimes' => 'Ảnh xác minh chỉ chấp nhận các định dạng: jpg, jpeg, png, webp.',
+            'identity_verification.max' => 'Kích thước tệp ảnh xác minh không được vượt quá 2MB.',
         ];
 
         if (!Auth::check()) {

@@ -27,6 +27,7 @@ class RegisterController extends Controller
     use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
 
     const FOLDER_CERTIFICATES = 'certificates';
+    const FOLDER_IDENTITY_VERIFICATION = 'identity_verification';
 
     public function register(RegisterInstructorRequest $request)
     {
@@ -39,17 +40,19 @@ class RegisterController extends Controller
 
             if (Approvable::where('approvable_id', $user->id)
                 ->where('approvable_type', User::class)
-                ->exists()) {
+                ->exists()
+            ) {
                 return $this->respondOk('Yêu cầu kiểm duyệt đã được gửi');
             }
 
             $uploadedCertificates = $this->uploadCertificates($request->file('certificates'));
-
+            $uploadedIndentityVerification = $this->uploadIndentityVerification($request->file('identity_verification'));
             $qaSystemsData = $this->prepareQaSystemsData($request->qa_systems);
 
             $requestData = [
                 'qa_systems' => $qaSystemsData,
                 'certificates' => $uploadedCertificates,
+                'identity_verification' => $uploadedIndentityVerification,
             ];
 
             ProcessInstructorRegistrationJob::dispatch($user, $requestData);
@@ -70,7 +73,6 @@ class RegisterController extends Controller
             $role = $user->roles->first();
 
             return $this->respondOk('Vai trò của người dùng', $role);
-
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 
@@ -85,6 +87,14 @@ class RegisterController extends Controller
             return $this->uploadMultiple($certificates, self::FOLDER_CERTIFICATES);
         }
         return [];
+    }
+
+    private function uploadIndentityVerification($identityVerification)
+    {
+        if ($identityVerification) {
+            return $this->uploadToLocal($identityVerification, self::FOLDER_IDENTITY_VERIFICATION);
+        }
+        return null;
     }
 
     private function prepareQaSystemsData($qaSystems)
