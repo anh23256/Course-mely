@@ -755,8 +755,6 @@ class ChatController extends Controller
         $conversation = Conversation::query()
             ->where('owner_id', $user->id)
             ->where('type', 'group')
-            ->whereNull('conversationable_id')
-            ->whereNull('conversationable_type')
             ->find($id);
 
         if (empty($conversation)) {
