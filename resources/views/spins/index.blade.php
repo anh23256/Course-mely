@@ -252,7 +252,7 @@
                                         <td>Gift</td>
                                         <td>{{ $gift->name }}</td>
                                         <td>{{ $gift->cells ?? '1' }}</td>
-                                        <td>{{ $gift->probability }}</td>
+                                        <td>{{ $gift->probability }}</td> 
                                         <td>
                                             <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST"
                                                 class="d-inline">
