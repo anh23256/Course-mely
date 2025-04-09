@@ -18,12 +18,13 @@ class Profile extends Model
         'bio',
         'certificates',
         'qa_systems',
-        'banking_info'
+        'banking_info',
+        'identity_verification'
     ];
 
     protected $casts = [
         'bio' => 'array',
-        'banking_info' => 'array'
+        'banking_info' => 'array',
     ];
 
     public function user()
