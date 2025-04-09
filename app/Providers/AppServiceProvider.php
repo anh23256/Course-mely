@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Setting;
 use Illuminate\Notifications\Notification;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -25,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+        
     }
 }

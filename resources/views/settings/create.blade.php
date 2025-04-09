@@ -39,6 +39,8 @@
                                 <span class="text-danger mt-2">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        
                         <div class="col-md-12">
                             <label for="inputValue" class="form-label">Giá trị</label>
                             <input type="value" class="form-control mb-2" name="value" id="inputValue"
