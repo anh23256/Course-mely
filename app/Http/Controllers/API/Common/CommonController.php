@@ -15,9 +15,12 @@ use App\Traits\LoggableTrait;
 use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
 class CommonController extends Controller
@@ -315,5 +318,60 @@ class CommonController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function chatBox(Request $request)
+    {
+        $userMessage = $request->input('message','');
+        $context = $request->input('context','Chưa có, khi chưa có bạn hãy hỏi lại học viên');
+        $timestamp = Carbon::now()->format('[d/m/Y H:i:s]');
+
+        $chatHistory = Session::get('chat_history', []);
+
+        if (empty($chatHistory)) {
+            $chatHistory[] = [
+                'role' => 'user',
+                'parts' => [
+                    ['text' => "Bạn là trợ lý dạy học. Bối cảnh hiện tại: $context. Trả lời ngắn gọn, dễ hiểu và tập trung đúng vào nội dung."]
+                ]
+            ];
+        }
+
+        if(empty($userMessage)) return $this->respondError('Bạn chưa nhập nội dung đoạn chat');
+
+        $chatHistory[] = [
+            'role' => 'user',
+            'parts' => [
+                ['text' => "$timestamp Bạn: $userMessage"]
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept-Encoding' => 'gzip',
+        ])->post(
+            'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . env('GOOGLE_STUDIO_KEY'),
+            ['contents' => $chatHistory]
+        );
+
+        $aiReply = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? 'Không nhận được phản hồi, vui lòng thử lại';
+
+        $chatHistory[] = [
+            'role' => 'model',
+            'parts' => [
+                ['text' => "$timestamp AI: $aiReply"]
+            ]
+        ];
+
+        Session::put('chat_history', $chatHistory);
+
+        return response()->json([
+            'reply' => $aiReply
+        ]);
+    }
+    public function resetChatBox()
+    {
+        Session::forget('chat_history');
+        return $this->respondNoContent();
     }
 }
