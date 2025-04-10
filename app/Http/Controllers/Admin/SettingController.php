@@ -69,7 +69,7 @@ class SettingController extends Controller
 
             $setting = Setting::create($data);
 
-            return redirect()->route('admin.settings.index')->with('success', true);
+            return redirect()->route('admin.settings.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
 
             $this->logError($e);
