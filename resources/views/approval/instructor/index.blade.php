@@ -98,10 +98,10 @@
                                             placeholder="Tìm kiếm..." data-search>
                                         <button id="search-full" class="h-75 ri-search-line search-icon m-0 p-0 border-0"
                                             style="background: none;"></button>
-                                    </div>
+                                    </div> 
                                 </div>
                             </div>
-                            <a href="" class="btn btn-sm btn-success h-75">Export dữ liệu</a>
+                            <a href="{{ route('admin.approvals.instructors.export') }}" class="btn btn-sm btn-success h-75">Export dữ liệu</a>
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 <i class="ri-filter-2-line"></i>
                             </button>

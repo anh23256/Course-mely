@@ -158,6 +158,8 @@ class TransactionController extends Controller
     public function createPayment(Request $request)
     {
         try {
+            DB::beginTransaction();
+
             $user = Auth::user();
 
             if (!$user) {
@@ -170,6 +172,7 @@ class TransactionController extends Controller
                 'item_id' => 'required|integer',
                 'coupon_code' => 'nullable|string',
                 'payment_method' => 'required|string',
+                'original_amount' => 'required|numeric',
             ]);
 
             $paymentType = $validated['payment_type'];
@@ -177,47 +180,86 @@ class TransactionController extends Controller
             $finalAmount = $validated['amount'];
 
             if ($paymentType === 'course') {
-                if (CourseUser::query()
-                    ->where('user_id', $user->id)
-                    ->where('course_id', $itemId)
-                    ->where('source', 'purchase')
-                    ->exists()
-                ) {
+                $existingPurchase = CourseUser::query()
+                    ->lockForUpdate()
+                    ->where([
+                        'user_id' => $user->id,
+                        'course_id' => $itemId,
+                        'source' => 'purchase'
+                    ])
+                    ->exists();
+
+                if ($existingPurchase) {
+                    DB::rollBack();
                     return $this->respondError('Bạn đã sở hữu khoá học này rồi');
                 }
 
-                $item = Course::query()->find($itemId);
+                $item = Course::query()
+                    ->lockForUpdate()
+                    ->find($itemId);
+
                 if (!$item) {
+                    DB::rollBack();
                     return $this->respondError('Không tìm thấy khóa học');
                 }
 
                 $originalAmount = $item->price_sale > 0 ? $item->price_sale : $item->price;
+
+                $currentPrice = $item->price_sale > 0 ? $item->price_sale : $item->price;
+                $submittedOriginalPrice = $validated['original_amount'];
+
+                if ($currentPrice != $submittedOriginalPrice) {
+                    DB::rollBack();
+                    return $this->respondError('Giá khóa học đã thay đổi. Vui lòng tải lại trang để xem giá mới nhất.');
+                }
             } else {
-                if (MembershipSubscription::query()
+
+                $existingMembershipSubscription = MembershipSubscription::query()
+                    ->lockForUpdate()
                     ->where('user_id', $user->id)
                     ->where('membership_plan_id', $itemId)
                     ->where('end_date', '>', now())
-                    ->exists()
-                ) {
+                    ->exists();
+
+                if ($existingMembershipSubscription) {
+                    DB::rollBack();
                     return $this->respondError('Bạn đã đăng ký gói membership này rồi');
                 }
 
-                $item = MembershipPlan::query()->find($itemId);
+                $item = MembershipPlan::query()
+                    ->lockForUpdate()
+                    ->find($itemId);
+
                 if (!$item) {
+                    DB::rollBack();
                     return $this->respondError('Không tìm thấy gói membership');
                 }
+
                 $originalAmount = $item->price;
+
+                $currentPrice = $item->price;
+                $submittedOriginalPrice = $validated['original_amount'];
+
+                if ($currentPrice != $submittedOriginalPrice) {
+                    DB::rollBack();
+                    return $this->respondError('Giá gói membership đã thay đổi. Vui lòng tải lại trang để xem giá mới nhất.');
+                }
             }
 
             $discountAmount = $originalAmount - $finalAmount;
             $couponCode = $validated['coupon_code'] ?? null;
 
-            return match ($validated['payment_method']) {
+            $result = match ($validated['payment_method']) {
                 'momo' => $this->createMoMoPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
                 'vnpay' => $this->createVnPayPayment($user, $itemId, $originalAmount, $discountAmount, $finalAmount, $couponCode, $paymentType),
                 default => $this->respondError('Phương thức thanh toán không hợp lệ')
             };
+
+            DB::commit();
+            return $result;
         } catch (\Exception $e) {
+            DB::rollBack();
+
             $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -339,10 +381,34 @@ class TransactionController extends Controller
             }
 
             if ($paymentType === 'course') {
-                $course = Course::query()->find($itemId);
+                $course = Course::query()
+                    ->lockForUpdate()
+                    ->find($itemId);
 
                 if (!$course) {
+                    DB::rollBack();
                     return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $currentPrice = $course->price_sale > 0 ? $course->price_sale : $course->price;
+
+                if ($currentPrice != $originalAmount) {
+                    DB::rollBack();
+                    return redirect()->away($frontendUrl . "?status=error");
+                }
+
+                $existingPurchase = CourseUser::query()
+                    ->lockForUpdate()
+                    ->where([
+                        'user_id' => $userId,
+                        'course_id' => $itemId,
+                        'source' => 'purchase'
+                    ])
+                    ->exists();
+
+                if ($existingPurchase) {
+                    DB::rollBack();
+                    return redirect()->away($frontendUrl . "?status=error");
                 }
 
                 $discount = null;
@@ -615,7 +681,6 @@ class TransactionController extends Controller
             }
 
             if ($inputData['resultCode'] != '0') {
-                Log::info(2);
                 return redirect()->away($frontendUrl . "?status=failed");
             }
 
@@ -655,9 +720,34 @@ class TransactionController extends Controller
             }
 
             if ($paymentType === 'course') {
-                $course = Course::query()->find($itemId);
+                $course = Course::query()
+                    ->lockForUpdate()
+                    ->find($itemId);
+
                 if (!$course) {
+                    DB::rollBack();
                     return redirect()->away($frontendUrl . "/not-found");
+                }
+
+                $currentPrice = $course->price_sale > 0 ? $course->price_sale : $course->price;
+
+                if ($currentPrice != $originalAmount) {
+                    DB::rollBack();
+                    return redirect()->away($frontendUrl . "?status=error");
+                }
+
+                $existingPurchase = CourseUser::query()
+                    ->lockForUpdate()
+                    ->where([
+                        'user_id' => $userId,
+                        'course_id' => $itemId,
+                        'source' => 'purchase'
+                    ])
+                    ->exists();
+
+                if ($existingPurchase) {
+                    DB::rollBack();
+                    return redirect()->away($frontendUrl . "?status=error");
                 }
 
                 $discount = null;
@@ -987,7 +1077,7 @@ class TransactionController extends Controller
                     'received_at' => now(),
                     'expires_at' => now()->addDays(7),
                 ]);
-    
+
                 $student->notify(new SpinReceivedNotification($student->id, $spin->spin_count, $spin->expires_at));
             }
 

@@ -30,7 +30,12 @@ class UpdateUserProfileRequest extends BaseFormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,webp,png|max:2048',
-            'phone' => 'sometimes|numeric|digits_between:10,13',
+            'phone' => [
+                'sometimes',
+                'nullable',
+                'regex:/^(\+?\d{1,3}[-.\s]?)?\d{9,15}$/',
+                Rule::unique('profiles', 'phone')->ignore(Auth::user()->profile->id ?? null),
+            ],
             'address' => 'sometimes|string|max:255',
             'experience' => 'sometimes|string',
             'certificates' => 'nullable|array',
@@ -96,6 +101,24 @@ class UpdateUserProfileRequest extends BaseFormRequest
                     }
                 }
             }
+
+            if ($phone = request()->input('phone')) {
+                $digits = preg_replace('/\D/', '', $phone);
+                
+                $ascending = '0123456789';
+                $descending = '9876543210';
+                
+                if (
+                    strlen(count_chars($digits, 3)) <= 2 || 
+                    str_contains($ascending, $digits) || 
+                    str_contains($descending, $digits)
+                ) {
+                    $validator->errors()->add(
+                        'phone',
+                        'Số điện thoại không hợp lệ. Không được sử dụng số lặp lại hoặc số tuần tự.'
+                    );
+                }
+            }
         });
     }
 
@@ -111,8 +134,8 @@ class UpdateUserProfileRequest extends BaseFormRequest
             'avatar.max' => 'Avatar không được vượt quá 2MB.',
 
             'phone.sometimes' => 'Vui lòng kiểm tra lại số điện thoại.',
-            'phone.numeric' => 'Số điện thoại chỉ được chứa các chữ số.',
-            'phone.digits_between' => 'Số điện thoại phải có từ 10 đến 13 chữ số.',
+            'phone.regex' => 'Số điện thoại không hợp lệ. Có thể bắt đầu bằng mã quốc gia (VD: +84, +1) và chứa 9-15 chữ số',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng',
 
             'address.sometimes' => 'Vui lòng kiểm tra lại địa chỉ.',
             'address.string' => 'Địa chỉ phải là một chuỗi ký tự.',

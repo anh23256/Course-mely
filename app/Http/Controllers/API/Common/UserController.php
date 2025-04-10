@@ -11,6 +11,7 @@ use App\Http\Requests\API\User\UpdateCareerRequest;
 use App\Http\Requests\API\User\UpdateUserProfileRequest;
 use App\Models\Career;
 use App\Models\Certificate;
+use App\Models\Chapter;
 use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -417,60 +418,41 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             $orders = Invoice::where('user_id', $user->id)
-                ->with('course:id,name')
+                ->with('course:id,name','membershipPlan:id,name')
                 ->select(
                     'id',
                     'course_id',
+                    'membership_plan_id',
                     'created_at',
                     DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
-                    'status'
+                    'status',
+                    'invoice_type'
                 )
-                ->select(
-                    'id',
-                    'course_id',
-                    'created_at',
-                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
-                    'status'
-                )
-                ->where('invoice_type', 'course')
-                ->get();
-
+                ->get()
+                ->groupBy('invoice_type');
+    
             return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
+    
 
     public function showOrdersBought($id)
     {
         try {
             $user = Auth::user();
-
+    
             $order = Invoice::where('id', $id)
-                ->with([
-                    'course' => function ($query) {
-                        $query->select('id', 'name', 'user_id')->with('instructor:id,name'); // Đổi instructor_id thành user_id
-                    }
-                ])
                 ->where('user_id', $user->id)
-                ->where('invoice_type', 'course')
                 ->select(
                     'id',
+                    'invoice_type',
                     'course_id',
-                    'code',
-                    'coupon_code',
-                    'coupon_discount',
-                    'amount',
-                    'created_at',
-                    DB::raw('(amount - IFNULL(coupon_discount, 0)) as final_amount'),
-                    'status'
-                )
-                ->select(
-                    'id',
-                    'course_id',
+                    'membership_plan_id',
                     'code',
                     'coupon_code',
                     'coupon_discount',
@@ -480,17 +462,43 @@ class UserController extends Controller
                     'status'
                 )
                 ->first();
-
+    
             if (!$order) {
                 return $this->respondNotFound('Đơn hàng không tồn tại hoặc không thuộc về người dùng.');
             }
-            $courseName = $order->course ? $order->course->name : 'Không xác định';
-            return $this->respondOk('Chi tiết đơn hàng ' . $courseName . ' của người dùng: ' . $user->name, $order);
+    
+            if ($order->invoice_type === 'course') {
+                $order->load([
+                    'course' => function ($query) {
+                        $query->select('id', 'name', 'user_id')
+                            ->with('instructor:id,name');
+                    }
+                ]);
+            }
+    
+            if ($order->invoice_type === 'membership') {
+                $order->load([
+                    'membershipPlan' => function ($query) {
+                        $query->select('id', 'name','instructor_id')
+                        ->with('instructor:id,name');
+                    }
+                ]);
+                // dd($order);
+            }
+    
+            $title = match ($order->invoice_type) {
+                'course' => $order->course->name ?? 'Không xác định',
+                'membership' => $order->membership->title ?? 'Không xác định',
+                default => 'Không xác định'
+            };
+    
+            return $this->respondOk("Chi tiết đơn hàng {$title} của người dùng: {$user->name}", $order);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
+    
 
     public function storeCareers(StoreCareerRequest $request)
     {
@@ -1159,4 +1167,41 @@ class UserController extends Controller
             return $this->respondServerError();
         }
     }
+    public function getRecentCourses()
+{
+    try {
+        $user = Auth::user();
+
+        // Lấy danh sách các khóa học người dùng có tiến độ
+        $recentCourses = DB::table('lesson_progress')
+            ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
+            ->join('chapters', 'lessons.chapter_id', '=', 'chapters.id')
+            ->join('courses', 'chapters.course_id', '=', 'courses.id')
+            ->join('course_users', function($join) use ($user) {
+                $join->on('course_users.course_id', '=', 'courses.id')
+                     ->where('course_users.user_id', '=', $user->id);
+            })
+            ->where('lesson_progress.user_id', $user->id)
+            ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'course_users.progress_percent')
+            ->select(
+                'courses.id as course_id',
+                'courses.name as course_name',
+                'courses.thumbnail',
+                'course_users.progress_percent',
+                DB::raw('MAX(lesson_progress.updated_at) as last_updated')
+            )
+            ->orderByDesc('last_updated')
+            ->limit(10)
+            ->get();
+
+        return $this->respondOk('Các khóa học bạn đã học gần đây:', $recentCourses);
+    } catch (\Exception $e) {
+        $this->logError($e);
+        return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+    }
+}
+
+    
+    
+
 }

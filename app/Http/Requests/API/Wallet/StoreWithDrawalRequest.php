@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Auth;
 class StoreWithDrawalRequest extends BaseFormRequest
 {
     protected $wallet;
+    protected $minWithdrawal = 200000; 
+    protected $maxWithdrawal = 10000000; 
+    protected $minBalance = 100000; 
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         $user = Auth::user();
@@ -21,14 +21,11 @@ class StoreWithDrawalRequest extends BaseFormRequest
         return $this->wallet !== null;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        $maxAmount = $this->wallet ? $this->wallet->balance : 0;
+        $availableForWithdrawal = $this->wallet ? $this->wallet->balance - $this->minBalance : 0;
+
+        $maxWithdrawal = min($availableForWithdrawal, $this->maxWithdrawal);
 
         return [
             'account_no' => 'required|numeric',
@@ -51,10 +48,11 @@ class StoreWithDrawalRequest extends BaseFormRequest
             'amount' => [
                 'required',
                 'numeric',
-                'min:50000',
-                function ($attribute, $value, $fail) use ($maxAmount) {
-                    if ($value > $maxAmount) {
-                        $fail("Số tiền rút (" . number_format($value) . " VNĐ) vượt quá số dư khả dụng: " . number_format($maxAmount) . " VNĐ");
+                'min:' . $this->minWithdrawal,
+                'max:' . $this->maxWithdrawal,
+                function ($attribute, $value, $fail) use ($availableForWithdrawal, $maxWithdrawal) {
+                    if ($value > $availableForWithdrawal) {
+                        $fail("Số dư trong tài khoản phải duy trì tối thiểu " . number_format($this->minBalance) . " VNĐ. Bạn đang rút " . number_format($availableForWithdrawal) . " VNĐ");
                     }
                 }
             ],
@@ -66,22 +64,142 @@ class StoreWithDrawalRequest extends BaseFormRequest
     protected function removeVietnameseDiacritics($str)
     {
         $vietnamese = [
-            'á', 'à', 'ả', 'ã', 'ạ', 'ă', 'ắ', 'ằ', 'ẳ', 'ẵ', 'ặ', 'â', 'ấ', 'ầ', 'ẩ', 'ẫ', 'ậ',
-            'é', 'è', 'ẻ', 'ẽ', 'ẹ', 'ê', 'ế', 'ề', 'ể', 'ễ', 'ệ',
-            'í', 'ì', 'ỉ', 'ĩ', 'ị',
-            'ó', 'ò', 'ỏ', 'õ', 'ọ', 'ô', 'ố', 'ồ', 'ổ', 'ỗ', 'ộ', 'ơ', 'ớ', 'ờ', 'ở', 'ỡ', 'ợ',
-            'ú', 'ù', 'ủ', 'ũ', 'ụ', 'ư', 'ứ', 'ừ', 'ử', 'ữ', 'ự',
-            'ý', 'ỳ', 'ỷ', 'ỹ', 'ỵ',
+            'á',
+            'à',
+            'ả',
+            'ã',
+            'ạ',
+            'ă',
+            'ắ',
+            'ằ',
+            'ẳ',
+            'ẵ',
+            'ặ',
+            'â',
+            'ấ',
+            'ầ',
+            'ẩ',
+            'ẫ',
+            'ậ',
+            'é',
+            'è',
+            'ẻ',
+            'ẽ',
+            'ẹ',
+            'ê',
+            'ế',
+            'ề',
+            'ể',
+            'ễ',
+            'ệ',
+            'í',
+            'ì',
+            'ỉ',
+            'ĩ',
+            'ị',
+            'ó',
+            'ò',
+            'ỏ',
+            'õ',
+            'ọ',
+            'ô',
+            'ố',
+            'ồ',
+            'ổ',
+            'ỗ',
+            'ộ',
+            'ơ',
+            'ớ',
+            'ờ',
+            'ở',
+            'ỡ',
+            'ợ',
+            'ú',
+            'ù',
+            'ủ',
+            'ũ',
+            'ụ',
+            'ư',
+            'ứ',
+            'ừ',
+            'ử',
+            'ữ',
+            'ự',
+            'ý',
+            'ỳ',
+            'ỷ',
+            'ỹ',
+            'ỵ',
             'đ'
         ];
 
         $english = [
-            'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
-            'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e',
-            'i', 'i', 'i', 'i', 'i',
-            'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o',
-            'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u',
-            'y', 'y', 'y', 'y', 'y',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'e',
+            'i',
+            'i',
+            'i',
+            'i',
+            'i',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'u',
+            'y',
+            'y',
+            'y',
+            'y',
+            'y',
             'd'
         ];
 
@@ -101,9 +219,8 @@ class StoreWithDrawalRequest extends BaseFormRequest
 
             'amount.required' => 'Số tiền rút không được để trống',
             'amount.numeric' => 'Số tiền phải là số',
-            'amount.min' => 'Số tiền rút tối thiểu là 50,000 VNĐ',
-            'amount.max' => 'Số tiền rút (:input) vượt quá số dư khả dụng: ' .
-                ($this->wallet ? number_format($this->wallet->balance) : '0') . ' VNĐ',
+            'amount.min' => 'Số tiền rút tối thiểu là ' . number_format($this->minWithdrawal) . ' VNĐ',
+            'amount.max' => 'Số tiền rút tối đa là ' . number_format($this->maxWithdrawal) . ' VNĐ',
 
             'add_info.required' => 'Thông tin bổ sung không được để trống',
             'add_info.string' => 'Thông tin bổ sung phải là chuỗi ký tự',
@@ -119,5 +236,4 @@ class StoreWithDrawalRequest extends BaseFormRequest
             'Bạn không có ví để thực hiện giao dịch rút tiền.'
         );
     }
-
 }
