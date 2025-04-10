@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
-        
+        Cache::forget('settings');
+        view()->composer('*', function ($view) {
+            $view->with('site_name', Setting::get('site_name', 'Tên website'));
+            $view->with('site_logo', Setting::get('site_logo', 'images/logo.png'));
+        });
+
     }
 }
