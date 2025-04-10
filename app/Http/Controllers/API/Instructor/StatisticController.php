@@ -342,6 +342,7 @@ class StatisticController extends Controller
 
             for ($i = 1; $i <= 12; $i++) {
                 $monthlyMemberships[] = [
+                    'id' => $i,
                     'month' => $i,
                     'membershipRevenue' => $membershipRevenue[$i] ?? 0,
                 ];
