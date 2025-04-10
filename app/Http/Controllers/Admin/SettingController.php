@@ -12,6 +12,7 @@ use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -65,12 +66,23 @@ class SettingController extends Controller
     {
         try {
 
-            $data = $request->validated();
+            $data = $request->except('value');
 
-            $setting = Setting::create($data);
+            if ($request->hasFile('value') && $request->input('type') === 'image') {
+                $path = $request->file('value')->store('settings', 'public');
+                $data['value'] = $path;
+            }
+
+            Setting::query()->create($data);
 
             return redirect()->route('admin.settings.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
+
+            if (!empty($data['value']) && $request->input('type') === 'image') {
+                if (Storage::disk('public')->exists($data['value'])) {
+                    Storage::disk('public')->delete($data['value']);
+                }
+            }
 
             $this->logError($e);
 
@@ -118,14 +130,30 @@ class SettingController extends Controller
     {
         try {
 
-            $data = $request->validated();
-
             $setting = Setting::query()->findOrFail($id);
 
+            $data = $request->except('value');
+
+            if ($request->hasFile('value') && $request->input('type') === 'image') {
+            
+            if (!empty($setting->value) && !filter_var($setting->value, FILTER_VALIDATE_URL)) {
+                if (Storage::disk('public')->exists($setting->value)) {
+                    Storage::disk('public')->delete($setting->value);
+                }
+            }
+
+            $data['value'] = $request->file('value')->store('settings', 'public');
+        }
             $setting->update($data);
 
-            return redirect()->route('admin.settings.edit', $id)->with('success', true);
+            return redirect()->route('admin.settings.edit', $id)->with('success', 'Thao tác thành công');
         } catch (\Exception $e) {
+
+            if (!empty($data['value']) && $request->input('type') === 'image') {
+                if (Storage::disk('public')->exists($data['value'])) {
+                    Storage::disk('public')->delete($data['value']);
+                }
+            }
 
             $this->logError($e);
 

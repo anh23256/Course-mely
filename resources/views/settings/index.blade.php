@@ -109,6 +109,7 @@
                                                 <input type="checkbox" id="checkAll">
                                             </th>
                                             <th>ID</th>
+                                            <th>Tiêu đề</th>
                                             <th>Key</th>
                                             <th>Value</th>
                                             <th>Ngày tạo</th>
@@ -125,10 +126,22 @@
                                                             name="settingId" value="{{ $setting->id }}">
                                                     </div>
                                                 </th>
-                                                <td class="id"><a
-                                                        class="fw-medium link-primary">#{{ $setting->id }}</a></td>
+                                                
+                                                <td class="id">
+                                                    <a class="fw-medium link-primary">#{{ $setting->id }}</a>
+                                                </td>
+                                                    
+                                                <td>{{ $setting->label ?? '' }}</td>
                                                 <td class="customer_name">{{ $setting->key ?? '' }}</td>
-                                                <td class="email">{{ $setting->value ?? '' }}</td>
+                                                
+                                                <td>
+                                                    @if ($setting->type === 'image' && $setting->value)
+                                                        <img src="{{ asset('storage/' . $setting->value) }}" alt="setting image"
+                                                             style="height: 50px; border-radius: 4px;">
+                                                    @else
+                                                        {{ \Str::limit($setting->value, 50) }}
+                                                    @endif
+                                                </td>
                                                 <td>{{ $setting->created_at != null ? date_format($setting->created_at, 'd/m/Y') : 'NULL' }}
                                                 </td>
                                                 <td>{{ $setting->updated_at != null ? date_format($setting->updated_at, 'd/m/Y') : 'NULL' }}

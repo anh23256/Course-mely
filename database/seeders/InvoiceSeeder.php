@@ -14,18 +14,18 @@ class InvoiceSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {
-        $users = User::query()->whereHas('roles', function ($query) {
-            $query->where('name', 'member');
-        })->pluck('id')->toArray();
 
+    {
+        $instructor = User::where('email', 'ducmely@gmail.com')->first();
+
+        
         $courses = Course::query()->where('status', 'approved')->pluck('id')->toArray();
 
         for ($i=0; $i < 2000; $i++) { 
             $created_at = fake()->dateTimeBetween('-2 years', now(), env('APP_TIMEZONE'));
 
             Invoice::insert([
-                'user_id' => fake()->randomElement($users),
+                'user_id' => $instructor->id,
                 'course_id' => fake()->randomElement($courses),
                 'code' => 'IVE-'.$i,
                 'amount' => fake()->randomFloat(2, 10000, 10000000),
