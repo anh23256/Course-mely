@@ -22,15 +22,18 @@ class UpdateSettingRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'key' => ['required','string','max:255',Rule::unique('settings','key')->ignore($this->route('setting'))],
+        $rules = [
+            'key' => ['required', 'string', 'max:255', Rule::unique('settings', 'key')->ignore($this->route('setting'))],
             'type' => ['required', Rule::in(['text', 'textarea', 'image'])],
             'value' => ['nullable'],
         ];
 
-        if ($setting && $setting->type === 'image') {
+        // Kiểm tra và set rules value theo loại type
+        $type = $this->input('type');
+
+        if ($type === 'image') {
             $rules['value'] = ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'];
-        } else {
+        } elseif (in_array($type, ['text', 'textarea'])) {
             $rules['value'] = ['nullable', 'string'];
         }
 

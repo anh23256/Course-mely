@@ -310,6 +310,7 @@ class StatisticController extends Controller
     public function getRevenueMembershipsByMonth(Request $request)
     {
         try {
+
             $user = Auth::user();
             if (!$user || !$user->hasRole('instructor')) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
@@ -321,26 +322,26 @@ class StatisticController extends Controller
 
             $membershipRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, 
-                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue')
-                ->join('courses', function ($join) use ($user) {
-                    $join->on('invoices.course_id', '=', 'courses.id')
-                        ->where('courses.user_id', $user->id);
-                })
+                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue,
+                    GROUP_CONCAT(DISTINCT membership_plans.name) as membership_plan_names')
+                ->leftJoin('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
                 ->whereYear('invoices.created_at', $year)
                 ->where('invoices.status', 'Đã thanh toán')
                 ->groupBy('month')
-                ->pluck('membership_revenue', 'month')
-                ->toArray();
+                ->get();
 
 
             $monthlyMemberships = [];
 
             for ($i = 1; $i <= 12; $i++) {
-
+                $monthlyData = $membershipRevenue->firstWhere('month', $i);
                 $monthlyMemberships[] = [
                     'id' => $i,
                     'month' => $i,
-                    'membershipRevenue' => $membershipRevenue[$i] ?? 0,
+                    'membershipRevenue' => $monthlyData?->membership_revenue ?? 0,
+                    'membershipPlanNames' => $monthlyData && $monthlyData->membership_plan_names
+                        ? explode(',', $monthlyData->membership_plan_names)
+                        : [],
                 ];
             }
 

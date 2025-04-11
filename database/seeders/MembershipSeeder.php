@@ -3,12 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Approvable;
+use App\Models\Invoice;
 use App\Models\MembershipPlan;
 use App\Models\MembershipSubscription;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker;
+use Illuminate\Support\Str;
+
 
 class MembershipSeeder extends Seeder
 {
@@ -17,61 +19,67 @@ class MembershipSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create();
+        // Lấy instructor cụ thể
+        $instructor = User::where('email', 'ducmely@gmail.com')->first();
 
-        $instructors = User::whereHas('roles', function ($query) {
-            $query->where('name', 'instructor'); // Lọc role là instructor
-        })->pluck('id')->toArray();
-
-        if (empty($instructors)) {
-            $instructors = [1]; // Nếu không có giảng viên, mặc định là 1
+        if (!$instructor) {
+            $this->command->error('Instructor not found!');
+            return;
         }
 
-        // Tạo 5 gói membership giả
-        $membershipPlans = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $membershipPlans[] = MembershipPlan::create([
-                'instructor_id' => $faker->randomElement($instructors),
-                'code' => 'MP' . str_pad($i, 4, '0', STR_PAD_LEFT),
-                'name' => 'Gói ' . $i,
+        $planNames = ['VIP', 'Pro', 'Basic', 'Premium'];
+        $durations = [1, 3, 6, 12];
+        $planIds = [];
 
-                'description' => $faker->sentence,
-                'price' => $faker->randomFloat(2, 100, 1000),
-                'duration_months' => $faker->randomElement([3, 6, 9]),
-                'status' => 'active',
-            ]);
+        foreach ($planNames as $name) {
+            foreach ($durations as $duration) {
+                $plan = MembershipPlan::updateOrCreate(
+                    [
+                        'instructor_id' => $instructor->id,
+                        'name' => $name,
+                        'duration_months' => $duration,
+                    ],
+                    [
+                        'code' => strtoupper(Str::random(8)),
+                        'price' => fake()->numberBetween(100000, 1000000),
+                        'status' => 'active',
+                    ]
+                );
+
+                $planIds[] = $plan->id;
+            }
         }
 
-        // Lấy danh sách user (giả sử đã có user trong DB)
-        $users = User::pluck('id')->toArray();
-
-        // Tạo 20 đăng ký membership giả
-        $subscriptions = [];
-        for ($i = 1; $i <= 20; $i++) {
-            $plan = $faker->randomElement($membershipPlans);
-            $userId = $faker->randomElement($users);
-            $startDate = $faker->dateTimeBetween('-1 year', 'now');
-            $endDate = (clone $startDate)->modify("+{$plan->duration_months} months");
+        // Lấy random 10 học viên
+        $instructors = User::query()->role('instructor')->inRandomOrder()->take(10)->get();
 
 
-            $subscriptions[] = MembershipSubscription::create([
-                'membership_plan_id' => $plan->id,
-                'user_id' => $userId,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'status' => $faker->randomElement(['active', 'expired', 'cancelled']),
-                'activity_logs' => json_encode(['log' => 'Subscription created']),
-            ]);
+        foreach ($instructors as $instructor) {
+            for ($i = 0; $i < 5; $i++) {
+                $planId = fake()->randomElement($planIds);
+                $startDate = fake()->dateTimeBetween('-1 years', 'now');
+                $endDate = (clone $startDate)->modify('+' . fake()->randomElement([1, 3, 6, 12]) . ' months');
+
+                MembershipSubscription::create([
+                    'membership_plan_id' => $planId,
+                    'user_id' => $instructor->id,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'status' => 'active',
+                ]);
+
+                Invoice::create([
+                    'user_id' => $instructor->id,
+                    'membership_plan_id' => $planId,
+                    'course_id' => null,
+                    'invoice_type' => 'membership',
+                    'final_amount' => $plan->price,
+                    'status' => 'Đã thanh toán',
+                    'created_at' => $startDate,
+                ]);
+            }
         }
 
-        // Tạo 10 bản ghi kiểm duyệt (approvables)
-        foreach ($membershipPlans as $plan) { 
-            Approvable::create([
-                'approvable_type' => MembershipPlan::class, 
-                'approvable_id' => $plan->id, 
-                'status' => $faker->randomElement(['pending', 'approved', 'rejected']),
-                'approver_id' => $faker->randomElement($users),
-            ]);
-        }
+        $this->command->info('MembershipSeeder run successfully!');
     }
 }

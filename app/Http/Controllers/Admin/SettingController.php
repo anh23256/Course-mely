@@ -13,6 +13,8 @@ use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
+
 
 class SettingController extends Controller
 {
@@ -135,16 +137,22 @@ class SettingController extends Controller
             $data = $request->except('value');
 
             if ($request->hasFile('value') && $request->input('type') === 'image') {
-            
-            if (!empty($setting->value) && !filter_var($setting->value, FILTER_VALIDATE_URL)) {
-                if (Storage::disk('public')->exists($setting->value)) {
-                    Storage::disk('public')->delete($setting->value);
+
+                if (!empty($setting->value) && !filter_var($setting->value, FILTER_VALIDATE_URL)) {
+                    if (Storage::disk('public')->exists($setting->value)) {
+                        Storage::disk('public')->delete($setting->value);
+                    }
                 }
+
+                $data['value'] = $request->file('value')->store('settings', 'public');
+
+            } elseif ($request->input('type') === 'text') {
+                $data['value'] = $request->input('value'); 
             }
 
-            $data['value'] = $request->file('value')->store('settings', 'public');
-        }
             $setting->update($data);
+
+            Cache::forget('settings');
 
             return redirect()->route('admin.settings.edit', $id)->with('success', 'Thao tác thành công');
         } catch (\Exception $e) {
