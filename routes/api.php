@@ -59,10 +59,7 @@ Route::prefix('auth')->as('auth.')->group(function () {
     Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback']);
 });
 
-
-Route::get('/get-upload-url', [CommonController::class, 'getUploadUrl']);
-Route::get('/get-info-video/{uploadId}', [CommonController::class, 'getInfoVideo']);
-Route::post('/mux-webhook', [CommonController::class, 'handleMuxWebhook']);
+Route::post('/chat-box', [CommonController::class, 'chatBox']);
 
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
@@ -133,6 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-course-bought', [UserController::class, 'getMyCourseBought']);
         Route::get('/my-courses', [UserController::class, 'getUserCourses']);
         Route::get('/courses/{slug}/progress', [UserController::class, 'getCourseProgress']);
+        Route::get('/recentCourse', [UserController::class, 'getRecentCourses']);
         Route::get('/orders', [UserController::class, 'getOrdersBought']);
         Route::get('/orders/{id}', [UserController::class, 'showOrdersBought']);
         Route::get('/coupons', [UserController::class, 'getCouponUser']);
@@ -310,6 +308,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::prefix('manage')
                 ->group(function () {
+                    #============================== ROUTE MEDIA =============================
+                    Route::get('/get-upload-url', [CommonController::class, 'getUploadUrl']);
+                    Route::get('/get-video-info/{uploadId}', [CommonController::class, 'getInfoVideo']);
+                    Route::get('/media', [CommonController::class, 'getMedia']);
+
                     #============================== ROUTE LEARNER  =============================
                     Route::prefix('learners')
                         ->group(function () {

@@ -6,6 +6,7 @@ use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Common\UploadImageRequest;
 use App\Models\Course;
+use App\Models\Media;
 use App\Models\MembershipPlan;
 use App\Models\Rating;
 use App\Models\User;
@@ -13,11 +14,16 @@ use App\Services\VideoUploadService;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToLocalTrait;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
 class CommonController extends Controller
@@ -280,16 +286,19 @@ class CommonController extends Controller
             return $this->respondServerError();
         }
     }
+
     public function getUploadUrl()
     {
         try {
             $result = $this->videoUploadService->createUploadUrl();
 
-            return response()->json([
-                'upload_url' => $result['upload_url'],
-                'asset_id' => $result['asset_id'],
+            return $this->respondOk('Tạo đường dẫn thành công', [
+                'id' => $result['id'],
+                'url' => $result['url'],
             ]);
         } catch (\Exception $e) {
+            $this->logError($e);
+
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
@@ -301,19 +310,157 @@ class CommonController extends Controller
         try {
             $result =  $this->videoUploadService->getVideoInfoFromMux($uploadId);
 
-            $assetId = $result['asset_id'] ?? null;
-            $playbackId = $result['playback_id'] ?? null;
-            $duration = $result['duration'] ?? null;
+            if (!$result || !is_array($result)) {
+                return $this->respondError('Lỗi khi lấy thông tin video');
+            }
 
-            return response()->json([
-                'asset_id' => $assetId,
-                'playback_id' => $playbackId,
-                'duration' => $duration
+            $user = Auth::user();
+
+            $exists = Media::query()
+                ->where('user_id', $user->id)
+                ->where('type', 'video')
+                ->where(function ($query) use ($result) {
+                    $query->where('asset_id', $result['asset_id'] ?? '')
+                        ->orWhere('playback_id', $result['playback_id'] ?? '');
+                })
+                ->exists();
+
+            if (!$exists) {
+                $count = Media::query()
+                    ->where('user_id', $user->id)
+                    ->where('type', 'video')
+                    ->count();
+
+                Media::create([
+                    'user_id' => $user->id,
+                    'title' => 'Bài giảng ' . ($count + 1),
+                    'type' => 'video',
+                    'asset_id' => $result['asset_id'] ?? '',
+                    'playback_id' => $result['playback_id'] ?? '',
+                    'thumbnail' => $result['thumbnail'] ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1744405490/Gemini_Generated_Image_i0dae4i0dae4i0da_pwjntz.jpg',
+                ]);
+            }
+
+            return $this->respondOk('Lấy dữ liệu thành công', [
+                'asset_id' => $result['asset_id'] ?? null,
+                'playback_id' => $result['playback_id'] ?? null,
+                'duration' => $result['duration'] ?? null
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getMedia(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user && !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $query = Media::query();
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('playback_id', 'like', "%{$search}%")
+                        ->orWhere('path', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->has('type') && !empty($request->type) && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+
+            $orderBy = $request->order_by ?? 'created_at';
+            $direction = $request->direction ?? 'desc';
+            $query->orderBy($orderBy, $direction);
+
+            $perPage = $request->per_page ?? 12;
+            $media = $query->paginate(5);
+
+            return response()->json([
+                'data' => $media,
+                'meta' => [
+                    'total' => $media->total(),
+                    'per_page' => $media->perPage(),
+                    'current_page' => $media->currentPage(),
+                    'last_page' => $media->lastPage(),
+                ]
+            ]);
+        } catch (Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function chatBox(Request $request)
+    {
+        $userMessage = $request->input('message', '');
+        $context = $request->input('context', 'Chưa có, khi chưa có bạn hãy hỏi lại học viên');
+        $clearHistory = $request->input('clear_history', false);
+        $timestamp = Carbon::now()->format('[d/m/Y H:i:s]');
+
+        $chatHistory = Session::get('chat_history', []);
+
+        if ($clearHistory) {
+            Session::forget('chat_history');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Chat history cleared'
+            ]);
+        }
+
+        if (empty($chatHistory)) {
+            $chatHistory[] = [
+                'role' => 'user',
+                'parts' => [
+                    ['text' => "Bạn là trợ lý dạy học. Bối cảnh hiện tại: $context. Trả lời ngắn gọn, dễ hiểu và tập trung đúng vào nội dung."]
+                ]
+            ];
+        }
+
+        if (empty($userMessage)) return $this->respondError('Bạn chưa nhập nội dung đoạn chat');
+
+        $chatHistory[] = [
+            'role' => 'user',
+            'parts' => [
+                ['text' => "$timestamp Bạn: $userMessage"]
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept-Encoding' => 'gzip',
+        ])->post(
+            'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . env('GOOGLE_STUDIO_KEY'),
+            ['contents' => $chatHistory]
+        );
+
+        $aiReply = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? 'Không nhận được phản hồi, vui lòng thử lại';
+
+        $chatHistory[] = [
+            'role' => 'model',
+            'parts' => [
+                ['text' => "$timestamp AI: $aiReply"]
+            ]
+        ];
+
+        Session::put('chat_history', $chatHistory);
+
+        return response()->json([
+            'reply' => $aiReply
+        ]);
+    }
+    public function resetChatBox()
+    {
+        Session::forget('chat_history');
+        return $this->respondNoContent();
     }
 }

@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('profiles', function (Blueprint $table) {
-            $table->string('identity_verification')->nullable()->after('banking_info');
+        Schema::table('settings', function (Blueprint $table) {
+            //
+            $table->dropColumn('group');
         });
     }
 
@@ -21,8 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('profiles', function (Blueprint $table) {
-            $table->dropColumn('identity_verification');
+        Schema::table('settings', function (Blueprint $table) {
+            //
+            $table->string('group')->nullable();
         });
     }
 };

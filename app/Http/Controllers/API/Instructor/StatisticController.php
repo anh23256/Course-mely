@@ -4,18 +4,13 @@ namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\Invoice;
 use App\Models\Rating;
-use App\Models\Transaction;
-use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+
 
 class StatisticController extends Controller
 {
@@ -341,7 +336,9 @@ class StatisticController extends Controller
             $monthlyMemberships = [];
 
             for ($i = 1; $i <= 12; $i++) {
-                $monthlyMemberships[$i] = [
+
+                $monthlyMemberships[] = [
+                    'id' => $i,
                     'month' => $i,
                     'membershipRevenue' => $membershipRevenue[$i] ?? 0,
                 ];

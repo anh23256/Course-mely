@@ -21,6 +21,7 @@ use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class LearningPathController extends Controller
@@ -479,8 +480,31 @@ class LearningPathController extends Controller
                     }
 
                     $expectedResult = $lessonable->result_code;
+                    $referenceCode = $lessonable->sample_code;
 
-                    if (!$userCodeResult || $userCodeResult !== $expectedResult) {
+                    $response = Http::withHeaders([
+                        'Content-Type' => 'application/json',
+                        'Accept-Encoding' => 'gzip',
+                    ])->post(
+                        'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . env('GOOGLE_STUDIO_KEY'),
+                        [
+                            'contents' => [
+                                [
+                                    'parts' => [
+                                        ['text' => "You are a programming evaluator. Compare the following two code snippets. If they solve the same problem logically, respond with only: true. If not, respond with only: false. Do not explain anything. Just return true or false."],
+                                        ['text' => "Reference code:\n" . $referenceCode],
+                                        ['text' => "Student code:\n" . $userCodingInput],
+                                    ],
+                                ]
+                            ]
+                        ]
+                    );
+
+                    $result = $response->json();
+
+                    $aiCheck = trim($response->json()['candidates'][0]['content']['parts'][0]['text'] ?? 'false');
+
+                    if (!$userCodeResult || $userCodeResult !== $expectedResult || !$aiCheck) {
                         return $this->respondError('Kết quả code của bạn chưa đúng.');
                     }
 

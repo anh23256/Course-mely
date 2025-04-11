@@ -11,6 +11,7 @@ use App\Models\Lesson;
 use App\Models\Reaction;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Blaspsoft\Blasp\Facades\Blasp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -164,6 +165,22 @@ class CommentLessonController extends Controller
                 return $this->respondNotFound('Không tìm thấy lớp học');
             }
 
+            $customCheck = function ($text, $profanities) {
+                $text = strtolower($text);
+                foreach ($profanities as $word) {
+                    if (stripos($text, strtolower($word)) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            $profanities = config('blasp.profanities', []);
+
+            if ($customCheck($data['content'], $profanities)) {
+                return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
+            }
+
             $comment = Comment::query()->create([
                 'user_id' => $user->id,
                 'content' => $data['content'] ?? '',
@@ -225,6 +242,22 @@ class CommentLessonController extends Controller
 
             if (!$parentComment) {
                 return $this->respondNotFound('Không có bình luận cha');
+            }
+
+            $customCheck = function ($text, $profanities) {
+                $text = strtolower($text);
+                foreach ($profanities as $word) {
+                    if (stripos($text, strtolower($word)) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            $profanities = config('blasp.profanities', []);
+
+            if ($customCheck($data['content'], $profanities)) {
+                return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
             }
 
             $reply = Comment::query()->create([
