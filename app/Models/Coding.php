@@ -28,5 +28,6 @@ class Coding extends Model
 
     protected $casts = [
         'hints' => 'array',
+        'test_case' => 'array'
     ];
 }

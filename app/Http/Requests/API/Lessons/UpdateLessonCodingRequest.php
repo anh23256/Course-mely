@@ -31,7 +31,9 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'result_code' => 'nullable|string',
             'solution_code' => 'nullable|string',
             'sample_code' => 'nullable|string',
-            'test_case' => 'nullable'
+            'test_case' => 'nullable|array',
+            'test_case.*.input' => 'required|string',
+            'test_case.*.output' => 'required|string',
         ];
     }
 
@@ -49,6 +51,11 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'result_code.string' => 'Mã kết quả phải là chuỗi',
             'solution_code.string' => 'Mã lý thuyết phải là chuỗi',
             'sample_code.string' => 'Code mẫu phải là chuỗi',
+            'test_case.array' => 'Test case phải là mảng',
+            'test_case.*.input.required' => 'Input của test case là bắt buộc',
+            'test_case.*.input.string' => 'Input của test case phải là chuỗi',
+            'test_case.*.output.required' => 'Output của test case là bắt buộc',
+            'test_case.*.output.string' => 'Output của test case phải là chuỗi',
         ];
     }
 }

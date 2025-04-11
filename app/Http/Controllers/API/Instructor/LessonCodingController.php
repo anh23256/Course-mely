@@ -125,16 +125,21 @@ class LessonCodingController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài tập');
             }
 
-            $coding->hints = is_string($coding->hints)
-                ? json_decode($coding->hints, true)
+            if (!empty($data['content'])) {
+                $lesson->update([
+                    'content' => $data['content']
+                ]);
+            }
+
+            $data['hints'] = isset($data['hints']) && is_array($data['hints'])
+                ? json_encode($data['hints'])
                 : $coding->hints;
 
-            $coding->update($data);
+            $data['test_case'] = isset($data['test_case']) && is_array($data['test_case'])
+                ? json_encode($data['test_case'])
+                : $coding->test_case;
 
-            if (isset($data['content'])) {
-                $lesson->content = $data['content'];
-                $lesson->save();
-            }
+            $coding->update($data);
 
             DB::commit();
 

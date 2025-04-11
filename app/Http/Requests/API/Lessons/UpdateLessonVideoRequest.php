@@ -24,9 +24,11 @@ class UpdateLessonVideoRequest extends BaseFormRequest
     {
         return [
             'title' => 'sometimes|string|max:255',
-            'video_file' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
+            'mux_asset_id' => 'sometimes|string',
+            'mux_playback_id' => 'sometimes|string',
             'is_free_preview' => 'nullable|in:0,1',
             'content' => 'nullable|string',
+            'duration' => 'nullable|numeric',
         ];
     }
 
@@ -35,17 +37,9 @@ class UpdateLessonVideoRequest extends BaseFormRequest
         return [
             'title.string' => 'Tiêu đề phải là chuỗi',
             'title.max' => 'Tiêu đề không được vượt quá 255 ký tự',
-            'video_file.file' => 'File video phải là file',
-            'video_file.mimes' => 'File video phải có định dạng mp4, mov, avi',
-            'video_file.max' => 'File video không được vượt quá 100MB',
+            'mux_asset_id.string' => 'Asset ID phải là chuỗi',
+            'mux_playback_id.string' => 'Playback ID phải là chuỗi',
+            'duration.numeric' => 'Thời lượng phải là số',
         ];
     }
-
-    protected function prepareForValidation()
-    {
-        if ($this->video_file === 'null' || $this->video_file === '') {
-            $this->request->remove('video_file');
-        }
-    }
-
 }

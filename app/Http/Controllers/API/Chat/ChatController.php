@@ -487,22 +487,7 @@ class ChatController extends Controller
                     $file_size = $file->getSize();
                     $file_name = $file->getClientOriginalName();
 
-                    $media = Media::create([
-                        'file_path' => $file_path,
-                        'file_type' => $file_type,
-                        'file_size' => $file_size,
-                        'message_id' => $message->id,
-                    ]);
-
-                    $media = Media::create([
-                        'file_path' => $file_path,
-                        'file_type' => $file_type,
-                        'file_size' => $file_size,
-                        'message_id' => $message->id,
-                    ]);
-
                     $mediaData[] = [
-                        'media_id' => $media->id,
                         'file_name' => $file_name,
                         'file_path' => $file_path,
                         'file_type' => $file_type,
@@ -755,8 +740,6 @@ class ChatController extends Controller
         $conversation = Conversation::query()
             ->where('owner_id', $user->id)
             ->where('type', 'group')
-            ->whereNull('conversationable_id')
-            ->whereNull('conversationable_type')
             ->find($id);
 
         if (empty($conversation)) {
