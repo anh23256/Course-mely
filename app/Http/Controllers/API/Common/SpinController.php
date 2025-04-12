@@ -115,14 +115,14 @@ class SpinController extends Controller
     {
         $user = $request->user();
 
-        // Kiểm tra giới hạn 5 lượt quay/ngày
-        // $todaySpins = SpinHistory::where('user_id', $user->id)
-        //     ->whereDate('spun_at', Carbon::today())
-        //     ->count();
+        //Kiểm tra giới hạn 5 lượt quay/ngày
+        $todaySpins = SpinHistory::where('user_id', $user->id)
+            ->whereDate('spun_at', Carbon::today())
+            ->count();
 
-        // if ($todaySpins >= 5) {
-        //     return response()->json(['message' => 'Đã đạt giới hạn 5 lượt quay/ngày'], 403);
-        // }
+        if ($todaySpins >= 5) {
+            return response()->json(['message' => 'Đã đạt giới hạn 5 lượt quay/ngày'], 403);
+        }
 
         // Kiểm tra lượt quay còn lại
         $availableSpins = Spin::where('user_id', $user->id)
