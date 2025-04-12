@@ -1168,38 +1168,100 @@ class UserController extends Controller
         }
     }
     public function getRecentCourses()
-{
-    try {
-        $user = Auth::user();
-
-        // Lấy danh sách các khóa học người dùng có tiến độ
-        $recentCourses = DB::table('lesson_progress')
-            ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
-            ->join('chapters', 'lessons.chapter_id', '=', 'chapters.id')
-            ->join('courses', 'chapters.course_id', '=', 'courses.id')
-            ->join('course_users', function($join) use ($user) {
-                $join->on('course_users.course_id', '=', 'courses.id')
-                     ->where('course_users.user_id', '=', $user->id);
-            })
-            ->where('lesson_progress.user_id', $user->id)
-            ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'course_users.progress_percent')
-            ->select(
-                'courses.id as course_id',
-                'courses.name as course_name',
-                'courses.thumbnail',
-                'course_users.progress_percent',
-                DB::raw('MAX(lesson_progress.updated_at) as last_updated')
-            )
-            ->orderByDesc('last_updated')
-            ->limit(10)
-            ->get();
-
-        return $this->respondOk('Các khóa học bạn đã học gần đây:', $recentCourses);
-    } catch (\Exception $e) {
-        $this->logError($e);
-        return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+    {
+        try {
+            $user = Auth::user();
+    
+            $recentCourses = DB::table('lesson_progress')
+                ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
+                ->join('chapters', 'lessons.chapter_id', '=', 'chapters.id')
+                ->join('courses', 'chapters.course_id', '=', 'courses.id')
+                ->join('course_users', function ($join) use ($user) {
+                    $join->on('course_users.course_id', '=', 'courses.id')
+                         ->where('course_users.user_id', '=', $user->id);
+                })
+                ->where('lesson_progress.user_id', $user->id)
+                ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'courses.slug', 'course_users.progress_percent')
+                ->select(
+                    'courses.id as course_id',
+                    'courses.name as course_name',
+                    'courses.thumbnail',
+                    'courses.slug',
+                    'course_users.progress_percent',
+                    DB::raw('MAX(lesson_progress.updated_at) as last_updated')
+                )
+                ->orderByDesc('last_updated')
+                ->limit(10)
+                ->get();
+    
+            $coursesWithProgress = $recentCourses->map(function ($course) use ($user) {
+                $courseModel = Course::with(['chapters.lessons.lessonable'])->find($course->course_id);
+    
+                if (!$courseModel) {
+                    return null;
+                }
+                $lessonIds = $courseModel->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->pluck('id');
+                });
+                $totalLessons = $lessonIds->count();
+                $completedCount = LessonProgress::where('user_id', $user->id)
+                    ->whereIn('lesson_id', $lessonIds)
+                    ->where('is_completed', 1)
+                    ->count();
+    
+                $lessonProgress = LessonProgress::query()
+                    ->where('user_id', $user->id)
+                    ->whereIn('lesson_id', $lessonIds)
+                    ->with('lesson:id,title')
+                    ->latest('updated_at')
+                    ->first();
+    
+                if (!$lessonProgress) {
+                    $firstChapter = $courseModel->chapters->first();
+                    $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
+    
+                    $currentLesson = $firstLesson ? [
+                        'id' => $firstLesson->id,
+                        'title' => $firstLesson->title
+                    ] : null;
+                } else {
+                    if ($course->progress_percent == 100) {
+                        $lastChapter = $courseModel->chapters->last();
+                        $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
+    
+                        $currentLesson = $lastLesson ? [
+                            'id' => $lastLesson->id,
+                            'title' => $lastLesson->title
+                        ] : null;
+                    } else {
+                        $currentLesson = [
+                            'id' => $lessonProgress->lesson->id,
+                            'title' => $lessonProgress->lesson->title
+                        ];
+                    }
+                }
+    
+                return [
+                    'id' => $course->course_id,
+                    'name' => $course->course_name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'total_lessons' => $totalLessons,
+                    'progress_percent' => $course->progress_percent,
+                    'completed_lessons' => $completedCount,
+                    'current_lesson' => $currentLesson
+                ];
+            })->filter();
+    
+            return $this->respondOk('Các khóa học bạn đã học gần đây:', [
+                'courses' => $coursesWithProgress->values()
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
+        }
     }
-}
+    
 
     
     

@@ -83,6 +83,16 @@ class ApprovalInstructorController extends Controller
                 ->with([
                     'approver',
                     'user.profile.careers',
+                    'user.followers',
+                    'user.following', 
+                ])
+                ->withCount([
+                    'user as follower_count' => function ($query) {
+                        $query->whereHas('followers');
+                    },
+                    'user as following_count' => function ($query) {
+                        $query->whereHas('following');
+                    },
                 ])
                 ->where('id', $id)->first();
 
