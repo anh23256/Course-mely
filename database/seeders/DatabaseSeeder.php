@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-
+use App\Models\InstructorCommission;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
             // ApprovableSeeder::class,
             // CouponSeeder::class,
             // PostSeeder::class,
-            InvoiceSeeder::class,
+            // InvoiceSeeder::class,
             // WithdrawalsRequestSeeder::class,
             // TransactionSeeder::class,
             // SystemFundSeeder::class,
@@ -38,6 +38,8 @@ class DatabaseSeeder extends Seeder
             // PostSeeder::class,
             // CommentSeeder::class,
             // ReactionSeeder::class,
+
+            InstructorCommissionSeeder::class
         ]);
 
         $endTime = microtime(true);
