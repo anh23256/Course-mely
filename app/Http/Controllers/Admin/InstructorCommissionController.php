@@ -11,18 +11,23 @@ class InstructorCommissionController extends Controller
     //
     public function index(Request $request)
     {
-        
 
-        $title = 'Quản lý danh mục';
-        $subTitle = 'Danh sách danh mục';
+
+        $title = 'Quản lý hoa hồng';
+        $subTitle = 'Danh sách hoa hồng giảng viên';
 
         $queryInstructorCommission = InstructorCommission::query()->with(['instructor', 'course']);
 
         if ($request->hasAny(['id', 'status', 'startDate', 'endDate']))
             $queryInstructorCommission = $this->filter($request, $queryInstructorCommission);
 
-        if ($request->has('search_full'))
-            $queryInstructorCommission = $this->search($request->search_full, $queryInstructorCommission);
+        if ($request->has('query') && $request->query('query')) {
+            $searchTerm = $request->query('query');
+            $queryInstructorCommission->whereHas('instructor', function ($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+            });
+        }
+
 
         $instructorCommissions = $queryInstructorCommission->paginate(10);
 

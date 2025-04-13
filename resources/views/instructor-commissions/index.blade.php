@@ -53,78 +53,14 @@
 @endphp
 @section('content')
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Quản lí mã giảm giá</h4>
-
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Danh sách coupon</li>
-                        </ol>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        <div class="row cursor-pointer">
-            <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card border-0">
-                    <div class="card-body text-center">
-                        <div class="stat-icon text-primary">
-                            <i class="ri-coupon-3-line"></i>
-                        </div>
-                        <h6 class="card-title-custom">TỔNG SỐ MÃ GIẢM GIÁ</h6>
-                        <p class="stat-value text-primary">{{ $couponCounts->total_coupons ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card border-0">
-                    <div class="card-body text-center">
-                        <div class="stat-icon text-success">
-                            <i class="ri-check-double-line"></i>
-                        </div>
-                        <h6 class="card-title-custom">ĐANG HOẠT ĐỘNG</h6>
-                        <p class="stat-value text-success">{{ $couponCounts->active_coupons ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card border-0">
-                    <div class="card-body text-center">
-                        <div class="stat-icon text-warning">
-                            <i class="ri-timer-line"></i>
-                        </div>
-                        <h6 class="card-title-custom">SẮP HẾT HẠN</h6>
-                        <p class="stat-value text-warning">{{ $couponCounts->expire_coupons ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 mb-3">
-                <div class="card stat-card border-0">
-                    <div class="card-body text-center">
-                        <div class="stat-icon text-danger">
-                            <i class="ri-archive-line"></i>
-                        </div>
-                        <h6 class="card-title-custom">ĐÃ SỬ DỤNG</h6>
-                        <p class="stat-value text-danger">{{ $couponCounts->used_coupons ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0">Danh sách mã giảm giá</h4>
+                        <h4 class="card-title mb-0">{{ $subTitle }}</h4>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-danger">Import dữ liệu</button>
-                            <button class="btn btn-sm btn-success">Export dữ liệu</button>
-                            <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
-                                Tìm kiếm nâng cao
-                            </button>
+                            
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
                                     data-bs-toggle="dropdown" aria-expanded="false">
@@ -135,21 +71,7 @@
                                     <div class="container">
                                         <div class="container">
                                             <div class="row">
-                                                <li>
-                                                    <label for="amountRange" class="form-label">Số lượt sử dụng</label>
-
-                                                    <div class="d-flex justify-content-between">
-                                                        <span id="amountMin">0</span>
-                                                        <span id="amountMax">1000</span>
-                                                    </div>
-
-                                                    <div class="d-flex justify-content-between">
-                                                        <input type="range" class="form-range w-100" id="amountMinRange"
-                                                            name="used_count" min="0" max="1000" step="10"
-                                                            value="0" oninput="updateRange()" data-filter>
-
-                                                    </div>
-                                                </li>
+                                               
                                                 <li class="col-6">
                                                     <div class="mb-2">
                                                         <label for="startDate" class="form-label">Ngày bắt đầu</label>
@@ -232,20 +154,15 @@
                         <div class="listjs-table">
                             <div class="row g-4 mb-3">
                                 <div class="col-sm-auto">
-                                    <div>
-                                        <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary add-btn"><i
-                                                class="ri-add-line align-bottom me-1"></i> Thêm mới</a>
-                                        <button class="btn btn-danger" id="deleteSelected">
-                                            <i class="ri-delete-bin-2-line"> Xóa nhiều</i>
-                                        </button>
-                                    </div>
+
                                 </div>
                                 <div class="col-sm">
                                     <div class="d-flex justify-content-sm-end">
                                         <div class="search-box ms-2">
-                                            <form action="{{ route('admin.coupons.index') }}" method="get">
-                                                <input type="text" name="query" class="form-control search"
-                                                    placeholder="Search..." value="{{ old('query') }}">
+                                            <form action="{{ route('admin.instructor-commissions.index') }}"
+                                                method="get">
+                                                <input type="text" name="search_full" class="form-control search"
+                                                    placeholder="Search..." value="{{ old('search_full') }}">
                                                 <i class="ri-search-line search-icon"></i>
                                             </form>
                                         </div>
@@ -265,10 +182,9 @@
                                             </th>
                                             <th>STT</th>
                                             <th>Giảng viên</th>
-                                            <th>Khóa học</th>
-                                            <th>Giá trị hoa hồng</th>
-                                            <th>Tỷ lệ (%)</th>
-                                            <th>Ngày tạo</th>
+                                            <th>Hoa hồng hiện tại (%)</th>
+                                            <th>Lịch sử thay đổi</th>
+                                            <th>Cập nhật lúc</th>
                                         </tr>
                                     </thead>
                                     <tbody class="list form-check-all">
@@ -281,23 +197,45 @@
                                                     </div>
                                                 </th>
 
-                                                <td>{{ $index + 1 }}</td>
-                                                <td>{{ $commission->instructor->name ?? 'N/A' }}</td>
-                                                <td>{{ $commission->course->title ?? 'N/A' }}</td>
-                                                <td>{{ number_format($commission->commission_amount, 0, ',', '.') }}đ</td>
-                                                <td>{{ $commission->percentage }}%</td>
-                                                <td>{{ $commission->created_at->format('d/m/Y') }}</td>
+                                                <td class="id">{{ $loop->iteration }}</td>
+
+                                                <td>{{ $instructorCommission->instructor->name ?? 'Không tìm thấy' }}</td>
+                                                <td>{{ number_format($instructorCommission->rate, 2) }}%</td>
                                                 <td>
+                                                    @php
+                                                        $logs = json_decode($instructorCommission->rate_logs, true);
+                                                    @endphp
+
+                                                    @if ($logs)
+                                                        <ul class="list-unstyled mb-0">
+                                                            @foreach ($logs as $log)
+                                                                <li class="mb-2">
+                                                                    <span
+                                                                        class="fw-bold">{{ number_format($log['rate'], 2) }}%</span>
+                                                                    <span class="badge bg-light text-dark">
+                                                                        {{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}
+                                                                    </span>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    @else
+                                                        <em>Không có dữ liệu</em>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
+                                                {{-- <td>
                                                     <div class="d-flex gap-2">
                                                         <div class="remove">
-                                                            <a href="{{ route('admin.instructorCommissions.edit', $instructorCommission->id) }}">
+                                                            <a
+                                                                href="{{ route('admin.instructorCommissions.edit', $instructorCommission->id) }}">
                                                                 <button class="btn btn-sm btn-warning edit-item-btn">
                                                                     <span class="ri-edit-box-line"></span>
                                                                 </button>
                                                             </a>
                                                         </div>
                                                         <div class="edit">
-                                                            <a href="{{ route('admin.instructorCommissions.show', $instructorCommission->id) }}">
+                                                            <a
+                                                                href="{{ route('admin.instructorCommissions.show', $instructorCommission->id) }}">
                                                                 <button class="btn btn-sm btn-info edit-item-btn">
                                                                     <span class="ri-eye-line"></span>
                                                                 </button>
@@ -311,7 +249,7 @@
                                                         </div>
 
                                                     </div>
-                                                </td>
+                                                </td> --}}
 
 
                                             </tr>
@@ -334,7 +272,7 @@
 @endsection
 @push('page-scripts')
     <script>
-        var routeUrlFilter = "{{ route('admin.coupons.index') }}";
+        var routeUrlFilter = "{{ route('admin.instructor-commissions.index') }}";
         var routeDeleteAll = "{{ route('admin.coupons.destroy', ':itemID') }}";
 
         function updateRange() {

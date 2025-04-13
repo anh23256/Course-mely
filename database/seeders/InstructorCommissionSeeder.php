@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Course;
 use App\Models\InstructorCommission;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -17,34 +18,32 @@ class InstructorCommissionSeeder extends Seeder
     public function run(): void
     {
         //
-        
-        $instructors = User::whereHas('roles', function ($query) {
-            $query->where('name', 'instructor');
-        })->inRandomOrder()->take(10)->get();
 
-        
-        $courses = Course::inRandomOrder()->take(20)->get();
+        $instructors = User::inRandomOrder()->take(5)->get();
 
-        // Giả lập 50 hoa hồng
-        for ($i = 0; $i < 50; $i++) {
-            $instructor = $instructors->random();
-            $course = $courses->random();
+        foreach ($instructors as $instructor) {
+            $rate = fake()->randomElement([20.00, 25.00, 30.00, 35.00]); // Tỷ lệ hiện tại
 
-            // Giá khóa học giả lập (nếu không có sẵn)
-            $coursePrice = $course->price ?? fake()->numberBetween(200000, 1000000);
-
-            // Tỷ lệ hoa hồng (20% - 50%)
-            $percentage = fake()->randomElement([20, 25, 30, 35, 40, 45, 50]);
-
-            $commissionAmount = round($coursePrice * ($percentage / 100), 2);
+            // Lịch sử thay đổi ngẫu nhiên
+            $rateLogs = [
+                [
+                    'rate' => 15,
+                    'changed_at' => Carbon::now()->subMonths(3)->format('Y-m-d H:i:s'),
+                ],
+                [
+                    'rate' => 20,
+                    'changed_at' => Carbon::now()->subMonths(2)->format('Y-m-d H:i:s'),
+                ],
+                [
+                    'rate' => $rate,
+                    'changed_at' => Carbon::now()->subMonth()->format('Y-m-d H:i:s'),
+                ],
+            ];
 
             InstructorCommission::create([
                 'instructor_id' => $instructor->id,
-                'course_id' => $course->id,
-                'commission_amount' => $commissionAmount,
-                'percentage' => $percentage,
-                'created_at' => fake()->dateTimeBetween('-3 months', 'now'),
-                'updated_at' => now(),
+                'rate' => $rate,
+                'rate_logs' => json_encode($rateLogs),
             ]);
         }
     }
