@@ -9,8 +9,11 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class CommentBlogController extends Controller
 {
@@ -78,7 +81,21 @@ class CommentBlogController extends Controller
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
-
+            // Kiểm tra xem người dùng có bị chặn không
+            $blockKey = "comment_block:user_{$user->id}";
+            if (Redis::exists($blockKey)) {
+                $ttl = Redis::ttl($blockKey);
+                $blockUntil = Carbon::now()->addSeconds($ttl);
+                $minutes = floor($ttl / 60);
+                $seconds = $ttl % 60;
+                $formattedCountdown = sprintf('%02d:%02d', $minutes, $seconds);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Bạn đã bị cấm bình luận đến ' . $blockUntil->toDateTimeString() . '.',
+                    'countdown' => $ttl,
+                    'formatted_countdown' => $formattedCountdown
+                ], 400);
+            }
             $data = $request->validated();
 
             $posts = Post::query()->find($data['post_id']);
@@ -99,6 +116,21 @@ class CommentBlogController extends Controller
             $profanities = config('blasp.profanities', []);
 
             if ($customCheck($data['content'], $profanities)) {
+                $violationKey = "comment_violations:user_{$user->id}";
+                $violations = Redis::incr($violationKey);
+                if ($violations === 1) {
+                    Redis::expire($violationKey, 3600); 
+                }
+                if ($violations > config('comments.max_violations')) {
+                    Redis::setex($blockKey, config('comments.block_duration'), true);
+                    Redis::del($violationKey); 
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần.',
+                        'countdown' => 3600 
+                    ], 400);
+                }
+    
                 return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
             }
             $comment = Comment::query()->create([
@@ -111,10 +143,15 @@ class CommentBlogController extends Controller
 
             return $this->respondCreated('Bình luận thành công', $comment);
         } catch (\Exception $e) {
-            $this->logError($e, $request->all());
+            Log::error('Error in storeCommentBlog: ' . $e->getMessage());
+            if ($e instanceof RedisException) {
+                Log::error('Redis error: ' . $e->getMessage());
+                return $this->respondServerError('Hệ thống gặp lỗi, vui lòng thử lại sau.');
+            }
+                $this->logError($e, $request->all());
 
-            return $this->respondServerError();
-        }
+                return $this->respondServerError();
+            }
     }
 
     public function getReplies(Request $request, string $commentId)
