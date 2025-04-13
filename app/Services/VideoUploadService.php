@@ -6,6 +6,7 @@ use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use GuzzleHttp\Client;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use MuxPhp;
@@ -46,24 +47,21 @@ class VideoUploadService
                 ]
             ]);
 
-            $responseData = json_decode($response->getBody()->getContents(), true);
 
+            $responseData = json_decode($response->getBody()->getContents(), true);
             $uploadUrl = $responseData['data']['url'] ?? null;
 
             if (!$uploadUrl) {
                 throw new \Exception('Không thể lấy URL upload từ Mux.');
             }
 
-            return [
-                'upload_url' => $uploadUrl,
-                'asset_id' => $responseData['data']['id'],
-            ];
+            return $responseData['data'];
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Không thể tạo URL upload, vui lòng thử lại sau.');
         }
-        
     }
+
     public function uploadVideoToMux($videoUrl)
     {
         try {
@@ -103,7 +101,6 @@ class VideoUploadService
         try {
             $httpClient = new Client();
 
-            // Gửi request GET để lấy thông tin video từ Mux bằng uploadId
             $response = $httpClient->request('GET', self::MUX_API_URL_UPLOAD . '/' . $uploadId, [
                 'headers' => [
                     'Content-Type' => 'application/json',
@@ -111,25 +108,21 @@ class VideoUploadService
                 ],
             ]);
 
-            // Đọc nội dung phản hồi
             $data = json_decode($response->getBody()->getContents(), true);
 
-            // Lấy asset_id từ phản hồi
             $assetId = $data['data']['asset_id'] ?? null;
 
             if (!$assetId) {
                 throw new \Exception('Không tìm thấy asset_id trong phản hồi từ Mux');
             }
 
-            // Sau khi có asset_id, lấy thêm thông tin chi tiết về video (playback_id và duration)
-            $videoInfo = $this->getVideoDetails($assetId);
-
-            return $videoInfo;
+            return $this->getVideoDetails($assetId);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra khi lấy thông tin video từ Mux, vui lòng thử lại');
         }
     }
+
     public function getVideoDetails($assetId)
     {
         try {
@@ -146,17 +139,20 @@ class VideoUploadService
 
             $playbackId = $data['data']['playback_ids'][0]['id'] ?? null;
             $duration = $data['data']['duration'] ?? null;
+            $thumbnail = "https://image.mux.com/{$playbackId}/thumbnail.png?width=214&height=121";
 
             return [
                 'asset_id' => $assetId,
                 'playback_id' => $playbackId,
-                'duration' => $duration
+                'duration' => $duration,
+                'thumbnail' =>   $thumbnail
             ];
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra khi lấy thông tin video chi tiết từ Mux, vui lòng thử lại');
         }
     }
+
     public function deleteVideoFromMux($assetId)
     {
         try {

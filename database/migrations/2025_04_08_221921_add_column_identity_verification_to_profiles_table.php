@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('profiles', function (Blueprint $table) {
-            $table->string('identity_verification');
+            $table->dropColumn('identity_verification');
         });
     }
 };

@@ -10,13 +10,12 @@ class Media extends Model
     use HasFactory;
 
     protected $fillable = [
-        'message_id',
-        'file_path',
-        'file_type',
-        'file_size',
+        'user_id',
+        'title',
+        'type',
+        'asset_id',
+        'playback_id',
+        'path',
+        'thumbnail'
     ];
-    public function message()
-    {
-        return $this->belongsTo(Message::class);
-    }
 }

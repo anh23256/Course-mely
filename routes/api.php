@@ -59,9 +59,6 @@ Route::prefix('auth')->as('auth.')->group(function () {
     Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback']);
 });
 
-
-Route::get('/get-upload-url', [CommonController::class, 'getUploadUrl']);
-Route::get('/get-info-video/{uploadId}', [CommonController::class, 'getInfoVideo']);
 Route::post('/chat-box', [CommonController::class, 'chatBox']);
 
 Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
@@ -311,6 +308,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::prefix('manage')
                 ->group(function () {
+                    #============================== ROUTE MEDIA =============================
+                    Route::get('/get-upload-url', [CommonController::class, 'getUploadUrl']);
+                    Route::get('/get-video-info/{uploadId}', [CommonController::class, 'getInfoVideo']);
+                    Route::get('/media', [CommonController::class, 'getMedia']);
+
                     #============================== ROUTE LEARNER  =============================
                     Route::prefix('learners')
                         ->group(function () {

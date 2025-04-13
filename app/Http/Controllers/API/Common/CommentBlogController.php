@@ -86,7 +86,21 @@ class CommentBlogController extends Controller
             if (!$posts) {
                 return $this->respondNotFound('Không tìm thấy bài viết');
             }
+            $customCheck = function ($text, $profanities) {
+                $text = strtolower($text);
+                foreach ($profanities as $word) {
+                    if (stripos($text, strtolower($word)) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            };
 
+            $profanities = config('blasp.profanities', []);
+
+            if ($customCheck($data['content'], $profanities)) {
+                return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
+            }
             $comment = Comment::query()->create([
                 'user_id' => $user->id,
                 'content' => $data['content'] ?? '',

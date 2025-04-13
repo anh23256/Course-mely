@@ -24,9 +24,11 @@ class StoreLessonVideoRequest extends BaseFormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'video_file' => 'required|file|mimes:mp4,mov,avi|max:102400',
+            'mux_asset_id' => 'required|string',
+            'mux_playback_id' => 'required|string',
             'is_free_preview' => 'nullable|in:0,1',
             'content' => 'nullable|string',
+            'duration' => 'nullable|numeric',
         ];
     }
 
@@ -36,10 +38,9 @@ class StoreLessonVideoRequest extends BaseFormRequest
             'title.required' => 'Tiêu đề không được để trống',
             'title.string' => 'Tiêu đề phải là chuỗi',
             'title.max' => 'Tiêu đề không được vượt quá 255 ký tự',
-            'video_file.required' => 'File video không được để trống',
-            'video_file.file' => 'File video phải là file',
-            'video_file.mimes' => 'File video phải có định dạng mp4, mov, avi',
-            'video_file.max' => 'File video không được vượt quá 100MB',
+            'mux_asset_id.required' => 'Asset ID không được để trống',
+            'mux_playback_id.required' => 'Playback ID không được để trống',
+            'duration.numeric' => 'Thời lượng phải là số',
         ];
     }
 }
