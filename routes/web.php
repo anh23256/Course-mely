@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InstructorCommissionController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\TopInstructorController;
 use App\Http\Controllers\Admin\TopStudentController;
 use App\Http\Controllers\Admin\WalletController;
+use App\Models\InstructorCommission;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -235,7 +237,7 @@ Route::prefix('admin')->as('admin.')
             Route::delete('/{coupon}/force-delete', [CouponController::class, 'forceDelete'])
                 ->name('forceDelete')->can('coupon.update');
         });
-
+        
         #============================== ROUTE SETTINGS =============================
         Route::prefix('settings')->as('settings.')->group(function () {
             Route::get('/', [SettingController::class, 'index'])->name('index')->can('setting.read');
@@ -253,6 +255,13 @@ Route::prefix('admin')->as('admin.')
                 ->can('setting.delete');
         });
 
+        #============================== ROUTE instructorCommissions =============================
+        Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
+            Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
+            
+        });
+
+        
         #============================== ROUTE SUPPORT BANK =============================
         Route::prefix('support-banks')->as('support-banks.')->group(function () {
             Route::get('/', [SupportBankController::class, 'index'])->name('index');
