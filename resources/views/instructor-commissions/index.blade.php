@@ -102,53 +102,6 @@
                     </div>
 
                     <!-- Tìm kiếm nâng cao -->
-                    <div id="advancedSearch" class="card-header" style="display:none;">
-                        <form>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <label class="form-label">Mã giảm giá</label>
-                                    <input class="form-control form-control-sm" name="code" type="text"
-                                        value="{{ request()->input('code') ?? '' }}" placeholder="Nhập mã giảm giá..."
-                                        data-advanced-filter>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Tên mã giảm giá</label>
-                                    <input class="form-control form-control-sm" name="name" type="text"
-                                        value="{{ request()->input('name') ?? '' }}" placeholder="Nhập tên mã giảm giá..."
-                                        data-advanced-filter>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Người tạo</label>
-                                    <input class="form-control form-control-sm" name="user_id" type="text"
-                                        value="{{ request()->input('user_id') ?? '' }}" placeholder="Nhập người tạo..."
-                                        data-advanced-filter>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="statusItem" class="form-label">Loại giảm giá</label>
-                                    <select class="form-select form-select-sm" name="discount_type" id="statusItem"
-                                        data-advanced-filter>
-                                        <option value="">Chọn loại giảm giá</option>
-                                        <option @selected(request()->input('discount_type') === 'percentage') value="percentage">Phần trăm</option>
-                                        <option @selected(request()->input('discount_type') === 'fixed') value="fixed">Giảm trực tiếp</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mt-2">
-                                    <label for="statusItem" class="form-label">Trạng thái</label>
-                                    <select class="form-select form-select-sm" name="status" id="statusItem"
-                                        data-advanced-filter>
-                                        <option value="">Chọn trạng thái</option>
-                                        <option @selected(request()->input('status') === '1') value="1">Hoạt động</option>
-                                        <option @selected(request()->input('status') === '0') value="0">Không hoạt động</option>
-                                    </select>
-                                </div>
-                                <div class="mt-3 text-end">
-                                    <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
-                                    <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
-                                </div>
-
-                            </div>
-                        </form>
-                    </div>
 
                     <div class="card-body" id="item_List">
                         <div class="listjs-table">
