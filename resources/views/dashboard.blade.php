@@ -777,6 +777,7 @@
                 }).format(date);
             });
             let profitData = data.map(item => parseFloat(item.total_profit));
+            let renueveDate = data.map(item => parseFloat(item.total_revenue));
 
             Highcharts.chart(chartContainer, {
                 chart: {
@@ -810,7 +811,7 @@
                     startOnTick: true,
                     endOnTick: false,
                     title: {
-                        text: 'Lợi nhuận (VND)'
+                        text: null
                     },
                     labels: {
                         formatter: function() {
@@ -820,22 +821,44 @@
                 },
                 tooltip: {
                     shared: true,
-                    pointFormat: '<b>{point.y} VND</b>'
+                    formatter: function() {
+                        let s = `<b>Ngày ${this.x}</b><br/>`;
+
+                        let date = this.points[0].category;
+                        s = `<b>Ngày ${date}</b><br/>`;
+
+                        this.points.forEach(point => {
+                            s += `${point.series.name}: <b>${point.y.toLocaleString()} VND</b><br/>`;
+                        });
+                        return s;
+                    }
                 },
                 legend: {
                     enabled: false
                 },
-                series: [{
-                    name: 'Lợi nhuận',
-                    data: profitData,
-                    lineColor: Highcharts.getOptions().colors[1],
-                    color: Highcharts.getOptions().colors[2],
-                    fillOpacity: 0.5,
-                    marker: {
-                        enabled: false
-                    },
-                    threshold: null
-                }]
+                series: [
+                    {
+                        name: 'Doanh thu',
+                        data: renueveDate,
+                        lineColor: Highcharts.getOptions().colors[3],
+                        color: Highcharts.getOptions().colors[4],
+                        fillOpacity: 0.3,
+                        marker: {
+                            enabled: false
+                        },
+                        threshold: null
+                    },{
+                        name: 'Lợi nhuận',
+                        data: profitData,
+                        lineColor: Highcharts.getOptions().colors[1],
+                        color: Highcharts.getOptions().colors[2],
+                        fillOpacity: 0.5,
+                        marker: {
+                            enabled: false
+                        },
+                        threshold: null
+                    }
+                ]
             });
         }
 

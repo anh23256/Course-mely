@@ -46,6 +46,13 @@
         .coupon-table th {
             background-color: #f5f7fa;
         }
+
+        .history-log-list li:hover {
+            background-color: #f8f9fa;
+            transition: 0.2s;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
     </style>
 @endpush
 @php
@@ -53,14 +60,14 @@
 @endphp
 @section('content')
     <div class="container-fluid">
-        
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">{{ $subTitle }}</h4>
                         <div class="d-flex gap-2">
-                            
+
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
                                     data-bs-toggle="dropdown" aria-expanded="false">
@@ -71,7 +78,7 @@
                                     <div class="container">
                                         <div class="container">
                                             <div class="row">
-                                               
+
                                                 <li class="col-6">
                                                     <div class="mb-2">
                                                         <label for="startDate" class="form-label">Ngày bắt đầu</label>
@@ -136,8 +143,8 @@
                                             <th>STT</th>
                                             <th>Giảng viên</th>
                                             <th>Hoa hồng hiện tại (%)</th>
-                                            <th>Lịch sử thay đổi</th>
                                             <th>Cập nhật lúc</th>
+                                            <th>Lịch sử thay đổi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="list form-check-all">
@@ -153,29 +160,80 @@
                                                 <td class="id">{{ $loop->iteration }}</td>
 
                                                 <td>{{ $instructorCommission->instructor->name ?? 'Không tìm thấy' }}</td>
-                                                <td>{{ number_format($instructorCommission->rate, 2) }}%</td>
+                                                <td>
+                                                    <input type="number" step="1"
+                                                        class="form-control input-rate"
+                                                        data-id="{{ $instructorCommission->id }}"
+                                                        value="{{ fmod($instructorCommission->rate * 100, 1) == 0
+                                                            ? number_format($instructorCommission->rate * 100, 0)
+                                                            : number_format($instructorCommission->rate * 100, 2) }}"
+                                                        data-old="{{ fmod($instructorCommission->rate * 100, 1) == 0
+                                                            ? number_format($instructorCommission->rate * 100, 0)
+                                                            : number_format($instructorCommission->rate * 100, 2) }}"
+                                                        data-name="{{ $instructorCommission->instructor->name }}""
+                                                        style="width: 80px;" />
+                                                </td>
+                                                <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
                                                 <td>
                                                     @php
                                                         $logs = json_decode($instructorCommission->rate_logs, true);
                                                     @endphp
 
-                                                    @if ($logs)
-                                                        <ul class="list-unstyled mb-0">
-                                                            @foreach ($logs as $log)
-                                                                <li class="mb-2">
-                                                                    <span
-                                                                        class="fw-bold">{{ number_format($log['rate'], 2) }}%</span>
-                                                                    <span class="badge bg-light text-dark">
-                                                                        {{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}
-                                                                    </span>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @else
-                                                        <em>Không có dữ liệu</em>
-                                                    @endif
+                                                    <button type="button" class="btn btn-sm btn-info"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalLog_{{ $instructorCommission->id }}">
+                                                        <i class="ri-eye-line"></i>
+                                                    </button>
+
+                                                    <div class="modal fade" id="modalLog_{{ $instructorCommission->id }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="modalLogLabel_{{ $instructorCommission->id }}"
+                                                        aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-scrollable modal-md">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title"
+                                                                        id="modalLogLabel_{{ $instructorCommission->id }}">
+                                                                        Lịch sử thay đổi hoa hồng
+                                                                    </h5>
+                                                                    <button type="button" class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Đóng"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    @if ($logs)
+                                                                        <ul
+                                                                            class="list-unstyled mb-0 small history-log-list">
+                                                                            @foreach ($logs as $log)
+                                                                                @php
+                                                                                    $formattedRate =
+                                                                                        fmod($log['rate'] * 100, 1) == 0
+                                                                                            ? number_format(
+                                                                                                $log['rate'] * 100,
+                                                                                                0,
+                                                                                            )
+                                                                                            : number_format(
+                                                                                                $log['rate'] * 100,
+                                                                                                2,
+                                                                                            );
+                                                                                @endphp
+                                                                                <li
+                                                                                    class="mb-2 d-flex justify-content-between align-items-center border-bottom pb-1">
+                                                                                    <span
+                                                                                        class="text-danger fw-semibold fs-14">{{ $formattedRate }}%</span>
+                                                                                    <span
+                                                                                        class="badge bg-secondary text-white fs-13">{{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}</span>
+                                                                                </li>
+                                                                            @endforeach
+                                                                        </ul>
+                                                                    @else
+                                                                        <em>Không có lịch sử thay đổi</em>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </td>
-                                                <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
                                                 {{-- <td>
                                                     <div class="d-flex gap-2">
                                                         <div class="remove">
@@ -235,6 +293,94 @@
 
         $(document).on('click', '#resetFilter', function() {
             window.location = routeUrlFilter;
+        });
+
+        $(document).ready(function() {
+            $('.input-rate').on('blur', function() {
+                var $this = $(this);
+                var id = $this.data('id');
+                var newValue = parseFloat($this.val());
+                var oldValue = parseFloat($this.data('old'));
+                var nameInstructor = $this.data('name');
+
+                if (isNaN(newValue) || !Number.isInteger(newValue)) {
+                    toastr.error('Hoa hồng mới phải là một số Nguyên!');
+                    $this.val(oldValue);
+                    return;
+                }
+
+                if(newValue <= 0 || newValue >= 101){
+                    toastr.error('Hoa hồng mới phải là một số năm trong khoảng 0 đến 100');
+                    $this.val(oldValue);
+                    return;
+                }
+
+                if (newValue === oldValue) {
+                    return;
+                }
+
+                var note =
+                    `giảm hoa hồng của giảng viên <b style="color:red">${nameInstructor}</b> từ <b>${oldValue}%</b> xuống <b>${newValue}%</b>`;
+                if (newValue > oldValue) {
+                    note =
+                        `tăng hoa hồng của giảng viên <b style="color:red">${nameInstructor}</b> từ <b>${oldValue}%</b> lên <b>${newValue}%</b>`;
+                }
+
+                Swal.fire({
+                    title: `Xác nhận thay đổi hoa hồng`,
+                    html: `Bạn có chắc chắn muốn ${note} không?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Xác nhận',
+                    cancelButtonText: 'Không',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('admin.instructor-commissions.update') }}",
+                            type: 'PUT',
+                            data: {
+                                id: id,
+                                rate: newValue / 100,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(res) {
+                                toastr.success('Cập nhật thành công');
+                                let re = Math.round(res.data.rate * 10000) / 100;
+                                $this.data('old', re);
+
+                                let updatedAt = new Date(res.data.updated_at);
+                                let day = updatedAt.getDate().toString().padStart(2,
+                                    '0');
+                                let month = (updatedAt.getMonth() + 1).toString()
+                                    .padStart(2, '0');
+                                let year = updatedAt.getFullYear();
+                                let hours = updatedAt.getHours().toString().padStart(2,
+                                    '0');
+                                let minutes = updatedAt.getMinutes().toString()
+                                    .padStart(2, '0');
+                                let formattedDate =
+                                    `${day}/${month}/${year} ${hours}:${minutes}`;
+
+                                let logList = $(`#modalLog_${id} .history-log-list`);
+                                let newLog = $(`
+                                <li class="mb-2 d-flex justify-content-between align-items-center border-bottom pb-1">
+                                    <span class="text-danger fw-semibold fs-14">${re}%</span>
+                                    <span class="badge bg-secondary text-white fs-13">${formattedDate}</span>
+                                </li>
+                            `);
+                                logList.append(newLog);
+                            },
+                            error: function() {
+                                toastr.error('Cập nhật thất bại!');
+                                $this.val(oldValue);
+                            }
+                        });
+                    } else {
+                        $this.val(oldValue);
+                    }
+                });
+            });
         });
     </script>
 

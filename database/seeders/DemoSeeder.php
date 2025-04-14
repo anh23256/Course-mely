@@ -69,7 +69,8 @@ class DemoSeeder extends Seeder
                     $userId = $user->id;
 
                     foreach ($randomCourseIds as $course) {
-                        $instructor = User::query()->where('id', $course['user_id'])->first();
+                        $instructor = User::query()->where('id', $course['user_id'])->with('instructorCommissions')->first();
+                        $rateInstructor = !empty($instructor?->instructorCommissions->rate) ? $instructor->instructorCommissions->rate : 0.6;
 
                         $year = fake()->randomElement([
                             2025,
@@ -167,6 +168,7 @@ class DemoSeeder extends Seeder
                             'status' => 'Đã thanh toán',
                             'invoice_type' => 'course',
                             'payment_method' => $i % 2 == 0 ? 'vnpay' : 'momo',
+                            'instructor_commissions' => $rateInstructor,
                             'created_at' => $randomDate,
                             'updated_at' => $randomDate,
                         ]);
@@ -187,15 +189,15 @@ class DemoSeeder extends Seeder
 
                         if (!$systemBalance) {
                             DB::table('system_funds')->insert([
-                                'balance' => $finalAmount * 0.4,
-                                'pending_balance' => $finalAmount * 0.6,
+                                'balance' => $finalAmount * (1 - $rateInstructor),
+                                'pending_balance' => $finalAmount * $rateInstructor,
                                 'created_at' => $randomDate,
                                 'updated_at' => $randomDate,
                             ]);
                         } else {
                             DB::table('system_funds')->update([
-                                'balance' => $systemBalance->balance + $finalAmount * 0.4,
-                                'pending_balance' => $systemBalance->pending_balance + $finalAmount * 0.6,
+                                'balance' => $systemBalance->balance + $finalAmount * (1 - $rateInstructor),
+                                'pending_balance' => $systemBalance->pending_balance + $finalAmount * $rateInstructor,
                                 'updated_at' => $randomDate,
                             ]);
                         }
@@ -204,7 +206,7 @@ class DemoSeeder extends Seeder
                             'transaction_id' => $transactionId,
                             'user_id' => $userId,
                             'total_amount' => $finalAmount,
-                            'retained_amount' => $finalAmount * 0.4,
+                            'retained_amount' => $finalAmount * (1 - $rateInstructor),
                             'type' => 'commission_received',
                             'description' => "Nhận tiền hoa hồng từ việc bán khóa học",
                             'created_at' => $randomDate,
@@ -216,7 +218,7 @@ class DemoSeeder extends Seeder
                             ['balance' => 0]
                         );
 
-                        $wallet->increment('balance', $finalAmount * 0.6);
+                        $wallet->increment('balance', $finalAmount * $rateInstructor);
 
                         $conversation = Conversation::query()->where([
                             'conversationable_id' => $course['id'],
