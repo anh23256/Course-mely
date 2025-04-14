@@ -17,21 +17,20 @@ class InstructorCommissionSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-
-        $instructors = User::inRandomOrder()->take(5)->get();
+        $instructors = User::whereHas('roles', function($query){
+            $query->where('name', 'instructor');
+        })->get();
 
         foreach ($instructors as $instructor) {
-            $rate = fake()->randomElement([20.00, 25.00, 30.00, 35.00]); // Tỷ lệ hiện tại
+            $rate = fake()->randomElement([0.6,0.8,0.7,0.5,0.7,0.7]);
 
-            // Lịch sử thay đổi ngẫu nhiên
             $rateLogs = [
                 [
-                    'rate' => 15,
+                    'rate' => fake()->randomElement([0.3,0.4,0.6,0.8,0.7,0.5,0.7,0.7]),
                     'changed_at' => Carbon::now()->subMonths(3)->format('Y-m-d H:i:s'),
                 ],
                 [
-                    'rate' => 20,
+                    'rate' => fake()->randomElement([0.3,0.4,0.6,0.8,0.7,0.5,0.7,0.7]),
                     'changed_at' => Carbon::now()->subMonths(2)->format('Y-m-d H:i:s'),
                 ],
                 [

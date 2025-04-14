@@ -36,7 +36,6 @@ use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\TopInstructorController;
 use App\Http\Controllers\Admin\TopStudentController;
 use App\Http\Controllers\Admin\WalletController;
-use App\Models\InstructorCommission;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -258,7 +257,7 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE instructorCommissions =============================
         Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
             Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
-            
+            Route::put('/update-rate-instructor', [InstructorCommissionController::class, 'updateInstructorCommission'])->name('update');
         });
 
         

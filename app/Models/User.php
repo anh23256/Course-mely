@@ -116,7 +116,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function instructorCommissions()
     {
-        return $this->hasMany(InstructorCommission::class, 'instructor_id');
+        return $this->hasOne(InstructorCommission::class, 'instructor_id');
     }
     public function followers()
     {

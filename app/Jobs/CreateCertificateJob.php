@@ -17,6 +17,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CreateCertificateJob implements ShouldQueue
 {
@@ -48,8 +49,6 @@ class CreateCertificateJob implements ShouldQueue
             $courseUser = CourseUser::query()->where(['user_id' => $user->id, 'course_id' => $course->id])->first();
 
             if (!$courseUser) return;
-
-            if ($courseUser->progress_percent !== 100 || $courseUser->completed_at == null) return;
 
             $certificate = Certificate::query()->where(['user_id' => $user->id, 'course_id' => $course->id])->first();
 
@@ -90,13 +89,9 @@ class CreateCertificateJob implements ShouldQueue
                 $filename = "certificate_{$user->id}_{$course->id}";
                 $pdfContent = $pdf->output();
 
-                $uploadResult = Cloudinary::upload('data:application/pdf;base64,' . base64_encode($pdfContent), [
-                    'folder' => 'certificates',
-                    'resource_type' => 'auto',
-                    'public_id' => $filename,
-                ]);
-
-                $pdfUrl = $uploadResult->getSecurePath();
+                Storage::disk('public')->put("certificates/{$filename}",  $pdfContent);
+                
+                $pdfUrl = Storage::url("certificates/{$filename}");
 
                 if (!$pdfUrl) return;
 
