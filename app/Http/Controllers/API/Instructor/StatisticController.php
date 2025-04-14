@@ -4,9 +4,11 @@ namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Follow;
 use App\Models\Rating;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -310,6 +312,7 @@ class StatisticController extends Controller
     public function getRevenueMembershipsByMonth(Request $request)
     {
         try {
+
             $user = Auth::user();
             if (!$user || !$user->hasRole('instructor')) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
@@ -321,26 +324,26 @@ class StatisticController extends Controller
 
             $membershipRevenue = DB::table('invoices')
                 ->selectRaw('MONTH(invoices.created_at) as month, 
-                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue')
-                ->join('courses', function ($join) use ($user) {
-                    $join->on('invoices.course_id', '=', 'courses.id')
-                        ->where('courses.user_id', $user->id);
-                })
+                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue,
+                    GROUP_CONCAT(DISTINCT membership_plans.name) as membership_plan_names')
+                ->leftJoin('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
                 ->whereYear('invoices.created_at', $year)
                 ->where('invoices.status', 'Đã thanh toán')
                 ->groupBy('month')
-                ->pluck('membership_revenue', 'month')
-                ->toArray();
+                ->get();
 
 
             $monthlyMemberships = [];
 
             for ($i = 1; $i <= 12; $i++) {
-
+                $monthlyData = $membershipRevenue->firstWhere('month', $i);
                 $monthlyMemberships[] = [
                     'id' => $i,
                     'month' => $i,
-                    'membershipRevenue' => $membershipRevenue[$i] ?? 0,
+                    'membershipRevenue' => $monthlyData?->membership_revenue ?? 0,
+                    'membershipPlanNames' => $monthlyData && $monthlyData->membership_plan_names
+                        ? explode(',', $monthlyData->membership_plan_names)
+                        : [],
                 ];
             }
 
@@ -348,6 +351,96 @@ class StatisticController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function getRatingsStatistics(Request $request)
+    {
+        try {
+            $query = Rating::query();
+
+            $query->join('courses', 'ratings.course_id', '=', 'courses.id')
+                ->where('courses.status', 'approved');
+
+            if ($request->has('instructor_id')) {
+                $query->where('courses.instructor_id', $request->instructor_id);
+            }
+
+            if ($request->has('course_id')) {
+                $query->where('ratings.course_id', $request->course_id);
+            }
+
+            if ($request->has('date_from')) {
+                $query->whereDate('ratings.created_at', '>=', $request->date_from);
+            }
+
+            if ($request->has('date_to')) {
+                $query->whereDate('ratings.created_at', '<=', $request->date_to);
+            }
+
+            $ratingStats = $query->select('ratings.rate', DB::raw('count(*) as count'))
+                ->groupBy('ratings.rate')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'rating' => $item->rate,
+                        'count' => $item->count,
+                        'label' => $item->rate . ' sao'
+                    ];
+                });
+
+            $totalRatings = $ratingStats->sum('count');
+
+            $ratingStats = $ratingStats->map(function ($item) use ($totalRatings) {
+                $item['percentage'] = $totalRatings > 0 ? round(($item['count'] / $totalRatings) * 100, 2) : 0;
+                return $item;
+            });
+
+            $averageRating = $totalRatings > 0 ?
+                $query->avg('ratings.rate') : 0;
+
+            return $this->respondOk('Lấy dữ liệu thành công', [
+                'data' => $ratingStats,
+                'total' => $totalRatings,
+                'average' => round($averageRating, 2)
+            ]);
+        } catch (Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function getFollowsStatistics(Request $request)
+    {
+        try {
+            $instructorId = auth()->id();
+            $year = $request->input('year', now()->year);
+
+            $query = Follow::query()
+                ->where('instructor_id', $instructorId)
+                ->whereYear('created_at', $year);
+
+            $monthlyData = $query
+                ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+                ->groupByRaw('MONTH(created_at)')
+                ->orderBy('month')
+                ->pluck('count', 'month');
+
+            $statistics = collect(range(1, 12))->map(function ($month) use ($monthlyData) {
+                return [
+                    'month' => str_pad($month, 2, '0', STR_PAD_LEFT),
+                    'count' => $monthlyData[$month] ?? 0,
+                ];
+            });
+
+            return $this->respondOk('Lấy thống kê theo tháng thành công', [
+                'year' => $year,
+                'data' => $statistics,
+            ]);
+        } catch (Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError();
         }
     }
 }

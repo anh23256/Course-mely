@@ -70,18 +70,17 @@
                             </select>
                         </div>
 
-                        <div class="col-md-12 {{ old('type', $setting->type) === 'text' ? '' : 'd-none' }}"
-                            id="value-text">
+                        <div class="col-md-12" id="value-text" style="display: none;">
                             <label for="inputValue" class="form-label">Giá trị</label>
                             <input type="text" class="form-control mb-2" name="value" id="inputValue"
                                 placeholder="Nhập giá trị" value="{{ old('value', $setting->value) }}">
                         </div>
 
-                        <div class="col-md-12 {{ old('type', $setting->type) === 'textarea' ? '' : 'd-none' }}"
-                            id="value-textarea">
+                        <div class="col-md-12" id="value-textarea" style="display: none;">
                             <label class="form-label">Giá trị</label>
                             <textarea class="form-control mb-2" name="value" rows="3" placeholder="Nhập nội dung">{{ old('value', $setting->value) }}</textarea>
                         </div>
+
 
                         @if (isset($setting) && $setting->type === 'image' && $setting->value)
                             <div class="col-md-12">
@@ -93,10 +92,11 @@
                             </div>
                         @endif
 
-                        <div class="col-md-12 d-none" id="value-image">
+                        <div class="col-md-12" id="value-image" style="display: none;">
                             <label class="form-label">Thay ảnh mới</label>
-                            <input type="file" class="form-control mb-2" name="value" >
+                            <input type="file" class="form-control mb-2" name="value">
                         </div>
+
 
 
                         <div class="col-12 text-end">
@@ -114,31 +114,45 @@
 @push('page-scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const typeSelector = document.getElementById('setting-type');
-            const valueText = document.getElementById('value-text');
-            const valueTextarea = document.getElementById('value-textarea');
-            const valueImage = document.getElementById('value-image');
+            const typeSelect = document.getElementById('setting-type');
+            const textInput = document.getElementById('value-text');
+            const textareaInput = document.getElementById('value-textarea');
+            const imageInput = document.getElementById('value-image');
 
-            function toggleFields() {
-                const selected = typeSelector.value;
+            const textField = textInput.querySelector('input[name="value"]');
+            const textareaField = textareaInput.querySelector('textarea[name="value"]');
+            const imageField = imageInput.querySelector('input[name="value"]');
 
-                valueText.classList.add('d-none');
-                valueTextarea.classList.add('d-none');
-                valueImage.classList.add('d-none');
+            function toggleInputFields() {
+                const selectedType = typeSelect.value;
 
-                if (selected === 'text') {
-                    valueText.classList.remove('d-none');
-                } else if (selected === 'textarea') {
-                    valueTextarea.classList.remove('d-none');
-                } else if (selected === 'image') {
-                    valueImage.classList.remove('d-none');
+                // Ẩn tất cả
+                textInput.style.display = 'none';
+                textareaInput.style.display = 'none';
+                imageInput.style.display = 'none';
+
+                textField.disabled = true;
+                textareaField.disabled = true;
+                imageField.disabled = true;
+
+                // Hiện đúng field theo loại
+                if (selectedType === 'text') {
+                    textInput.style.display = 'block';
+                    textField.disabled = false;
+                } else if (selectedType === 'textarea') {
+                    textareaInput.style.display = 'block';
+                    textareaField.disabled = false;
+                } else if (selectedType === 'image') {
+                    imageInput.style.display = 'block';
+                    imageField.disabled = false;
                 }
             }
 
-            typeSelector.addEventListener('change', toggleFields);
-            toggleFields(); // Gọi khi load lần đầu
+            typeSelect.addEventListener('change', toggleInputFields);
+            toggleInputFields(); // chạy khi trang load
         });
     </script>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -181,6 +195,4 @@
             });
         });
     </script>
-
-    
 @endpush
