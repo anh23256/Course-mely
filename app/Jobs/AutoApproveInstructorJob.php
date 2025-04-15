@@ -3,10 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\Approvable;
+use App\Models\InstructorCommission;
 use App\Models\User;
 use App\Notifications\InstructorApprovalNotification;
 use App\Notifications\InstructorRejectedNotification;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -62,6 +64,15 @@ class AutoApproveInstructorJob implements ShouldQueue
                     $user->syncRoles(['instructor']);
 
                     $user->notify(new InstructorApprovalNotification($user));
+
+                    InstructorCommission::create([
+                        'instructor_id' => $user->id,
+                        'rate' => 0.6,
+                        'rate_logs' => json_encode([
+                            'rate' => 0.6,
+                            'changed_at' => now()
+                        ])
+                    ]);
                 } else {
                     $approvable->update([
                         'status' => 'rejected',
@@ -73,7 +84,6 @@ class AutoApproveInstructorJob implements ShouldQueue
                     $user->notify(new InstructorRejectedNotification($user));
                 }
             });
-
         } catch (\Exception $e) {
             $this->logError($e);
         }

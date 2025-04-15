@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\Users\StoreUserRequest;
 use App\Http\Requests\Admin\Users\UpdateProfileRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Imports\UsersImport;
+use App\Models\Course;
 use App\Models\User;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
@@ -173,8 +174,18 @@ class UserController extends Controller
 
             $user->load('profile');
 
+            $queryCourses = Course::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->orderByDesc('created_at');
+
+
+            $totalStudents = (clone $queryCourses)->sum('total_student');
+            $courses = $queryCourses->paginate(5);
+
             return view('users.show', compact([
                 'user',
+                'courses',
+                'totalStudents',
                 'title',
                 'subTitle'
             ]));
@@ -586,7 +597,7 @@ class UserController extends Controller
             if ($request->filled('current_password') && $request->filled('password')) {
                 $data['password'] = Hash::make($request->password);
             } else {
-                unset($data['password']); 
+                unset($data['password']);
             }
 
             $data['email'] = $user->email;
@@ -606,7 +617,6 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('admin.administrator.profile', $user)->with('success', 'Cập nhật thành công');
-
         } catch (\Exception $e) {
             DB::rollBack();
 

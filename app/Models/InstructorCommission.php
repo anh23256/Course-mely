@@ -8,22 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class InstructorCommission extends Model
 {
     use HasFactory;
-
-
     protected $fillable = [
         'instructor_id',
-        'course_id',
-        'commission_amount',
-        'percentage',
+        'rate',
+        'rate_logs',
     ];
 
     public function instructor()
     {
         return $this->belongsTo(User::class, 'instructor_id');
-    }
-
-    public function course()
-    {
-        return $this->belongsTo(Course::class);
     }
 }

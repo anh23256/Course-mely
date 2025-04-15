@@ -52,7 +52,7 @@
                             <h3 style="margin:0 0 15px; color:#2e7d52; font-size:20px; font-weight:600;">Xin chúc
                                 mừng!</h3>
                             <p style="font-size:16px; color:#4d755d; margin-bottom:0;">Bạn đã chính thức trở thành người
-                                hướng dẫn tại CourseMeLy!</p>
+                                hướng dẫn tại CourseMeLy! Và bạn được chia 60% doanh thu từ việc bán khóa học trực tiếp trên Course Mely</p>
                         </div>
                     </td>
                 </tr>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Common;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\LearningPath\CompletePracticeExerciseRequest;
 use App\Jobs\CreateCertificateJob;
+use App\Models\Certificate;
 use App\Models\Coding;
 use App\Models\Course;
 use App\Models\CourseUser;
@@ -480,31 +481,8 @@ class LearningPathController extends Controller
                     }
 
                     $expectedResult = $lessonable->result_code;
-                    $referenceCode = $lessonable->sample_code;
 
-                    $response = Http::withHeaders([
-                        'Content-Type' => 'application/json',
-                        'Accept-Encoding' => 'gzip',
-                    ])->post(
-                        'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . env('GOOGLE_STUDIO_KEY'),
-                        [
-                            'contents' => [
-                                [
-                                    'parts' => [
-                                        ['text' => "You are a programming evaluator. Compare the following two code snippets. If they solve the same problem logically, respond with only: true. If not, respond with only: false. Do not explain anything. Just return true or false."],
-                                        ['text' => "Reference code:\n" . $referenceCode],
-                                        ['text' => "Student code:\n" . $userCodingInput],
-                                    ],
-                                ]
-                            ]
-                        ]
-                    );
-
-                    $result = $response->json();
-
-                    $aiCheck = trim($response->json()['candidates'][0]['content']['parts'][0]['text'] ?? 'false');
-
-                    if (!$userCodeResult || $userCodeResult !== $expectedResult || !$aiCheck) {
+                    if (!$userCodeResult || $userCodeResult !== $expectedResult) {
                         return $this->respondError('Kết quả code của bạn chưa đúng.');
                     }
 
@@ -936,9 +914,13 @@ class LearningPathController extends Controller
 
             $courseUser->progress_percent = round($progressPercent, 2);
 
+            if ($progressPercent >= 80) {
+                if(Certificate::where(['user_id' => $userId, 'course_id' => $courseId])->exists()) return;
+                CreateCertificateJob::dispatch($userId, $courseId);
+            }
+
             if ($progressPercent == 100) {
                 $courseUser->completed_at = now();
-                CreateCertificateJob::dispatch($userId, $courseId);
             } else {
                 $courseUser->completed_at = null;
             }

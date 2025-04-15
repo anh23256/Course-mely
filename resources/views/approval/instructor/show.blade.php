@@ -32,13 +32,13 @@
                     <div class="row text text-white-50 text-center">
                         <div class="col-lg-6 col-4">
                             <div class="p-2">
-                                <h4 class="text-white mb-1">24.3K</h4>
+                                <h4 class="text-white mb-1">{{$approval->follower_count}}</h4>
                                 <p class="fs-14 mb-0">Followers</p>
                             </div>
                         </div>
                         <div class="col-lg-6 col-4">
                             <div class="p-2">
-                                <h4 class="text-white mb-1">1.3K</h4>
+                                <h4 class="text-white mb-1">{{$approval->following_count}}</h4>
                                 <p class="fs-14 mb-0">Following</p>
                             </div>
                         </div>

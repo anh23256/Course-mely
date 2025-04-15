@@ -83,13 +83,10 @@ class CertificateController extends Controller
                     }
                 }
 
-                $start = microtime(true);
-
                 $pdf = Pdf::loadHTML($content)->setPaper('A4', 'landscape');
                 $filename = "certificate_{$user->id}_{$course->id}.pdf";
                 $pdfContent = $pdf->output();
 
-                $end = microtime(true);
                 Storage::disk('public')->put("certificates/{$filename}",  $pdfContent);
                 $pdfUrl = Storage::url("certificates/{$filename}");
 
@@ -105,9 +102,6 @@ class CertificateController extends Controller
                     'issued_at' => now(env('APP_TIMEZONE')),
                     'file_path' => $pdfUrl,
                 ]);
-
-                UploadCertificateJob::dispatch('certificates/' . $filename, base64_encode($pdfContent), $user->id, $course->id)
-                    ->delay(120);
             }
 
             return $this->respondOk('Tạo đường dẫn chứng chỉ thành công', ['pdf_url' => $certificate->file_path]);
