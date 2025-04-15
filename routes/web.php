@@ -297,6 +297,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index')->can('course.read');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
+            Route::get('/{id}/renueveCourse', [CourseController::class, 'renueveCourse'])->name('renueveCourse');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
             Route::put('{id}/update-popular', [CourseController::class, 'updatePopular'])->name('updatePopular');

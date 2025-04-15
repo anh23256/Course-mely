@@ -344,8 +344,52 @@
                                         </div>
                                         <div class="col-md-9 user-info-value">
                                             @if (!empty($user->profile->bio))
-                                                <div class="bio-content">
-                                                    {{ json_decode($user->profile->bio) }}
+                                                <div>
+                                                    @php
+                                                        $socials = json_decode($user->profile->bio, true) ?? '';
+                                                        $socials = is_array($socials) ? $socials : [];
+                                                        $filledSocials = array_filter($socials);
+                                                    @endphp
+                                                    <div class="card-body">
+                                                        @php
+                                                            $icon = [
+                                                                'facebook' => 'ri-facebook-fill',
+                                                                'twitter' => 'ri-twitter-fill',
+                                                                'instagram' => 'ri-instagram-fill',
+                                                                'linkedin' => 'ri-linkedin-fill',
+                                                                'github' => 'ri-github-fill',
+                                                                'dribbble' => 'ri-dribbble-fill',
+                                                                'youtube' => 'ri-youtube-fill',
+                                                                'website' => 'ri-global-fill',
+                                                            ];
+                                                        @endphp
+
+                                                        @if (!empty($filledSocials))
+                                                            <div class="d-flex flex-wrap gap-3">
+                                                                @foreach ($socials as $key => $url)
+                                                                    @if (array_key_exists($key, $icon) && $url)
+                                                                        <a href="{{ $url }}"
+                                                                            class="btn btn-soft-primary btn-sm"
+                                                                            target="_blank">
+                                                                            <i class="{{ $icon[$key] }} me-1"></i>
+                                                                            {{ ucfirst($key) }}
+                                                                        </a>
+                                                                    @endif
+                                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <div class="text-center py-3">
+                                                                <div class="avatar-sm mx-auto mb-3">
+                                                                    <span
+                                                                        class="avatar-title rounded-circle bg-light text-body fs-20">
+                                                                        <i class="ri-links-line"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <p class="text-muted mb-0">Người dùng chưa thêm liên kết
+                                                                    mạng xã hội</p>
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             @else
                                                 <span class="text-muted fst-italic">Chưa có thông tin</span>

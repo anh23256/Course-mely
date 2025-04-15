@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Events\InstructorApproved;
 use App\Models\Approvable;
+use App\Models\InstructorCommission;
 use App\Models\Profile;
 use App\Models\User;
 use App\Notifications\InstructorApprovalNotification;
@@ -61,6 +62,15 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                 event(new InstructorApproved($user));
 
                 $user->notify(new InstructorApprovalNotification($user));
+                
+                InstructorCommission::create([
+                    'instructor_id' => $user->id,
+                    'rate' => 0.6,
+                    'rate_logs' => json_encode([
+                        'rate' => 0.6,
+                        'changed_at' => now()
+                    ])
+                ]);
             } else {
                 $approvable->update([
                     'status' => 'rejected',
