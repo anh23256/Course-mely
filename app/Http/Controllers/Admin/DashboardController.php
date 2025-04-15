@@ -19,7 +19,6 @@ class DashboardController extends Controller
 {
 
     use LoggableTrait;
-    const RATE = 0.4;
     public function index(Request $request)
     {
         try {
@@ -437,7 +436,11 @@ class DashboardController extends Controller
     private function getTopCourse()
     {
         $totalRevenue = DB::table('invoices')
-            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
+            ->select(
+                'course_id',
+                DB::raw('ROUND(SUM(invoices.final_amount*invoices.instructor_commissions), 0) as total_revenue'),
+                DB::raw('COUNT(id) as total_sales')
+            )
             ->where('status', 'Đã thanh toán')
             ->whereMonth('invoices.created_at', now()->month)
             ->whereYear('invoices.created_at', now()->year)

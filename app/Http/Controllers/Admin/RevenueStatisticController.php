@@ -190,8 +190,7 @@ class RevenueStatisticController extends Controller
                 $join->on('invoices.course_id', '=', 'courses.id');
             })
             ->leftJoin('users', function ($join) {
-                $join->on('users.id', '=', 'courses.user_id')
-                    ->where('users.status', '!=', 'blocked');
+                $join->on('users.id', '=', 'courses.user_id');
             });
 
         $totalRevenue = $query

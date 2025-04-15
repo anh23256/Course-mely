@@ -264,8 +264,6 @@ class UserController extends Controller
                 $data['avatar'] = $this->uploadImage($request->file('avatar'), self::FOLDER);
             }
 
-            $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
-
             $user->update($data);
 
             if ($request->has('role')) {
@@ -567,12 +565,14 @@ class UserController extends Controller
     private function search($searchTerm, $query)
     {
         if (!empty($searchTerm)) {
-            $query->whereHas('profile', function ($query) use ($searchTerm) {
-                $query->where('phone', 'LIKE', "%$searchTerm%");
-            })
-                ->orWhere('name', 'LIKE', "%$searchTerm%")
-                ->orWhere('email', 'LIKE', "%$searchTerm%")
-                ->orWhere('code', 'LIKE', "%$searchTerm%");
+            $query->where(function ($query) use ($searchTerm) {
+                $query->orWhere('name', 'LIKE', "%$searchTerm%")
+                    ->orWhere('email', 'LIKE', "%$searchTerm%")
+                    ->orWhere('code', 'LIKE', "%$searchTerm%")
+                    ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                        $query->where('phone', 'LIKE', "%$searchTerm%");
+                    });
+            });
         }
 
         return $query;

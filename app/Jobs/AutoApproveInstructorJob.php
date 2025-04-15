@@ -64,15 +64,6 @@ class AutoApproveInstructorJob implements ShouldQueue
                     $user->syncRoles(['instructor']);
 
                     $user->notify(new InstructorApprovalNotification($user));
-
-                    InstructorCommission::create([
-                        'instructor_id' => $user->id,
-                        'rate' => 0.6,
-                        'rate_logs' => json_encode([
-                            'rate' => 0.6,
-                            'changed_at' => now()
-                        ])
-                    ]);
                 } else {
                     $approvable->update([
                         'status' => 'rejected',

@@ -151,7 +151,7 @@ class TopCourseController extends Controller
     private function getTopCourse(Request $request)
     {
         $totalRevenue = DB::table('invoices')
-            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
+            ->select('course_id', DB::raw('SUM(final_amount*instructor_commissions) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
             ->where('status', 'Đã thanh toán')
             ->orderByDesc('total_revenue')->groupBy('course_id')->limit(10);
 
