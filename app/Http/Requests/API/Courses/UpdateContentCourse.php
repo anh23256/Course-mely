@@ -96,6 +96,7 @@ class UpdateContentCourse extends BaseFormRequest
                     'private',
                 ])
             ],
+            'allow_coding_lesson' => 'nullable|boolean'
         ];
     }
 
@@ -120,6 +121,7 @@ class UpdateContentCourse extends BaseFormRequest
             'visibility.string' => 'Quyền riêng tư phải là chuỗi ký tự.',
             'visibility.in' => 'Quyền riêng tư không hợp lệ.',
             'is_free.in' => 'Trường này phải là 0 hoặc 1.',
+            'allow_coding_lesson.boolean' => 'Dữ liệu trường cho phép bài tập coding phải nhận vào là true và false'
         ];
     }
 }

@@ -2,7 +2,7 @@
     <div class="row g-4 mb-3">
         <div class="col-sm-auto">
             <div>
-                
+
                 <button class="btn btn-danger" id="deleteSelected">
                     <i class="ri-delete-bin-2-line"> Xóa nhiều</i>
                 </button>
@@ -54,9 +54,10 @@
                         <td class="customer_name">{{ $post->id }}</td>
                         <td class="email">{{ $post->title }}</td>
                         <td>
-                            <img class="img-thumbnail" src="{{ $post->thumbnail ?? '' }}" alt="Hình đại diện" width="100">
+                            <img class="img-thumbnail" src="{{ Storage::url($post->thumbnail) }}" alt="Hình đại diện"
+                                width="100">
                         </td>
-                        <td class="text-danger fw-bold">{{ $post->user->name ?? ''}}</td>
+                        <td class="text-danger fw-bold">{{ $post->user->name ?? '' }}</td>
                         <td>{{ $post->category->name ?? '' }}</td>
                         <td class="status col-1">
                             @if ($post->status === 'published')
@@ -70,6 +71,10 @@
                             @elseif($post->status === 'draft')
                                 <span class="badge bg-secondary w-75">
                                     Bản nháp
+                                </span>
+                            @elseif($post->status === 'scheduled')
+                                <span class="badge bg-info w-75">
+                                    Chờ xuất bản
                                 </span>
                             @else
                                 <span class="badge bg-danger w-75">

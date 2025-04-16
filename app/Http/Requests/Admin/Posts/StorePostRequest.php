@@ -27,7 +27,7 @@ class StorePostRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'status' => ['in:draft,pending,published,private'],
+            'status' => ['in:draft,pending,published,private,scheduled'],
             'published_at' => ['nullable', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['nullable'],

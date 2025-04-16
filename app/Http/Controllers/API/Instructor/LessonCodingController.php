@@ -37,6 +37,10 @@ class LessonCodingController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
+            if (!$chapter->course->allow_coding_lesson) {
+                return $this->respondForbidden('Khoá học này không cho phép tạo bài học dạng coding');
+            }
+
             $coding = Coding::query()->create([
                 'title' => $data['title'],
                 'language' => $data['language'],

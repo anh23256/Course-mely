@@ -14,6 +14,7 @@ class Post extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_PUBLISHED = 'published';
     const STATUS_PRIVATE = 'private';
+    const STATUS_SCHEDULED = 'scheduled';
 
     protected $fillable = [
         'user_id',
