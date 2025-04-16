@@ -39,7 +39,7 @@
                             <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                     data-bs-target="#importModal">Import dữ liệu</button>
 
-                            <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
+                            <a href="{{ route('admin.qa-systems.exportFile') }}" class="btn btn-sm btn-success h-75">Export
                                 dữ
                                 liệu</a>
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">

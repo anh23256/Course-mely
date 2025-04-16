@@ -28,7 +28,6 @@ class TagController extends Controller
             return $this->respondOk('Danh sách thẻ phổ biến', $tags);
         } catch (\Exception $e) {
             $this->logError($e);
-    
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
