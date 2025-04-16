@@ -25,6 +25,7 @@ return new class extends Migration
                 \App\Models\Post::STATUS_PENDING,
                 \App\Models\Post::STATUS_PUBLISHED,
                 \App\Models\Post::STATUS_PRIVATE,
+                \App\Models\Post::STATUS_SCHEDULED,
             ])->default(\App\Models\Post::STATUS_DRAFT);
             $table->integer('views')->default(0);
             $table->boolean('is_hot')->default(false);

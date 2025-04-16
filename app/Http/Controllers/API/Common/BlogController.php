@@ -30,8 +30,9 @@ class BlogController extends Controller
                     'tags',
                 ])
                 ->where('status', Post::STATUS_PUBLISHED)
+                ->where('published_at', '<=', now())
                 ->orderByDesc('views')
-                ->paginate(4);
+                ->paginate(10);
 
             if (!$posts) {
                 return $this->respondNotFound('Không tìm thấy bài viết nào');
@@ -69,6 +70,7 @@ class BlogController extends Controller
                     }) : [],
                 ];
             });
+
             return response()->json([
                 'message' => 'Danh sách bài viết:',
                 'data' => $filteredBlogs,
