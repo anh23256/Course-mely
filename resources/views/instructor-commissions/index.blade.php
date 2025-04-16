@@ -315,6 +315,9 @@
                                                     </button>
 
                                                 </td>
+
+                                                <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
+                                            
                                             </tr>
                                         @endforeach
                                     </tbody>
