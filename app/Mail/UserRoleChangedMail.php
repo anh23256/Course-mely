@@ -28,7 +28,6 @@ class UserRoleChangedMail extends Mailable implements ShouldQueue
         $this->newRole = $newRole;
     }
 
-    // Hàm build trong mail
     public function build()
     {
         return $this->view('emails.user-role-changed')

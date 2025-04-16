@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
     <div class="container-fluid">
         <div class="profile-foreground position-relative mx-n4 mt-n4">
@@ -138,7 +137,7 @@
                             <li class="nav-item">
                                 <a class="nav-link fs-14" data-bs-toggle="tab" href="#listStudent" role="tab">
                                     <i class="ri-price-tag-line d-inline-block d-md-none"></i> <span
-                                        class="d-none d-md-inline-block">Danh sách học viên</span>
+                                        class="d-none d-md-inline-block">Thống kê</span>
                                 </a>
                             </li>
                         </ul>
@@ -477,187 +476,125 @@
                 </div>
             </div>
 
-            <div class="tab-pane " id="listStudent" role="tabpanel">
+            <div class="tab-pane dashboard-section" id="listStudent" role="tabpanel">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Danh sách học viên</h5>
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0 fw-bold text-dark">Danh sách học viên</h5>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-3">
 
-                                <div class="row">
-                                    <div class="col-lg-12">
-                                        <div class="card">
-
-                                            <div class="accordion" id="accordionWithicon">
-                                                <div class="row mb-2">
-                                                    <div class="col-12 col-sm-6 col-md-3">
-                                                        <div class="card text-center h-75">
-                                                            <div class="card-body">
-                                                                <h5 class="card-title">Tổng số học viên</h5>
-                                                                <p class="card-text fs-4">
-                                                                    {{ $userCounts->total_students ?? 0 }}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-12 col-sm-6 col-md-3">
-                                                        <div class="card text-center h-75">
-                                                            <div class="card-body">
-                                                                <h5 class="card-title">Số hoc viên hoàn thành</h5>
-                                                                <p class="card-text fs-4 text-success">
-                                                                    {{ $userCounts->completed_students ?? 0 }}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-12 col-sm-6 col-md-3">
-                                                        <div class="card text-center h-75">
-                                                            <div class="card-body">
-                                                                <h5 class="card-title">Số hoc viên đang hoàn thành</h5>
-                                                                <p class="card-text fs-4 text-warning">
-                                                                    {{ $userCounts->in_progress_students ?? 0 }}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-12 col-sm-6 col-md-3">
-                                                        <div class="card text-center h-75">
-                                                            <div class="card-body">
-                                                                <h5 class="card-title">Số hoc viên chưa hoàn thành
-                                                                </h5>
-                                                                <p class="card-text fs-4 text-danger">
-                                                                    {{ $userCounts->not_started_students ?? 0 }}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                <!-- Thêm class metrics-grid -->
+                                <div class="row mb-4 g-3 metrics-grid">
+                                    <div class="col-12 col-sm-6 col-md-3">
+                                        <div class="card metric-card border-0 shadow-sm text-center">
+                                            <div class="card-body p-3">
+                                                <h6 class="text-muted">Tổng số học viên</h6>
+                                                <p class="fs-4 fw-bold text-dark">
+                                                    {{ $userCounts->total_students ?? 0 }}
+                                                </p>
                                             </div>
-
-                                            <div class="listjs-table" id="customerList">
-                                                <div class="table-responsive table-card mt-3 mb-1">
-                                                    <table class="table align-middle table-nowrap" id="customerTable">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>STT</th>
-                                                                <th>Họ và tên</th>
-                                                                <th>Email</th>
-                                                                <th>Trạng thái</th>
-                                                                <th>Bài học gần đây</th>
-                                                                <th>Tiến độ khóa học</th>
-                                                                <th>Nội dung đánh giá</th>
-                                                                <th>Thời gian tham gia khóa học</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody class="list">
-
-                                                            @foreach ($courseUsers as $courseUser)
-                                                                <tr>
-                                                                    <td>{{ $loop->index + 1 }}</td>
-                                                                    <td>{{ $courseUser->user->name }}</td>
-                                                                    <td>{{ $courseUser->user->email }}</td>
-                                                                    <td>{{ $courseUser->completed_at ? 'Hoàn thành' : 'Đang học' }}
-                                                                    </td>
-                                                                    <td>
-
-                                                                        @if (!empty($recentLessons[$courseUser->user_id]))
-                                                                            @php
-                                                                                $recentLesson = $recentLessons[
-                                                                                    $courseUser->user_id
-                                                                                ]->first();
-                                                                            @endphp
-                                                                            <span
-                                                                                class="badge bg-info">{{ $recentLesson->lesson_title }}</span>
-                                                                        @else
-                                                                            <span class="text-muted">Chưa bắt đầu</span>
-                                                                        @endif
-
-                                                                    </td>
-                                                                    <td>{{ $courseUser->progress_percent }}%</td>
-                                                                    <td>
-                                                                        <button class="btn btn-primary"
-                                                                            onclick="showRating({{ $course->id }},
-                                                                        {{ $courseUser->id }})">
-                                                                            Xem đánh giá
-                                                                        </button>
-                                                                    </td>
-                                                                    <td>{{ $courseUser->created_at }}</td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                {{ $courseUsers->links() }}
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-3">
+                                        <div class="card metric-card border-0 shadow-sm text-center">
+                                            <div class="card-body p-3">
+                                                <h6 class="text-muted">Hoàn thành</h6>
+                                                <p class="fs-4 fw-bold text-success">
+                                                    {{ $userCounts->completed_students ?? 0 }}
+                                                </p>
                                             </div>
-
-                                            <div class="d-flex">
-                                                <div class="col-xl-6">
-                                                    <div class="card card-height-100">
-                                                        <div class="card-header align-items-center d-flex">
-                                                            <h4 class="card-title mb-0 flex-grow-1">
-                                                                Đánh giá khoá học
-                                                            </h4>
-                                                            <div class="dateRangePicker"
-                                                                data-filter="topRatingCourseMely">
-                                                            </div>
-                                                        </div><!-- end card header -->
-
-                                                        <div class="card-body">
-                                                            <div id="rating-pie-chart" dir="ltr"></div>
-                                                        </div>
-                                                    </div> <!-- .card-->
-                                                </div> <!-- .col-->
-
-                                                <div class="col-xl-6">
-                                                    <div class="card card-height-100">
-                                                        <div class="card-header align-items-center d-flex">
-                                                            <h4 class="card-title mb-0 flex-grow-1">
-                                                                Tiến độ học tập của học viên
-                                                            </h4>
-                                                        </div><!-- end card header -->
-
-                                                        <div class="card-body">
-                                                            <div id="progress-pie-chart" dir="ltr"></div>
-                                                        </div>
-                                                    </div> <!-- .card-->
-                                                </div> <!-- .col-->
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-3">
+                                        <div class="card metric-card border-0 shadow-sm text-center">
+                                            <div class="card-body p-3">
+                                                <h6 class="text-muted">Đang học</h6>
+                                                <p class="fs-4 fw-bold text-warning">
+                                                    {{ $userCounts->in_progress_students ?? 0 }}
+                                                </p>
                                             </div>
-
-                                            <div>
-                                                <div class="col-xxl-11">
-                                                    <div class="">
-                                                        <div class="card-header border-0 align-items-center d-flex">
-                                                            <h4 class="card-title mb-0 flex-grow-1">Tiến độ hoàn thành theo
-                                                                chương</h4>
-                                                        </div>
-                                                        <div id="chapterProgressChart" class="apex-charts"
-                                                            dir="ltr"></div>
-                                                    </div>
-                                                </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-3">
+                                        <div class="card metric-card border-0 shadow-sm text-center">
+                                            <div class="card-body p-3">
+                                                <h6 class="text-muted">Chưa bắt đầu</h6>
+                                                <p class="fs-4 fw-bold text-danger">
+                                                    {{ $userCounts->not_started_students ?? 0 }}
+                                                </p>
                                             </div>
-
-                                            <div>
-                                                <div class="col-xxl-12">
-                                                    <div class="card">
-                                                        <div class="card-header border-0 align-items-center d-flex">
-                                                            <h4 class="card-title mb-0 flex-grow-1">Doanh thu theo tháng
-                                                            </h4>
-                                                        </div>
-                                                        <div id="monthlyRevenueChart" class="apex-charts" dir="ltr">
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-
-
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="row chart-grid g-4">
+                                    <div class="col-xl-6">
+                                        <div class="card chart-container border-0 shadow-sm h-100">
+                                            <div class="card-header bg-light d-flex align-items-center">
+                                                <h5 class="mb-0 fw-bold flex-grow-1">Đánh giá khóa học</h5>
+                                                <div class="dateRangePicker" data-filter="topRatingCourseMely"></div>
+                                            </div>
+                                            <div class="card-body p-4">
+                                                <div id="rating-pie-chart" class="apex-charts w-100" dir="ltr">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6">
+                                        <div class="card chart-container border-0 shadow-sm h-100">
+                                            <div class="card-header bg-light d-flex align-items-center">
+                                                <h5 class="mb-0 fw-bold flex-grow-1">Tiến độ học tập</h5>
+                                            </div>
+                                            <div class="card-body p-4">
+                                                <div id="progress-pie-chart" class="apex-charts w-100" dir="ltr">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <!-- Các biểu đồ tiến độ -->
+                                <div class="mt-4">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-light d-flex align-items-center">
+                                            <h5 class="mb-0 fw-bold flex-grow-1">Tiến độ hoàn thành theo chương</h5>
+                                        </div>
+                                        <div class="card-body p-4">
+                                            <div id="chapterProgressChart" class="apex-charts w-100" dir="ltr">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="card border-0 shadow-sm">
+                                        <div
+                                            class="card-header bg-light d-flex align-items-center justify-content-between">
+                                            <h5 class="mb-0 fw-bold">Doanh thu theo tháng</h5>
+
+                                            <!-- Dropdown chọn năm -->
+                                            <div>
+                                                <select id="yearFilter" class="form-select form-select-sm w-auto">
+                                                    @for ($year = now()->year; $year >= 2020; $year--)
+                                                        <option value="{{ $year }}">{{ $year }}</option>
+                                                    @endfor
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-4">
+                                            <div id="monthlyRevenueChart" class="apex-charts w-100" dir="ltr"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
 
         </div>
     </div>
@@ -744,14 +681,8 @@
                 return;
             }
 
-            let series = [];
-            let labels = [];
-
-            ratingData.forEach(item => {
-                let rating = item.rating !== null && item.rating !== undefined ? item.rating : "Không có đánh giá";
-                series.push(parseFloat(item.total));
-                labels.push(rating + " sao");
-            });
+            let series = ratingData.map(item => parseFloat(item.total));
+            let labels = ratingData.map(item => `${item.rating} sao`);
 
             let pieOptions = {
                 series: series,
@@ -772,6 +703,7 @@
 
         // Dữ liệu từ PHP truyền sang JavaScript
         let ratingData = @json($ratingsData) || [];
+
         updatePieChart(ratingData);
 
 
@@ -869,9 +801,6 @@
 
         renderProgressChart(chapterProgressData);
 
-
-
-
         let chartRevenue;
 
         function renderRevenueChart(data) {
@@ -892,7 +821,7 @@
             let options = {
                 chart: {
                     height: 350,
-                    type: "line",
+                    type: "area",
                     toolbar: {
                         show: false
                     }
@@ -908,7 +837,8 @@
                     labels: {
                         formatter: value => value.toLocaleString("vi-VN", {
                             style: "currency",
-                            currency: "VND"
+                            currency: "VND",
+                            minimumFractionDigits: 0
                         })
                     }
                 },
@@ -916,9 +846,21 @@
                     y: {
                         formatter: value => value.toLocaleString("vi-VN", {
                             style: "currency",
-                            currency: "VND"
+                            currency: "VND",
+                            minimumFractionDigits: 0
                         })
                     }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: value => value.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                        minimumFractionDigits: 0
+                    })
+                },
+                stroke: {
+                    curve: 'smooth'
                 },
                 colors: ["#00E396"]
             };
@@ -927,9 +869,32 @@
             chartRevenue.render();
         }
 
-        // Chuyển dữ liệu từ Blade PHP sang JavaScript
-        let monthlyRevenueData = @json($monthlyRevenue);
-        renderRevenueChart(monthlyRevenueData);
+        document.addEventListener("DOMContentLoaded", function() {
+            const yearFilter = document.getElementById("yearFilter");
+
+            function fetchRevenueData(year) {
+                $.ajax({
+                    url: "{{ route('admin.courses.renueveCourse', $course->id) }}",
+                    method: 'GET',
+                    data: {
+                        year: year
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        renderRevenueChart(data);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Lỗi khi tải dữ liệu doanh thu:", error);
+                    }
+                });
+            }
+
+            yearFilter.addEventListener("change", function() {
+                fetchRevenueData(this.value);
+            });
+
+            fetchRevenueData(yearFilter.value);
+        });
     </script>
     <script>
         $(document).ready(function() {

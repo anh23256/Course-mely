@@ -34,6 +34,7 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'test_case' => 'nullable|array',
             'test_case.*.input' => 'required|string',
             'test_case.*.output' => 'required|string',
+            'ignore_test_case' => 'nullable|boolean'
         ];
     }
 
@@ -56,6 +57,7 @@ class UpdateLessonCodingRequest extends BaseFormRequest
             'test_case.*.input.string' => 'Input của test case phải là chuỗi',
             'test_case.*.output.required' => 'Output của test case là bắt buộc',
             'test_case.*.output.string' => 'Output của test case phải là chuỗi',
+            'ignore_test_case.boolean' => 'Trường "Bỏ qua test case" phải là kiểu true hoặc false',
         ];
     }
 }

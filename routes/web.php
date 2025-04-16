@@ -36,7 +36,6 @@ use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\TopInstructorController;
 use App\Http\Controllers\Admin\TopStudentController;
 use App\Http\Controllers\Admin\WalletController;
-use App\Models\InstructorCommission;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -258,9 +257,9 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE instructorCommissions =============================
         Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
             Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
-            
+            Route::post('/bulk-update', [InstructorCommissionController::class, 'bulkUpdate'])->name('bulk-update');
+            Route::put('/update-rate-instructor', [InstructorCommissionController::class, 'updateInstructorCommission'])->name('update');
         });
-
         
         #============================== ROUTE SUPPORT BANK =============================
         Route::prefix('support-banks')->as('support-banks.')->group(function () {
@@ -298,6 +297,7 @@ Route::prefix('admin')->as('admin.')
             Route::get('/', [CourseController::class, 'index'])->name('index')->can('course.read');
             Route::get('/exportFile', [CourseController::class, 'export'])->name('exportFile');
             Route::get('/{id}', [CourseController::class, 'show'])->name('show');
+            Route::get('/{id}/renueveCourse', [CourseController::class, 'renueveCourse'])->name('renueveCourse');
             Route::put('{id}/approve', [CourseController::class, 'approve'])->name('approve');
             Route::put('{id}/reject', [CourseController::class, 'reject'])->name('reject');
             Route::put('{id}/update-popular', [CourseController::class, 'updatePopular'])->name('updatePopular');

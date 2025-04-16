@@ -3,10 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\Approvable;
+use App\Models\InstructorCommission;
 use App\Models\User;
 use App\Notifications\InstructorApprovalNotification;
 use App\Notifications\InstructorRejectedNotification;
 use App\Traits\LoggableTrait;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -73,7 +75,6 @@ class AutoApproveInstructorJob implements ShouldQueue
                     $user->notify(new InstructorRejectedNotification($user));
                 }
             });
-
         } catch (\Exception $e) {
             $this->logError($e);
         }

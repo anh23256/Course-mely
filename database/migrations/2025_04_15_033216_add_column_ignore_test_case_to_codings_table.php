@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->decimal('instructor_commissions', 12, 2)->default(0.6)->nullable()->after('final_amount')->comment('Instructor commissions');
+        Schema::table('codings', function (Blueprint $table) {
+            $table->boolean('ignore_test_case')->default(false)->after('test_case');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            //
-            $table->dropColumn('instructor_commissions');
+        Schema::table('codings', function (Blueprint $table) {
+            $table->dropColumn('ignore_test_case');
         });
     }
 };

@@ -12,6 +12,7 @@ use App\Models\Coupon;
 use App\Models\CouponUse;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\InstructorCommission;
 use App\Models\Invoice;
 use App\Models\MembershipPlan;
 use App\Models\MembershipSubscription;
@@ -43,9 +44,6 @@ use PhpParser\Node\Stmt\Return_;
 class TransactionController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
-
-    const adminRate = 0.4;
-    const instructorRate = 1 - self::adminRate;
     const walletMail = 'quaixe121811@gmail.com';
 
     public function index()
@@ -440,6 +438,13 @@ class TransactionController extends Controller
                     }
                 }
 
+                $instructorCommissions = InstructorCommission::query()
+                    ->select('rate')
+                    ->lockForUpdate()
+                    ->where('instructor_id', $course->user_id)->first();
+
+                $instructorCommissions = !empty($instructorCommissions) ? $instructorCommissions->rate : 0.6;
+
                 $invoice = Invoice::create([
                     'user_id' => $userId,
                     'course_id' => $itemId,
@@ -449,6 +454,7 @@ class TransactionController extends Controller
                     'coupon_discount' => $discountAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
+                    'instructor_commissions' => $instructorCommissions,
                     'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'vnpay',
                     'invoice_type' => 'course',
@@ -464,7 +470,7 @@ class TransactionController extends Controller
                     'type' => 'invoice',
                 ]);
 
-                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
+                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount, $instructorCommissions);
 
                 DB::commit();
 
@@ -476,6 +482,13 @@ class TransactionController extends Controller
                     return redirect()->away($frontendUrl . "/not-found");
                 }
 
+                $instructorCommissions = InstructorCommission::query()
+                    ->select('rate')
+                    ->lockForUpdate()
+                    ->where('instructor_id', $memberShipPlan->instructor_id)->first();
+
+                $instructorCommissions = !empty($instructorCommissions) ? $instructorCommissions->rate : 0.6;
+
                 $invoice = Invoice::query()->create([
                     'user_id' => $userId,
                     'course_id' => null,
@@ -483,6 +496,7 @@ class TransactionController extends Controller
                     'amount' => $originalAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
+                    'instructor_commissions' => $instructorCommissions,
                     'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'vnpay',
                     'invoice_type' => 'membership'
@@ -584,7 +598,8 @@ class TransactionController extends Controller
                     $memberShipPlan,
                     $transaction,
                     $invoice,
-                    $finalAmount
+                    $finalAmount,
+                    $instructorCommissions
                 );
 
                 $student = User::query()->find($userId);
@@ -779,6 +794,13 @@ class TransactionController extends Controller
                     }
                 }
 
+                $instructorCommissions = InstructorCommission::query()
+                    ->select('rate')
+                    ->lockForUpdate()
+                    ->where('instructor_id', $course->user_id)->first();
+
+                $instructorCommissions = !empty($instructorCommissions) ? $instructorCommissions->rate : 0.6;
+
                 $invoice = Invoice::create([
                     'user_id' => $userId,
                     'course_id' => $itemId,
@@ -788,6 +810,7 @@ class TransactionController extends Controller
                     'coupon_discount' => $discountAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
+                    'instructor_commissions' => $instructorCommissions,
                     'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'momo',
                     'payment_type' => 'course'
@@ -803,7 +826,7 @@ class TransactionController extends Controller
                     'type' => 'invoice',
                 ]);
 
-                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount);
+                $this->finalBuyCourse($userId, $course, $transaction, $invoice, $discount, $finalAmount, $instructorCommissions);
 
                 DB::commit();
 
@@ -815,6 +838,13 @@ class TransactionController extends Controller
                     return redirect()->away($frontendUrl . "/not-found");
                 }
 
+                $instructorCommissions = InstructorCommission::query()
+                    ->select('rate')
+                    ->lockForUpdate()
+                    ->where('instructor_id', $memberShipPlan->instructor_id)->first();
+
+                $instructorCommissions = !empty($instructorCommissions) ? $instructorCommissions->rate : 0.6;
+
                 $invoice = Invoice::query()->create([
                     'user_id' => $userId,
                     'course_id' => null,
@@ -822,6 +852,7 @@ class TransactionController extends Controller
                     'amount' => $originalAmount,
                     'final_amount' => $finalAmount,
                     'status' => 'Đã thanh toán',
+                    'instructor_commissions' => $instructorCommissions,
                     'code' => 'INV' . Str::upper(Str::random(10)),
                     'payment_method' => 'vnpay',
                     'invoice_type' => 'membership'
@@ -918,11 +949,11 @@ class TransactionController extends Controller
                     ->where('access_status', '!=', 'active')
                     ->update(['access_status' => 'active']);
 
-                $spin =   Spin::query()->create([
+                $spin =  Spin::query()->create([
                     'user_id' => $userId,
                     'spin_count' => 1,
                     'received_at' => now(),
-                    'expires_at' => now()->addDays(7),
+                    'expires_at' => now()->addDays(7)
                 ]);
 
                 $user->notify(new SpinReceivedNotification($user->id, $spin->spin_count, $spin->expires_at));
@@ -932,7 +963,8 @@ class TransactionController extends Controller
                     $memberShipPlan,
                     $transaction,
                     $invoice,
-                    $finalAmount
+                    $finalAmount,
+                    $instructorCommissions
                 );
 
                 $student = User::query()->find($userId);
@@ -954,9 +986,9 @@ class TransactionController extends Controller
         }
     }
 
-    private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null)
+    private function finalBuyCourse($userID, $course, $transaction, $invoice, $discount = null, $finalAmount = null, $instructorCommissions)
     {
-        DB::transaction(function () use ($userID, $course, $transaction, $invoice, $discount, $finalAmount) {
+        DB::transaction(function () use ($userID, $course, $transaction, $invoice, $discount, $finalAmount, $instructorCommissions) {
 
             if ($discount) {
                 $discount->refresh();
@@ -1017,7 +1049,7 @@ class TransactionController extends Controller
                     'user_id' => $course->user_id
                 ]);
 
-            $walletInstructor->balance += $finalAmount * self::instructorRate;
+            $walletInstructor->balance += $finalAmount * $instructorCommissions;
 
             $walletInstructor->save();
 
@@ -1027,19 +1059,19 @@ class TransactionController extends Controller
                         ->value('id'),
                 ]);
 
-            $walletWeb->balance += $finalAmount * self::adminRate;
+            $walletWeb->balance += $finalAmount * (1 - $instructorCommissions);
             $walletWeb->save();
 
             $systemFund = SystemFund::query()->first();
 
             if ($systemFund) {
-                $systemFund->balance += $finalAmount * self::adminRate;
-                $systemFund->pending_balance += $finalAmount * self::instructorRate;
+                $systemFund->balance += $finalAmount * (1 - $instructorCommissions);
+                $systemFund->pending_balance += $finalAmount * $instructorCommissions;
                 $systemFund->save();
             } else {
                 SystemFund::query()->create([
-                    'balance' => $finalAmount * self::adminRate,
-                    'pending_balance' => $finalAmount * self::instructorRate
+                    'balance' => $finalAmount * (1 - $instructorCommissions),
+                    'pending_balance' => $finalAmount * $instructorCommissions
                 ]);
             }
 
@@ -1047,7 +1079,7 @@ class TransactionController extends Controller
                 'transaction_id' => $transaction->id,
                 'user_id' => $userID,
                 'total_amount' => $finalAmount,
-                'retained_amount' => $finalAmount * self::adminRate,
+                'retained_amount' => $finalAmount * (1 - $instructorCommissions),
                 'type' => 'commission_received',
                 'description' => 'Tiền hoa hồng nhận được từ việc bán khóa học: ' . $course->name,
             ]);
@@ -1087,7 +1119,7 @@ class TransactionController extends Controller
         });
     }
 
-    private function finalBuyMembership($userId, $memberShipPlan, $transaction, $invoice, $finalAmount)
+    private function finalBuyMembership($userId, $memberShipPlan, $transaction, $invoice, $finalAmount, $instructorCommissions)
     {
         $memberShipPlan->refresh();
 
@@ -1096,7 +1128,7 @@ class TransactionController extends Controller
                 'user_id' => $memberShipPlan->instructor_id
             ]);
 
-        $walletInstructor->balance += $finalAmount * self::instructorRate;
+        $walletInstructor->balance += $finalAmount * $instructorCommissions;
         $walletInstructor->save();
 
         $walletWeb = Wallet::query()
@@ -1111,13 +1143,13 @@ class TransactionController extends Controller
         $systemFund = SystemFund::query()->first();
 
         if ($systemFund) {
-            $systemFund->balance += $finalAmount * self::adminRate;
-            $systemFund->pending_balance += $finalAmount * self::instructorRate;
+            $systemFund->balance += $finalAmount * (1 - $instructorCommissions);
+            $systemFund->pending_balance += $finalAmount * $instructorCommissions;
             $systemFund->save();
         } else {
             SystemFund::query()->create([
-                'balance' => $finalAmount * self::adminRate,
-                'pending_balance' => $finalAmount * self::instructorRate
+                'balance' => $finalAmount * (1 - $instructorCommissions),
+                'pending_balance' => $finalAmount * $instructorCommissions
             ]);
         }
 
@@ -1125,7 +1157,7 @@ class TransactionController extends Controller
             'transaction_id' => $transaction->id,
             'user_id' => $userId,
             'total_amount' => $finalAmount,
-            'retained_amount' => $finalAmount * self::adminRate,
+            'retained_amount' => $finalAmount * (1 - $instructorCommissions),
             'type' => 'commission_received',
             'description' => 'Phí đăng ký gói membership: ' . $memberShipPlan->name,
         ]);

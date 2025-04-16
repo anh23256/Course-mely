@@ -19,7 +19,6 @@ class DashboardController extends Controller
 {
 
     use LoggableTrait;
-    const RATE = 0.4;
     public function index(Request $request)
     {
         try {
@@ -286,7 +285,7 @@ class DashboardController extends Controller
     private function getTotalAmount()
     {
         return DB::table('invoices')
-            ->selectRaw('ROUND(SUM(final_amount),0) as total_revenue, ROUND(SUM(final_amount * ?),0) as total_profit', [self::RATE])
+            ->selectRaw('ROUND(SUM(final_amount),0) as total_revenue, ROUND(SUM(final_amount * (1 - instructor_commissions)),0) as total_profit')
             ->where('status', 'Đã thanh toán');
     }
 
@@ -388,14 +387,13 @@ class DashboardController extends Controller
                 'users.email',
                 'users.avatar',
                 'users.created_at',
-                DB::raw('ROUND(SUM(invoices.final_amount) * 0.6, 0) as total_revenue'),
+                DB::raw('ROUND(SUM(invoices.final_amount*invoices.instructor_commissions), 0) as total_revenue'),
             )
             ->leftJoinSub($invoices, 'invoices', function ($join) {
                 $join->on('invoices.course_id', '=', 'courses.id');
             })
             ->leftJoin('users', function ($join) {
-                $join->on('users.id', '=', 'courses.user_id')
-                    ->where('users.status', '!=', 'blocked');
+                $join->on('users.id', '=', 'courses.user_id');
             });
 
         $totalRevenue = $query
@@ -438,7 +436,11 @@ class DashboardController extends Controller
     private function getTopCourse()
     {
         $totalRevenue = DB::table('invoices')
-            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
+            ->select(
+                'course_id',
+                DB::raw('ROUND(SUM(invoices.final_amount*invoices.instructor_commissions), 0) as total_revenue'),
+                DB::raw('COUNT(id) as total_sales')
+            )
             ->where('status', 'Đã thanh toán')
             ->whereMonth('invoices.created_at', now()->month)
             ->whereYear('invoices.created_at', now()->year)
@@ -508,12 +510,12 @@ class DashboardController extends Controller
             ->selectRaw('
             DATE(created_at) as date,
             ROUND(SUM(final_amount), 0) as total_revenue,
-            ROUND(SUM(final_amount * ?), 0) as total_profit,
+            ROUND(SUM(final_amount * (1 - instructor_commissions)), 0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
             SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
             SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay
-        ', [self::RATE])
+        ')
             ->where('status', 'Đã thanh toán')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)

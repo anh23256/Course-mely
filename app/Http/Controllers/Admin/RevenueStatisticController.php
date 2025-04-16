@@ -184,14 +184,13 @@ class RevenueStatisticController extends Controller
                 'users.email',
                 'users.avatar',
                 'users.created_at',
-                DB::raw('ROUND(SUM(invoices.final_amount) * 0.6, 0) as total_revenue'),
+                DB::raw('ROUND(SUM(invoices.final_amount*invoices.instructor_commissions), 0) as total_revenue'),
             )
             ->leftJoinSub($invoices, 'invoices', function ($join) {
                 $join->on('invoices.course_id', '=', 'courses.id');
             })
             ->leftJoin('users', function ($join) {
-                $join->on('users.id', '=', 'courses.user_id')
-                    ->where('users.status', '!=', 'blocked');
+                $join->on('users.id', '=', 'courses.user_id');
             });
 
         $totalRevenue = $query
@@ -235,7 +234,7 @@ class RevenueStatisticController extends Controller
     private function getTopCourse(Request $request)
     {
         $totalRevenue = DB::table('invoices')
-            ->select('course_id', DB::raw('SUM(final_amount) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
+            ->select('course_id', DB::raw('SUM(final_amount*instructor_commissions) as total_revenue'), DB::raw('COUNT(id) as total_sales'))
             ->where('status', 'Đã thanh toán')
             ->orderByDesc('total_revenue')->groupBy('course_id')->limit(10);
 
@@ -305,12 +304,12 @@ class RevenueStatisticController extends Controller
             MONTH(created_at) as month,
             YEAR(created_at) as year,
             ROUND(SUM(final_amount), 0) as total_revenue,
-            ROUND(SUM(final_amount * ?), 0) as total_profit,
+            ROUND(SUM(final_amount *(1 - instructor_commissions)), 0) as total_profit,
             SUM(CASE WHEN invoice_type = "course" THEN 1 ELSE 0 END) as total_course_sales,
             SUM(CASE WHEN invoice_type = "membership" THEN 1 ELSE 0 END) as total_membership_sales,
             SUM(CASE WHEN payment_method = "momo" THEN 1 ELSE 0 END) as total_payment_method_momo,
             SUM(CASE WHEN payment_method = "vnpay" THEN 1 ELSE 0 END) as total_payment_method_vnpay
-        ', [self::RATE])
+        ')
             ->where('status', 'Đã thanh toán')
             ->groupByRaw('YEAR(created_at), MONTH(created_at)')
             ->orderByRaw('YEAR(created_at) ASC, MONTH(created_at) ASC');

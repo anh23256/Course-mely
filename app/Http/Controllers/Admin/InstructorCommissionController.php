@@ -4,19 +4,24 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstructorCommission;
+use App\Models\User;
+use App\Notifications\Client\InstructorModificationRate;
+use App\Traits\ApiResponseTrait;
+use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InstructorCommissionController extends Controller
 {
-    //
+    use LoggableTrait, ApiResponseTrait;
+
     public function index(Request $request)
     {
+        $title = 'Quản lý và phân chia doanh thu';
+        $subTitle = 'Phân chia doanh thu';
 
-
-        $title = 'Quản lý hoa hồng';
-        $subTitle = 'Danh sách hoa hồng giảng viên';
-
-        $queryInstructorCommission = InstructorCommission::query()->with(['instructor', 'course']);
+        $queryInstructorCommission = InstructorCommission::query()->with('instructor');
 
         if ($request->hasAny(['id', 'status', 'startDate', 'endDate']))
             $queryInstructorCommission = $this->filter($request, $queryInstructorCommission);
@@ -28,7 +33,6 @@ class InstructorCommissionController extends Controller
             });
         }
 
-
         $instructorCommissions = $queryInstructorCommission->paginate(10);
 
         if ($request->ajax()) {
@@ -36,5 +40,158 @@ class InstructorCommissionController extends Controller
             return response()->json(['html' => $html]);
         }
         return view('instructor-commissions.index', compact('instructorCommissions', 'title', 'subTitle'));
+    }
+
+    public function updateInstructorCommission(Request $request)
+    {
+        try {
+            $rate = $request->input('rate', 0.6);
+            $id = $request->input('id', '');
+
+            if ($rate > 0.9 || $rate < 0.1) {
+                return $this->respondError('Hoa hồng của giảng viên phải nằm trong khoảng 10% đến 90%');
+            }
+
+            if (!$id) return $this->respondError('Thông tin không hợp lệ');
+
+            $instructorCommission = InstructorCommission::find($id);
+
+            if (!$instructorCommission) return $this->respondNotFound('Không tìm thấy thông tin');
+
+            $logs = json_decode($instructorCommission->rate_logs, true);
+            $logs = is_array($logs) ? $logs : [];
+
+            $oldRate = $instructorCommission->rate;
+            $newRate = round($rate, 2);
+
+            $note = $newRate > $oldRate
+                ? 'Tăng tỷ lệ hoa hồng từ ' . ($oldRate * 100) . '% lên ' . ($newRate * 100) . '%'
+                : ($newRate < $oldRate
+                    ? 'Giảm tỷ lệ hoa hồng từ ' . ($oldRate * 100) . '% xuống ' . ($newRate * 100) . '%'
+                    : 'Giữ nguyên tỷ lệ hoa hồng');
+
+            $logs[] = [
+                'old_rate' => $instructorCommission->rate,
+                'new_rate' => round($rate, 2),
+                'changed_at' => now()->toDateTimeString(),
+                'user_name' => auth()->user()->name ?? 'Hệ thống tự động đánh giá',
+                'note' => $note
+            ];
+
+            $instructorCommission->rate =  $newRate;
+            $instructorCommission->rate_logs = json_encode($logs);
+            $instructorCommission->updated_at = now();
+            $instructorCommission->save();
+
+
+            $instructor = User::where('id', $instructorCommission->instructor_id)->first();
+
+            if ($instructor) {
+                if ($oldRate != $newRate) {
+                    $instructor->notify(new InstructorModificationRate($newRate, $instructor));
+                }
+            }
+
+            return $this->respondOk('Thay đổi hoa hồng của giảng viên thành công', $instructorCommission);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra vui lòng thử lại');
+        }
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'exists:instructor_commissions,id',
+                'method' => 'required|in:fixed,increment,decrement',
+                'value' => 'required|numeric|min:0|max:100',
+                'note' => 'nullable|string|max:255',
+            ]);
+
+            $ids = $validated['ids'];
+            $method = $validated['method'];
+            $value = $validated['value'] / 100;
+            $updatedCount = 0;
+
+            DB::beginTransaction();
+
+            foreach ($ids as $id) {
+                $commission = InstructorCommission::findOrFail($id);
+                $oldRate = $commission->rate;
+                $newRate = $oldRate;
+
+                switch ($method) {
+                    case 'fixed':
+                        $newRate = $value;
+                        break;
+                    case 'increment':
+                        $newRate = min(1, $oldRate + $value);
+                        break;
+                    case 'decrement':
+                        $newRate = max(0, $oldRate - $value);
+                        break;
+                }
+
+                if ($newRate > 0.9) {
+                    $newRate = 0.9;
+                }
+                if ($newRate < 0.1) {
+                    $newRate = 0.1;
+                }
+
+                if ($newRate == $oldRate) {
+                    continue;
+                }
+
+                $logs = json_decode($commission->rate_logs, true) ?: [];
+
+                $changeType = $newRate > $oldRate ? 'Tăng' : ($newRate < $oldRate ? 'Giảm' : 'Giữ nguyên');
+                $formattedOld = rtrim(rtrim(number_format($oldRate * 100, 2), '0'), '.');
+                $formattedNew = rtrim(rtrim(number_format($newRate * 100, 2), '0'), '.');
+                $autoNote = match ($changeType) {
+                    'Tăng' => "Tăng tỷ lệ hoa hồng từ {$formattedOld}% lên {$formattedNew}%",
+                    'Giảm' => "Giảm tỷ lệ hoa hồng từ {$formattedOld}% xuống {$formattedNew}%",
+                    default => 'Giữ nguyên tỷ lệ hoa hồng'
+                };
+
+                $logs[] = [
+                    'old_rate' => $oldRate,
+                    'new_rate' => $newRate,
+                    'changed_at' => now(),
+                    'user_name' => auth()->user()->name ?? 'Hệ thống tự động đánh giá',
+                    'note' =>  $autoNote
+                ];
+
+                if ($newRate != $oldRate) {
+                    $commission->rate = $newRate;
+                    $commission->rate_logs = json_encode($logs);
+                    $commission->save();
+
+                    $instructor = User::find($commission->instructor_id);
+                    if ($instructor) {
+                        $instructor->notify(new InstructorModificationRate($newRate, $instructor));
+                    }
+
+                    $updatedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật thành công ' . $updatedCount . ' giảng viên',
+                'updated' => $updatedCount
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
