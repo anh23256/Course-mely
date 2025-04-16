@@ -454,7 +454,7 @@ class CourseController extends Controller
                 ->get();
 
             if ($trashedCourses->isEmpty()) {
-                return $this->respondNotFound('Không tìm thấy khóa học nào trong thùng rác');
+                return $this->respondOk('Không tìm thấy khóa học nào trong thùng rác', $trashedCourses);
             }
 
             return $this->respondOk(
@@ -494,14 +494,16 @@ class CourseController extends Controller
                     continue;
                 }
 
-                if ($course->courseUsers()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
-                    continue;
-                }
+                if (!$course->is_practical_course) {
+                    if ($course->courseUsers()->count() > 0) {
+                        $errorMessages[] = "Khóa học '{$course->name}' đã có học viên đăng ký, không thể xóa";
+                        continue;
+                    }
 
-                if ($course->chapters()->count() > 0) {
-                    $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
-                    continue;
+                    if ($course->chapters()->count() > 0) {
+                        $errorMessages[] = "Khóa học '{$course->name}' đang chứa chương học, không thể xóa";
+                        continue;
+                    }
                 }
 
                 $course->delete();

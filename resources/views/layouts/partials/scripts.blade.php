@@ -45,7 +45,7 @@
             }
         });
 
-        $(".sweet-confirm").click(function(event) {
+        $(document).on('click', '.sweet-confirm', function(event) {
             event.preventDefault();
 
             let deleteUrl = $(this).attr("href");

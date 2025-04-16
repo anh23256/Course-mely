@@ -379,7 +379,7 @@
                                     <div class="col-md-6">
                                         <div class="form-floating position-relative">
                                             <i class="ri-mail-line input-icon"></i>
-                                            <input disabled type="email"
+                                            <input readonly type="email"
                                                 class="form-control @error('email') is-invalid @enderror" name="email"
                                                 id="inputEmail4" placeholder="Nhập email" value="{{ $user->email }}"
                                                 style="padding-left: 2.5rem;">
@@ -493,7 +493,7 @@
                                 </div>
                             </div>
                         </div>
-                    </form>
+                         </form>
                 </div>
             </div>
         </div>

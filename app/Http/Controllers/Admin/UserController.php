@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\Users\StoreUserRequest;
 use App\Http\Requests\Admin\Users\UpdateProfileRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Imports\UsersImport;
+use App\Models\Course;
 use App\Models\User;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpParser\Node\Stmt\Return_;
@@ -173,8 +175,18 @@ class UserController extends Controller
 
             $user->load('profile');
 
+            $queryCourses = Course::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->orderByDesc('created_at');
+
+
+            $totalStudents = (clone $queryCourses)->sum('total_student');
+            $courses = $queryCourses->paginate(5);
+
             return view('users.show', compact([
                 'user',
+                'courses',
+                'totalStudents',
                 'title',
                 'subTitle'
             ]));
@@ -248,17 +260,24 @@ class UserController extends Controller
             DB::beginTransaction();
 
             $currencyAvatar = $user->avatar;
+            $currencyRole = $user->roles->pluck('name')->first();
 
             if ($request->hasFile('avatar')) {
                 $data['avatar'] = $this->uploadImage($request->file('avatar'), self::FOLDER);
             }
 
-            $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
-
             $user->update($data);
 
             if ($request->has('role')) {
 
+                $newRole  = $request->input('role');
+
+                if( $currencyRole !== $newRole )
+                {
+                    $user->syncRoles([]);
+                    $user->assignRole($newRole);
+                    Mail::to($user->email)->send(new \App\Mail\UserRoleChangedMail($user, $currencyRole, $newRole));
+                }
                 $user->syncRoles([]);
 
                 $user->assignRole($request->input('role'));
@@ -556,12 +575,14 @@ class UserController extends Controller
     private function search($searchTerm, $query)
     {
         if (!empty($searchTerm)) {
-            $query->whereHas('profile', function ($query) use ($searchTerm) {
-                $query->where('phone', 'LIKE', "%$searchTerm%");
-            })
-                ->orWhere('name', 'LIKE', "%$searchTerm%")
-                ->orWhere('email', 'LIKE', "%$searchTerm%")
-                ->orWhere('code', 'LIKE', "%$searchTerm%");
+            $query->where(function ($query) use ($searchTerm) {
+                $query->orWhere('name', 'LIKE', "%$searchTerm%")
+                    ->orWhere('email', 'LIKE', "%$searchTerm%")
+                    ->orWhere('code', 'LIKE', "%$searchTerm%")
+                    ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                        $query->where('phone', 'LIKE', "%$searchTerm%");
+                    });
+            });
         }
 
         return $query;
@@ -586,7 +607,7 @@ class UserController extends Controller
             if ($request->filled('current_password') && $request->filled('password')) {
                 $data['password'] = Hash::make($request->password);
             } else {
-                unset($data['password']); 
+                unset($data['password']);
             }
 
             $data['email'] = $user->email;
@@ -606,7 +627,6 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('admin.administrator.profile', $user)->with('success', 'Cập nhật thành công');
-
         } catch (\Exception $e) {
             DB::rollBack();
 

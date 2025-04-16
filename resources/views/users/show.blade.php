@@ -146,12 +146,12 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
+
         .action-buttons .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .action-buttons .btn i {
             margin-right: 0.5rem;
         }
@@ -170,7 +170,7 @@
                 width: 120px;
                 height: 120px;
             }
-            
+
             .user-avatar-container {
                 margin-bottom: 1.5rem;
             }
@@ -194,7 +194,8 @@
                                 </a>
                             </li>
                             <li class="breadcrumb-item">
-                                <a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">
+                                <a
+                                    href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">
                                     Danh sách người dùng
                                 </a>
                             </li>
@@ -215,7 +216,7 @@
                                 <i class="mdi mdi-account-circle me-1"></i>
                                 Thông tin chi tiết:
                                 <span class="text-primary">{{ $user->name }}</span>
-                                
+
                                 @if ($user->status === 'active')
                                     <span class="status-badge bg-success text-white ms-2">
                                         <i class="mdi mdi-check-circle"></i>Hoạt động
@@ -243,21 +244,25 @@
                             <!-- User Avatar Column -->
                             <div class="col-lg-3 col-md-4">
                                 <div class="user-avatar-container">
-                                    <img src="{{ $user->avatar }}" alt="Avatar của {{ $user->name }}" class="img-fluid rounded-circle user-avatar">
+                                    <img src="{{ $user->avatar }}" alt="Avatar của {{ $user->name }}"
+                                        class="img-fluid rounded-circle user-avatar">
                                     <h5 class="user-name">{{ $user->name }}</h5>
                                     <p class="user-code">{{ $user->code }}</p>
-                                    
-                                    <div class="verification-badge {{ $user->email_verified_at ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }}">
-                                        <i class="mdi {{ $user->email_verified_at ? 'mdi-check-circle' : 'mdi-alert-circle' }} me-1"></i>
+
+                                    <div
+                                        class="verification-badge {{ $user->email_verified_at ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }}">
+                                        <i
+                                            class="mdi {{ $user->email_verified_at ? 'mdi-check-circle' : 'mdi-alert-circle' }} me-1"></i>
                                         {{ $user->email_verified_at ? 'Đã xác minh' : 'Email chưa xác minh' }}
                                     </div>
-                                    
+
                                     <div class="mt-4">
-                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary w-100 mb-2">
+                                        <a href="{{ route('admin.users.edit', $user->id) }}"
+                                            class="btn btn-sm btn-outline-primary w-100 mb-2">
                                             <i class="mdi mdi-pencil me-1"></i>Chỉnh sửa thông tin
                                         </a>
-                                        
-                                        @if($user->status !== 'active')
+
+                                        @if ($user->status !== 'active')
                                             <button class="btn btn-sm btn-outline-success w-100">
                                                 <i class="mdi mdi-check-circle me-1"></i>Kích hoạt tài khoản
                                             </button>
@@ -299,7 +304,7 @@
                                             <i class="mdi mdi-phone user-info-icon"></i>Số điện thoại:
                                         </div>
                                         <div class="col-md-9 user-info-value">
-                                            @if(!empty($user->profile->phone))
+                                            @if (!empty($user->profile->phone))
                                                 {{ $user->profile->phone }}
                                             @else
                                                 <span class="text-muted fst-italic">Chưa có thông tin</span>
@@ -312,7 +317,7 @@
                                             <i class="mdi mdi-map-marker user-info-icon"></i>Địa chỉ:
                                         </div>
                                         <div class="col-md-9 user-info-value">
-                                            @if(!empty($user->profile->address))
+                                            @if (!empty($user->profile->address))
                                                 {{ $user->profile->address }}
                                             @else
                                                 <span class="text-muted fst-italic">Chưa có thông tin</span>
@@ -325,7 +330,7 @@
                                             <i class="mdi mdi-briefcase user-info-icon"></i>Kinh nghiệm:
                                         </div>
                                         <div class="col-md-9 user-info-value">
-                                            @if(!empty($user->profile->experience))
+                                            @if (!empty($user->profile->experience))
                                                 {{ $user->profile->experience }}
                                             @else
                                                 <span class="text-muted fst-italic">Chưa có thông tin</span>
@@ -338,12 +343,69 @@
                                             <i class="mdi mdi-text-box user-info-icon"></i>Tiểu sử:
                                         </div>
                                         <div class="col-md-9 user-info-value">
-                                            @if(!empty($user->profile->bio))
-                                                <div class="bio-content">
-                                                    {{ json_decode($user->profile->bio) }}
+                                            @if (!empty($user->profile->bio))
+                                                <div>
+                                                    @php
+                                                        $socials = json_decode($user->profile->bio, true) ?? '';
+                                                        $socials = is_array($socials) ? $socials : [];
+                                                        $filledSocials = array_filter($socials);
+                                                    @endphp
+                                                    <div class="card-body">
+                                                        @php
+                                                            $icon = [
+                                                                'facebook' => 'ri-facebook-fill',
+                                                                'twitter' => 'ri-twitter-fill',
+                                                                'instagram' => 'ri-instagram-fill',
+                                                                'linkedin' => 'ri-linkedin-fill',
+                                                                'github' => 'ri-github-fill',
+                                                                'dribbble' => 'ri-dribbble-fill',
+                                                                'youtube' => 'ri-youtube-fill',
+                                                                'website' => 'ri-global-fill',
+                                                            ];
+                                                        @endphp
+
+                                                        @if (!empty($filledSocials))
+                                                            <div class="d-flex flex-wrap gap-3">
+                                                                @foreach ($socials as $key => $url)
+                                                                    @if (array_key_exists($key, $icon) && $url)
+                                                                        <a href="{{ $url }}"
+                                                                            class="btn btn-soft-primary btn-sm"
+                                                                            target="_blank">
+                                                                            <i class="{{ $icon[$key] }} me-1"></i>
+                                                                            {{ ucfirst($key) }}
+                                                                        </a>
+                                                                    @endif
+                                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <div class="text-center py-3">
+                                                                <div class="avatar-sm mx-auto mb-3">
+                                                                    <span
+                                                                        class="avatar-title rounded-circle bg-light text-body fs-20">
+                                                                        <i class="ri-links-line"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <p class="text-muted mb-0">Người dùng chưa thêm liên kết
+                                                                    mạng xã hội</p>
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             @else
                                                 <span class="text-muted fst-italic">Chưa có thông tin</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="row user-info-row">
+                                        <div class="col-md-3 user-info-label">
+                                            <i class="mdi mdi-account-group user-info-icon"></i>Tổng số học viên:
+                                        </div>
+                                        <div class="col-md-9 user-info-value">
+                                            @if ($totalStudents > 0)
+                                                {{ $totalStudents }}
+                                            @else
+                                                <span class="text-muted fst-italic">Chưa có học viên</span>
                                             @endif
                                         </div>
                                     </div>
@@ -365,9 +427,61 @@
                                             {{ \Carbon\Carbon::parse($user->updated_at)->format('d/m/Y H:i:s') }}
                                         </div>
                                     </div>
+                                    @if ($user->hasRole('instructor'))
+
+                                        <div class="mt-4">
+                                            <h5 class="mb-3 fw-bold">
+                                                📚 Danh sách khóa học của giảng viên <span
+                                                    class="text-primary">{{ $user->name }}</span>
+                                            </h5>
+
+                                            @if ($courses->count() > 0)
+                                                <div class="table-responsive shadow-sm rounded border bg-white">
+                                                    <table class="table table-hover mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>STT</th>
+                                                                <th>Ảnh</th>
+                                                                <th>Tên khóa học</th>
+                                                                <th>Số học viên</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach ($courses as $index => $course)
+                                                                <tr>
+                                                                    <td>{{ $courses->firstItem() + $index }}</td>
+                                                                    <td>
+                                                                        <img src="{{ $course->thumbnail ?? '/images/placeholder.png' }}"
+                                                                            alt="thumbnail" class="img-thumbnail"
+                                                                            style="width: 80px; height: 50px; object-fit: cover;">
+                                                                    </td>
+                                                                    <td>{{ $course->name }}</td>
+                                                                    <td>{{ $course->total_student }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Pagination -->
+                                                <div class="mt-3">
+                                                    {{ $courses->links() }}
+                                                </div>
+                                            @else
+                                                <div class="alert alert-info mt-3">
+                                                    Không có khóa học nào được tạo bởi giảng viên này.
+                                                </div>
+                                            @endif
+                                        </div>
+
+
+
+
+                                    @endif
 
                                     <div class="action-buttons">
-                                        <a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}" class="btn btn-light">
+                                        <a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}"
+                                            class="btn btn-light">
                                             <i class="mdi mdi-arrow-left"></i>Quay lại
                                         </a>
                                         <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning">

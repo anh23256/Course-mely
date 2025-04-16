@@ -18,7 +18,8 @@ class Coding extends Model
         'result_code',
         'solution_code',
         'instruct',
-        'test_case'
+        'test_case',
+        'ignore_test_case'
     ];
 
     public function lessons()

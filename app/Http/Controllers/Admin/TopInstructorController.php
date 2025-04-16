@@ -177,7 +177,7 @@ class TopInstructorController extends Controller
                 'users.email',
                 'users.avatar',
                 'users.created_at',
-                DB::raw('ROUND(SUM(invoices.final_amount) * 0.6, 0) as total_revenue'),
+                DB::raw('ROUND(SUM(invoices.final_amount*invoices.instructor_commissions), 0) as total_revenue'),
             )
             ->leftJoinSub($invoices, 'invoices', function ($join) {
                 $join->on('invoices.course_id', '=', 'courses.id');

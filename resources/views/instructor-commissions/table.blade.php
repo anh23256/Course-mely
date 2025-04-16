@@ -75,33 +75,7 @@
                                 @endif
                             </td>
                             <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
-                            {{-- <td>
-                                <div class="d-flex gap-2">
-                                    <div class="remove">
-                                        <a
-                                            href="{{ route('admin.instructorCommissions.edit', $instructorCommission->id) }}">
-                                            <button class="btn btn-sm btn-warning edit-item-btn">
-                                                <span class="ri-edit-box-line"></span>
-                                            </button>
-                                        </a>
-                                    </div>
-                                    <div class="edit">
-                                        <a
-                                            href="{{ route('admin.instructorCommissions.show', $instructorCommission->id) }}">
-                                            <button class="btn btn-sm btn-info edit-item-btn">
-                                                <span class="ri-eye-line"></span>
-                                            </button>
-                                        </a>
-                                    </div>
-                                    <div class="remove">
-                                        <a href="{{ route('admin.instructorCommissions.destroy', $instructorCommission->id) }}"
-                                            class="sweet-confirm btn btn-sm btn-danger remove-item-btn">
-                                            <span class="ri-delete-bin-7-line"></span>
-                                        </a>
-                                    </div>
-
-                                </div>
-                            </td> --}}
+                            
 
 
                         </tr>

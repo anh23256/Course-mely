@@ -455,7 +455,8 @@ class CommonController extends Controller
         Session::put('chat_history', $chatHistory);
 
         return response()->json([
-            'reply' => $aiReply
+            'reply' => $aiReply,
+            'time' => Carbon::now()->format('H:i')
         ]);
     }
     public function resetChatBox()
