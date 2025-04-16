@@ -5,9 +5,9 @@ namespace App\Imports;
 use App\Models\QaSystem;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-
-class QaSystemImport implements ToModel, WithHeadingRow
+class QaSystemImport implements ToModel, WithMapping
 {
     /**
      * @param array $row
@@ -23,15 +23,15 @@ class QaSystemImport implements ToModel, WithHeadingRow
     /**
      * Ánh xạ dữ liệu từ file Excel theo index thay vì tên cột
      */
-    public function map($row)
+    public function map($row):array
     {
         return [
-            'title'         => $row[1] ?? "",
-            'description'   => $row[2] ?? "",
-            'question'      => $row[3] ?? "",
-            'options'       => isset($row[4]) ? json_encode(explode(',', $row[4])) : json_encode([]),
-            'answer_type'   => in_array(strtolower($row[5] ?? ""), ['single', 'multiple']) ? strtolower($row[5]) : 'single',
-            'status'        => isset($row[6]) && is_numeric($row[6]) ? (int) $row[6] : 0, // Đảm bảo status là số hoặc mặc định là 0
+            'title'         => $row[0] ?? "",
+            'description'   => $row[1] ?? "",
+            'question'      => $row[2] ?? "",
+            'options'       => isset($row[3]) ? json_encode(explode(',', $row[3])) : json_encode([]),
+            'answer_type'   => in_array(strtolower($row[4] ?? ""), ['single', 'multiple']) ? strtolower($row[4]) : 'single',
+            'status'        => isset($row[5]) && is_numeric($row[5]) ? (int) $row[5] : 0, 
         ];
     }
 }

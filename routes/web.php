@@ -444,6 +444,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/create', [\App\Http\Controllers\Admin\QaSystemController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'store'])->name('store');
                 Route::post('/import', [QaSystemController::class, 'importFile'])->name('import');
+                Route::get('/exportFile', [QaSystemController::class, 'export'])->name('exportFile');
                 Route::get('/edit/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'edit'])->name('edit');
                 Route::put('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'update'])->name('update');
                 Route::delete('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'destroy'])->name('destroy');

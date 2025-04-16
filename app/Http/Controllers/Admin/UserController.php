@@ -243,7 +243,7 @@ class UserController extends Controller
 
             $validator = $request->validated();
 
-            $data = $request->except('avatar');
+            $data = $request->except('avatar','email');
 
             DB::beginTransaction();
 

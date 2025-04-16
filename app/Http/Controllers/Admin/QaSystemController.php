@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CoursesExport;
+use App\Exports\QaSystemExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\QaSystems\ImportQaSystemRequest;
 use App\Http\Requests\Admin\QaSystems\StoreQaSystemRequest;
@@ -163,6 +165,18 @@ class QaSystemController extends Controller
 
         return redirect()->route('admin.qa-systems.index')->with('success', 'Import dữ liệu thành công');
 
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+    public function export()
+    {
+        try {
+
+            return Excel::download(new QaSystemExport, 'QaSystem.xlsx');
         } catch (\Exception $e) {
 
             $this->logError($e);
