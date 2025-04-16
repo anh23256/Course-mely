@@ -39,7 +39,7 @@ class LessonCodingController extends Controller
 
             $coding = Coding::query()->create([
                 'title' => $data['title'],
-                'language' => $data['language']
+                'language' => $data['language'],
             ]);
 
             $data['order'] = $chapter->lessons->max('order') + 1;
@@ -131,12 +131,12 @@ class LessonCodingController extends Controller
                 ]);
             }
 
-            $data['hints'] = isset($data['hints']) && is_array($data['hints'])
-                ? json_encode($data['hints'])
+            $data['hints'] = isset($data['hints'])
+                ? $data['hints']
                 : $coding->hints;
 
-            $data['test_case'] = isset($data['test_case']) && is_array($data['test_case'])
-                ? json_encode($data['test_case'])
+            $data['test_case'] = isset($data['test_case'])
+                ? $data['test_case']
                 : $coding->test_case;
 
             $coding->update($data);

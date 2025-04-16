@@ -264,6 +264,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('/get-rating-stats', [StatisticController::class, 'getRatingStats']);
                     Route::get('/get-total-sales-by-month', [StatisticController::class, 'getTotalSalesByMonth']);
                     Route::get('/get-monthly-memberships-revenue', [StatisticController::class, 'getRevenueMembershipsByMonth']);
+                    Route::get('/ratings', [StatisticController::class, 'getRatingsStatistics']);
+                    Route::get('/follows', [StatisticController::class, 'getFollowsStatistics']);
                 });
 
             #============================== ROUTE MEMBERSHIP PLAN =================================

@@ -257,9 +257,9 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE instructorCommissions =============================
         Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
             Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
+            Route::post('/bulk-update', [InstructorCommissionController::class, 'bulkUpdate'])->name('bulk-update');
             Route::put('/update-rate-instructor', [InstructorCommissionController::class, 'updateInstructorCommission'])->name('update');
         });
-
         
         #============================== ROUTE SUPPORT BANK =============================
         Route::prefix('support-banks')->as('support-banks.')->group(function () {
