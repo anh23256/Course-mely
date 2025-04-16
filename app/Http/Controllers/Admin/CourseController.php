@@ -9,6 +9,7 @@ use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\CourseUser;
 use App\Models\Document;
+use App\Models\Invoice;
 use App\Models\LessonProgress;
 use App\Models\Quiz;
 use App\Models\Rating;
@@ -17,6 +18,7 @@ use App\Models\Video;
 use App\Traits\FilterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
@@ -30,7 +32,7 @@ class CourseController extends Controller
         $title = 'Quản lý khoá học';
         $subTitle = 'Danh sách khoá học trên hệ thống';
 
-        $queryCourses = Course::query()->with(['user', 'category']);
+        $queryCourses = Course::query()->where('status', 'approved')->with(['user', 'category']);
 
         if ($request->has('query') && $request->input('query')) {
             $search = $request->input(key: 'query');
@@ -50,7 +52,7 @@ class CourseController extends Controller
 
         return view('courses.index', compact('title', 'subTitle', 'courses'));
     }
-    
+
     public function reject(Request $request, $id)
     {
         $course = Course::findOrFail($id);
@@ -121,13 +123,7 @@ class CourseController extends Controller
             ->get()
             ->keyBy('user_id');
 
-
-        $ratingsData = Rating::where('course_id', $id)
-            ->whereNotNull('rate')
-            ->selectRaw('rate, COUNT(*) as total')
-            ->groupBy('rate')
-            ->orderByDesc('rate')
-            ->get();
+        $ratingsData = $this->getCourseRatingBreakdown($id)->get();
 
         $chapterProgressStats = Chapter::query()
             ->where('course_id', $id)
@@ -137,16 +133,6 @@ class CourseController extends Controller
                         ROUND(AVG(CASE WHEN lesson_progress.is_completed = 1 THEN 100 ELSE lesson_progress.last_time_video END), 2) as avg_progress')
             ->groupBy('chapters.id', 'chapters.title')
             ->get();
-
-        $monthlyRevenue = Transaction::query()
-            ->where('transactionable_type', Course::class) // Chỉ lấy giao dịch liên quan đến khóa học
-            ->where('transactionable_id', $id) // Chỉ lấy giao dịch của khóa học hiện tại
-            ->where('status', 'completed') // Chỉ tính giao dịch đã hoàn thành
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total_revenue')
-            ->groupBy('year', 'month')
-            ->orderByRaw('year ASC, month ASC')
-            ->get();
-
 
         // dd($chapterProgressStats->toArray());
 
@@ -188,7 +174,6 @@ class CourseController extends Controller
             'recentLessons',
             'ratingsData',
             'chapterProgressStats',
-            'monthlyRevenue',
             'documents',
             'quizzes',
             'videos',
@@ -215,6 +200,29 @@ class CourseController extends Controller
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
+    }
+
+    public function renueveCourse(string $id, Request $request)
+    {
+        $year = $request->input('year',2025);
+
+        $monthlyRevenue = Invoice::query()
+            ->where(['status' => 'Đã thanh toán', 'invoice_type' => 'course', 'course_id' => $id])
+            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, ROUND(SUM(final_amount*(1-instructor_commissions)),0) as total_revenue')
+            ->groupBy('year', 'month')
+            ->orderByRaw('year ASC, month ASC')
+            ->whereYear('created_at',$year)
+            ->get();
+
+        return response()->json($monthlyRevenue);
+    }
+    private function getCourseRatingBreakdown($id)
+    {
+        return DB::table('ratings')
+            ->select('rate as rating', DB::raw('COUNT(*) as total'))
+            ->where('course_id', $id)
+            ->groupBy('rate')
+            ->orderBy('rating', 'asc');
     }
 
     private function filter($request, $query)
