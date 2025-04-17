@@ -20,28 +20,29 @@ class AiController extends Controller
         $this->cloudflare = $cloudflare;
     }
 
-//    public function generateText(Request $request)
-//    {
-//        try {
-//            $request->validate([
-//                'title' => 'required|string',
-//            ]);
-//
-//            $response = $this->aiService->generateText($request->title);
-//
-//            return $this->respondOk('Lấy dữ liệu thành công', $response);
-//        } catch (\Exception $e) {
-//            $this->logError($e, $request->all());
-//
-//            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
-//        }
-//    }
+    //    public function generateText(Request $request)
+    //    {
+    //        try {
+    //            $request->validate([
+    //                'title' => 'required|string',
+    //            ]);
+    //
+    //            $response = $this->aiService->generateText($request->title);
+    //
+    //            return $this->respondOk('Lấy dữ liệu thành công', $response);
+    //        } catch (\Exception $e) {
+    //            $this->logError($e, $request->all());
+    //
+    //            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
+    //        }
+    //    }
 
     public function generateTextCloudflare(Request $request)
     {
         try {
             $request->validate([
                 'title' => 'required|string',
+                'type' => 'sometimes|string'
             ]);
 
             $response = $this->cloudflare->generateText($request);

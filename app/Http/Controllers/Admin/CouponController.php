@@ -123,7 +123,7 @@ class CouponController extends Controller
     {
         $coupon = Coupon::query()
             ->with(['couponUses' => function ($query) {
-                $query->select('id', 'coupon_id', 'user_id'); // This is limiting the columns
+                $query->select('id', 'coupon_id', 'user_id');
             }, 'couponUses.user:id,name,email,avatar'])
             ->findOrFail($id);
 

@@ -33,6 +33,9 @@ class BannerController extends Controller
             $systemAverageRating = Rating::query()->whereHas('course', function ($query) {
                 $query->where('status', 'approved');
             })->avg('rate');
+            
+            $systemAverageRating = round($systemAverageRating ?? 0, 1);
+
             $popularCourses = Course::query()
                 ->where('status', 'approved')
                 ->where('is_popular', '=', 1)
