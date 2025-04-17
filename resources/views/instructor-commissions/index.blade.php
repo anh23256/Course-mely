@@ -190,44 +190,57 @@
                                 <i class="ri-edit-2-line align-bottom"></i> Cập nhật hàng loạt
                             </button>
 
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="ri-filter-2-line"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
-                                    style="min-width: 500px;">
-                                    <div class="container">
-                                        <div class="container">
-                                            <div class="row">
+                            <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
+                                Tìm kiếm nâng cao
+                            </button>
 
-                                                <li class="col-6">
-                                                    <div class="mb-2">
-                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
-                                                        <input type="date" class="form-control form-control-sm"
-                                                            name="start_date" id="startDate" data-filter
-                                                            value="{{ request()->input('start_date') ?? '' }}">
-                                                    </div>
-                                                </li>
-                                                <li class="col-6">
-                                                    <div class="mb-2">
-                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
-                                                        <input type="date" class="form-control form-control-sm"
-                                                            name="expire_date" id="endDate" data-filter
-                                                            value="{{ request()->input('expire_date') ?? '' }}">
-                                                    </div>
-                                                </li>
-                                            </div>
-                                            <li class="mt-2">
-                                                <button class="btn btn-sm btn-primary w-100" id="applyFilter">Áp
-                                                    dụng</button>
-                                            </li>
-                                        </div>
-                                    </div>
-                                </ul>
-                            </div>
                         </div>
 
+                    </div>
+
+                    <!-- Tìm kiếm nâng cao -->
+
+                    <div id="advancedSearch" class="card-header" style="display:none;">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Mã giảng viên</label>
+                                    <input class="form-control form-control-sm" name="instructor_code" type="text"
+                                        value="{{ request()->input('instructor_code') ?? '' }}" placeholder="Nhập mã giảng viên..."
+                                        data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Tên giảng viên</label>
+                                    <input class="form-control form-control-sm" name="instructor_name" type="text"
+                                        value="{{ request()->input('instructor_name') ?? '' }}" placeholder="Nhập tên giảng viên..."
+                                        data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control form-control-sm" name="instructor_email" type="text"
+                                        value="{{ request()->input('instructor_email') ?? '' }}" placeholder="Nhập email..."
+                                        data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Lợi nhuận</label>
+                                    <input class="form-control form-control-sm" name="commission_amount" type="text"
+                                        value="{{ request()->input('commission_amount') ?? '' }}" placeholder="Nhập lợi nhuận..."
+                                        data-advanced-filter>
+                                </div>
+                                <div class="col-md-3 mt-2">
+                                    <label class="form-label">Ngày tham gia</label>
+                                    <input type="date" class="form-control form-control-sm"
+                                        name="start_date" value="{{ request()->input('start_date') ?? '' }}" 
+                                        data-advanced-filter>
+                                </div>
+                                
+                                <div class="mt-3 text-end">
+                                    <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
+                                    <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
+                                </div>
+
+                            </div>
+                        </form>
                     </div>
 
                     <div class="card-body" id="item_List">
@@ -316,7 +329,7 @@
 
                                                 </td>
 
-                                                <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
+                                               
                                             
                                             </tr>
                                         @endforeach
@@ -358,10 +371,11 @@
                                             : number_format($log['old_rate'] * 100, 2))
                                         : 'N/A';
 
-                                    $formattedNewRate =
-                                        fmod($log['new_rate'] * 100, 1) == 0
+                                    $formattedNewRate = isset($log['new_rate'])
+                                        ? fmod($log['new_rate'] * 100, 1) == 0
                                             ? number_format($log['new_rate'] * 100, 0)
-                                            : number_format($log['new_rate'] * 100, 2);
+                                            : number_format($log['new_rate'] * 100, 2)
+                                        : 'N/A';
 
                                     $noteClass = '';
                                     if (isset($log['note'])) {

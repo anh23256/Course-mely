@@ -7,6 +7,7 @@ use App\Models\InstructorCommission;
 use App\Models\User;
 use App\Notifications\Client\InstructorModificationRate;
 use App\Traits\ApiResponseTrait;
+use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class InstructorCommissionController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait;
+    use LoggableTrait, ApiResponseTrait, FilterTrait;
 
     public function index(Request $request)
     {
@@ -23,8 +24,35 @@ class InstructorCommissionController extends Controller
 
         $queryInstructorCommission = InstructorCommission::query()->with('instructor');
 
-        if ($request->hasAny(['id', 'status', 'startDate', 'endDate']))
-            $queryInstructorCommission = $this->filter($request, $queryInstructorCommission);
+        if ($request->filled('instructor_name')) {
+            $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('instructor_name') . '%');
+            });
+        }
+    
+        if ($request->filled('instructor_code')) {
+            $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->input('instructor_code') . '%');
+            });
+        }
+    
+        if ($request->filled('instructor_email')) {
+            $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->input('instructor_email') . '%');
+            });
+        }
+    
+        if ($request->filled('commission_amount')) {
+            $queryInstructorCommission->where('commission_amount', $request->input('commission_amount'));
+        }
+    
+        if ($request->filled('start_date')) {
+            $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
+        }
+    
+        if ($request->filled('end_date')) {
+            $queryInstructorCommission->where('created_at', '<=', $request->input('end_date'));
+        }
 
         if ($request->has('query') && $request->query('query')) {
             $searchTerm = $request->query('query');
@@ -194,4 +222,7 @@ class InstructorCommissionController extends Controller
             ], 500);
         }
     }
+
+    
+    
 }
