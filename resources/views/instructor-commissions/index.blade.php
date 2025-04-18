@@ -190,6 +190,11 @@
                                 <i class="ri-edit-2-line align-bottom"></i> Cập nhật hàng loạt
                             </button>
 
+
+                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.courses.exportFile') }}">Export dữ
+                                liệu</a>
+                                
+
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
