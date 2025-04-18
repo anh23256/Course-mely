@@ -32,13 +32,13 @@
                     <div class="row text text-white-50 text-center">
                         <div class="col-lg-6 col-4">
                             <div class="p-2">
-                                <h4 class="text-white mb-1">{{$approval->follower_count}}</h4>
+                                <h4 class="text-white mb-1">{{ $approval->follower_count }}</h4>
                                 <p class="fs-14 mb-0">Followers</p>
                             </div>
                         </div>
                         <div class="col-lg-6 col-4">
                             <div class="p-2">
-                                <h4 class="text-white mb-1">{{$approval->following_count}}</h4>
+                                <h4 class="text-white mb-1">{{ $approval->following_count }}</h4>
                                 <p class="fs-14 mb-0">Following</p>
                             </div>
                         </div>
@@ -146,9 +146,10 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="progress animated-progress custom-progress progress-label mb-2">
-                                                <div class="progress-bar {{ $score < 50 ? 'bg-danger' : ($score < 80 ? 'bg-warning' : 'bg-success') }}" 
-                                                     role="progressbar" style="width: {{ $score }}%"
-                                                     aria-valuenow="{{ $score }}" aria-valuemin="0" aria-valuemax="100">
+                                                <div class="progress-bar {{ $score < 50 ? 'bg-danger' : ($score < 80 ? 'bg-warning' : 'bg-success') }}"
+                                                    role="progressbar" style="width: {{ $score }}%"
+                                                    aria-valuenow="{{ $score }}" aria-valuemin="0"
+                                                    aria-valuemax="100">
                                                 </div>
                                             </div>
                                             <div class="text-center">
@@ -167,32 +168,76 @@
                                             <ul class="list-group list-group-flush">
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Họ tên</span>
-                                                    <span class="fw-medium">{{ $approval->user->name ?? 'No information' }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->user->name ?? 'No information' }}</span>
                                                 </li>
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Số điện thoại</span>
-                                                    <span class="fw-medium">{{ $approval->user->profile->phone ?? 'No information' }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->user->profile->phone ?? 'No information' }}</span>
                                                 </li>
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Email</span>
-                                                    <span class="fw-medium">{{ $approval->user->email ?? 'No information' }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->user->email ?? 'No information' }}</span>
                                                 </li>
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Exp</span>
-                                                    <span class="fw-medium">{{ $approval->user->profile->experience ?? 'No information' }} years</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->user->profile->experience ?? 'No information' }}
+                                                        years</span>
                                                 </li>
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Địa chỉ</span>
-                                                    <span class="fw-medium">{{ $approval->user->profile->address ?? 'No information' }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->user->profile->address ?? 'No information' }}</span>
                                                 </li>
                                                 <li class="list-group-item px-0 d-flex justify-content-between">
                                                     <span class="text-muted">Tham gia</span>
-                                                    <span class="fw-medium">{{ $approval->created_at->format('d/m/Y') }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ $approval->created_at->format('d/m/Y') }}</span>
                                                 </li>
+
+                                                @if (!empty($approval->user->profile->identity_verification))
+                                                <li class="list-group-item px-0 d-flex justify-content-between">
+                                                    <span class="text-muted">Xác minh danh tính</span>
+                                                    <button type="button" class="badge bg-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#modalId">
+                                                        Xác minh danh tính
+                                                    </button>
+                                                </li>
+                                                @endif
+
+                                                <div class="modal fade" id="modalId" tabindex="-1"
+                                                    data-bs-backdrop="static" data-bs-keyboard="false" role="dialog"
+                                                    aria-labelledby="modalTitleId" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-sm"
+                                                        role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="modalTitleId">
+                                                                    Xác minh danh tính
+                                                                </h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body"><img
+                                                                    src="{{ Storage::url($approval->user->profile->identity_verification) }}"
+                                                                    class="img-fluid rounded-top" alt="" />
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">
+                                                                    Đóng
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </ul>
                                         </div>
                                     </div>
-                                
+
                                 </div>
                                 <!--end col-->
                                 <div class="col-xxl-9">
@@ -205,16 +250,18 @@
                                         </div>
                                         <!--end card-body-->
                                     </div><!-- end card -->
-                                     
+
                                     <div class="card">
-                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <div
+                                            class="card-header bg-light d-flex justify-content-between align-items-center">
                                             <h5 class="card-title mb-0">Mạng xã hội</h5>
                                             @php
-                                                $socials = $approval->user->profile->bio ?? '';
+                                                $socials = json_decode($approval->user->profile->bio, true) ?? '';
                                                 $socials = is_array($socials) ? $socials : [];
                                                 $filledSocials = array_filter($socials);
                                             @endphp
-                                            <span class="badge {{ empty($filledSocials) ? 'bg-warning-subtle text-warning' : 'bg-info-subtle text-info' }}">
+                                            <span
+                                                class="badge {{ empty($filledSocials) ? 'bg-warning-subtle text-warning' : 'bg-info-subtle text-info' }}">
                                                 {{ count($filledSocials) }} liên kết
                                             </span>
                                         </div>
@@ -236,7 +283,8 @@
                                                 <div class="d-flex flex-wrap gap-3">
                                                     @foreach ($socials as $key => $url)
                                                         @if (array_key_exists($key, $icon) && $url)
-                                                            <a href="{{ $url }}" class="btn btn-soft-primary btn-sm" target="_blank">
+                                                            <a href="{{ $url }}"
+                                                                class="btn btn-soft-primary btn-sm" target="_blank">
                                                                 <i class="{{ $icon[$key] }} me-1"></i>
                                                                 {{ ucfirst($key) }}
                                                             </a>
@@ -250,7 +298,8 @@
                                                             <i class="ri-links-line"></i>
                                                         </span>
                                                     </div>
-                                                    <p class="text-muted mb-0">Người dùng chưa thêm liên kết mạng xã hội</p>
+                                                    <p class="text-muted mb-0">Người dùng chưa thêm liên kết mạng xã hội
+                                                    </p>
                                                 </div>
                                             @endif
                                         </div>
@@ -463,6 +512,11 @@
 
 @push('page-scripts')
     <script>
+        const myModal = new bootstrap.Modal(
+            document.getElementById("modalId"),
+            options,
+        );
+
         $(document).ready(function() {
             $(".approve").click(function(event) {
                 event.preventDefault();
