@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\InstructorCommissionExport;
 use App\Http\Controllers\Controller;
 use App\Models\InstructorCommission;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InstructorCommissionController extends Controller
 {
@@ -29,27 +31,27 @@ class InstructorCommissionController extends Controller
                 $q->where('name', 'like', '%' . $request->input('instructor_name') . '%');
             });
         }
-    
+
         if ($request->filled('instructor_code')) {
             $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
                 $q->where('code', 'like', '%' . $request->input('instructor_code') . '%');
             });
         }
-    
+
         if ($request->filled('instructor_email')) {
             $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
                 $q->where('email', 'like', '%' . $request->input('instructor_email') . '%');
             });
         }
-    
+
         if ($request->filled('commission_amount')) {
             $queryInstructorCommission->where('commission_amount', $request->input('commission_amount'));
         }
-    
+
         if ($request->filled('start_date')) {
             $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
         }
-    
+
         if ($request->filled('end_date')) {
             $queryInstructorCommission->where('created_at', '<=', $request->input('end_date'));
         }
@@ -223,6 +225,15 @@ class InstructorCommissionController extends Controller
         }
     }
 
-    
-    
+    public function export()
+    {
+        try {
+            return Excel::download(new InstructorCommissionExport, 'phan_chia_hoa_hong.xlsx');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
 }

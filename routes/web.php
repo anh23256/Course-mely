@@ -257,6 +257,7 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE instructorCommissions =============================
         Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
             Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
+            Route::get('/export', [InstructorCommissionController::class, 'export'])->name('export');
             Route::post('/bulk-update', [InstructorCommissionController::class, 'bulkUpdate'])->name('bulk-update');
             Route::put('/update-rate-instructor', [InstructorCommissionController::class, 'updateInstructorCommission'])->name('update');
         });
