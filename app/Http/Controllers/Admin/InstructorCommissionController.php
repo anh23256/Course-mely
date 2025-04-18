@@ -32,6 +32,7 @@ class InstructorCommissionController extends Controller
             });
         }
 
+
         if ($request->filled('instructor_code')) {
             $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
                 $q->where('code', 'like', '%' . $request->input('instructor_code') . '%');
@@ -44,6 +45,7 @@ class InstructorCommissionController extends Controller
             });
         }
 
+
         if ($request->filled('commission_amount')) {
             $queryInstructorCommission->where('commission_amount', $request->input('commission_amount'));
         }
@@ -52,6 +54,16 @@ class InstructorCommissionController extends Controller
             $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
         }
 
+
+    
+        if ($request->filled('commission_amount')) {
+            $queryInstructorCommission->where('commission_amount', $request->input('commission_amount'));
+        }
+    
+        if ($request->filled('start_date')) {
+            $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
+        }
+    
         if ($request->filled('end_date')) {
             $queryInstructorCommission->where('created_at', '<=', $request->input('end_date'));
         }
@@ -236,4 +248,8 @@ class InstructorCommissionController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    
+    
+
 }
