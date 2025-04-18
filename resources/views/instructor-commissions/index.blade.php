@@ -170,7 +170,7 @@
                                                         data-old="{{ fmod($instructorCommission->rate * 100, 1) == 0
                                                             ? number_format($instructorCommission->rate * 100, 0)
                                                             : number_format($instructorCommission->rate * 100, 2) }}"
-                                                        data-name="{{ $instructorCommission->instructor->name }}""
+                                                        data-name="{{ $instructorCommission->instructor->name }}"
                                                         style="width: 80px;" />
                                                 </td>
                                                 <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
@@ -201,7 +201,7 @@
                                                                         aria-label="Đóng"></button>
                                                                 </div>
                                                                 <div class="modal-body">
-                                                                    @if ($logs)
+                                                                    @if (!empty($logs))
                                                                         <ul
                                                                             class="list-unstyled mb-0 small history-log-list">
                                                                             @foreach ($logs as $log)

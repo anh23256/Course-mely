@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class InstructorModificationRate extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -41,6 +42,7 @@ class InstructorModificationRate extends Notification implements ShouldBroadcast
      */
     public function toMail(): MailMessage
     {
+        Log::info($this->newRate);
         return (new MailMessage)
             ->view('emails.update_rate_instructor', [
                 'newSharePercentage' => $this->newRate,

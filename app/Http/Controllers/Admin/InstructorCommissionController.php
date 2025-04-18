@@ -72,8 +72,9 @@ class InstructorCommissionController extends Controller
             $instructorCommission->save();
 
             $instructor = User::where('id', $instructorCommission->instructor_id)->first();
+            Log::info($rate*100);
 
-            $instructor->notify(new InstructorModificationRate($rate, $instructor));
+            $instructor->notify(new InstructorModificationRate($rate*100, $instructor));
 
             return $this->respondOk('Thay đổi hoa hồng của giảng viên thành công', $instructorCommission);
         } catch (\Exception $e) {

@@ -74,6 +74,23 @@
                             </table>
                         </div>
                     </div>
+
+                    <div class="p-3 border rounded bg-light-subtle">
+                        <h6 class="mb-3">🧐 Tiêu chí đánh giá gói thành viên</h6>
+                        <ul class="list-unstyled">
+                            @foreach ($conditionalMembership['pass'] as $passed)
+                                <li class="d-flex align-items-center mb-2 text-success">
+                                    <i class='bx bx-check-circle me-2'></i> {{ $passed }}
+                                </li>
+                            @endforeach
+
+                            @foreach ($conditionalMembership['errors'] as $error)
+                                <li class="d-flex align-items-center mb-2 text-danger">
+                                    <i class='bx bx-x-circle me-2'></i> {{ $error }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -133,14 +150,16 @@
                                     </tr>
                                     <tr>
                                         <th>Ngày tạo</th>
-                                        <td> {{ \Carbon\Carbon::parse($approval->membershipPlan->created_at)->format('d/m/Y') }}
+                                        <td>{{ \Carbon\Carbon::parse($approval->membershipPlan->created_at)->format('d/m/Y') }}
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div>
-                            <h6 class="mb-4">Quyền lợi thành viên</h6>
+
+                        {{-- Quyền lợi thành viên --}}
+                        <div class="mt-4">
+                            <h6 class="mb-3">Quyền lợi thành viên</h6>
                             @php
                                 $benefits = $approval->membershipPlan->benefits ?? '';
                             @endphp
@@ -150,7 +169,7 @@
                                     @foreach ($benefits as $benefit)
                                         <li class="benefit-item">
                                             <div class="benefit-icon">
-                                                <i class=" ri-checkbox-circle-fill"></i>
+                                                <i class="ri-checkbox-circle-fill"></i>
                                             </div>
                                             <span>{{ $benefit }}</span>
                                         </li>
