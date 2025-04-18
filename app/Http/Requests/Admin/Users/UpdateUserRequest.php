@@ -28,7 +28,7 @@ class UpdateUserRequest extends FormRequest
         $roles = array_values($roles);
 
         return [
-            'name'       => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s]+$/u'],    
+            'name'       => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s]+$/u'],
             'avatar'     => ['nullable', 'image', 'max:2000'],
             'status'     => ['required', 'in:active,inactive,blocked'],
             'role' => [

@@ -1,21 +1,5 @@
-<div class="listjs-table">
-    <div class="row g-4 mb-3">
-        <div class="col-sm-auto">
-
-        </div>
-        <div class="col-sm">
-            <div class="d-flex justify-content-sm-end">
-                <div class="search-box ms-2">
-                    <form action="{{ route('admin.instructor-commissions.index') }}"
-                        method="get">
-                        <input type="text" name="search_full" class="form-control search"
-                            placeholder="Search..." value="{{ old('search_full') }}">
-                        <i class="ri-search-line search-icon"></i>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="card-body" id="item_List">
+    <div class="listjs-table">
 
     <div class="table-responsive table-card mt-3 mb-1">
         <table class="table align-middle table-nowrap">
@@ -43,118 +27,90 @@
                                     value="{{ $instructorCommission->id }}">
                             </div>
                         </th>
+                        <th style="width: 60px;">STT</th>
+                        <th>Giảng viên</th>
+                        <th style="width: 180px;">Lợi nhuận (%)</th>
+                        <th style="width: 160px;">Ngày tham gia</th>
+                        <th style="width: 160px;">Cập nhật lúc</th>
+                        <th style="width: 120px;">Lịch sử</th>
+                    </tr>
+                </thead>
+                <tbody class="list form-check-all">
+                    @foreach ($instructorCommissions as $instructorCommission)
+                        <tr>
+                            <th scope="row">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="itemID"
+                                        value="{{ $instructorCommission->id }}">
+                                </div>
+                            </th>
 
-                        <td class="id">{{ $loop->iteration }}</td>
+                            <td class="id">{{ $loop->iteration }}</td>
 
-                        <td>{{ $instructorCommission->instructor->name ?? 'Không tìm thấy' }}</td>
-                        <td>
-                            <input type="number" step="1"
-                                class="form-control input-rate"
-                                data-id="{{ $instructorCommission->id }}"
-                                value="{{ fmod($instructorCommission->rate * 100, 1) == 0
-                                    ? number_format($instructorCommission->rate * 100, 0)
-                                    : number_format($instructorCommission->rate * 100, 2) }}"
-                                data-old="{{ fmod($instructorCommission->rate * 100, 1) == 0
-                                    ? number_format($instructorCommission->rate * 100, 0)
-                                    : number_format($instructorCommission->rate * 100, 2) }}"
-                                data-name="{{ $instructorCommission->instructor->name }}"
-                                style="width: 80px;" />
-                        </td>
-                        <td>{{ $instructorCommission->updated_at->format('d/m/Y H:i') }}</td>
-                        <td>
-                            @php
-                                $logs = json_decode($instructorCommission->rate_logs, true);
-                            @endphp
-
-                            <button type="button" class="btn btn-sm btn-info"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalLog_{{ $instructorCommission->id }}">
-                                <i class="ri-eye-line"></i>
-                            </button>
-
-                            <div class="modal fade" id="modalLog_{{ $instructorCommission->id }}"
-                                tabindex="-1"
-                                aria-labelledby="modalLogLabel_{{ $instructorCommission->id }}"
-                                aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-scrollable modal-md">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title"
-                                                id="modalLogLabel_{{ $instructorCommission->id }}">
-                                                Lịch sử thay đổi hoa hồng
-                                            </h5>
-                                            <button type="button" class="btn-close"
-                                                data-bs-dismiss="modal"
-                                                aria-label="Đóng"></button>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ $instructorCommission->instructor->avatar ?? '' }}"
+                                        alt="Avatar" class="user-avatar me-2">
+                                    <div class="d-flex flex-column">
+                                        <div class="fw-medium">
+                                            {{ $instructorCommission->instructor->name ?? 'Không tìm thấy' }}
                                         </div>
-                                        <div class="modal-body">
-                                            @if (!empty($logs))
-                                                <ul
-                                                    class="list-unstyled mb-0 small history-log-list">
-                                                    @foreach ($logs as $log)
-                                                        @php
-                                                            $formattedRate =
-                                                                fmod($log['rate'] * 100, 1) == 0
-                                                                    ? number_format(
-                                                                        $log['rate'] * 100,
-                                                                        0,
-                                                                    )
-                                                                    : number_format(
-                                                                        $log['rate'] * 100,
-                                                                        2,
-                                                                    );
-                                                        @endphp
-                                                        <li
-                                                            class="mb-2 d-flex justify-content-between align-items-center border-bottom pb-1">
-                                                            <span
-                                                                class="text-danger fw-semibold fs-14">{{ $formattedRate }}%</span>
-                                                            <span
-                                                                class="badge bg-secondary text-white fs-13">{{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}</span>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <em>Không có lịch sử thay đổi</em>
-                                            @endif
-                                        </div>
+                                        @if ($instructorCommission->instructor->code ?? false)
+                                            <small
+                                                class="text-muted">{{ $instructorCommission->instructor->code }}</small>
+                                        @endif
+                                        @if ($instructorCommission->instructor->email ?? false)
+                                            <small
+                                                class="text-muted">{{ $instructorCommission->instructor->email }}</small>
+                                        @endif
                                     </div>
                                 </div>
-                            </div>
-                        </td>
-                        {{-- <td>
-                            <div class="d-flex gap-2">
-                                <div class="remove">
-                                    <a
-                                        href="{{ route('admin.instructorCommissions.edit', $instructorCommission->id) }}">
-                                        <button class="btn btn-sm btn-warning edit-item-btn">
-                                            <span class="ri-edit-box-line"></span>
-                                        </button>
-                                    </a>
+                            </td>
+                            <td>
+                                <div class="input-group" style="width: 120px;">
+                                    <input type="number" step="1"
+                                        class="form-control input-rate text-center"
+                                        data-id="{{ $instructorCommission->id }}"
+                                        value="{{ fmod($instructorCommission->rate * 100, 1) == 0
+                                            ? number_format($instructorCommission->rate * 100, 0)
+                                            : number_format($instructorCommission->rate * 100, 2) }}"
+                                        data-old="{{ fmod($instructorCommission->rate * 100, 1) == 0
+                                            ? number_format($instructorCommission->rate * 100, 0)
+                                            : number_format($instructorCommission->rate * 100, 2) }}"
+                                        data-name="{{ $instructorCommission->instructor->name }}" />
+                                    <span class="input-group-text bg-light">%</span>
                                 </div>
-                                <div class="edit">
-                                    <a
-                                        href="{{ route('admin.instructorCommissions.show', $instructorCommission->id) }}">
-                                        <button class="btn btn-sm btn-info edit-item-btn">
-                                            <span class="ri-eye-line"></span>
-                                        </button>
-                                    </a>
-                                </div>
-                                <div class="remove">
-                                    <a href="{{ route('admin.instructorCommissions.destroy', $instructorCommission->id) }}"
-                                        class="sweet-confirm btn btn-sm btn-danger remove-item-btn">
-                                        <span class="ri-delete-bin-7-line"></span>
-                                    </a>
-                                </div>
+                            </td>
+                            <td><i
+                                    class="ri-time-line text-muted me-1"></i>{{ $instructorCommission->instructor->created_at->format('d/m/Y H:i') ?? '' }}
+                            </td>
+                            <td><i
+                                    class="ri-time-line text-muted me-1"></i>{{ $instructorCommission->updated_at->format('d/m/Y H:i') ?? '' }}
+                            </td>
+                            <td>
+                                @php
+                                    $logs = json_decode($instructorCommission->rate_logs, true);
+                                @endphp
 
-                            </div>
-                        </td> --}}
+                                <button type="button" class="btn btn-sm btn-info"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalLog_{{ $instructorCommission->id }}">
+                                    <i class="ri-eye-line"></i>
+                                </button>
 
+                            </td>
 
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                           
+                        
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{ $instructorCommissions->appends(request()->query())->links() }}
     </div>
 
-    {{ $instructorCommissions->appends(request()->query())->links() }}
+    
 </div>
+

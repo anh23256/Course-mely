@@ -257,9 +257,9 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE instructorCommissions =============================
         Route::prefix('instructor-commissions')->as('instructor-commissions.')->group(function () {
             Route::get('/', [InstructorCommissionController::class, 'index'])->name('index');
+            Route::post('/bulk-update', [InstructorCommissionController::class, 'bulkUpdate'])->name('bulk-update');
             Route::put('/update-rate-instructor', [InstructorCommissionController::class, 'updateInstructorCommission'])->name('update');
         });
-
         
         #============================== ROUTE SUPPORT BANK =============================
         Route::prefix('support-banks')->as('support-banks.')->group(function () {
@@ -444,6 +444,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/create', [\App\Http\Controllers\Admin\QaSystemController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'store'])->name('store');
                 Route::post('/import', [QaSystemController::class, 'importFile'])->name('import');
+                Route::get('/exportFile', [QaSystemController::class, 'export'])->name('exportFile');
                 Route::get('/edit/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'edit'])->name('edit');
                 Route::put('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'update'])->name('update');
                 Route::delete('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'destroy'])->name('destroy');

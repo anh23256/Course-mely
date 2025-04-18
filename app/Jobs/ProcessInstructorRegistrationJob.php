@@ -67,10 +67,11 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                     'instructor_id' => $user->id,
                     'rate' => 0.6,
                     'rate_logs' => json_encode([
-                        [
-                            'rate' => 0.6,
-                            'changed_at' => now()
-                        ]
+                        'old_rate' => null,
+                        'new_rate' => 0.6,
+                        'changed_at' => now(),
+                        'user_name' => 'Hệ thống tự động đánh giá',
+                        'note' => 'Tỷ lệ mặc định khi giảng viên bắt đầu tham gia'
                     ])
                 ]);
             } else {

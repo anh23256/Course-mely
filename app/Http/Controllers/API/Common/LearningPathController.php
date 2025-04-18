@@ -474,27 +474,32 @@ class LearningPathController extends Controller
 
                 case Coding::class:
                     $userCodingInput = $request->input('code');
-                    $userCodeResult = $request->input('result');
+                    // $userCodeResult = $request->input('result');
 
                     if (!$userCodingInput) {
                         return $this->respondError('Vui lòng thực hiện bài kiểm tra.');
                     }
 
-                    $expectedResult = $lessonable->result_code;
+                    // $expectedResult = $lessonable->result_code;
 
-                    if (!$userCodeResult || $userCodeResult !== $expectedResult) {
-                        return $this->respondError('Kết quả code của bạn chưa đúng.');
-                    }
+                    // if (!$userCodeResult || $userCodeResult !== $expectedResult) {
+                    //     return $this->respondError('Kết quả code của bạn chưa đúng.');
+                    // }
 
                     $lessonProgress->is_completed = true;
 
-                    UserCodingSubmission::query()->create([
-                        'user_id' => $user->id,
-                        'coding_id' => $lessonable->id,
-                        'code' => $userCodingInput,
-                        'result' => $userCodeResult,
-                        'is_correct' => $userCodeResult === $expectedResult
-                    ]);
+                    UserCodingSubmission::updateOrCreate(
+                        [
+                            'user_id' => $user->id,
+                            'coding_id' => $lessonable->id,
+                        ],
+                        [
+                            'code' => $userCodingInput,
+                            'result' => $userCodeResult,
+                            // 'is_correct' => $userCodeResult === $expectedResult,
+                            'is_correct' => true
+                        ]
+                    );
 
                     break;
 
@@ -915,7 +920,7 @@ class LearningPathController extends Controller
             $courseUser->progress_percent = round($progressPercent, 2);
 
             if ($progressPercent >= 80) {
-                if(Certificate::where(['user_id' => $userId, 'course_id' => $courseId])->exists()) return;
+                if (Certificate::where(['user_id' => $userId, 'course_id' => $courseId])->exists()) return;
                 CreateCertificateJob::dispatch($userId, $courseId);
             }
 

@@ -22,11 +22,16 @@
                         <td>{{ $loop->iteration ?? '' }}</td>
                         <td>{{ $approval->membershipPlan->name ?? '' }}</td>
                         <td>
-                            <span
-                                class="text-danger font-weight-bold">{{ $approval->membershipPlan->instructor->name ?? '' }}</span>
-                            <br>
-                            <small
-                                class="text-muted">{{ $approval->membershipPlan->instructor->profile->phone ?? '' }}</small>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ $approval->membershipPlan->instructor->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png' }}" alt="Avatar" class="user-avatar me-2">
+                                <div>
+                                    <span
+                                        class="text-danger font-weight-bold">{{ $approval->membershipPlan->instructor->name ?? '' }}</span>
+                                    <br>
+                                    <small
+                                        class="text-muted">{{ $approval->membershipPlan->instructor->profile->phone ?? '' }}</small>
+                                </div>
+                            </div>
                         </td>
                         <td>{{ $approval->membershipPlan->instructor->email ?? '' }}</td>
                         <td>{{ number_format($approval->membershipPlan->price ?? 0, 0, ',', '.') }}đ

@@ -30,7 +30,7 @@ class UpdatePostRequest extends FormRequest
                 'nullable',
 
             ],
-            'status' => ['in:draft,pending,published,private'],
+            'status' => ['in:draft,pending,published,private,scheduled'],
             'published_at' => ['nullable', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['nullable'],

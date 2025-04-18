@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpParser\Node\Stmt\Return_;
@@ -300,11 +301,12 @@ class UserController extends Controller
 
             $validator = $request->validated();
 
-            $data = $request->except('avatar');
+            $data = $request->except('avatar','email');
 
             DB::beginTransaction();
 
             $currencyAvatar = $user->avatar;
+            $currencyRole = $user->roles->pluck('name')->first();
 
             if ($request->hasFile('avatar')) {
                 $data['avatar'] = $this->uploadImage($request->file('avatar'), self::FOLDER);
@@ -314,6 +316,14 @@ class UserController extends Controller
 
             if ($request->has('role')) {
 
+                $newRole  = $request->input('role');
+
+                if( $currencyRole !== $newRole )
+                {
+                    $user->syncRoles([]);
+                    $user->assignRole($newRole);
+                    Mail::to($user->email)->send(new \App\Mail\UserRoleChangedMail($user, $currencyRole, $newRole));
+                }
                 $user->syncRoles([]);
 
                 $user->assignRole($request->input('role'));

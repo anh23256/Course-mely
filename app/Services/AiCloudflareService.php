@@ -22,12 +22,12 @@ class AiCloudflareService
     {
         $apiUrl = $this->getApiUrl();
         $messages = $this->buildMessages($request->input('title'));
+        $maxTokens = $this->calculateMaxTokens($request->input('title'));
 
         try {
-            $response = $this->sendRequestToCloudflare($apiUrl, $messages);
+            $response = $this->sendRequestToCloudflare($apiUrl, $messages, $maxTokens);
 
             return $this->handleApiResponse($response);
-
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
@@ -39,21 +39,37 @@ class AiCloudflareService
         return config('cloudflare.url') . config('cloudflare.account_id') . '/ai/run/@cf/meta/llama-3-8b-instruct';
     }
 
-    protected function buildMessages($title)
+    protected function buildMessages($prompt)
     {
         return [
             [
                 "role" => "system",
-                "content" => "Bạn là một trợ lý AI hữu ích và bạn sẽ trả lời bằng tiếng Việt."
+                "content" => "Bạn là một trợ lý AI hữu ích và bạn sẽ trả lời bằng tiếng Việt. Hãy viết nội dung chi tiết, chuyên nghiệp và có cấu trúc rõ ràng."
             ],
             [
                 "role" => "user",
-                "content" => 'Hãy viết một đoạn văn ngắn về ' . $title
+                "content" => $prompt
             ]
         ];
     }
 
-    protected function sendRequestToCloudflare($apiUrl, $messages)
+    protected function calculateMaxTokens($prompt)
+    {
+        $promptLength = strlen($prompt);
+
+        if (
+            strpos(strtolower($prompt), 'chi tiết') !== false ||
+            strpos(strtolower($prompt), 'bài viết') !== false ||
+            strpos(strtolower($prompt), '800') !== false ||
+            strpos(strtolower($prompt), '1000') !== false
+        ) {
+            return 1500;
+        }
+
+        return 300;
+    }
+
+    protected function sendRequestToCloudflare($apiUrl, $messages, $maxTokens)
     {
         return $this->cloudflare->post($apiUrl, [
             'headers' => [
@@ -62,7 +78,7 @@ class AiCloudflareService
             ],
             'json' => [
                 'messages' => $messages,
-                'max_tokens' => 200
+                'max_tokens' => $maxTokens
             ]
         ]);
     }

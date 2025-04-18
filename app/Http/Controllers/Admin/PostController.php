@@ -29,9 +29,6 @@ class PostController extends Controller
 
     const FOLDER = 'blogs';
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         try {
@@ -67,9 +64,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         try {
@@ -92,9 +86,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StorePostRequest $request)
     {
         try {
@@ -109,7 +100,14 @@ class PostController extends Controller
 
             $data['user_id'] = Auth::id();
 
-            $data['published_at'] = $request->input('published_at') ?? now();
+            if ($request->input('status') === 'scheduled') {
+                if (!$request->has('published_at') || empty($request->input('published_at'))) {
+                    throw new \Exception('Publish date is required for scheduled posts');
+                }
+                $data['published_at'] = $request->input('published_at');
+            } else {
+                $data['published_at'] = $request->input('status') === 'published' ? now() : null;
+            }
 
             do {
                 $data['slug'] = Str::slug($request->title) . '-' . substr(Str::uuid(), 0, 10);
@@ -148,9 +146,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -173,9 +168,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         try {
@@ -207,9 +199,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdatePostRequest $request, string $id)
     {
         try {
@@ -228,7 +217,14 @@ class PostController extends Controller
             }
 
             $data['is_hot'] = $request->input('is_hot') ?? 0;
-            $data['published_at'] = $request->input('published_at') ?? now();
+            if ($request->input('status') === 'scheduled') {
+                if (!$request->has('published_at') || empty($request->input('published_at'))) {
+                    throw new \Exception('Publish date is required for scheduled posts');
+                }
+                $data['published_at'] = $request->input('published_at');
+            } else {
+                $data['published_at'] = $request->input('status') === 'published' ? now() : null;
+            }
 
             do {
                 $data['slug'] = Str::slug($request->title) . '-' . substr(Str::uuid(), 0, 10);
@@ -265,9 +261,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Post $post)
     {
         try {
@@ -289,7 +282,6 @@ class PostController extends Controller
         try {
 
             return Excel::download(new PostsExport, 'Posts.xlsx');
-
         } catch (\Exception $e) {
 
             $this->logError($e);

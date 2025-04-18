@@ -46,7 +46,8 @@ class Course extends Model
         'modification_request',
         'accepted',
         'views',
-        'is_practical_course'
+        'is_practical_course',
+        'allow_coding_lesson'
     ];
 
     public $attributes = [

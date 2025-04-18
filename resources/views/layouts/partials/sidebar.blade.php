@@ -351,6 +351,11 @@
                     </ul>
                 </div>
             @endcanany
+
+            <a class="nav-link menu-link" href="{{ route('admin.instructor-commissions.index') }}" >
+                <i class="las la-coins"></i> <span data-key="t-authentication">Phân chia doanh thu</span>
+            </a>
+
             @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
                 <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
                     <i class="ri-money-dollar-circle-line"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
