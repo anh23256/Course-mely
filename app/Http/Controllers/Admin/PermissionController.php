@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Permissions\StorePermissionRequest;
+use App\Http\Requests\Admin\Permissions\UpdatePermissionRequest;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,9 +103,17 @@ class PermissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdatePermissionRequest $request, $id)
     {
-        //
+        $request->validated();
+
+        $permission = Permission::findOrFail($id); // Thay WithdrawalRequest bằng model Permission nếu khác
+        $permission->update([
+            'name' => $request->name,
+            'description' => $request->description,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật quyền thành công']);
     }
 
     /**

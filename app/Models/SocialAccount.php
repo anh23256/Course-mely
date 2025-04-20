@@ -9,6 +9,8 @@ class SocialAccount extends Model
 {
     use HasFactory;
 
+    const PROVIDER_GOOGLE = 'google';
+
     protected $fillable = [
         'user_id',
         'provider',
@@ -19,4 +21,9 @@ class SocialAccount extends Model
     protected $attributes = [
         'avatar' => null,
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

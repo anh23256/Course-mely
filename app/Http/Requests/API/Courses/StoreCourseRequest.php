@@ -24,6 +24,7 @@ class StoreCourseRequest extends BaseFormRequest
         return [
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer|exists:categories,id',
+            'isPracticalCourse' => 'nullable|boolean',
         ];
     }
 
@@ -36,6 +37,7 @@ class StoreCourseRequest extends BaseFormRequest
             'category_id.required' => 'Danh mục không được để trống',
             'category_id.integer' => 'Danh mục phải là số nguyên',
             'category_id.exists' => 'Không tìm thấy danh mục',
+            'isPracticalCourse.boolean' => 'Loại khoá học phải là true hoặc false',
         ];
     }
 }

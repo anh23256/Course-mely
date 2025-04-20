@@ -1,13 +1,13 @@
-<a href="index.html" class="logo logo-dark">
+<a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
     <span class="logo-sm">
-        <img src="{{ asset('assets/images/logo-sm.png') }}" alt="" height="22">
+        <img src="{{ asset('assets/ima ges/logo-sm.png') }}" alt="" height="22">
     </span>
     <span class="logo-lg">
         <img src="{{ asset('assets/images/logo-dark.png') }}" alt="" height="17">
     </span>
 </a>
 <!-- Light Logo-->
-<a href="index.html" class="logo logo-light">
+<a href="{{ route('admin.dashboard') }}" class="logo logo-light">
     <span class="logo-sm">
         <img src="{{ asset('assets/images/logo-container.png') }}" alt="" height="22">
     </span>
@@ -15,7 +15,7 @@
         <span class="logo-lg">
             <img src="{{ asset('assets/images/logo-container.png') }}" alt="" width="40" height="40">
         </span>
-        <span id="custom-text-logo" class="custom-text-logo">CourseMeLy</span>
+        <span id="custom-text-logo" class="custom-text-logo"> CouseMeLy </span>
     </div>
 
 </a>

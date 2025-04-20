@@ -12,12 +12,15 @@ class Invoice extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'membership_plan_id',
         'code',
         'coupon_code',
         'coupon_discount',
         'amount',
         'final_amount',
-        'status'
+        'status',
+        'payment_method',
+        'invoice_type'
     ];
 
     protected $attributes = [
@@ -39,4 +42,8 @@ class Invoice extends Model
         return $this->morphOne(Transaction::class, 'transactionable');
     }
 
+    public function membershipPlan()
+    {
+        return $this->belongsTo(MembershipPlan::class)->with('instructor');
+    }
 }

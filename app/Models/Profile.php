@@ -18,9 +18,17 @@ class Profile extends Model
         'bio',
         'certificates',
         'qa_systems',
+        'banking_info',
+        'identity_verification'
     ];
 
-    public function user(){
+    protected $casts = [
+        'bio' => 'array',
+        'banking_info' => 'array',
+    ];
+
+    public function user()
+    {
         return $this->hasOne(User::class);
     }
 

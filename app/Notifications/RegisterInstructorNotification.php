@@ -40,10 +40,12 @@ class RegisterInstructorNotification extends Notification implements ShouldBroad
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Yêu cầu phê duyệt người hướng dẫn')
-            ->line('Người hướng dẫn "' . $this->user->name . '" đã được gửi yêu cầu kiểm duyệt.')
-            ->action('Xem chi tiết', $this->getUrl())
-            ->line('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!');
+            ->subject('Yêu cầu phê duyệt giảng viên')
+            ->view('emails.instructor-approval', [
+                'user' => $this->user,
+                'notifiable' => $notifiable,
+                'url' => $this->getUrl()
+            ]);
     }
 
     private function getUrl()
@@ -52,13 +54,14 @@ class RegisterInstructorNotification extends Notification implements ShouldBroad
         return $approvableId ? route('admin.approvals.instructors.show', $approvableId) : '#';
     }
 
-    private function notificationData() {
+    private function notificationData()
+    {
         return [
             'type' => 'register_instructor',
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
             'user_email' => $this->user->email,
-            'message' => 'Người hướng dẫn "' . $this->user->name . '" đã được gửi yêu cầu kiểm duyệt.',
+            'message' => 'Giảng viên "' . $this->user->name . '" đã được gửi yêu cầu kiểm duyệt.',
             'url' => $this->getUrl(),
         ];
     }

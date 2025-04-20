@@ -30,13 +30,23 @@ class UpdateContentCourse extends BaseFormRequest
                 'nullable',
                 'string',
                 function ($attribute, $value, $fail) {
-                    if ($value && str_word_count($value) > 150) {
-                        $fail('Mô tả không được quá 150 từ.');
+                    if ($value && str_word_count($value) > 500) {
+                        $fail('Mô tả không được quá 500 từ.');
                     }
                 },
             ],
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'intro' => 'nullable|file|mimes:mp4,mov,avi,wmv,flv,3gp|max:204800',
+            'intro' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if (!is_string($value) && !($value instanceof \Illuminate\Http\UploadedFile)) {
+                        $fail('Trường intro phải là một tệp hợp lệ hoặc đường dẫn video hiện có.');
+                    }
+                },
+                Rule::when(function () {
+                    return $this->hasFile('intro');
+                }, ['file', 'mimes:mp4,mov,avi,wmv,flv,3gp', 'max:204800']),
+            ],
             'price' => [
                 'nullable',
                 'numeric',
@@ -86,6 +96,7 @@ class UpdateContentCourse extends BaseFormRequest
                     'private',
                 ])
             ],
+            'allow_coding_lesson' => 'nullable|boolean'
         ];
     }
 
@@ -110,6 +121,7 @@ class UpdateContentCourse extends BaseFormRequest
             'visibility.string' => 'Quyền riêng tư phải là chuỗi ký tự.',
             'visibility.in' => 'Quyền riêng tư không hợp lệ.',
             'is_free.in' => 'Trường này phải là 0 hoặc 1.',
+            'allow_coding_lesson.boolean' => 'Dữ liệu trường cho phép bài tập coding phải nhận vào là true và false'
         ];
     }
 }

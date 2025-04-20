@@ -12,7 +12,7 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="">{{ $subTitle ?? ''}}</a></li>
+                            <li class="breadcrumb-item active"><a href="">{{ $subTitle ?? '' }}</a></li>
                         </ol>
                     </div>
 
@@ -26,7 +26,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0">{{ $subTitle ?? ''}}</h4>
+                        <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
                         <div class="d-flex gap-2">
                             <a class="btn btn-sm btn-success" href="{{ route('admin.posts.export') }}">Export dữ liệu</a>
                             <button class="btn btn-sm btn-primary" id="toggleAdvancedSearch">
@@ -104,6 +104,7 @@
                                     <option value="">Chọn trạng thái</option>
                                     <option @selected(request()->input('status') === 'published') value="published">Xuất bản</option>
                                     <option @selected(request()->input('status') === 'private') value="private">Riêng tư</option>
+                                    <option @selected(request()->input('status') === 'scheduled') value="scheduled">Chờ xuất bản</option>
                                     <option @selected(request()->input('status') === 'pending') value="pending">Chờ xử lí</option>
                                     <option @selected(request()->input('status') === 'draft') value="draft">Bản nháp</option>
                                 </select>
@@ -172,10 +173,14 @@
                                                 </th>
 
                                                 <td class="customer_name">{{ $loop->iteration }}</td>
-                                                <td class="email">{{ $post->title }}</td>
                                                 <td>
-                                                    <img class="img-thumbnail" src="{{ $post->thumbnail }}"
-                                                        alt="Hình đại diện" width="100">
+                                                    <h6 class="mb-0 text-truncate" style="max-width: 250px;">
+                                                        {{ $post->title }}</h6>
+                                                </td>
+                                                <td>
+                                                    <img class="rounded shadow-sm"
+                                                        src="{{ Storage::url($post->thumbnail) }}" alt="Hình đại diện"
+                                                        width="80" height="50" style="object-fit: cover;">
                                                 </td>
                                                 <td class="text-danger fw-bold">{{ $post->user->name ?? '' }}</td>
                                                 <td>{{ $post->category->name ?? '' }}</td>
@@ -191,6 +196,10 @@
                                                     @elseif($post->status === 'draft')
                                                         <span class="badge bg-secondary w-75">
                                                             Bản nháp
+                                                        </span>
+                                                    @elseif($post->status === 'scheduled')
+                                                        <span class="badge bg-info w-75">
+                                                           Chờ xuất bản
                                                         </span>
                                                     @else
                                                         <span class="badge bg-danger w-75">
@@ -215,7 +224,7 @@
                                                         </a>
                                                         <a href="{{ route('admin.posts.show', $post->id) }}">
                                                             <button class="btn btn-sm btn-info edit-item-btn">
-                                                                <span class="ri-folder-user-line"></span>
+                                                                <span class="ri-eye-line"></span>
                                                             </button>
                                                         </a>
                                                         <a href="{{ route('admin.posts.destroy', $post->id) }}"

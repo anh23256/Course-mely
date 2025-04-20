@@ -13,12 +13,12 @@
                         </a>
                     </h5>
                     <span class="text-muted">
-                        Tham gia {{ $topInstructor->created_at->format('d/m/Y') ?? '' }}
+                        Tham gia {{ $topInstructor->created_at ? Carbon\Carbon::parse($topInstructor->created_at)->format('d/m/Y') : '' }}
                     </span>
                 </div>
             </div>
         </td>
-        <td class="text-center">
+        <td>
             <p class="mb-0">{{ $topInstructor->total_courses ?? '' }}</p>
             <span class="text-muted">Đã bán</span>
         </td>
@@ -29,7 +29,7 @@
         </td>
         <td>
             <span class="text-muted">
-                {{ number_format($topInstructor->total_revenue) ?? '' }}
+                {{ number_format($topInstructor->total_revenue ?? 0) }}
             </span>
         </td>
     </tr>

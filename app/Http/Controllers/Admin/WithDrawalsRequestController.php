@@ -35,9 +35,9 @@ class WithDrawalsRequestController extends Controller
             $queryWithdrawals = WithdrawalRequest::query()->latest('id');
             $countWithdrawals = WithdrawalRequest::query()->selectRaw(
                 'count(id) as total_withdrawals,
-                sum(status = "completed") as completed_withdrawals,
-                sum(status = "pending") as pending_withdrawals,
-                sum(status = "failed") as failed_withdrawals'
+                sum(status = "Hoàn thành") as completed_withdrawals,
+                sum(status = "Đang xử lý") as pending_withdrawals,
+                sum(status = "Từ chối") as failed_withdrawals'
             )->first();
 
             if ($request->hasAny(['status', 'request_date', 'completed_date', 'bank_name', 'amount_min', 'amount_max', 'account_number', 'account_holder']))
@@ -47,10 +47,10 @@ class WithDrawalsRequestController extends Controller
                 $queryWithdrawals = $this->search($request, $queryWithdrawals);
 
             $withdrawals = $queryWithdrawals->paginate(10);
-            $supportedBank = SupportedBank::query()->select('short_name', 'name', 'logo', 'code')->get();
+            $supportedBank = SupportedBank::query()->select('short_name', 'name',  'logo_rounded')->get();
 
             if ($request->ajax()) {
-                $html = view('withdrawals.table', compact('withdrawals'))->render();
+                $html = view('withdrawals.table', compact('withdrawals', 'supportedBank'))->render();
                 return response()->json(['html' => $html]);
             }
 
@@ -73,13 +73,13 @@ class WithDrawalsRequestController extends Controller
                 ->with([
                     'wallet.user'
                 ])
-                ->find($id);
+                ->findOrFail($id);
 
             return view('withdrawals.show', compact(['title', 'subTitle', 'withDraw']));
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return redirect()->back()->with('error', 'Có lị xây ra, vui lý thử lai sau');
+            return redirect()->back()->with('error', 'Không tìm thấy giao dịch, vui lòng thử lại');
         }
     }
 
@@ -90,19 +90,21 @@ class WithDrawalsRequestController extends Controller
 
             $data = $request->validate([
                 'withdrawal_id' => 'required|exists:withdrawal_requests,id',
-                'admin_comment' => 'required|string|max:255',
+                'admin_comment' => 'nullable|string|max:255',
+                'action' => 'required|in:approve,reject'
             ]);
 
             $withdrawal = WithdrawalRequest::query()
                 ->with(['wallet.user'])
                 ->find($data['withdrawal_id']);
 
-            if ($withdrawal->status === 'Hoàn thành') {
+            if ($withdrawal->status === 'Hoàn thành' || $withdrawal->status === 'Đã xử lý') {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Yêu cầu đã được xử lý, không thể thay đổi',
+                    'message' => 'Yêu cầu đã được xử lý, hoặc đang xử lý. Vui lòng thử lại sau.',
                 ]);
             }
+
             if ($withdrawal->status === 'Chờ xác nhận lại') {
                 $transation = Transaction::query()
                     ->where('transactionable_id', $withdrawal->id)
@@ -115,9 +117,8 @@ class WithDrawalsRequestController extends Controller
 
                 if ($systemFundTransaction) {
                     $withdrawal->update([
-                        'status' => 'Đã xử lý',
-                        'admin_comment' => $request->input('admin_comment') ?? $withdrawal->admin_comment,
-                        'instructor_confirmation' => 'not_received',
+                        'status' => 'Hoàn thành',
+                        'admin_comment' =>  $withdrawal->admin_comment,
                     ]);
                 }
 
@@ -131,27 +132,57 @@ class WithDrawalsRequestController extends Controller
                 ]);
             }
 
-            $systemFund = SystemFund::query()
+            if ($data['action'] === 'reject') {
+                $wallet = $withdrawal->wallet;
+
+                $wallet->update([
+                    'balance' => $wallet->balance + $withdrawal->amount,
+                ]);
+
+                $withdrawal->update([
+                    'status' => 'Từ chối',
+                    'admin_comment' => $data['admin_comment'],
+                ]);
+
+                Transaction::query()->create([
+                    'transaction_code' => 'ORDER' . time(),
+                    'amount' => $withdrawal->amount,
+                    'type' => 'withdrawal',
+                    'status' => 'Từ chối yêu cầu',
+                    'user_id' => Auth::id(),
+                    'transactionable_id' => $withdrawal->id,
+                    'transactionable_type' => WithdrawalRequest::class,
+                ]);
+
+                $this->sendRejectionNotification($withdrawal);
+
+                DB::commit();
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Yêu cầu rút tiền đã bị từ chối thành công',
+                ]);
+            }
+
+            $systemFundBalance = SystemFund::query()
                 ->lockForUpdate()
                 ->first();
 
-            if (!$systemFund) {
+            if (!$systemFundBalance === null || $systemFundBalance->pending_balance <= 0) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Hệ thống đang bảo trì, vui lý thử lại sau',
                 ]);
             }
 
-            if ($systemFund->balance < $withdrawal->amount) {
+            if ($systemFundBalance->pending_balance < $withdrawal->amount) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Hệ thống đang bảo trì, vui lý thử lại sau',
                 ]);
             }
 
-            $systemFund->update([
-                'balance' => $systemFund->balance - $withdrawal->amount
-            ]);
+            $systemFundBalance->decrement('pending_balance', $withdrawal->amount);
 
             $transation = Transaction::query()->create([
                 'transaction_code' => 'ORDER' . time(),
@@ -172,7 +203,7 @@ class WithDrawalsRequestController extends Controller
             ]);
 
             $withdrawal->update([
-                'admin_comment' => $data['admin_comment'],
+                'admin_comment' => 'Đã thanh toán cho bạn với số tiền ' . number_format($withdrawal->amount),
                 'status' => 'Đã xử lý',
                 'completed_date' => now()
             ]);
@@ -197,10 +228,10 @@ class WithDrawalsRequestController extends Controller
     protected function sendOrUpdateNotification($withdrawal)
     {
         $user = $withdrawal->wallet->user;
-
+        
         $message = $withdrawal->status === 'Đã xử lý'
-            ? "Yêu cầu thanh toán của bạn đã được xử lý với số tiền " . number_format($withdrawal->amount) . " VND."
-            : "Yêu cầu thanh toán của bạn đã được xử lý thành công";
+            ? "Yêu cầu thanh toán của bạn đã được xử lý thành công"
+            : "Yêu cầu rút tiền của bạn đã được hệ thống phản hồi. Vui lòng kiểm tra lại.";
 
         $existingNotification = DatabaseNotification::query()
             ->where('notifiable_id', $user->id)
@@ -231,6 +262,17 @@ class WithDrawalsRequestController extends Controller
         }
     }
 
+    protected function sendRejectionNotification($withdrawal)
+    {
+        $user = $withdrawal->wallet->user;
+        $message = "Yêu cầu rút tiền của bạn đã bị từ chối. Lý do: " . $withdrawal->admin_comment;
+
+        $user->notify(new ConfirmPaymentToInstructorNotification(
+            $withdrawal,
+            $message
+        ));
+    }
+
     public function checkStatus(Request $request)
     {
         try {
@@ -241,18 +283,40 @@ class WithDrawalsRequestController extends Controller
             ]);
 
             $withdrawal = WithdrawalRequest::query()->find($withdrawalId);
+
+            if (!$withdrawal) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy yêu cầu rút tiền.',
+                ], 404);
+            }
+
             $transaction = Transaction::query()
                 ->where('transactionable_type', WithdrawalRequest::class)
                 ->where('transactionable_id', $withdrawalId)
                 ->first();
-            $systemFundTransaction = SystemFundTransaction::query()
-                ->where('transaction_id', $transaction->id)->first();
+
+            if ($withdrawal->status === 'Từ chối') {
+                return response()->json([
+                    'status' => 'rejected',
+                    'message' => 'Yêu cầu rút tiền đã bị từ chối.',
+                    'withdrawal_request' => $withdrawal,
+                    'transaction' => $transaction,
+                ], 200);
+            }
+
+            $systemFundTransaction = null;
+            if ($transaction) {
+                $systemFundTransaction = SystemFundTransaction::query()
+                    ->where('transaction_id', $transaction->id)->first();
+            }
 
             return response()->json([
+                'status' => 'success',
                 'withdrawal_request' => $withdrawal,
                 'transaction' => $transaction,
                 'system_fund_transaction' => $systemFundTransaction,
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
 

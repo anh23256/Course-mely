@@ -41,9 +41,10 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-//            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Session\Middleware\StartSession::class,
         ],
     ];
 
@@ -57,6 +58,7 @@ class Kernel extends HttpKernel
     protected $middlewareAliases = [
         'roleHasAdmins' => \App\Http\Middleware\RoleHasAdmins::class,
         'roleHasInstructor' => \App\Http\Middleware\RoleHasInstructor::class,
+        'roleHasEmployees' => \App\Http\Middleware\RoleHasEmployees::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,

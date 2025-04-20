@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class Coding extends Model
 {
     use HasFactory;
@@ -16,7 +17,9 @@ class Coding extends Model
         'sample_code',
         'result_code',
         'solution_code',
-        'instruct'
+        'instruct',
+        'test_case',
+        'ignore_test_case'
     ];
 
     public function lessons()
@@ -26,5 +29,6 @@ class Coding extends Model
 
     protected $casts = [
         'hints' => 'array',
+        'test_case' => 'array'
     ];
 }

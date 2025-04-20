@@ -20,7 +20,7 @@ class TransactionController extends Controller
             $subTitle = 'Giao dịch thanh toán';
 
             $queryTransactions = Transaction::query()
-                ->with('user')
+                ->with('user.profile')
                 ->latest('id');
 
             $countTransactions = Transaction::query()->selectRaw(
@@ -58,7 +58,8 @@ class TransactionController extends Controller
             $transaction = Transaction::query()
                 ->with([
                     'user',
-                    'invoice.course.user',
+                    'invoice.course',
+                    'invoice.membershipPlan',
                 ])
                 ->where('transaction_code', $transactionCode)
                 ->firstOrFail();
@@ -99,9 +100,18 @@ class TransactionController extends Controller
             'type' => ['queryWhere' => '='],
             'status' => ['queryWhere' => '='],
             'amount' => ['attribute' => ['amount_min' => '>=', 'amount_max' => '<=']],
+            'user_email_transaction' => null,
         ];
 
         $query = $this->filterTrait($filters, $request, $query);
+
+        $phone_user = $request->input('phone_user', '');
+
+        if (!empty($phone_user)) {
+            $query->whereHas('user.profile', function ($query) use ($phone_user) {
+                $query->where('phone', 'LIKE', "%$phone_user%");
+            });
+        }
 
         return $query;
     }
@@ -124,7 +134,10 @@ class TransactionController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->whereHas('user', function ($query) use ($searchTerm) {
                     $query->where('name', 'LIKE', "%$searchTerm%")
-                        ->orWhere('email', 'LIKE', "%$searchTerm%");
+                        ->orWhere('email', 'LIKE', "%$searchTerm%")
+                        ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                            $query->where('phone', 'LIKE', "%$searchTerm%");
+                        });
                 })->orWhere('transaction_code',  'LIKE', "%$searchTerm%");
             });
         }

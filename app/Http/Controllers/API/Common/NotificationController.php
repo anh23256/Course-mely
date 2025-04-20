@@ -7,6 +7,8 @@ use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -28,9 +30,13 @@ class NotificationController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate($limit, ['*'], 'page', $page);
 
+            $hasNextPage = $notifications->hasMorePages();
+
             return $this->respondOk('Danh sách thông báo', [
                 'notifications' => $notifications->items(),
-                'next_page' => $notifications->nextPageUrl() ? $page + 1 : null
+                'next_page' => $hasNextPage ? (int)$page + 1 : null,
+                'total' => $notifications->total(),
+                'has_more' => $hasNextPage
             ]);
         } catch (\Exception $e) {
             $this->log($e, $request->all());

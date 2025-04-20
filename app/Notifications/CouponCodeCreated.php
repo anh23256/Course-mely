@@ -12,7 +12,9 @@ use Illuminate\Notifications\Notification;
 class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
+
     protected $coupon;
+
     /**
      * Create a new notification instance.
      */
@@ -36,18 +38,16 @@ class CouponCodeCreated extends Notification implements ShouldBroadcast, ShouldQ
      */
     private function getUrl()
     {
-        return  'Chưa tao duong dan';
+        $url = config('app.fe_url');
+        return $url . '/my-courses?tab=coupon';
     }
 
     public function notificationData()
     {
         return [
-            'message' => 'Mã giảm giá "' . $this->coupon->name . '" đã được tạo. Nhấn để nhận mã.',
-            'id' => $this->coupon->id,
-            'code' => $this->coupon->code,
-            'name' => $this->coupon->name,
-            'discount_value' => $this->coupon->discount_value,
-            'action_url' => $this->getUrl(),
+            'message' => "Bạn có mã giảm giá mới: {$this->coupon->code} - Giảm ". number_format(($this->coupon->discount_type == 'percentage' ? $this->coupon->discount_max_value : $this->coupon->discount_value)) . ' VND',
+            'name' => $this->coupon->user_id,
+            'url' => $this->getUrl(),
         ];
     }
 

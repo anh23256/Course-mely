@@ -21,12 +21,33 @@ class Coupon extends Model
         'start_date',
         'expire_date',
         'status',
+        'max_usage',
         'used_count',
+        'specific_course'
+    ];
+    
+    protected $casts = [
+        'expire_date' => 'date',
     ];
 
     public function scopeSearch($query, $keyword)
     {
         return $query->where('code', 'LIKE', "%{$keyword}%")
             ->orWhere('name', 'LIKE', "%{$keyword}%");
+    }
+
+    public function couponUses()
+    {
+        return $this->hasMany(CouponUse::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function couponCourses()
+    {
+        return $this->belongsToMany(Course::class);
     }
 }

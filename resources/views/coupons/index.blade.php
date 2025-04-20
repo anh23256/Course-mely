@@ -2,6 +2,51 @@
 @push('page-css')
     <!-- plugin css -->
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .stat-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            height: 150px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .card-title-custom {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #6c757d;
+        }
+
+        .action-buttons .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .coupon-table th {
+            background-color: #f5f7fa;
+        }
+    </style>
 @endpush
 @php
     $title = 'Danh sách coupon';
@@ -23,36 +68,48 @@
                 </div>
             </div>
         </div>
-        <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Tổng số mã giảm giá</h5>
-                        <p class="card-text fs-4">{{ $couponCounts->total_coupons ?? 0 }}</p>
+        <div class="row cursor-pointer">
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stat-card border-0">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-primary">
+                            <i class="ri-coupon-3-line"></i>
+                        </div>
+                        <h6 class="card-title-custom">TỔNG SỐ MÃ GIẢM GIÁ</h6>
+                        <p class="stat-value text-primary">{{ $couponCounts->total_coupons ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Mã giảm giá đang hoạt động</h5>
-                        <p class="card-text fs-4 text-success">{{ $couponCounts->active_coupons ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stat-card border-0">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-success">
+                            <i class="ri-check-double-line"></i>
+                        </div>
+                        <h6 class="card-title-custom">ĐANG HOẠT ĐỘNG</h6>
+                        <p class="stat-value text-success">{{ $couponCounts->active_coupons ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Mã giảm giá sắp hết hạn</h5>
-                        <p class="card-text fs-4 text-warning">{{ $couponCounts->expire_coupons ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stat-card border-0">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-warning">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <h6 class="card-title-custom">SẮP HẾT HẠN</h6>
+                        <p class="stat-value text-warning">{{ $couponCounts->expire_coupons ?? 0 }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Mã giảm giá đã được sử dụng</h5>
-                        <p class="card-text fs-4 text-danger">{{ $couponCounts->used_coupons ?? 0 }}</p>
+            <div class="col-12 col-sm-6 col-md-3 mb-3">
+                <div class="card stat-card border-0">
+                    <div class="card-body text-center">
+                        <div class="stat-icon text-danger">
+                            <i class="ri-archive-line"></i>
+                        </div>
+                        <h6 class="card-title-custom">ĐÃ SỬ DỤNG</h6>
+                        <p class="stat-value text-danger">{{ $couponCounts->used_coupons ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -208,7 +265,7 @@
                                             </th>
                                             <th>ID</th>
                                             <th>Người tạo</th>
-                                            <th>Tên mã giảm giá</th>
+                                            <th>Chương trình</th>
                                             <th>Mã giảm giá</th>
                                             <th>Giảm giá</th>
                                             <th>Trạng Thái</th>
@@ -228,8 +285,8 @@
                                                     </div>
                                                 </th>
 
-                                                <td class="id">{{ $coupon->id }}</td>
-                                                <td class="id">{{ $coupon->user_id }}</td>
+                                                <td class="id">{{ $loop->iteration }}</td>
+                                                <td class="id">{{ $coupon->user->name }}</td>
                                                 <td class="customer_name">{{ $coupon->name }}</td>
                                                 <td class="date">{{ $coupon->code }}</td>
                                                 <td class="date">{{ number_format($coupon->discount_value) }}
@@ -237,17 +294,17 @@
                                                 </td>
                                                 @if ($coupon->status)
                                                     <td class="status"><span class="badge bg-success text-uppercase">
-                                                            Active
+                                                            Hoạt động
                                                         </span></td>
                                                 @else
                                                     <td class="status"><span class="badge bg-danger text-uppercase">
-                                                            InActive
+                                                          Hết hạn
                                                         </span></td>
                                                 @endif
 
-                                                <td class="date">{{ $coupon->start_date ?? '' }}</td>
-                                                <td class="date">{{ $coupon->expire_date ?? '' }}</td>
-                                                <td class="date">{{ $coupon->used_count ?? 0 }}</td>
+                                                <td class="date">{{ $coupon->start_date ? \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') : '' }}</td>
+                                                <td class="date">{{ $coupon->expire_date ? \Carbon\Carbon::parse($coupon->expire_date)->format('d/m/Y') : '' }}</td>
+                                                <td class="date">{{ $coupon->max_usage ?? 0 }}</td>
                                                 <td>
                                                     <div class="d-flex gap-2">
                                                         <div class="remove">
@@ -260,7 +317,7 @@
                                                         <div class="edit">
                                                             <a href="{{ route('admin.coupons.show', $coupon->id) }}">
                                                                 <button class="btn btn-sm btn-info edit-item-btn">
-                                                                    <span class="ri-folder-user-line"></span>
+                                                                    <span class="ri-eye-line"></span>
                                                                 </button>
                                                             </a>
                                                         </div>
@@ -294,6 +351,7 @@
     </div>
 @endsection
 @push('page-scripts')
+
     <script>
         var routeUrlFilter = "{{ route('admin.coupons.index') }}";
         var routeDeleteAll = "{{ route('admin.coupons.destroy', ':itemID') }}";
@@ -307,6 +365,7 @@
             window.location = routeUrlFilter;
         });
     </script>
+
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>
     <script src="{{ asset('assets/js/common/delete-all-selected.js') }}"></script>

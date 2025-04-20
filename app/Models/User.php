@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -58,6 +59,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
+    public function isOnline()
+    {
+        return Cache::has('user-online-' . $this->id);
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -98,4 +104,29 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(WishList::class, 'user_id');
     }
 
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
+    }
+
+    public function instructorCommissions()
+    {
+        return $this->hasOne(InstructorCommission::class, 'instructor_id');
+    }
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'instructor_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'instructor_id')
+            ->withTimestamps();
+    }
 }

@@ -21,7 +21,7 @@ class UpdateQuestionRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'question' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'answer_type' => 'sometimes|in:single_choice,multiple_choice',
@@ -29,6 +29,12 @@ class UpdateQuestionRequest extends BaseFormRequest
             'options.*.answer' => 'required_with:options|string',
             'options.*.is_correct' => 'required_with:options|boolean',
         ];
+
+        if ($this->hasFile('image')) {
+            $rules['image'] = 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048';
+        }
+
+        return $rules;
     }
 
     protected function prepareForValidation()
@@ -59,6 +65,9 @@ class UpdateQuestionRequest extends BaseFormRequest
             'options.*.answer.string' => 'Câu trả lời phải là chuỗi.',
             'options.*.is_correct.required_with' => 'Trạng thái đúng/sai là bắt buộc khi có danh sách câu trả lời.',
             'options.*.is_correct.boolean' => 'Trạng thái đúng/sai phải là boolean.',
+            'image.image' => 'File phải là hình ảnh.',
+            'image.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, svg hoặc webp.',
+            'image.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
         ];
     }
 }

@@ -40,15 +40,13 @@ class CourseApprovedNotification extends Notification implements ShouldBroadcast
 
     public function toDatabase($notifiable)
     {
-        Log::info("Saving notification to the database for user ID: " . $notifiable->id . " | Course ID: " . $this->course->id);
-
         return [
             'type' => 'register_course',
             'course_id' => $this->course->id,
             'course_name' => $this->course->name,
             'course_slug' => $this->course->slug,
             'course_thumbnail' => $this->course->thumbnail,
-            'message' => 'Khóa học "' . $this->course->name . '" đã được gửi yêu cầu kiểm duyệt.',
+            'message' => 'Khóa học "' . $this->course->name . '" đã được phê duyệt.',
         ];
     }
 
@@ -65,7 +63,7 @@ class CourseApprovedNotification extends Notification implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        $channel = new PrivateChannel('instructor.' . $this->course->user_id);
+        $channel = new PrivateChannel('notification.' . $this->course->user_id);
         Log::info('Broadcasting on channel: ' . $channel->name);
         return $channel;
     }

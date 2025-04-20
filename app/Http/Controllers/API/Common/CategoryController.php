@@ -19,15 +19,12 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::query()
+                ->select('id', 'name', 'slug')
                 ->where([
                     'parent_id' => null,
                     'status' => 1
                 ])
                 ->get();
-
-            if ($categories->isEmpty()) {
-                return $this->respondNotFound('Không có dữ liệu');
-            }
 
             return $this->respondOk('Danh sách danh mục', $categories);
         } catch (\Exception $e) {
@@ -36,5 +33,4 @@ class CategoryController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
 }

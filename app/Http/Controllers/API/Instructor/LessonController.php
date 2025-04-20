@@ -43,6 +43,26 @@ class LessonController extends Controller
         $this->videoUploadService = $videoUploadService;
     }
 
+    public function getChapterFromLesson(string $lessonId)
+    {
+        try {
+            $lesson = Lesson::query()
+                ->with('chapter:id,title')
+                ->where('id', $lessonId)
+                ->first();
+
+            if (!$lesson) {
+                return $this->respondNotFound('Không tìm thấy bài học');
+            }
+
+            return $this->respondOk('Thao tác thành công', $lesson->chapter);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
     public function storeLesson(StoreLessonRequest $request)
     {
         try {

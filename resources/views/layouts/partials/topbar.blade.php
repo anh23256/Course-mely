@@ -161,8 +161,12 @@
                     <div class="dropdown-head bg-primary bg-pattern rounded-top">
                         <div class="p-3">
                             <div class="row align-items-center">
-                                <div class="col">
+                                <div class="col d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 fs-16 fw-semibold text-white"> Tin tức </h6>
+                                    <a href="{{ route('admin.notifications.all-notifications') }}"
+                                        class="badge bg-light-subtle text-dark px-2 py-1">
+                                        Xem tất cả
+                                    </a>
                                 </div>
                                 <div class="col-auto dropdown-tabs">
                                     <span id="unread-notification-count"
@@ -248,19 +252,13 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
                     <!-- item-->
-                    <h6 class="dropdown-header">Welcome {{ Auth::user()->name ?? '' }}!</h6>
-                    <a class="dropdown-item" href="{{ route('admin.roles.show', Auth::user()->id ?? '') }}"><i
+                    <h6 class="dropdown-header">Xin chào {{ Auth::user()->name ?? '' }}!</h6>
+                    <a class="dropdown-item" href="{{ route('admin.administrator.profile') }}"><i
                             class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
-                            class="align-middle">Profile</span></a>
+                            class="align-middle">Thông cá cá nhân</span></a>
                     <a class="dropdown-item" href="apps-chat.html"><i
                             class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i>
                         <span class="align-middle">Messages</span></a>
-                    <a class="dropdown-item" href="apps-tasks-kanban.html"><i
-                            class="mdi mdi-calendar-check-outline text-muted fs-16 align-middle me-1"></i>
-                        <span class="align-middle">Taskboard</span></a>
-                    <a class="dropdown-item" href="pages-faqs.html"><i
-                            class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span
-                            class="align-middle">Help</span></a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{{ route('admin.wallets.index') }}"><i
                             class="mdi mdi-wallet text-muted fs-16 align-middle me-1"></i> <span
@@ -270,12 +268,10 @@
                             class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
                             class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
                             class="align-middle">Settings</span></a>
-                    <a class="dropdown-item" href="auth-lockscreen-basic.html"><i
-                            class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span
-                            class="align-middle">Lock screen</span></a>
                     <a class="dropdown-item" href="{{ route('admin.logout') }}"><i
-                            class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle"
-                            data-key="t-logout">Logout</span></a>
+                            class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
+                        <span class="align-middle" data-key="t-logout">Đăng xuất</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -286,9 +282,33 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/locale/vi.js"></script>
     <script>
+        var count
         moment.locale('vi');
+        var approvalCountNotification = 0;
+        var buycourseCountNotification = 0;
+        var messageCountNotification = 0;
 
         $(document).ready(function() {
+            $('.dropdown-item[href="{{ route('admin.logout') }}"]').on('click', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Xác nhận đăng xuất',
+                    text: 'Bạn có chắc chắn muốn đăng xuất?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đăng xuất',
+                    cancelButtonText: 'Hủy',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('admin.logout') }}";
+                    }
+                });
+            });
+
+
             Echo.connector.pusher.connection.bind('connected', function() {
                 console.log('Pusher đã kết nối thành công');
             });
@@ -321,10 +341,8 @@
                         if (response?.data) {
                             const {
                                 notifications,
-                                unread_notifications_count
+                                unread_notifications_count,
                             } = response.data;
-
-                            console.log(response);
 
                             $('#messages-notifications-container').empty();
                             $('#notification-data').empty();
@@ -336,31 +354,71 @@
 
                             updateUnreadCount(unread_notifications_count);
 
-                            if (response.data && response.data.notifications.length > 0) {
+                            if (buycourseCountNotification > 0) {
+                                if (buycourseCountNotification == countNotificationsData.buycourse
+                                    .count) {
+                                    $('#notification-data').append(`
+                                            <div class="col-12 col-md-12">
+                                                <div class="d-flex mt-4 justify-content-center">
+                                                    <button data-notification-type="user_buy_course" id="load-more" class="btn btn-sm btn-primary px-4 rounded-pill">
+                                                        <i class="ri-refresh-line me-1"></i> Xem thêm
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `);
+                                }
+                            } else {
                                 $('#notification-data').append(`
                                         <div class="col-12 col-md-12">
                                             <div class="d-flex mt-4 justify-content-center">
-                                                <a class="text-primary text-decoration-underline" data-notification-type="user_buy_course" id="load-more">Xem thêm</a>
+                                                <p class="text-muted">Không có thông báo</p>
                                             </div>
                                         </div>
                                     `);
+                            }
+
+                            if (approvalCountNotification > 0) {
+                                if (approvalCountNotification == countNotificationsData.approval
+                                    .count) {
+                                    $('#approvals-notifications-container').append(`
+                                        <div class="col-12 col-md-12">
+                                            <div class="d-flex mt-4 justify-content-center">
+                                                <button data-notification-type="register_course-register_instructor" id="load-more" class="btn btn-sm btn-primary px-4 rounded-pill">
+                                                    <i class="ri-refresh-line me-1"></i> Xem thêm
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `);
+                                }
+                            } else {
                                 $('#approvals-notifications-container').append(`
-                                        <div class="col-12 col-md-12">
-                                            <div class="d-flex mt-4 justify-content-center">
-                                                <a class="text-primary text-decoration-underline" 
-                                                    data-notification-type="register_course-register_instructor" id="load-more">
-                                                    Xem thêm
-                                                </a>
+                                            <div class="col-12 col-md-12">
+                                                <div class="d-flex mt-4 justify-content-center">
+                                                    <p class="text-muted">Không có thông báo</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    `);
+                                        `);
+                            }
+                            if (messageCountNotification > 0) {
+                                if (messageCountNotification == countNotificationsData.message.count) {
+                                    $('#messages-notifications-container').append(`
+                                            <div class="col-12 col-md-12">
+                                                <div class="d-flex mt-4 justify-content-center">
+                                                    <button data-notification-type="receive_message" id="load-more" class="btn btn-sm btn-primary px-4 rounded-pill">
+                                                        <i class="ri-refresh-line me-1"></i> Xem thêm
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `);
+                                }
+                            } else {
                                 $('#messages-notifications-container').append(`
-                                        <div class="col-12 col-md-12">
-                                            <div class="d-flex mt-4 justify-content-center">
-                                                <a class="text-primary text-decoration-underline" data-notification-type="receive_message" id="load-more">Xem thêm</a>
+                                            <div class="col-12 col-md-12">
+                                                <div class="d-flex mt-4 justify-content-center">
+                                                    <p class="text-muted">Không có thông báo</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    `);
+                                        `);
                             }
                         }
                     },
@@ -373,7 +431,11 @@
             function updateUnreadCount(count) {
                 const $countElement = $('#unread-notification-count');
                 if (count > 0) {
-                    $countElement.text(count).show();
+                    if (count > 99) {
+                        $countElement.text('99+').show();
+                    } else {
+                        $countElement.text(count).show();
+                    }
                 } else {
                     $countElement.hide();
                 }
@@ -390,25 +452,41 @@
                 let thumbnail = '';
 
                 if (type === 'user_buy_course') {
+                    buycourseCountNotification++;
                     title = 'Mua khoá học';
                     thumbnail = notification.data.user_avatar ||
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
 
-                if (type === 'withdrawal') {
-                    title = 'Yêu cầu rút tiền';
+                if (type === 'member_ship_plan') {
+                    approvalCountNotification++;
+                    title = 'Mua gói thành viên';
                     thumbnail = notification.data.instructor_avatar ||
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
+
+                if (type === 'withdrawal') {
+                    approvalCountNotification++;
+                    title = 'Yêu cầu rút tiền';
+                    thumbnail = notification.data.user_avatar ||
+                        'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+                }
                 if (type === 'receive_message') {
+                    messageCountNotification++;
                     title = 'Tin nhắn';
                     thumbnail = notification.data.message_user_avatar ||
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
                 }
                 if (type === 'register_course') {
+                    approvalCountNotification++;
                     title = notification.data.course_name || 'Khóa học';
-                    thumbnail = notification.data.course_thumbnail;
+                    thumbnail = notification.data.course_thumbnail || 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1742943708/Gemini_Generated_Image_w68g6w68g6w68g6w_fcudfq.jpg';
                 } else if (type === 'register_instructor') {
+                    title = notification.data.user_name || 'Giảng viên';
+                    thumbnail =
+                        'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+                } else if (type === 'post_submitted') {
+                    approvalCountNotification++;
                     title = notification.data.user_name || 'Giảng viên';
                     thumbnail =
                         'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
@@ -437,7 +515,8 @@
         </div>
     `;
 
-                if (type === 'register_course' || type === 'register_instructor' || type === 'withdrawal') {
+                if (type === 'register_course' || type === 'register_instructor' || type === 'withdrawal' ||
+                    type === 'post_submitted') {
                     if (isRealTime) {
                         $('#approvals-notifications-container').prepend(notificationItem);
                     } else {
@@ -473,7 +552,7 @@
                 const readed = "{{ now() }}";
                 const urlRedirect = $(`.stretched-link-${notificationId}`).attr('href');
 
-                if(urlRedirect == "#"){
+                if (urlRedirect == "#") {
                     return;
                 }
 
@@ -482,8 +561,6 @@
                     return;
                 }
                 const url = `/admin/notifications/${notificationId}`;
-
-                console.log(urlRedirect, url, notificationId);
 
                 const data = {
                     read_at: readed
@@ -502,9 +579,9 @@
                 });
             });
 
-            let countNotificationsData = {
+            var countNotificationsData = {
                 approval: {
-                    type: ["register_course", "register_instructor", "withdrawal"],
+                    type: ["register_course", "register_instructor", "withdrawal", 'post_submitted'],
                     count: 10
                 },
                 message: {
@@ -533,11 +610,11 @@
                 });
             });
 
-
             window.Echo.private(`App.Models.User.${userID}`)
                 .notification((notification) => {
-                    console.log('Thông báo mới:', notification);
                     triggerBellAnimation()
+
+                    console.log(notification);
 
                     Toastify({
                         text: `🔔 ${notification.message}`,
@@ -558,6 +635,64 @@
                 });
 
             fetchNotifications();
+
+            window.Echo.join('user-status')
+                .here(users => {
+                    $.ajax({
+                        url: "{{ route('admin.getUserOnline') }}",
+                        method: 'POST',
+                        data: {
+                            type: 'join'
+                        }
+                    })
+                });
+
+            setInterval(() => {
+                $.ajax({
+                    url: "{{ route('admin.getUserOnline') }}",
+                    method: 'POST',
+                    data: {
+                        type: 'join'
+                    }
+                });
+            }, 300000);
+
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const href = this.getAttribute('href');
+                    if (href && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+                        sessionStorage.setItem('isInternalNavigation', 'true');
+                    }
+                });
+            });
+
+            window.addEventListener('beforeunload', function() {
+                const navEntry = performance.getEntriesByType("navigation")[0];
+                const isReloading = navEntry && navEntry.type === 'reload';
+
+                if (isReloading) {
+                    sessionStorage.setItem('isReloading', 'true');
+                } else {
+                    sessionStorage.setItem('isReloading', 'false');
+                }
+
+                const isInternal = sessionStorage.getItem('isInternalNavigation') === 'true';
+
+                if (!isReloading && !isInternal) {
+                    const data = new FormData();
+                    data.append('type', 'leave');
+                    data.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                    navigator.sendBeacon("{{ route('admin.getUserOnline') }}", data);
+                }
+
+                sessionStorage.removeItem('isInternalNavigation');
+            });
+
+            window.addEventListener('load', function() {
+                sessionStorage.removeItem('isReloading');
+                sessionStorage.removeItem('isInternalNavigation');
+            });
         });
     </script>
 @endpush

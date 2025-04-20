@@ -19,8 +19,14 @@ class CourseValidatorService
         $errors = [];
 
         $errors = array_merge($errors, $validator->validateBasicInfo($course));
-        $errors = array_merge($errors, $validator->checkCurriculum($course));
-        $errors = array_merge($errors, $validator->validateTotalDuration($course));
+
+        if ($course->is_practical_course) {
+            $errors = array_merge($errors, $validator->checkPracticalLessons($course));
+        } else {
+            $errors = array_merge($errors, $validator->checkCurriculum($course));
+            $errors = array_merge($errors, $validator->validateTotalDuration($course));
+        }
+
 
         return $errors;
     }
@@ -71,6 +77,113 @@ class CourseValidatorService
         $errors = [];
         $chapters = $course->chapters()->get();
         $errors = array_merge($errors, $this->validateChapters($chapters));
+        return $errors;
+    }
+
+    private function checkPracticalLessons(Course $course)
+    {
+        $errors = [];
+        $lessons = $course->lessons()->where('lessonable_type', Quiz::class)->get();
+
+        if ($lessons->count() < 3) {
+            $errors[] = "Khóa học thực hành phải có ít nhất 3 bài kiểm tra. Hiện tại có {$lessons->count()} bài.";
+        }
+
+        foreach ($lessons as $lesson) {
+            $errors = array_merge($errors, $this->validatePracticalQuizLesson($lesson));
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalQuizLesson(Lesson $lesson)
+    {
+        $errors = [];
+
+        if (empty($lesson->title)) {
+            $errors[] = "Bài kiểm tra ID {$lesson->id} thiếu tiêu đề.";
+        } elseif (strlen($lesson->title) < 5) {
+            $errors[] = "Bài kiểm tra '{$lesson->title}' phải có tiêu đề ít nhất 5 ký tự.";
+        }
+
+        $quiz = Quiz::query()->find($lesson->lessonable_id);
+        if ($quiz) {
+            $questionsCount = Question::where('quiz_id', $quiz->id)->count();
+            if ($questionsCount < 10 || $questionsCount > 50) {
+                $errors[] = "Bài kiểm tra '{$lesson->title}' phải có từ 10 đến 50 câu hỏi. Hiện tại có {$questionsCount} câu.";
+            }
+        } else {
+            $errors[] = "Bài kiểm tra '{$lesson->title}' không tồn tại dữ liệu quiz.";
+        }
+
+        return $errors;
+    }
+
+    private function checkPracticalCurriculum(Course $course): array
+    {
+        $errors = [];
+        $chapters = $course->chapters()->get();
+
+        $errors = array_merge($errors, $this->validatePracticalChapters($chapters));
+
+        return $errors;
+    }
+
+    private function validatePracticalChapters($chapters): array
+    {
+        $errors = [];
+
+        if ($chapters->count() == 0) {
+            $errors[] = "Khóa học thực hành phải có ít nhất 1 chương học.";
+        }
+
+        foreach ($chapters as $chapter) {
+            if (!$chapter->title) {
+                $errors[] = "Chương học ID {$chapter->id} không có tiêu đề.";
+            }
+
+            $errors = array_merge($errors, $this->validatePracticalLessons($chapter));
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalLessons($chapter): array
+    {
+        $errors = [];
+        $lessons = $chapter->lessons()->get();
+        $hasQuiz = false;
+
+        foreach ($lessons as $lesson) {
+            if (empty($lesson->title)) {
+                $errors[] = "Bài học ID {$lesson->id} trong chương '{$chapter->title}' thiếu tiêu đề.";
+            }
+
+            if ($lesson->lessonable_type == Quiz::class) {
+                $hasQuiz = true;
+                $errors = array_merge($errors, $this->validatePracticalQuiz($lesson, $chapter));
+            }
+        }
+
+        if (!$hasQuiz && $lessons->count() > 0) {
+            $errors[] = "Chương học '{$chapter->title}' cần có ít nhất một bài kiểm tra (quiz).";
+        }
+
+        return $errors;
+    }
+
+    private function validatePracticalQuiz($lesson, $chapter)
+    {
+        $errors = [];
+        $quiz = Quiz::query()->find($lesson->lessonable_id);
+
+        if ($quiz) {
+            $questions = Question::query()->where('quiz_id', $quiz->id)->get();
+            if ($questions->count() < 10 || $questions->count() > 50) {
+                $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương '{$chapter->title}' phải có từ 10 đến 50 câu hỏi. Hiện tại có {$questions->count()} câu.";
+            }
+        }
+
         return $errors;
     }
 
@@ -207,7 +320,7 @@ class CourseValidatorService
 
         if ($quiz) {
             $questions = Question::query()->where('quiz_id', $quiz->id)->get();
-            if ($questions->count() < 1 || $questions->count() > 10) {
+            if ($questions->count() < 5 || $questions->count() > 20) {
                 $errors[] = "Bài kiểm tra '{$lesson->title}' (ID {$lesson->id}) trong chương '{$chapter->title}' phải có từ 1 đến 10 câu hỏi. Hiện tại có {$questions->count()} câu.";
             }
         }

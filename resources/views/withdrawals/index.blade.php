@@ -1,6 +1,139 @@
 @extends('layouts.app')
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        #imagePreview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1050;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #previewImage {
+            max-width: 90%;
+            max-height: 90%;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .img-preview {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .img-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .stats-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            height: 180px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .stats-card .card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-card .card-icon {
+            font-size: 2.75rem;
+            margin-bottom: 0.75rem;
+            color: var(--icon-color);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .stats-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-card .card-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1;
+        }
+
+        .total-card {
+            --gradient-start: #5b73e8;
+            --gradient-end: #44c4fa;
+            --icon-color: #5b73e8;
+        }
+
+        .pending-card {
+            --gradient-start: #ffb822;
+            --gradient-end: #ffd980;
+            --icon-color: #ffb822;
+        }
+
+        .success-card {
+            --gradient-start: #34c38f;
+            --gradient-end: #84d9b9;
+            --icon-color: #34c38f;
+        }
+
+        .failed-card {
+            --gradient-start: #f46a6a;
+            --gradient-end: #f7a7a7;
+            --icon-color: #f46a6a;
+        }
+
+        @media (max-width: 768px) {
+            .stats-card {
+                height: 150px;
+            }
+
+            .stats-card .card-text {
+                font-size: 1.75rem;
+            }
+
+            .stats-card .card-icon {
+                font-size: 2.25rem;
+            }
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -25,36 +158,40 @@
         <!-- end page title -->
 
         <!-- social-customer -->
-        <div class="row mb-2">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Tổng số yêu cầu rút tiền</h5>
-                        <p class="card-text fs-4">{{ $countWithdrawals->total_withdrawals ?? 0 }}</p>
+        <div class="row cursor-pointer">
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card total-card">
+                    <div class="card-body text-center">
+                        <i class="ri-money-dollar-circle-line card-icon"></i>
+                        <h5 class="card-title">Tổng số yêu cầu</h5>
+                        <p class="card-text">{{ number_format($countWithdrawals->total_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền đang chờ duyệt</h5>
-                        <p class="card-text fs-4 text-success">{{ $countWithdrawals->completed_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card pending-card">
+                    <div class="card-body text-center">
+                        <i class="ri-time-line card-icon"></i>
+                        <h5 class="card-title">Đang chờ duyệt</h5>
+                        <p class="card-text">{{ number_format($countWithdrawals->pending_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thành công</h5>
-                        <p class="card-text fs-4 text-warning">{{ $countWithdrawals->pending_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card success-card">
+                    <div class="card-body text-center">
+                        <i class="ri-check-double-line card-icon"></i>
+                        <h5 class="card-title">Thành công</h5>
+                        <p class="card-text">{{ number_format($countWithdrawals->completed_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="card text-center h-75">
-                    <div class="card-body">
-                        <h5 class="card-title">Yêu cầu rút tiền thất bại</h5>
-                        <p class="card-text fs-4 text-danger">{{ $countWithdrawals->failed_withdrawals ?? 0 }}</p>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card failed-card">
+                    <div class="card-body text-center">
+                        <i class="ri-close-circle-line card-icon"></i>
+                        <h5 class="card-title">Từ chối</h5>
+                        <p class="card-text">{{ number_format($countWithdrawals->failed_withdrawals ?? 0) }}</p>
                     </div>
                 </div>
             </div>
@@ -166,7 +303,7 @@
                                         data-advanced-filter>
                                         <option value="">Chọn trạng thái</option>
                                         <option value="Hoàn thành" @selected(request()->input('status') == 'Hoàn thành')>
-                                           Hoàn thành
+                                            Hoàn thành
                                         </option>
                                         <option value="Đang xử lý" @selected(request()->input('status') == 'Đang xử lý')>
                                             Đang xử lý
@@ -175,7 +312,7 @@
                                             Chờ xác nhận lại
                                         </option>
                                         <option value="Đã xử lý" @selected(request()->input('status') == 'Đã xử lý')>
-                                          Đã xử lý
+                                            Đã xử lý
                                         </option>
                                         <option value="Từ chối" @selected(request()->input('status') == 'Từ chối')>
                                             Từ chối
@@ -227,7 +364,19 @@
                                         @foreach ($withdrawals as $withdrawal)
                                             <tr>
                                                 <td>{{ $loop->index + 1 }}</td>
-                                                <td>{{ \Illuminate\Support\Str::limit($withdrawal->bank_name ?? 'Không có thông tin', 40) }}
+                                                <td >
+                                                    @php
+                                                        $bank = $supportedBank->firstWhere(
+                                                            'short_name',
+                                                            $withdrawal->bank_name,
+                                                        );
+                                                    @endphp
+                                                    @if ($bank)
+                                                        <img src="{{ $bank->logo_rounded }}" alt="Bank Logo" class="me-2" style="width: 24px; height: 24px; object-fit: contain;"/>
+                                                        {{ $bank->short_name }}
+                                                    @else
+                                                        {{ $withdrawal->bank_name ?? 'Không có thông tin' }}
+                                                    @endif
                                                 </td>
                                                 <td>{{ $withdrawal->account_holder ?? 'Không có thông tin' }}</td>
                                                 <td><span
@@ -238,7 +387,7 @@
                                                     <img id="thumbnail-{{ $withdrawal->id }}"
                                                         class="img-thumbnail img-preview" width="50" height="50"
                                                         src="{{ \Illuminate\Support\Facades\Storage::url($withdrawal->qr_code ?? '') }}"
-                                                        alt="QR Code {{ $withdrawal->id }}" style="cursor: pointer;" />
+                                                        alt="QR Code {{ $withdrawal->id }}" />
                                                 </td>
                                                 <td>
                                                     @if ($withdrawal->status === 'Hoàn thành')

@@ -54,6 +54,20 @@ class WalletController extends Controller
                 })
                 ->get();
 
+            $totalIncome = DB::table('system_fund_transactions')
+                ->join('transactions', 'system_fund_transactions.transaction_id', '=', 'transactions.id')
+                ->where(['system_fund_transactions.type' => 'commission_received', 'transactions.status' => 'Giao dịch thành công'])
+                ->sum('system_fund_transactions.retained_amount');
+
+            $totalExpense = DB::table('system_fund_transactions')
+                ->join('transactions', 'system_fund_transactions.transaction_id', '=', 'transactions.id')
+                ->where(['system_fund_transactions.type' => 'withdrawal', 'transactions.status' => 'Giao dịch thành công'])
+                ->sum('system_fund_transactions.total_amount');
+
+            $totalTransactions = DB::table('system_fund_transactions')
+                ->join('transactions', 'system_fund_transactions.transaction_id', '=', 'transactions.id')
+                ->where('transactions.status', 'Giao dịch thành công')
+                ->count();
 
             if ($request->ajax()) {
                 return response()->json([
@@ -64,7 +78,10 @@ class WalletController extends Controller
             return view('wallets.index', compact([
                 'systemFunds',
                 'title',
-                'balanceSystem'
+                'balanceSystem',
+                'totalIncome',
+                'totalExpense',
+                'totalTransactions',
             ]));
         } catch (\Exception $e) {
             $this->logError($e);
@@ -78,8 +95,14 @@ class WalletController extends Controller
         try {
             $title = 'Chi tiết giao dịch';
 
-            $systemFund = SystemFundTransaction::query()->where('id', $id)
-                ->with(['transaction', 'user', 'course'])->first();
+            $systemFund = SystemFundTransaction::query()
+                ->where('id', $id)
+                ->with([
+                    'transaction.invoice.course',
+                    'transaction.invoice.membershipPlan',
+                    'user'
+                ])
+                ->first();
 
             if (!$systemFund) {
                 abort(404, 'Không tìm thấy giao dịch');

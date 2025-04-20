@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin\Auth;
 
+use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -19,7 +21,6 @@ class AuthController extends Controller
             }
 
             $title = 'Đăng nhập hệ thống quản trị';
-
             return view('auth.login', compact([
                 'title'
             ]));
@@ -29,6 +30,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function signup(){
         try {
             $title = 'Đăng kí tài khoản quản trị';
@@ -41,6 +43,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function forgotPassword(){
         try {
             $title = 'Quên mật khẩu';
@@ -53,6 +56,7 @@ class AuthController extends Controller
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
     public function handleLogin(Request $request)
     {
         try {
@@ -63,6 +67,7 @@ class AuthController extends Controller
                 $user =  Auth::user();
 
                 if ($user->hasRole('admin') || $user->hasRole('employee')) {
+                    Log::info('User logged in', ['user' => $user]);
                     return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công');
                 } else {
                     Auth::logout();
@@ -79,13 +84,13 @@ class AuthController extends Controller
         }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         try {
+            $user = $request->user();
+            Log::info('User logged out', ['user' => $user]);
             Auth::logout();
-
             session()->flush();
-
             return redirect()->route('admin.login');
         } catch (\Exception $e) {
             $this->logError($e);

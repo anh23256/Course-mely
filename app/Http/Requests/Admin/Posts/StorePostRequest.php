@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Admin\Posts;
 
-use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePostRequest extends BaseFormRequest
+class StorePostRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,7 +27,7 @@ class StorePostRequest extends BaseFormRequest
             'description' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'status' => ['in:draft,pending,published,private'],
+            'status' => ['in:draft,pending,published,private,scheduled'],
             'published_at' => ['nullable', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['nullable'],

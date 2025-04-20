@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Approvable;
+use App\Models\Conversation;
 use App\Models\Course;
 use App\Models\User;
 use App\Notifications\CourseApprovedNotification;
@@ -21,8 +22,8 @@ class AutoApproveCourseJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-//    public $tries = 10;
-//    public $backoff = 5;
+    //    public $tries = 10;
+    //    public $backoff = 5;
 
     protected $course;
 
@@ -31,8 +32,30 @@ class AutoApproveCourseJob implements ShouldQueue
      */
     public function __construct(Course $course)
     {
-        Log::info("Dispatching AutoApproveCourseJob for course: " . $course->id);
         $this->course = $course;
+    }
+
+    private function createChatGroup(Course $course): void
+    {
+        $existingConversation = Conversation::query()
+            ->where('conversationable_id', $course->id)
+            ->where('conversationable_type', Course::class)
+            ->where('type', 'group')
+            ->first();
+
+        if ($existingConversation) {
+            return;
+        }
+
+        $conversation = Conversation::create([
+            'conversationable_id' => $course->id,
+            'conversationable_type' => Course::class,
+            'name' => 'Nhóm học tập cho khóa học ' . $course->name,
+            'type' => 'group',
+            'owner_id' => $course->user_id
+        ]);
+
+        $conversation->users()->attach($course->user_id);
     }
 
     /**
@@ -60,7 +83,7 @@ class AutoApproveCourseJob implements ShouldQueue
             $errors = CourseValidatorService::validateCourse($course);
 
             if (!empty($errors)) {
-                DB::transaction(function () use ($approval, $course) {
+                DB::transaction(function () use ($approval, $course, $errors) {
                     $approval->update([
                         'status' => 'rejected',
                         'note' => 'Khoá học chưa đạt yêu cầu kiểm duyệt.',
@@ -72,10 +95,16 @@ class AutoApproveCourseJob implements ShouldQueue
                         'status' => 'rejected',
                         'visibility' => 'private',
                     ]);
+
+                    $approval->logApprovalAction(
+                        'rejected',
+                        null,
+                        'Khoá học chưa đạt yêu cầu kiểm duyệt.',
+                        implode(', ', $errors)
+                    );
                 });
 
                 $this->course->user->notify(new CourseRejectedNotification($this->course));
-
             } else {
                 DB::transaction(function () use ($approval, $course) {
                     $approval->update([
@@ -90,6 +119,14 @@ class AutoApproveCourseJob implements ShouldQueue
                         'visibility' => 'public',
                         'accepted' => now(),
                     ]);
+
+                    $this->createChatGroup($course);
+
+                    $approval->logApprovalAction(
+                        'approved',
+                        null,
+                        'Khoá học đã được kiểm duyệt.'
+                    );
                 });
 
                 $this->course->user->notify(new CourseApprovedNotification($this->course));

@@ -13,6 +13,7 @@ use App\Notifications\CrudNotification;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,13 +25,10 @@ use function PHPUnit\Framework\isEmpty;
 
 class PostController extends Controller
 {
-    use LoggableTrait, UploadToCloudinaryTrait, FilterTrait;
+    use LoggableTrait, UploadToCloudinaryTrait, FilterTrait, UploadToLocalTrait;
 
     const FOLDER = 'blogs';
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         try {
@@ -66,9 +64,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         try {
@@ -91,26 +86,28 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StorePostRequest $request)
     {
         try {
-
+            $request->validated();
             DB::beginTransaction();
 
             $data = $request->except('thumbnail');
 
             if ($request->hasFile('thumbnail')) {
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['user_id'] = Auth::id();
 
-            $data['category_id'] = $request->input('categories');
-
-            $data['published_at'] = $request->input('published_at') ?? now();
+            if ($request->input('status') === 'scheduled') {
+                if (!$request->has('published_at') || empty($request->input('published_at'))) {
+                    throw new \Exception('Publish date is required for scheduled posts');
+                }
+                $data['published_at'] = $request->input('published_at');
+            } else {
+                $data['published_at'] = $request->input('status') === 'published' ? now() : null;
+            }
 
             do {
                 $data['slug'] = Str::slug($request->title) . '-' . substr(Str::uuid(), 0, 10);
@@ -149,9 +146,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         try {
@@ -160,7 +154,7 @@ class PostController extends Controller
 
             $post = Post::query()
                 ->with(['tags:id,name', 'category:id,name,parent_id', 'user:id,name'])
-                ->findOrFail($id);
+                ->find($id);
 
             return view('posts.show', compact([
                 'title',
@@ -174,9 +168,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         try {
@@ -187,7 +178,7 @@ class PostController extends Controller
             $tags = Tag::query()->get();
             $post = Post::query()
                 ->with(['tags:id,name', 'category:id,name,parent_id'])
-                ->findOrFail($id);
+                ->find($id);
 
             $categoryIds = $post->category->pluck('id')->toArray();
             $tagIds = $post->tags->pluck('id')->toArray();
@@ -208,9 +199,6 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdatePostRequest $request, string $id)
     {
         try {
@@ -218,19 +206,25 @@ class PostController extends Controller
 
             $data = $request->except('thumbnail', 'categories', 'is_hot');
 
-            $post = Post::query()->with(['tags'])->findOrFail($id);
+            $post = Post::query()->with(['tags'])->find($id);
 
             if ($request->hasFile('thumbnail')) {
                 if ($post->thumbnail && filter_var($post->thumbnail, FILTER_VALIDATE_URL)) {
-                    $this->deleteImage($post->thumbnail, self::FOLDER);
+                    $this->deleteFromLocal($post->thumbnail, self::FOLDER);
                 }
 
-                $data['thumbnail'] = $this->uploadImage($request->file('thumbnail'), self::FOLDER);
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
             }
 
             $data['is_hot'] = $request->input('is_hot') ?? 0;
-            $data['category_id'] = $request->input('categories');
-            $data['published_at'] = $request->input('published_at') ?? now();
+            if ($request->input('status') === 'scheduled') {
+                if (!$request->has('published_at') || empty($request->input('published_at'))) {
+                    throw new \Exception('Publish date is required for scheduled posts');
+                }
+                $data['published_at'] = $request->input('published_at');
+            } else {
+                $data['published_at'] = $request->input('status') === 'published' ? now() : null;
+            }
 
             do {
                 $data['slug'] = Str::slug($request->title) . '-' . substr(Str::uuid(), 0, 10);
@@ -253,8 +247,6 @@ class PostController extends Controller
 
             DB::commit();
 
-            CrudNotification::sendToMany([], $id);
-
             return redirect()->route('admin.posts.edit', $id)->with('success', 'Cập nhật bài viết thành công');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -269,16 +261,13 @@ class PostController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Post $post)
     {
         try {
             $post->delete();
 
             if (isset($category->icon)) {
-                $this->deleteImage($post->thubmnail, self::FOLDER);
+                $this->deleteFromLocal($post->thubmnail, self::FOLDER);
             }
             return response()->json($data = ['status' => 'success', 'message' => 'Mục đã được xóa.']);
         } catch (\Exception $e) {
@@ -287,12 +276,12 @@ class PostController extends Controller
             return response()->json($data = ['status' => 'error', 'message' => 'Lỗi thao tác.']);
         }
     }
+
     public function export()
     {
         try {
-            
-            return Excel::download(new PostsExport, 'Posts.xlsx');
 
+            return Excel::download(new PostsExport, 'Posts.xlsx');
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -330,6 +319,7 @@ class PostController extends Controller
 
         return $query;
     }
+
     public function forceDelete(string $id)
     {
         try {
@@ -341,7 +331,7 @@ class PostController extends Controller
 
                 $this->deleteposts($postID);
             } else {
-                $post = Post::query()->onlyTrashed()->findOrFail($id);
+                $post = Post::query()->onlyTrashed()->find($id);
 
                 $post->forceDelete();
             }
@@ -364,6 +354,7 @@ class PostController extends Controller
             ]);
         }
     }
+
     private function deletePosts(array $postID)
     {
 
@@ -387,6 +378,7 @@ class PostController extends Controller
             }
         }
     }
+
     public function restoreDelete(string $id)
     {
         try {
@@ -423,6 +415,7 @@ class PostController extends Controller
             ]);
         }
     }
+
     public function listPostDelete(Request $request)
     {
         try {
@@ -458,6 +451,7 @@ class PostController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại');
         }
     }
+
     private function restoreDeletePosts(array $postID)
     {
 

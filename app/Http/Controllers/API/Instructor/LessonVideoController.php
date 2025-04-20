@@ -51,22 +51,12 @@ class LessonVideoController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
-            if ($request->hasFile('video_file')) {
-                $dataFile = $this->uploadVideo($request->file('video_file'), self::VIDE0_LESSON, true);
-                $muxVideoUrl = $this->videoUploadService->uploadVideoToMux($dataFile['secure_url']);
-
-                if (!$muxVideoUrl) {
-                    return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại');
-                }
-
-                $video = Video::query()->create([
-                    'title' => $data['title'],
-                    'url' => $dataFile['secure_url'],
-                    'asset_id' => $muxVideoUrl['asset_id'],
-                    'mux_playback_id' => $muxVideoUrl['playback_id'],
-                    'duration' => $dataFile['duration'],
-                ]);
-            }
+            $video = Video::query()->create([
+                'title' => $data['title'],
+                'asset_id' => $data['mux_asset_id'],
+                'mux_playback_id' => $data['mux_playback_id'],
+                'duration' => $data['duration'] ?? 0,
+            ]);
 
             $data['order'] = $chapter->lessons->max('order') + 1;
 
@@ -151,33 +141,23 @@ class LessonVideoController extends Controller
             }
 
             $video = $lesson->lessonable;
-            if ($request->hasFile('video_file')) {
-                $this->deleteVideo($video->url, self::VIDE0_LESSON);
-                $this->videoUploadService->deleteVideoFromMux($video->asset_id);
 
-                $dataFile = $this->uploadVideo($request->file('video_file'), self::VIDE0_LESSON, true);
-                $muxVideoUrl = $this->videoUploadService->uploadVideoToMux($dataFile['secure_url']);
+            $videoData = [
+                'title' => $data['title'] ?? $video->title,
+            ];
 
-                if (!$muxVideoUrl) {
-                    return $this->respondServerError('Có lỗi xảy ra khi upload video, vui lòng thử lại');
-                }
-
-                sleep(5);
-                $duration = $this->videoUploadService->getVideoDurationToMux($muxVideoUrl['asset_id']);
-
-                $video->update([
-                    'title' => $data['title'],
-                    'url' => $dataFile['secure_url'],
-                    'asset_id' => $muxVideoUrl['asset_id'],
-                    'mux_playback_id' => $muxVideoUrl['playback_id'],
-                    'duration' => $duration,
-                ]);
+            if (isset($data['mux_asset_id']) && isset($data['mux_playback_id'])) {
+                $videoData['asset_id'] = $data['mux_asset_id'];
+                $videoData['mux_playback_id'] = $data['mux_playback_id'];
+                $videoData['duration'] = $data['duration'] ?? $video->duration;
             }
 
+            $video->update($videoData);
+
             $lesson->update([
-                'title' => $data['title'],
-                'content' => $data['content'],
-                'is_free_preview' => $data['is_free_preview'] ?? false,
+                'title' => $data['title'] ?? $lesson->title,
+                'content' => array_key_exists('content', $data) ? $data['content'] : $lesson->content,
+                'is_free_preview' => isset($data['is_free_preview']) ? $data['is_free_preview'] : $lesson->is_free_preview,
             ]);
 
             return $this->respondOk('Cập nhật bài giảng thành công', $lesson->load('lessonable'));

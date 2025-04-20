@@ -4,13 +4,10 @@ namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Search\SearchRequest;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use function PHPUnit\Framework\isEmpty;
 
 class SearchController extends Controller
 {
@@ -24,9 +21,26 @@ class SearchController extends Controller
             $results = [];
 
             $courses = DB::table('courses')
-                ->select('id', 'name', 'slug', 'thumbnail')
-                ->where('status', 'approved')
-                ->whereRaw("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", [$query])
+                ->join('users', 'courses.user_id', '=', 'users.id')
+                ->select(
+                    'courses.id',
+                    'courses.user_id',
+                    'courses.name',
+                    'courses.slug',
+                    'courses.price',
+                    'courses.price_sale',
+                    'courses.is_free',
+                    'courses.thumbnail',
+                    'users.name as instructor_name' 
+                )
+                ->where('courses.status', 'approved')
+                ->where('courses.visibility', 'public')
+                ->where(function ($q) use ($query) {
+                    $q->whereRaw("MATCH(courses.name, courses.description) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
+                        ->orWhere('courses.name', 'LIKE', "%{$query}%")
+                        ->orWhere('courses.description', 'LIKE', "%{$query}%");
+                })
+                ->orderBy('courses.total_student', 'desc')
                 ->limit(5)
                 ->get();
 
@@ -37,7 +51,12 @@ class SearchController extends Controller
             $posts = DB::table('posts')
                 ->select('id', 'title', 'slug', 'thumbnail')
                 ->where('status', 'published')
-                ->whereRaw("MATCH(title, content, description) AGAINST(? IN BOOLEAN MODE)", [$query])
+                ->where(function ($q) use ($query) {
+                    $q->whereRaw("MATCH(title, content, description) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
+                        ->orWhere('title', 'LIKE', "%{$query}%")
+                        ->orWhere('content', 'LIKE', "%{$query}%")
+                        ->orWhere('description', 'LIKE', "%{$query}%");
+                })
                 ->limit(5)
                 ->get();
 
@@ -45,10 +64,17 @@ class SearchController extends Controller
                 $results['posts'] = $posts;
             }
 
-            $instructors = DB::table('users')
-                ->select('id', 'name', 'email', 'avatar')
-                ->whereRaw("MATCH(name, email) AGAINST(? IN BOOLEAN MODE)", [$query])
-                ->limit(5)
+            $instructors = User::query()->select('id', 'name', 'email', 'avatar')
+                ->where(function ($q) use ($query) {
+                    $q->whereRaw("MATCH(name, email) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
+                        ->orWhere('name', 'LIKE', "%{$query}%")
+                        ->orWhere('email', 'LIKE', "%{$query}%");
+                })
+                ->where('status', 'active')
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', 'instructor');
+                })
+                ->limit(3)
                 ->get();
 
             if ($instructors->isNotEmpty()) {

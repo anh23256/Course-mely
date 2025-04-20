@@ -46,7 +46,7 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://127.0.0.1:8000/api/auth/google/callback'),
     ],
 
     'vnpay' => [
@@ -54,5 +54,9 @@ return [
         'vnp_HashSecret' => env('VNP_HASH_SECRET'),
         'vnp_Url' => env('VNP_URL'),
         'vnp_ReturnUrl' => env('VNP_RETURN_URL'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
 ];

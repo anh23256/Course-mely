@@ -7,7 +7,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
+use Illuminate\Support\Str;
 class InvoiceSeeder extends Seeder
 {
     /**
@@ -27,9 +27,12 @@ class InvoiceSeeder extends Seeder
             Invoice::insert([
                 'user_id' => fake()->randomElement($users),
                 'course_id' => fake()->randomElement($courses),
+                'code' => 'IVE-'.$i,
                 'amount' => fake()->randomFloat(2, 10000, 10000000),
                 'final_amount' => fake()->randomFloat(2, 10000, 10000000),
-                'status' => fake()->randomElement(['completed', 'pending', 'failed']),
+                'status' => fake()->randomElement(['Đã thanh toán', 'Chưa thanh toán', 'Chờ thanh toán']),
+                'invoice_type' => fake()->randomElement(['membership', 'course']),
+                'payment_method' => fake()->randomElement(['vnpay', 'momo', 'credit_card']),
                 'created_at' => $created_at,
                 'updated_at' => fake()->dateTimeBetween($created_at, now(), env('APP_TIMEZONE'))
             ]);

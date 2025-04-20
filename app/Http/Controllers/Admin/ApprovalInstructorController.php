@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ApprovalsIntructorExport;
 use App\Http\Controllers\Controller;
 use App\Models\Approvable;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApprovalInstructorController extends Controller
 {
@@ -23,8 +25,9 @@ class ApprovalInstructorController extends Controller
             $queryApprovals = Approvable::query()
                 ->with([
                     'approver',
-                    'user',
+                    'user.profile',
                 ])
+                ->orderBy('id', 'desc')
                 ->where('approvable_type', User::class);
 
             $approvalCount = Approvable::query()
@@ -40,9 +43,10 @@ class ApprovalInstructorController extends Controller
                 'request_end_date',
                 'approval_start_date',
                 'approval_end_date',
-                'user_email_approved',
-                'user_name_approved',
                 'approver_name_approved',
+                'instructor_email',
+                'name_instructor',
+                'phone_instructor',
                 'status'
             ])) {
                 $queryApprovals = $this->filter($request, $queryApprovals);
@@ -79,8 +83,18 @@ class ApprovalInstructorController extends Controller
                 ->with([
                     'approver',
                     'user.profile.careers',
+                    'user.followers',
+                    'user.following', 
                 ])
-                ->where('id',$id)->first();
+                ->withCount([
+                    'user as follower_count' => function ($query) {
+                        $query->whereHas('followers');
+                    },
+                    'user as following_count' => function ($query) {
+                        $query->whereHas('following');
+                    },
+                ])
+                ->where('id', $id)->first();
 
             $score = $this->calculateCompletenessScore($approval->user);
 
@@ -162,12 +176,12 @@ class ApprovalInstructorController extends Controller
 
     public function approve(Request $request, string $id)
     {
-        return $this->updateApprovalStatus($id, 'approved', 'Người hướng dẫn đã được kiểm duyệt', 'instructor');
+        return $this->updateApprovalStatus($id, 'approved', 'Giảng viên đã được kiểm duyệt', 'instructor');
     }
 
     public function reject(Request $request, string $id)
     {
-        $note = $request->note ?? 'Người hướng dẫn đã bị từ chối';
+        $note = $request->note ?? 'Giảng viên đã bị từ chối';
         return $this->updateApprovalStatus($id, 'rejected', $note, 'member');
     }
 
@@ -189,7 +203,7 @@ class ApprovalInstructorController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', "Người hướng dẫn đã được $status");
+            return redirect()->back()->with('success', "Giảng viên đã được $status");
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logError($e);
@@ -203,14 +217,35 @@ class ApprovalInstructorController extends Controller
     {
         $filters = [
             'status' => ['queryWhere' => '='],
-            'user_email_approved' => null,
-            'user_name_approved' => null,
             'approver_name_approved' => null,
             'request_date' => ['attribute' => ['request_start_date' => '>=', 'request_end_date' => '<=']],
             'approval_date' => ['filed' => ['approved_at', 'rejected_at'], 'attribute' => ['approval_start_date' => '>=', 'approval_end_date' => '<=']],
         ];
 
         $query = $this->filterTrait($filters, $request, $query);
+
+        $email_instructor = $request->input('instructor_email', '');
+        $name_instructor = $request->input('name_instructor', '');
+        $phone_instructor = $request->input('phone_instructor', '');
+
+        if (!empty($name_instructor) || !empty($email_instructor) || !empty($phone_instructor)) {
+            $query->whereHas('user', function ($query) use ($email_instructor, $name_instructor, $phone_instructor) {
+
+                if (!empty($name_instructor)) {
+                    $query->where('name', 'LIKE', "%{$name_instructor}%");
+                }
+
+                if (!empty($email_instructor)) {
+                    $query->where('email', 'LIKE', "%{$email_instructor}%");
+                }
+
+                if (!empty($phone_instructor)) {
+                    $query->whereHas('profile', function ($query) use ($phone_instructor) {
+                        $query->where('phone', 'LIKE', "%$phone_instructor%");
+                    });
+                }
+            });
+        }
 
         return $query;
     }
@@ -219,18 +254,33 @@ class ApprovalInstructorController extends Controller
     {
         if (!empty($request->search_full)) {
             $searchTerm = $request->search_full;
-
             $query->where(function ($query) use ($searchTerm) {
-                $query->where('note', 'LIKE', "%$searchTerm%")
-                    ->orWhereHas('approver', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%");
-                    })
+                $query->whereHas('approver', function ($query) use ($searchTerm) {
+                    $query->where('name', 'LIKE', "%$searchTerm%");
+                })
                     ->orWhereHas('user', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%")->orWhere('email', 'LIKE', "%$searchTerm%");
+                        $query->where('name', 'LIKE', "%$searchTerm%")
+                            ->orWhere('email', 'LIKE', "%$searchTerm%")
+                            ->orWhereHas('profile', function ($query) use ($searchTerm) {
+                                $query->where('phone', 'LIKE', "%$searchTerm%");
+                            });
                     });
             });
         }
 
         return $query;
+    }
+
+    public function export()
+    {
+        try {
+
+            return Excel::download(new ApprovalsIntructorExport, 'danh_sach_kiem_duyet_giang_vien.xlsx');
+
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-
+use App\Models\InstructorCommission;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,26 +17,33 @@ class DatabaseSeeder extends Seeder
         $startTime = microtime(true);
 
         $this->call([
-            RoleSeeder::class,
-            PermissionsSeeder::class,
-            SupportedBankSeeder::class,
-            TagSeeder::class,
-            UserSeeder::class,
-            WalletSedder::class,
-            BannerSeeder::class,
-            CategorySeeder::class,
-            CourseSeeder::class,
-            ApprovableSeeder::class,
-            CouponSeeder::class,
-            PostSeeder::class,
-            InvoiceSeeder::class,
-            WithdrawalsRequestSeeder::class,
-            TransactionSeeder::class,
-            SystemFundSeeder::class,
+            // RoleSeeder::class,
+            // PermissionsSeeder::class,
+            // SupportedBankSeeder::class,
+            // TagSeeder::class,
+            // UserSeeder::class,
+            // WalletSedder::class,
+            // BannerSeeder::class,
+            // CategorySeeder::class,
+            // CourseSeeder::class,
+            // ApprovableSeeder::class,
+            // CouponSeeder::class,
+            // PostSeeder::class,
+            // InvoiceSeeder::class,
+            // WithdrawalsRequestSeeder::class,
+            // TransactionSeeder::class,
+            // SystemFundSeeder::class,
+            // MembershipSeeder::class
+
+            // PostSeeder::class,
+            // CommentSeeder::class,
+            // ReactionSeeder::class,
+
+            InstructorCommissionSeeder::class
         ]);
 
         $endTime = microtime(true);
 
-        echo 'Thời gian thực hiện: '. round($endTime - $startTime) . 's';
+        echo 'Thời gian thực hiện: ' . round($endTime - $startTime) . 's';
     }
 }

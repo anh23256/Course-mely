@@ -13,9 +13,10 @@ class BaseFormRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         $errors = $validator->errors();
+        $firstError = $errors->first();
 
         $response = response()->json([
-            'message' => 'Dữ liệu không hợp lệ',
+            'message' => $firstError ?? 'Dữ liệu không hợp lệ',
             'errors' => $errors->messages(),
         ], Response::HTTP_UNPROCESSABLE_ENTITY);
 

@@ -13,6 +13,12 @@ class UserCodingSubmission extends Model
         'user_id',
         'coding_id',
         'code',
+        'is_correct',
         'result',
     ];
+
+    public function coding()
+    {
+        return $this->belongsTo(Coding::class);
+    }
 }

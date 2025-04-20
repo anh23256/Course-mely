@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Coupons\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupons\UpdateCouponRequest;
+use App\Jobs\AssignCouponJob;
 use App\Models\Coupon;
+use App\Models\CouponUse;
 use App\Models\User;
-use App\Notifications\CouponCodeCreated;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CouponController extends Controller
 {
@@ -22,7 +26,7 @@ class CouponController extends Controller
      */
     public function index(Request $request)
     {
-        $queryCoupons = Coupon::query();
+        $queryCoupons = Coupon::query()->with('user');
 
         if ($request->has('query') && $request->input('query')) {
             $search = $request->input('query');
@@ -70,22 +74,40 @@ class CouponController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $request->validated();
-            // Gửi thông báo cho người dùng hoặc admin
-            $coupon = Coupon::create($data);
-            $roleUser = ['member', 'instructor'];
-            $users = User::whereHas('roles', function ($query) use ($roleUser) {
-                $query->whereIn('name', $roleUser);
-            })->get();
 
-            foreach ($users as $user) {
-                $user->notify(new CouponCodeCreated($coupon));
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole(['admin', 'employee'])) {
+                return abort(403, 'Bạn không có quyền thực hiện chức năng này!!!');
             }
+
+            $data = $request->validated();
+
+            $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
+            $data['user_id'] = $user->id;
+
+            $coupon = Coupon::create($data);
+
+            $userIds = $request->system_wide ?
+                User::whereDoesntHave('roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'employee']);
+                })
+                ->where('status', 'active')
+                ->whereNotNull('email_verified_at')
+                ->pluck('id')
+                ->toArray() :
+                $request->selected_users;
+
+            AssignCouponJob::dispatch($coupon, $userIds);
+
             DB::commit();
+
             return redirect()->route('admin.coupons.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
             DB::rollBack();
+
             $this->logError($e);
+
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -93,13 +115,24 @@ class CouponController extends Controller
     public function show(string $id)
     {
         $coupon = Coupon::findOrFail($id);
+
         return view('coupons.show', compact('coupon'));
     }
 
     public function edit(string $id)
     {
-        $coupon = Coupon::findOrFail($id);
-        return view('coupons.edit', compact('coupon'));
+        $coupon = Coupon::query()
+            ->with(['couponUses' => function ($query) {
+                $query->select('id', 'coupon_id', 'user_id');
+            }, 'couponUses.user:id,name,email,avatar'])
+            ->findOrFail($id);
+
+        $couponUses = CouponUse::query()
+            ->with('user:id,name,email,avatar')
+            ->where('coupon_id', $coupon->id)
+            ->get();
+
+        return view('coupons.edit', compact('coupon', 'couponUses'));
     }
 
     public function update(UpdateCouponRequest $request, string $id)
@@ -107,7 +140,10 @@ class CouponController extends Controller
         try {
             DB::beginTransaction();
             $coupon = Coupon::findOrFail($id);
-            $coupon->update($request->validated());
+            $data = $request->validated();
+            $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
+            $coupon->update($data);
+
             DB::commit();
             return redirect()->route('admin.coupons.edit', $coupon->id)->with('success', 'Cập nhật thành công');
         } catch (\Exception $e) {
@@ -150,6 +186,7 @@ class CouponController extends Controller
 
         return view('coupons.deleted', compact('coupons'));
     }
+
     private function filter($request, $query)
     {
         $filters = [
@@ -167,5 +204,71 @@ class CouponController extends Controller
         $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
+    }
+    public function suggestionCounpoun(Request $request)
+    {
+        try {
+            $suggestCounpons = [];
+
+            $counpon = $request->input('code', 'SALE');
+
+            if (Coupon::where('code', $counpon)->exists()) {
+                for ($i = 1; $i <= 3; $i++) {
+                    do {
+                        $counponCode = '';
+                        $counponCode = Str::upper($counpon . substr(str_replace('-', '', Str::uuid()), 0, 6));
+                    } while (Coupon::where('code', $counponCode)->exists());
+
+                    $suggestCounpons[] = $counponCode;
+                }
+
+                return response()->json($suggestCounpons);
+            }
+
+            return;
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
+    }
+
+    public function couponUserSearch(Request $request)
+    {
+        try {
+            $searchQuery = $request->input('search', '');
+            $excludeIds = $request->input('exclude', []);
+
+            $users = User::query()
+                ->whereDoesntHave('roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'employee']);
+                })
+                ->where('status', 'active')
+                ->whereNotNull('email_verified_at')
+                ->when(!empty($excludeIds), function ($query) use ($excludeIds) {
+                    $query->whereNotIn('id', $excludeIds);
+                })
+                ->where(function ($query) use ($searchQuery) {
+                    $query->where('name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('email', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('code', 'LIKE', "%{$searchQuery}%");
+                })
+                ->select('id', 'name', 'email', 'avatar')
+                ->limit(10)
+                ->get();
+
+            return response()->json([
+                'users' => $users,
+                'pagination' => [
+                    'more' => false,
+                    'total' => $users->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return response()->json([
+                'error' => true,
+                'message' => 'Có lỗi xảy ra, vui lòng thử lại'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

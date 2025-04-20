@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('name')->nullable();
             $table->enum('type', ['private', 'group'])->default('private');
             $table->boolean('status')->default(true);
-            $table->morphs('conversationable');
+            $table->nullableMorphs('conversationable');
             $table->timestamps();
         });
     }

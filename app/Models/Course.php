@@ -14,13 +14,14 @@ class Course extends Model
 
     const LEVEL_BEGINNER = 'beginner';
     const LEVEL_INTERMEDIATE =
-    'intermediate';
+        'intermediate';
     const LEVEL_ADVANCED = 'advanced';
 
     const STATUS_DRAFT = 'draft';
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_MODIFY_REQUEST = 'modify_request';
 
     protected $fillable = [
         'user_id',
@@ -44,7 +45,9 @@ class Course extends Model
         'visibility',
         'modification_request',
         'accepted',
-        'views'
+        'views',
+        'is_practical_course',
+        'allow_coding_lesson'
     ];
 
     public $attributes = [
@@ -111,8 +114,14 @@ class Course extends Model
     {
         return $this->belongsTo(Role::class);
     }
+
     public function instructor()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
     }
 }

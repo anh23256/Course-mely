@@ -14,6 +14,7 @@ class Post extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_PUBLISHED = 'published';
     const STATUS_PRIVATE = 'private';
+    const STATUS_SCHEDULED = 'scheduled';
 
     protected $fillable = [
         'user_id',
@@ -31,14 +32,27 @@ class Post extends Model
 
     public function tags()
     {
-        return $this->morphToMany(Tag::class, 'taggable');
+        return $this->morphToMany(Tag::class, 'taggable')
+                    ->withTimestamps();
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function category(){
+    public function profile()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function category()
+    {
         return $this->belongsTo(Category::class);
+    }
+    
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
 }

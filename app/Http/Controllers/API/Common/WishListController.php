@@ -5,11 +5,14 @@ namespace App\Http\Controllers\API\Common;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\WishList\StoreWishListRequest;
 use App\Models\Course;
+use App\Models\Rating;
+use App\Models\Video;
 use App\Models\WishList;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WishListController extends Controller
 {
@@ -29,7 +32,9 @@ class WishListController extends Controller
                     'wishLists',
                     'user',
                     'chapters' => function ($query) {
-                        $query->withCount('lessons');
+                        $query->with(['lessons' => function ($lessonQuery) {
+                            $lessonQuery->with('lessonable');
+                        }])->withCount('lessons');
                     },
                 ])
                 ->withCount([
@@ -41,11 +46,57 @@ class WishListController extends Controller
                 })
                 ->get();
 
-            if ($courses->isEmpty()) {
-                return $this->respondNotFound('Không có dữ liệu');
-            }
+            $courseRatings = Rating::whereIn('course_id', $courses->pluck('id'))
+                ->groupBy('course_id')
+                ->select(
+                    'course_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('ROUND(AVG(rate), 1) as average_rating')
+                )
+                ->get()
+                ->keyBy('course_id');
 
-            return $this->respondOk('Danh sách khoá học yêu thích của người dùng:' . $user->name, $courses);
+            $result = $courses->map(function ($course) use ($courseRatings) {
+                $videoLessons = $course->chapters->flatMap(function ($chapter) {
+                    return $chapter->lessons->where('lessonable_type', Video::class);
+                });
+
+                $totalVideoDuration = $videoLessons->sum(function ($lesson) {
+                    return $lesson->lessonable->duration ?? 0;
+                });
+
+                $ratingInfo = $courseRatings->get($course->id);
+
+                return [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'level' => $course->level,
+                    'status' => $course->status,
+                    'chapters_count' => $course->chapters_count,
+                    'lessons_count' => $course->lessons_count,
+                    'is_practical_course' => $course->is_practical_course,
+                    'ratings' => [
+                        'count' => $ratingInfo ? $ratingInfo->ratings_count : 0,
+                        'average' => $ratingInfo ? $ratingInfo->average_rating : 0
+                    ],
+                    'total_video_duration' => $totalVideoDuration,
+                    'category' => [
+                        'id' => $course->category->id ?? null,
+                        'name' => $course->category->name ?? null,
+                        'slug' => $course->category->slug ?? null
+                    ],
+                    'user' => [
+                        'id' => $course->user->id ?? null,
+                        'name' => $course->user->name ?? null,
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
+                    ]
+                ];
+            });
+
+            return $this->respondOk('Danh sách khoá học yêu thích của người dùng: ' . $user->name, $result);
         } catch (\Exception $e) {
             $this->logError($e);
 

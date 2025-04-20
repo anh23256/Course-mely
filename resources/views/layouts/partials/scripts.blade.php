@@ -8,6 +8,7 @@
 <script src="{{ asset('assets/libs/feather-icons/feather.min.js') }}"></script>
 <script src="{{ asset('assets/js/pages/plugins/lord-icon-2.1.0.js') }}"></script>
 <script src="{{ asset('assets/js/plugins.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 
 
 <script>
@@ -24,7 +25,7 @@
         });
     });
 </script>
-
+</script>
 
 <!-- App js -->
 <script src="{{ asset('assets/js/app.js') }}"></script>
@@ -44,9 +45,9 @@
             }
         });
 
-        $(".sweet-confirm").click(function(event) {
+        $(document).on('click', '.sweet-confirm', function(event) {
             event.preventDefault();
-            
+
             let deleteUrl = $(this).attr("href");
 
             Swal.fire({
@@ -125,14 +126,14 @@
         }
     }
     @isset($errors)
-    @if (session('success'))
-        showToast('success', "{{ session('success') }}");
-    @elseif (session('error'))
-        showToast('error', "{{ session('error') }}");
-    @elseif ($errors->any())
-        @foreach ($errors->all() as $warning)
-            showToast('warning', "{{ $warning }}");
-        @endforeach
-    @endif
+        @if (session('success'))
+            showToast('success', "{{ session('success') }}");
+        @elseif (session('error'))
+            showToast('error', "{{ session('error') }}");
+        @elseif ($errors->any())
+            @foreach ($errors->all() as $warning)
+                showToast('warning', "{{ $warning }}");
+            @endforeach
+        @endif
     @endisset
 </script>

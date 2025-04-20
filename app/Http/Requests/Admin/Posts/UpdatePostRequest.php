@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Admin\Posts;
 
-use App\Http\Requests\API\Bases\BaseFormRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdatePostRequest extends BaseFormRequest
+class UpdatePostRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,7 +30,7 @@ class UpdatePostRequest extends BaseFormRequest
                 'nullable',
 
             ],
-            'status' => ['in:draft,pending,published,private'],
+            'status' => ['in:draft,pending,published,private,scheduled'],
             'published_at' => ['nullable', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['nullable'],

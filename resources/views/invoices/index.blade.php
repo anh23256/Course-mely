@@ -1,6 +1,14 @@
 @extends('layouts.app')
 @push('page-css')
     <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .course-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -112,8 +120,8 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Mã hóa đơn</label>
                                     <input class="form-control form-control-sm" name="code" type="text"
-                                        placeholder="Nhập tên người mua khóa học..."
-                                        value="{{ request()->input('code') ?? '' }}" data-advanced-filter>
+                                        placeholder="Nhập mã hóa đơn..." value="{{ request()->input('code') ?? '' }}"
+                                        data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Người mua</label>
@@ -122,19 +130,37 @@
                                         value="{{ request()->input('user_name_invoice') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Tên khóa học</label>
-                                    <input class="form-control form-control-sm" name="course_name_invoice" type="text"
-                                        placeholder="Nhập mã khóa học..."
-                                        value="{{ request()->input('course_name_invoice') ?? '' }}" data-advanced-filter>
+                                    <label class="form-label">Số điện thoại người mua</label>
+                                    <input class="form-control form-control-sm" name="phone_user" type="text"
+                                        placeholder="Nhập số điện thoại người mua khóa học..."
+                                        value="{{ request()->input('phone_user') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Người hướng dẫn</label>
-                                    <input class="form-control form-control-sm" name="course_user_name" type="text"
+                                    <label class="form-label">Email người mua</label>
+                                    <input class="form-control form-control-sm" name="user_email_invoice" type="text"
+                                        placeholder="Nhập email người mua khóa học..."
+                                        value="{{ request()->input('user_email_invoice') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3 mt-3">
+                                    <label class="form-label">Tên khóa học</label>
+                                    <input class="form-control form-control-sm" name="course_name_invoice" type="text"
                                         placeholder="Nhập tên khóa học..."
+                                        value="{{ request()->input('course_name_invoice') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3 mt-3">
+                                    <label class="form-label">Giảng viên</label>
+                                    <input class="form-control form-control-sm" name="course_user_name" type="text"
+                                        placeholder="Nhập tên giảng viên..."
                                         value="{{ request()->input('course_user_name') ?? '' }}" data-advanced-filter>
                                 </div>
+                                <div class="col-md-3 mt-3">
+                                    <label class="form-label">Email giảng viên</label>
+                                    <input class="form-control form-control-sm" name="course_user_email" type="text"
+                                        placeholder="Nhập email giảng viên..."
+                                        value="{{ request()->input('course_user_email') ?? '' }}" data-advanced-filter>
+                                </div>
                                 <div class="mt-3 text-end">
-                                    <button class="btn btn-sm btn-success" type="reset">Reset</button>
+                                    <button class="btn btn-sm btn-success" id="resetFilter" type="reset">Reset</button>
                                     <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
                                 </div>
                             </div>
@@ -151,7 +177,7 @@
                                             <th>Mã hóa đơn</th>
                                             <th>Người mua</th>
                                             <th>Khoá học</th>
-                                            <th>Người hướng dẫn</th>
+                                            <th>Giảng viên</th>
                                             <th>Tổng thanh toán</th>
                                             <th>Trạng thái</th>
                                             <th>Ngày mua</th>
@@ -162,31 +188,41 @@
                                         @foreach ($invoices as $invoice)
                                             <tr>
                                                 <td>{{ $loop->index + 1 }}</td>
-                                                <td>{{ $invoice->code }}</td>
+                                                <td>{{ $invoice->code ?? '' }}</td>
                                                 <td><span
-                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
+                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span><br>
+                                                    <small class="text-muted">{{ $invoice->user->email }}</small>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted">{{ $invoice->user->profile->phone ?? '' }}</small>
                                                 </td>
                                                 <td>
-                                                    <img style="width: 70px; " src="{{ $invoice->course->thumbnail }}"
-                                                        class="object-fit-cover rounded me-2" alt="">
-                                                    <span>
-                                                        {{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}
-                                                    </span>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ $invoice->course->thumbnail }}"
+                                                            class="course-thumbnail me-3" alt="">
+                                                        <span
+                                                            class="fw-medium">{{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}</span>
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    {{ $invoice->course->instructor->name ?? '' }}
+                                                    <span
+                                                        class="text-danger fw-bold">{{ $invoice->course->instructor->name ?? '' }}</span>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted">{{ $invoice->course->instructor->email ?? '' }}</small>
                                                 </td>
                                                 <td>{{ number_format($invoice->final_amount ?? 0) }} VND</td>
                                                 <td>
-                                                    <span class="badge bg-primary">Hoàn thành</span>
+                                                    <span
+                                                        class="badge rounded-pill bg-success badge-status">{{ $invoice->status }}</span>
                                                 </td>
                                                 <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
                                                 </td>
                                                 <td>
-                                                    <a href="">
-                                                        <button class="btn btn-sm btn-info edit-item-btn">
-                                                            <span class="ri-eye-line"></span>
-                                                        </button>
+                                                    <a href="{{ route('admin.invoices.show', $invoice->code ?? '') }}"
+                                                        class="btn btn-sm btn-soft-info rounded-circle"
+                                                        data-bs-toggle="tooltip" title="Xem chi tiết">
+                                                        <i class="ri-eye-line"></i>
                                                     </a>
                                                 </td>
                                             </tr>
@@ -228,6 +264,10 @@
             $('#amountMinRange').val(0);
             $('#amountMaxRange').val(99990000);
             updateRange();
+        });
+
+        $(document).on('click', '#resetFilter', function() {
+            window.location = routeUrlFilter;
         });
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>

@@ -5,15 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Settings\StoreSettingRequest;
 use App\Http\Requests\Admin\Settings\UpdateSettingRequest;
+use App\Models\CertificateTemplate;
 use App\Models\Setting;
 use App\Notifications\CrudNotification;
+use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
+
 
 class SettingController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait, ApiResponseTrait;
     /**
      * Display a listing of the resource.
      */
@@ -25,8 +30,9 @@ class SettingController extends Controller
             $subTitle = 'Danh sách các cài đặt';
 
             $settings = Setting::latest('id')->paginate(10);
+            $templateCertificates = CertificateTemplate::query()->limit(4)->get();
 
-            return view('settings.index', compact(['title', 'subTitle', 'settings']));
+            return view('settings.index', compact(['title', 'subTitle', 'settings', 'templateCertificates']));
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -62,14 +68,23 @@ class SettingController extends Controller
     {
         try {
 
-            $data = $request->validated();
+            $data = $request->except('value');
 
-            $setting = Setting::create($data);
+            if ($request->hasFile('value') && $request->input('type') === 'image') {
+                $path = $request->file('value')->store('settings', 'public');
+                $data['value'] = $path;
+            }
 
-            CrudNotification::sendToMany([],$setting->id);
+            Setting::query()->create($data);
 
-            return redirect()->route('admin.settings.index')->with('success', true);
+            return redirect()->route('admin.settings.index')->with('success', 'Thêm mới thành công');
         } catch (\Exception $e) {
+
+            if (!empty($data['value']) && $request->input('type') === 'image') {
+                if (Storage::disk('public')->exists($data['value'])) {
+                    Storage::disk('public')->delete($data['value']);
+                }
+            }
 
             $this->logError($e);
 
@@ -117,16 +132,36 @@ class SettingController extends Controller
     {
         try {
 
-            $data = $request->validated();
-
             $setting = Setting::query()->findOrFail($id);
+
+            $data = $request->except('value');
+
+            if ($request->hasFile('value') && $request->input('type') === 'image') {
+
+                if (!empty($setting->value) && !filter_var($setting->value, FILTER_VALIDATE_URL)) {
+                    if (Storage::disk('public')->exists($setting->value)) {
+                        Storage::disk('public')->delete($setting->value);
+                    }
+                }
+
+                $data['value'] = $request->file('value')->store('settings', 'public');
+
+            } elseif ($request->input('type') === 'text') {
+                $data['value'] = $request->input('value'); 
+            }
 
             $setting->update($data);
 
-            CrudNotification::sendToMany([],$setting->id);
+            Cache::forget('settings');
 
-            return redirect()->route('admin.settings.edit', $id)->with('success', true);
+            return redirect()->route('admin.settings.edit', $id)->with('success', 'Thao tác thành công');
         } catch (\Exception $e) {
+
+            if (!empty($data['value']) && $request->input('type') === 'image') {
+                if (Storage::disk('public')->exists($data['value'])) {
+                    Storage::disk('public')->delete($data['value']);
+                }
+            }
 
             $this->logError($e);
 
@@ -146,7 +181,7 @@ class SettingController extends Controller
 
                 $settingID = explode(',', $id);
 
-                $setting = Setting::query()->whereIn('id',$settingID)->delete();
+                $setting = Setting::query()->whereIn('id', $settingID)->delete();
             } else {
                 $setting = Setting::query()->findOrFail($id);
 
@@ -154,8 +189,6 @@ class SettingController extends Controller
             }
 
             DB::commit();
-
-            CrudNotification::sendToMany([],$id);
 
             return response()->json([
                 'status' => 'success',
@@ -171,6 +204,24 @@ class SettingController extends Controller
                 'status' => 'error',
                 'message' => 'Xóa thất bại'
             ]);
+        }
+    }
+
+    public function updateStatusCertificates(string $id)
+    {
+        try {
+            $certificateTemplate = CertificateTemplate::query()->findOrFail($id);
+
+            $certificateTemplate->update(['status' => 1]);
+
+            $certificateEsle = CertificateTemplate::where('id', '<>', $id)->update(['status' => 0]);
+
+            return $this->respondOk('Thao tác thành công');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return $this->respondError('Vui lòng thử lại');
         }
     }
 }

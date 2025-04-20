@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleHasAdmins
@@ -25,14 +26,17 @@ class RoleHasAdmins
         ) {
             return $next($request);
         }
-        elseif (
-            Auth::check() && (
-                Auth::user()->hasRole('admin') || Auth::user()->hasRole('employee')
-            ) &&
-            Auth::user()->email_verified_at == null
-        ) {
-            return redirect('email');
-        }
+        // Kiểm tra quyền cho employee
+        // if ( Auth::check() && Auth::user()->hasRole('employee')) {
+        //     // Kiểm tra nếu yêu cầu truy cập vào banners hoặc posts
+        //     if ($request->is('admin/banners/*') || $request->is('admin/posts/*') || $request->is('admin/dashboard')) {
+        //         return $next($request);
+        //     }
+
+        //     // Nếu không phải banners hoặc posts, từ chối quyền truy cập
+        //     return abort(403, 'Bạn không có quyền truy cập vào hệ thống này.');
+        // }
+
         return abort(403, 'Bạn không có quyền truy cập vào hệ thống.');
     }
 }

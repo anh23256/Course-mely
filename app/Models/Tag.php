@@ -16,10 +16,7 @@ class Tag extends Model
 
     public function posts()
     {
-        return $this->morphToMany(Post::class, 'taggable');
-    }
-
-    public function taggable () {
-        return $this->morphTo();
+        return $this->morphedByMany(Post::class, 'taggable')
+                    ->withTimestamps();
     }
 }

@@ -20,14 +20,16 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_id');
     }
-
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
     public function reactions()
     {
-        return $this->morphMany(Reaction::class, 'reactionable');
+        return $this->morphMany(Reaction::class, 'reactable');
+    }
+    public function commentable()
+    {
+        return $this->morphTo();
     }
 }

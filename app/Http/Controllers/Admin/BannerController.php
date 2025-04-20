@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreBannerRequest;
-use App\Http\Requests\API\Banners\UpdateBannerRequest;
+use App\Http\Requests\Admin\Banners\StoreBannerRequest;
+use App\Http\Requests\Admin\Banners\UpdateBannerRequest;
 use App\Models\Banner;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class BannerController extends Controller
 {
@@ -23,7 +24,7 @@ class BannerController extends Controller
      */
     public function index(Request $request)
     {
-        $queryBanners = Banner::query()->latest('id');
+        $queryBanners = Banner::orderBy('order', 'asc');
 
         // Kiểm tra nếu có từ khóa tìm kiếm
         if ($request->has('search_full') && $request->input('search_full')) {
@@ -35,7 +36,6 @@ class BannerController extends Controller
         }
         // Lấy dữ liệu và phân trang
         $banners = $queryBanners->paginate(10);
-
         if ($request->ajax()) {
             $html = view('banners.table', compact('banners'))->render();
             return response()->json(['html' => $html]);
@@ -71,7 +71,10 @@ class BannerController extends Controller
             if ($request->hasFile('image')) {
                 $data['image'] = $this->uploadImage($request->file('image'), self::FOLDER);
             }
-
+            $data['redirect_url'] = !empty($data['title']) ? Str::slug($data['title']) : null;
+            $data['status'] ??= 0;
+            $lastBanner = Banner::orderBy('order', 'desc')->first();
+            $data['order'] = $lastBanner ? $lastBanner->order + 1 : 0;
             Banner::query()->create($data);
 
             DB::commit();
@@ -172,7 +175,8 @@ class BannerController extends Controller
             if (!empty($banner->image) && filter_var($banner->image, FILTER_VALIDATE_URL)) {
                 $this->deleteImage($banner->image,  self::FOLDER);
             }
-
+            Banner::where('order', '>', $banner->order)
+                ->decrement('order');
             DB::commit();
 
             return response()->json([
@@ -199,14 +203,14 @@ class BannerController extends Controller
             $search = $request->input('search_full');
             $queryBanners = $queryBanners->where('title', 'LIKE', "%$search%");
         }
-        if ($request->hasAny(['title', 'id', 'status', 'start_deleted', 'end_deleted' ])) {
+        if ($request->hasAny(['title', 'id', 'status', 'start_deleted', 'end_deleted'])) {
             $queryBanners = $this->filter($request, $queryBanners);
         }
 
         $banners = $queryBanners->paginate(10);
 
         if ($request->ajax()) {
-            $html = view('banners.table', compact(['banners','banner_deleted_at']))->render();
+            $html = view('banners.table', compact(['banners', 'banner_deleted_at']))->render();
             return response()->json(['html' => $html]);
         }
 
@@ -324,8 +328,18 @@ class BannerController extends Controller
             'deleted_at' => ['attribute' => ['start_deleted' => '>=', 'end_deleted' => '<=',]],
         ];
 
-        $query = $this->filterTrait($filters, $request,$query);
+        $query = $this->filterTrait($filters, $request, $query);
 
         return $query;
+    }
+    public function updateOrder(Request $request)
+    {
+        $data = $request->input('orderData'); // Nhận dữ liệu sắp xếp từ phía client
+
+        foreach ($data as $order => $id) {
+            Banner::where('id', $id)->update(['order' => $order]);
+        }
+
+        return response()->json(['status' => 'success']);
     }
 }

@@ -19,22 +19,37 @@ use Illuminate\Support\Facades\Log;
 //Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int)$user->id === (int)$id;
-});
-
-Broadcast::channel('instructor.{id}', function ($user, $id) {
-    Log::info($user);
-    Log::info($id);
     return (int) $user->id === (int) $id;
 });
 
-
-
+Broadcast::channel('notification.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
 
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
     ->where('user_id', $user->id)
     ->first();
-    return $conversationUser ? true : false;
+
+    if ($conversationUser) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    return false;
 });
 
+Broadcast::channel('private-chat.{conversationId}', function ($user, $conversationId) {
+    $conversationUser = ConversationUser::where('conversation_id', $conversationId)
+    ->where('user_id', $user->id)
+    ->first();
+
+    if ($conversationUser) {
+        return ['id' => $user->id, 'name' => $user->name];
+    }
+
+    return false;
+});
+
+Broadcast::channel('user-status', function ($user) {
+    return $user ? ['id' => $user->id, 'name' => $user->name] : null;
+});

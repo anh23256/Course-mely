@@ -37,9 +37,13 @@ class LessonCodingController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
+            if (!$chapter->course->allow_coding_lesson) {
+                return $this->respondForbidden('Khoá học này không cho phép tạo bài học dạng coding');
+            }
+
             $coding = Coding::query()->create([
                 'title' => $data['title'],
-                'language' => $data['language']
+                'language' => $data['language'],
             ]);
 
             $data['order'] = $chapter->lessons->max('order') + 1;
@@ -125,16 +129,21 @@ class LessonCodingController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài tập');
             }
 
-            $coding->hints = is_string($coding->hints)
-                ? json_decode($coding->hints, true)
+            if (!empty($data['content'])) {
+                $lesson->update([
+                    'content' => $data['content']
+                ]);
+            }
+
+            $data['hints'] = isset($data['hints'])
+                ? $data['hints']
                 : $coding->hints;
 
-            $coding->update($data);
+            $data['test_case'] = isset($data['test_case'])
+                ? $data['test_case']
+                : $coding->test_case;
 
-            if (isset($data['content'])) {
-                $lesson->content = $data['content'];
-                $lesson->save();
-            }
+            $coding->update($data);
 
             DB::commit();
 

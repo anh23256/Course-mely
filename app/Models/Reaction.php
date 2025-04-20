@@ -12,8 +12,8 @@ class Reaction extends Model
     protected $fillable = [
         'user_id',
         'type',
-        'reactionable_id',
-        'reactionable_type'
+        'reactable_id',
+        'reactable_type'
     ];
 
     public function reactionable()
@@ -24,5 +24,10 @@ class Reaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reactions()
+    {
+        return $this->morphMany(Reaction::class, 'reactable');
     }
 }

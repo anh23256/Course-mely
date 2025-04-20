@@ -27,12 +27,12 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->enum('level', [Course::LEVEL_BEGINNER, Course::LEVEL_INTERMEDIATE, Course::LEVEL_ADVANCED])->default(Course::LEVEL_BEGINNER);
             $table->integer('total_student')->default(0);
-            $table->json('requirements')->default('[]');
-            $table->json('benefits')->default('[]');
-            $table->json('qa')->default('[]');
+            $table->json('requirements');
+            $table->json('benefits');
+            $table->json('qa');
             $table->boolean('is_popular')->default(false);
             $table->boolean('is_sequential')->default(false);
-            $table->enum('status', [Course::STATUS_DRAFT, Course::STATUS_PENDING, Course::STATUS_APPROVED, Course::STATUS_REJECTED])->default(Course::STATUS_DRAFT);
+            $table->enum('status', [Course::STATUS_DRAFT, Course::STATUS_PENDING, Course::STATUS_APPROVED, Course::STATUS_REJECTED, Course::STATUS_MODIFY_REQUEST])->default(Course::STATUS_DRAFT);
             $table->date('accepted')->nullable();
             $table->softDeletes();
             $table->timestamps();

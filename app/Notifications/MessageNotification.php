@@ -2,20 +2,18 @@
 
 namespace App\Notifications;
 
-use App\Models\message;
-use Illuminate\Broadcasting\PrivateChannel;
+use App\Models\Message;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Notification;
 
 class MessageNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
-    public $message;
+    protected $message;
 
     /**
      * Create a new notification instance.
@@ -37,18 +35,30 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
 
     private function getUrl()
     {
-        return  route('admin.chats.index');
+        return route('admin.chats.index', ['room' => base64_encode($this->message->conversation_id)]);
     }
 
-    private function notificationData(): array
+    private function notificationData(object $notifiable, bool $isDatabase = false): array
     {
+        $existingNotification = $notifiable->notifications()
+        ->whereNull('read_at')
+        ->where('data->conversation_id', $this->message->conversation_id)
+            ->first();
+
+        $count = $existingNotification ? (!empty($existingNotification->data['count']) ? $existingNotification->data['count'] + 1 : 1) : 1;
+
         return [
             'type' => 'receive_message',
             'message_id' => $this->message->id,
-            'sender_id' => $this->message->id,
+            'sender_id' => $this->message->sender_id,
             'conversation_id' => $this->message->conversation_id,
+            'conversation_type' => $this->message->conversation->type,
             'message_user_avatar' => $this->message->sender->avatar,
-            'message' => 'Bạn có 1 tin nhắn mới từ' . ($this->message->conversation->type == "group" ? ' nhóm ' .$this->message->conversation->name :  ' người dùng '. $this->message->sender->name),
+            'count' => $isDatabase ? $count : ($existingNotification->data['count'] ?? 1),
+            'message' => 'Bạn có ' . ($isDatabase ? $count : ($existingNotification->data['count'] ?? 1)) . ' tin nhắn mới từ' .
+                ($this->message->conversation->type == "group"
+                    ? ' nhóm ' . $this->message->conversation->name
+                    : ' người dùng ' . $this->message->sender->name),
             'url' => $this->getUrl(),
         ];
     }
@@ -58,7 +68,18 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
      */
     public function toDatabase(object $notifiable): array
     {
-        return $this->notificationData();
+        $notificationData = $this->notificationData($notifiable, true);
+
+        $existingNotification = $notifiable->notifications()
+            ->whereNull('read_at')
+            ->where('data->conversation_id', $this->message->conversation_id)
+            ->first();
+
+        if ($existingNotification) {
+            $existingNotification->delete();
+        }
+
+        return $notificationData;
     }
 
     /**
@@ -66,6 +87,6 @@ class MessageNotification extends Notification implements ShouldBroadcast, Shoul
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage($this->notificationData());
+        return new BroadcastMessage($this->notificationData($notifiable, false));
     }
 }
