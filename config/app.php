@@ -54,7 +54,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://127.0.0.1:8000'),
+    'url' => env('APP_URL', 'https://course-mely-production.up.railway.app'),
 
     'fe_url' => env('FE_URL', 'http://localhost:3000'),
 

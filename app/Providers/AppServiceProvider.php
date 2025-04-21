@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,5 +32,8 @@ class AppServiceProvider extends ServiceProvider
             $view->with('site_logo', Setting::get('site_logo', 'images/logo.png'));
         });
 
+        if (env('APP_ENV') !== 'local') {
+            URL::forceScheme('https');
+        }
     }
 }
